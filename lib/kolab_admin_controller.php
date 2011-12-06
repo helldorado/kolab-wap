@@ -242,7 +242,11 @@
                 $hdrs = array_change_key_case($_SERVER, CASE_UPPER);
             }
 
-            return $hdrs[$key];
+            if (array_key_exists($key, $hdrs)) {
+                return $hdrs[$key];
+            } else {
+                return null;
+            }
         }
     }
 
