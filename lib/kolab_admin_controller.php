@@ -30,6 +30,8 @@
                         );
                 }
 
+            }
+
             // TODO: register services based on config or whatsoever
             // $this->add_service('user', 'kolab_admin_user_actions');
         }
