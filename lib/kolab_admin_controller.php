@@ -90,6 +90,7 @@
 
             // validate user session
             if ($method != 'authenticate') {
+                print $method . "\n";
                 if (!$this->session_validate($postdata)) {
                     throw new Exception("Invalid session", 403);
                 }
@@ -150,20 +151,15 @@
             if ($this->session_validate($postdata))
                 session_destroy();
 
-            // TODO: authenticate user against auth backend
-            if (!empty($postdata['username'])) {
-                if ($postdata['username'] == 'admin' && $postdata['password'] == 'Welcome2KolabSystems') {
-                    $this->uid = 'root@localhost';
-                    $valid = true;
-                }
-            }
+            $user = new User();
+            $valid = $user->authenticate($postdata['username'], $postdata['password']);
 
             // start new (PHP) session
             if ($valid) {
                 session_start();
-                $_SESSION['uid'] = $this->uid;
+                $_SESSION['user'] = $user;
                 $_SESSION['start'] = time();
-                return array('user' => $this->uid, 'session_token' => session_id());
+                return array('user' => $postdata['username'], 'session_token' => session_id());
             }
 
             return false;
