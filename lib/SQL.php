@@ -8,6 +8,12 @@
         /* Placeholder for the existing MySQL connection */
         private $conn = FALSE;
 
+        private $sql_stats = Array(
+                'queries' => 0,
+                'query_time' => 0,
+                'connections' => 0
+            );
+
         /**
          * This implements the 'singleton' design pattern
          *

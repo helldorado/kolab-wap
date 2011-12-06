@@ -1,16 +1,18 @@
 <?php
     require_once( dirname(__FILE__) . "/../../lib/functions.php");
 
-    if (!valid_login()) {
-        need_login();
+    // init frontend controller
+    $controller = new kolab_admin_controller;
+
+    try {
+        $postdata = $_SERVER['REQUEST_METHOD'] == 'POST' ? @json_decode(file_get_contents('php://input'), true) : null;
+        $controller->dispatch($postdata);
+    } catch(Exception $e) {
+        error_log($e->getMessage());
+        $controller->output->error($e->getMessage(), $e->getCode());
     }
 
-    if (!empty($_GET['object']) && !empty($_GET['action'])) {
-        if (function_exists($_GET['object'] . '_' . $_GET['action'])) {
-            call_user_func_array($_GET['object'] . '_' . $_GET['action']);
-        } elseif (file_exists(dirname(__FILE__) . "/../../lib/actions/" . $_GET['object'] . '_' . $_GET['action'] . ".php")) {
-            require_once(dirname(__FILE__) . "/../../lib/actions/" . $_GET['object'] . '_' . $_GET['action'] . ".php");
-        }
-    }
+    // if we arrive here the controller didn't generate output
+    $controller->output->error("Invalid request");
 
 ?>
