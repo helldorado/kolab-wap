@@ -90,7 +90,6 @@
 
             // validate user session
             if ($method != 'authenticate') {
-                print $method . "\n";
                 if (!$this->session_validate($postdata)) {
                     throw new Exception("Invalid session", 403);
                 }
