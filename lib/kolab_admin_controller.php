@@ -86,8 +86,7 @@
          */
         public function dispatch($postdata)
         {
-            $r = $this->request;
-            list($service, $method) = explode('.', array_shift($r));
+            list($service, $method) = $this->request;
 
             // validate user session
             if ($method != 'authenticate') {
@@ -98,8 +97,9 @@
 
             // call service method
             $service_handler = $this->get_service($service);
+
             if (method_exists($service_handler, $method))
-                $result = $service_handler->$method($r + $_GET, $postdata);
+                $result = $service_handler->$method($_GET, $postdata);
             else
                 throw new Exception("Unknown method", 405);
 
