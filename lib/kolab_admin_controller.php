@@ -18,7 +18,7 @@
             $this->output = new kolab_admin_json_output();
 
             if (isset($_GET['service']) && !empty($_GET['service'])) {
-                if (isset($_GET['method']) && !empty($_GET['method')) {
+                if (isset($_GET['method']) && !empty($_GET['method'])) {
                     $this->request = Array(
                             'service' => $_GET['service'],
                             'method' => $_GET['method']
