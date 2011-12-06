@@ -8,7 +8,6 @@
         public $output;
 
         private $uid;
-        private $docroot = '/';
         private $request = array();
         private $services = array();
         private $domains = array('localhost');
@@ -18,8 +17,18 @@
         {
             $this->output = new kolab_admin_json_output();
 
-            $this->docroot = self::slashify(substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen($_SERVER['DOCUMENT_ROOT'])));
-            $this->request = explode('/', substr($_SERVER['REDIRECT_URL'], strlen($this->docroot)));
+            if (isset($_GET['service']) && !empty($_GET['service'])) {
+                if (isset($_GET['method']) && !empty($_GET['method')) {
+                    $this->request = Array(
+                            'service' => $_GET['service'],
+                            'method' => $_GET['method']
+                        );
+                } else {
+                    $this->request = Array(
+                            'service' => $_GET['service'],
+                            'method' => null
+                        );
+                }
 
             // TODO: register services based on config or whatsoever
             // $this->add_service('user', 'kolab_admin_user_actions');
