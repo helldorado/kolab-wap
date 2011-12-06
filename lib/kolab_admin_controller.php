@@ -24,12 +24,11 @@
                             'method' => $_GET['method']
                         );
                 } else {
-                    $this->request = Array(
-                            'service' => $_GET['service'],
-                            'method' => null
-                        );
+                    throw new Exception("Unknown service", 400);
                 }
 
+            } else {
+                throw new Exception("Unknown service", 400);
             }
 
             // TODO: register services based on config or whatsoever
@@ -86,7 +85,8 @@
          */
         public function dispatch($postdata)
         {
-            list($service, $method) = $this->request;
+            $service = $this->request['service'];
+            $method = $this->request['method'];
 
             // validate user session
             if ($method != 'authenticate') {
