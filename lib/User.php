@@ -59,7 +59,7 @@
                 $this->_authenticated = TRUE;
                 $this->username = $username;
                 $this->password = $password;
-                $this->domain = $domain;
+                $this->domain = $auth->domain;
             }
 
             return $this->_authenticated;
