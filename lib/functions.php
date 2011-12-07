@@ -9,7 +9,6 @@
     // Initialize some runtime variables
     $messages = Array();
 
-    require_once('Session.php');
     require_once('Conf.php');
 
     // register autoloader
