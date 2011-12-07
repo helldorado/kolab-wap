@@ -23,7 +23,7 @@
                 foreach ($row as $key => $value) {
                     if ($key != "id") {
                         if ($key == "attributes") {
-                            $user_types[$row['id']][$key] = json_decode(base64_decode($value));
+                            $user_types[$row['id']][$key] = json_decode(unserialize($value), true);
                         } else {
                             $user_types[$row['id']][$key] = $value;
                         }
