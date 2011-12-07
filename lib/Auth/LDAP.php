@@ -248,6 +248,25 @@
             return $result;
         }
 
+        public function user_add($attrs, $type=NULL) {
+            if ($type == NULL) {
+                $type_str = 'user';
+            } else {
+                $_key = mysql_fetch_assoc(query("SELECT `key` FROM `user_types` WHERE `id` = '" . $type  . "'"));
+                $type_str = $_key['key'];
+            }
+
+            $base_dn = $this->conf->get($this->domain, $type_str . "_user_base_dn");
+            if (!$base_dn) {
+                $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
+            }
+
+            // TODO: The rdn is configurable as well
+            $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
+
+            return $this->add($dn, $attrs);
+        }
+
         public function users_list() {
             return $this->search("ou=People,dc=klab,dc=cc", "(objectClass=kolabinetorgperson)", Array("uid"));
         }
@@ -381,6 +400,9 @@
 
         private function _add($entry_dn, $attributes)
         {
+            $this->_connect();
+            $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
             if ( ( $add_result = ldap_add($this->_connection, $entry_dn, $attributes) ) == FALSE )
             {
                 // Issue warning

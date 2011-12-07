@@ -118,5 +118,9 @@
                 return FALSE;
             }
         }
+
+        public function user_add($attributes, $type=NULL) {
+            return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $type);
+        }
     }
 ?>
