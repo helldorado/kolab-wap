@@ -57,12 +57,12 @@
             if (isset($this->_conf[$key1])) {
                 if ($key2) {
                     if (isset($this->_conf[$key1][$key2])) {
-                        return $this->_conf[$key1][$key2];
+                        return $this->expand($this->_conf[$key1][$key2]);
                     } elseif (isset($this->_conf['kolab'][$key2])) {
-                        return $this->_conf['kolab'][$key2];
+                        return $this->expand($this->_conf['kolab'][$key2]);
                     }
                 } else {
-                    return $this->_conf[$key1];
+                    return $this->expand($this->_conf[$key1]);
                 }
             }
 
@@ -74,11 +74,33 @@
 #            echo "</pre>";
 
             if (isset($this->_conf['kolab'][$key1])) {
-                return $this->_conf['kolab'][$key1];
+                return $this->expand($this->_conf['kolab'][$key1]);
             } elseif (isset($this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1])) {
-                return $this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1];
+                return $this->expand($this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1]);
             }
 
+        }
+
+        private function expand($str) {
+            if (preg_match_all('/%\((?P<variable>\w+)\)s/', $str, $matches)) {
+                if (isset($matches['variable']) && !empty($matches['variable'])) {
+                    if (is_array($matches['variable'])) {
+                        foreach ($matches['variable'] as $key => $value) {
+                            $str = str_replace("%(" . $value . ")s", $this->get($value), $str);
+                        }
+
+                        return $str;
+
+                    } else {
+                        return str_replace("%(" . $matches['variable'] . ")s", $this->get($matches['variable']), $str);
+                    }
+                }
+
+                return $str;
+
+            } else {
+                return $str;
+            }
         }
 
     }
