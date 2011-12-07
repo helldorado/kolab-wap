@@ -8,9 +8,9 @@
         public $output;
 
         private $uid;
-        private $request = array();
-        private $services = array();
-        private $domains = array('localhost');
+        private $request = Array();
+        private $services = Array();
+        private $domains = Array('localhost.localdomain');
 
 
         public function __construct()
@@ -30,6 +30,9 @@
             } else {
                 throw new Exception("Unknown service", 400);
             }
+
+            $auth = Auth::get_instance();
+            $this->domains = $auth->list_domains();
 
             // TODO: register services based on config or whatsoever
             // $this->add_service('user', 'kolab_admin_user_actions');
@@ -127,7 +130,7 @@
             if (isset($_SESSION['user']) && $_SESSION['user']->_authenticated) {
                 return true;
             }
- 
+
             return false;
         }
 

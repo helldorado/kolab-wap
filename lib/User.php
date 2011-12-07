@@ -21,12 +21,9 @@
 
         function User($username = NULL, $password = NULL)
         {
-            if ( ( $username ) == FALSE || ( $password ) == FALSE )
-            {
+            if (($username) == FALSE || ($password) == FALSE) {
                 $result = FALSE;
-            }
-            else
-            {
+            } else {
                 $this->username = $username;
                 $this->password = $password;
 
@@ -55,13 +52,14 @@
         public function authenticate($username, $password, $method = FALSE)
         {
             $auth = Auth::get_instance();
+
             $result = $auth->authenticate($username, $password);
 
-            if ( $result )
-            {
+            if ($result) {
                 $this->_authenticated = TRUE;
                 $this->username = $username;
                 $this->password = $password;
+                $this->domain = $domain;
             }
 
             return $this->_authenticated;
