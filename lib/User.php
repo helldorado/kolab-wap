@@ -13,25 +13,8 @@
         private $username = NULL;
         private $password = NULL;
 
-        private $bind_dn = NULL;
-        private $bind_pw = NULL;
-
-        public $user_bind_dn = NULL;
-        public $user_bind_pw = NULL;
-
-        function User($username = NULL, $password = NULL)
-        {
-            if (($username) == FALSE || ($password) == FALSE) {
-                $result = FALSE;
-            } else {
-                $this->username = $username;
-                $this->password = $password;
-
-                $result = $this->authenticate($username, $password);
-            }
-
-            return $result;
-        }
+        private $domain;
+        private $working_domain;
 
         public function _get_username()
         {
@@ -63,6 +46,16 @@
             }
 
             return $this->_authenticated;
+        }
+
+        public function get_domain() {
+            if ($this->domain) {
+                return $this->domain;
+            } elseif ($this->working_domain) {
+                return $this->working_domain;
+            } else {
+                throw new Exception("No domain selected to work on", 1024);
+            }
         }
 
     }

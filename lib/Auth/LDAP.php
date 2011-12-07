@@ -102,10 +102,15 @@
             if ( ( $bind_ok = $this->_bind($user_dn, $password) ) == TRUE )
             {
                 $this->_unbind();
-                $_SESSION['user']->user_root_dn = $root_dn;
-                $_SESSION['user']->user_bind_dn = $user_dn;
-                $_SESSION['user']->user_bind_pw = $password;
-                error_log("Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
+
+                if (isset($_SESSION['user'])) {
+                    $_SESSION['user']->user_root_dn = $root_dn;
+                    $_SESSION['user']->user_bind_dn = $user_dn;
+                    $_SESSION['user']->user_bind_pw = $password;
+                    error_log("Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
+                } else {
+                    error_log("Successfully bound with User DN: " . $user_dn . " but not saving it to the session");
+                }
 
                 return TRUE;
             }
@@ -525,7 +530,7 @@
 
         private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = Array('*'))
         {
-            $this->_connect();
+            error_log("Searching with user " . $_SESSION['user']->user_bind_dn);
             $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
             if ( ( $search_results = @ldap_search($this->_connection, $base_dn, $search_filter, $attributes) ) == FALSE )

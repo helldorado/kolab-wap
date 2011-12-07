@@ -31,11 +31,10 @@
                 throw new Exception("Unknown service", 400);
             }
 
-            $auth = Auth::get_instance();
-            $this->domains = $auth->list_domains();
-
             // TODO: register services based on config or whatsoever
-            // $this->add_service('user', 'kolab_admin_user_actions');
+            $this->add_service('user_types', 'kolab_admin_user_types_actions');
+            $this->add_service('users', 'kolab_admin_users_actions');
+            $this->add_service('domains', 'kolab_admin_domains_actions');
         }
 
 
@@ -101,10 +100,14 @@
             // call service method
             $service_handler = $this->get_service($service);
 
-            if (method_exists($service_handler, $method))
+            if (method_exists($service_handler, $method)) {
                 $result = $service_handler->$method($_GET, $postdata);
-            else
+            } elseif (method_exists($service_handler, $service . "_" . $method)) {
+                $call_method = $service . "_" . $method;
+                $result = $service_handler->$call_method($_GET, $postdata);
+            } else {
                 throw new Exception("Unknown method", 405);
+            }
 
             // send response
             if ($result !== false)
@@ -152,17 +155,17 @@
             if ($this->session_validate($postdata))
                 session_destroy();
 
-            $user = new User();
-            $valid = $user->authenticate($postdata['username'], $postdata['password']);
+            session_start();
+
+            $_SESSION['user'] = new User();
+            $valid = $_SESSION['user']->authenticate($postdata['username'], $postdata['password']);
 
             // start new (PHP) session
             if ($valid) {
-                session_start();
-                $_SESSION['user'] = $user;
                 $_SESSION['start'] = time();
                 return Array(
-                        'user' => $postdata['username'],
-                        'domain' => $_SESSION['user']->domain,
+                        'user' => $_SESSION['user']->_get_username(),
+                        'domain' => $_SESSION['user']->get_domain(),
                         'session_token' => session_id()
                     );
             }
@@ -176,7 +179,16 @@
          */
         private function capabilities()
         {
+            $auth = Auth::get_instance();
+            $this->domains = $auth->normalize_result($auth->list_domains());
+
             $result = array();
+
+            // Should we have no permissions to list domain name spaces,
+            // we should always return our own.
+            if (count($this->domains) < 1) {
+                $this->domains[] = $_SESSION['user']->get_domain();
+            }
 
             // add capabilities of all registered services
             foreach ($this->domains as $domain) {
@@ -192,7 +204,9 @@
                     }
                 }
 
-                $result[] = array('domain' => $domain, 'actions' => $actions);
+                // TODO: 'associateddomain' is very specific to 389ds based deployments, and this
+                // is supposed to be very generic.
+                $result[] = array('domain' => $domain['associateddomain'], 'actions' => $actions);
             }
 
             return array('capabilities' => $result);
