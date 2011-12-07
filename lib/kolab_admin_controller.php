@@ -32,7 +32,9 @@
             }
 
             // TODO: register services based on config or whatsoever
+            $this->add_service('form_value', 'kolab_admin_form_value_actions');
             $this->add_service('user_types', 'kolab_admin_user_types_actions');
+            $this->add_service('user', 'kolab_admin_user_actions');
             $this->add_service('users', 'kolab_admin_users_actions');
             $this->add_service('domains', 'kolab_admin_domains_actions');
         }
