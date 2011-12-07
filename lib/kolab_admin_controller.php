@@ -124,11 +124,10 @@
             session_id($sess_id);
             session_start();
 
-            if ($_SESSION['uid']) {
-                $this->uid = $_SESSION['uid'];
+            if (isset($_SESSION['user']) && $_SESSION['user']->_authenticated) {
                 return true;
             }
-
+ 
             return false;
         }
 
