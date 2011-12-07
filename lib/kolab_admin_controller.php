@@ -160,7 +160,11 @@
                 session_start();
                 $_SESSION['user'] = $user;
                 $_SESSION['start'] = time();
-                return array('user' => $postdata['username'], 'session_token' => session_id());
+                return Array(
+                        'user' => $postdata['username'],
+                        'domain' => $_SESSION['user']->domain,
+                        'session_token' => session_id()
+                    );
             }
 
             return false;
