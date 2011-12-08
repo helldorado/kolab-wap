@@ -276,9 +276,14 @@
             $is_dn = ldap_explode_dn($user, 1);
             if ( !$is_dn ) {
                 list($this->userid, $this->domain) = $this->_qualify_id($user);
+                $root_dn = $this->_from_domain_to_rootdn($this->domain);
                 $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
             } else {
                 $user_dn = $user;
+            }
+
+            if (!$user_dn) {
+                return FALSE;
             }
 
             return $this->delete($user_dn);

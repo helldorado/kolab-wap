@@ -67,7 +67,11 @@
         public function user_delete($getdata, $postdata) {
             // TODO: Input validation
             $auth = Auth::get_instance();
-            $result = $auth->user_delete($postdata);
+            if (!isset($postdata['user'])) {
+                return FALSE;
+            }
+
+            $result = $auth->user_delete($postdata['user']);
             if ($result) {
                 return $result;
             } else {
