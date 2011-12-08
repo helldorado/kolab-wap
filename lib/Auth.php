@@ -178,7 +178,11 @@
         }
 
         public function user_delete($userdata) {
-            return $this->_auth[$_SESSION['user']->get_domain()]->user_delete($userdata, $type);
+            return $this->_auth[$_SESSION['user']->get_domain()]->user_delete($userdata);
+        }
+
+        public function user_info($userdata) {
+            return $this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata);
         }
     }
 ?>
