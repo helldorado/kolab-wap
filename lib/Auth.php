@@ -1,6 +1,4 @@
 <?php
-    require_once('Conf.php');
-
     class Auth {
         static private $instance = Array();
 
@@ -8,6 +6,12 @@
         private $conf;
         private $domains = Array();
 
+
+        /**
+         * Return an instance of Auth, associated with $domain.
+         *
+         * If $domain is not specified, the 'kolab' 'primary_domain' is used.
+         */
         static function get_instance($domain = NULL)
         {
             $conf = Conf::get_instance();
@@ -37,19 +41,59 @@
             $this->connect($domain);
         }
 
+        /**
+         * Authenticate $username with $password.
+         *
+         * The following forms for a username exist:
+         *
+         *  - "cn=Directory Manager"
+         *
+         *      This is considered a DN, as it succeeds to parse as such. The
+         *      very name of this user may have already caused you to suspect
+         *      that the user is not associated with one domain per-se. It is
+         *      our intention this user does therefor not have a
+         *      $_SESSION['user']->domain, but instead a
+         *      $_SESSION['user']->working_domain. In any case, obtain the
+         *      current domain for any user through
+         *      $_SESSION['user']->get_domain().
+         *
+         *      NOTE/TODO: For now, even cn=Directory Manager is set to the
+         *      default domain. I wish there was more time...
+         *
+         *  - "user@domain.tld"
+         *
+         *      While it may seem obvious, this user is to be authenticated
+         *      against the 'domain.tld' realm.
+         *
+         *  - "user"
+         *
+         *      This user is to be authenticated against the 'kolab'
+         *      'primary_domain'.
+         */
         public function authenticate($username, $password) {
-            error_log("Authentication request for $username");
+            // TODO: Log authentication request.
+//             error_log("Authentication request for $username");
+
             if (strpos($username, '@')) {
-                $user_domain = explode('@', $username);
-                $user_domain = $user_domain[1];
+                // Case-sensitivity does not matter for strstr() on '@', which
+                // has no case.
+                $user_domain = strstr($username, '@');
 
                 if (isset($this->_auth[$user_domain])) {
+                    // We know this domain
                     $domain = $user_domain;
                 } else {
+                    // Attempt to find the primary domain name space for the
+                    // domain used in the authentication request.
+                    //
+                    // This will enable john@example.org to login using 'alias'
+                    // domains as well, such as 'john@example.ch'.
                     $associated_domain = $this->primary_for_valid_domain($user_domain);
+
                     if ($associated_domain) {
                         $domain = $user_domain;
                     } else {
+                        // It seems we do not know about this domain.
                         $domain = FALSE;
                     }
                 }
@@ -57,31 +101,38 @@
                 $domain = $this->conf->get('primary_domain');
             }
 
+            // TODO: Debug logging for the use of a current or the creation of
+            // a new authentication class instance.
             if ($this->domain == $domain) {
-                error_log("using the current $domain auth thingy");
                 $result = $this->_auth[$domain]->authenticate($username, $password);
             } else {
-                error_log("creating a new $domain auth thingy");
                 $result = Auth::get_instance($domain)->authenticate($username, $password);
             }
+
             return $result;
         }
 
         public function connect($domain = NULL) {
-            $auth_method = strtoupper($this->conf->get('kolab', 'auth_mechanism'));
-
             if ($domain === NULL) {
                 $domain = $this->conf->get('primary_domain');
+            }
+
+            $auth_method = strtoupper($this->conf->get($domain, 'auth_mechanism'));
+
+            if (!$auth_method) {
+                // Use the default authentication technology
+                $auth_method = strtoupper($this->conf->get('kolab', 'auth_mechanism'));
             }
 
             if (!isset($this->_auth[$domain])) {
                 require_once('Auth/' . $auth_method . '.php');
                 $this->_auth[$domain] = new $auth_method($domain);
             }
-            
         }
 
         public function list_domains() {
+            // TODO: Consider a normal user does not have privileges on
+            // the base_dn where domain names and configuration is stored.
             $this->connect();
             return $this->_auth[$this->domain]->list_domains();
         }
@@ -106,6 +157,7 @@
 
             if (array_key_exists($domain, $this->domains)) {
                 return $domain;
+
             } elseif (in_array($domain, $this->domains)) {
                 // We know it's not a key!
                 foreach ($this->domains as $parent_domain => $child_domains) {
@@ -113,7 +165,9 @@
                         return $parent_domain;
                     }
                 }
+
                 return FALSE;
+
             } else {
                 return FALSE;
             }

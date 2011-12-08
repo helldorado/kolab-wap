@@ -14,8 +14,6 @@
         }
 
         public function user_add($getdata, $postdata) {
-#            print_r($postdata);
-
             if (!isset($postdata['user_type_id'])) {
                 throw new Exception("No user type ID specified", 346781);
             }
