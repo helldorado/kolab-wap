@@ -57,7 +57,22 @@
 
             $auth = Auth::get_instance();
             $result = $auth->user_add($user_attributes, $postdata['user_type_id']);
-            return $result;
+            if ($result) {
+                return $user_attributes;
+            } else {
+                return FALSE;
+            }
+        }
+
+        public function user_delete($getdata, $postdata) {
+            // TODO: Input validation
+            $auth = Auth::get_instance();
+            $result = $auth->user_delete($postdata);
+            if ($result) {
+                return $result;
+            } else {
+                return FALSE;
+            }
         }
     }
 

@@ -133,6 +133,11 @@
             return $this->_connect();
         }
 
+        public function delete($dn)
+        {
+            return $this->_delete($dn);
+        }
+
         public function domain_add($domain, $domain_alias = FALSE, $prepopulate = TRUE)
         {
             // Apply some routines for access control to this function here.
@@ -267,6 +272,18 @@
             return $this->add($dn, $attrs);
         }
 
+        public function user_delete($user, $type=NULL) {
+            $is_dn = ldap_explode_dn($user, 1);
+            if ( !$is_dn ) {
+                list($this->userid, $this->domain) = $this->_qualify_id($user);
+                $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
+            } else {
+                $user_dn = $user;
+            }
+
+            return $this->delete($user_dn);
+        }
+
         public function users_list() {
             return $this->search("ou=People,dc=klab,dc=cc", "(objectClass=kolabinetorgperson)", Array("uid"));
         }
@@ -398,8 +415,7 @@
             Shortcut to ldap_add()
         */
 
-        private function _add($entry_dn, $attributes)
-        {
+        private function _add($entry_dn, $attributes) {
             $this->_connect();
             $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
@@ -418,10 +434,10 @@
             Shortcut to ldap_bind()
         */
 
-        private function _bind($dn, $pw)
-        {
+        private function _bind($dn, $pw) {
             $this->_connect();
 
+            // TODO: Debug logging
             error_log("->_bind() Binding with $dn");
             if ( !$dn || !$pw )
             {
@@ -445,26 +461,44 @@
             Shortcut to ldap_connect()
         */
 
-        private function _connect()
-        {
-            if ( ( $this->_connection ) == FALSE )
-            {
+        private function _connect() {
+            if ( ( $this->_connection ) == FALSE ) {
+                // TODO: Debug logging
                 error_log("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
                 $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
 
-                if ( $connection == FALSE )
-                {
+                if ( $connection == FALSE ) {
                     $this->_connection = FALSE;
+                    // TODO: Debug logging
                     error_log("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
-                }
-                else
-                {
+                } else {
                     $this->_connection = $connection;
                 }
+
+                // TODO: Debug logging
                 error_log("Connected!");
-            }
-            else {
+            } else {
                 error_log("Already connected");
+            }
+        }
+
+        /*
+            Shortcut to ldap_delete()
+        */
+
+        private function _delete($entry_dn)
+        {
+            $this->_connect();
+            $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+            if ( ( $delete_result = ldap_delete($this->_connection, $entry_dn) ) == FALSE )
+            {
+                // Issue warning
+                return FALSE;
+            }
+            else
+            {
+                return TRUE;
             }
         }
 

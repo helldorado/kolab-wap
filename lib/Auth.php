@@ -176,5 +176,9 @@
         public function user_add($attributes, $type=NULL) {
             return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $type);
         }
+
+        public function user_delete($userdata) {
+            return $this->_auth[$_SESSION['user']->get_domain()]->user_delete($userdata, $type);
+        }
     }
 ?>
