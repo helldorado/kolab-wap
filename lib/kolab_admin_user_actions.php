@@ -78,6 +78,22 @@
                 return FALSE;
             }
         }
+
+        public function user_info($getdata, $postdata) {
+            $auth = Auth::get_instance();
+
+            if (!isset($getdata['user'])) {
+                return FALSE;
+            }
+
+            $result = $auth->user_info($getdata['user']);
+
+            if ($result) {
+                return $this->normalize_result($result);
+            } else {
+                return FALSE;
+            }
+        }
     }
 
 ?>
