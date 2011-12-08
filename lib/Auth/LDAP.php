@@ -272,7 +272,7 @@
             return $this->add($dn, $attrs);
         }
 
-        public function user_delete($user, $type=NULL) {
+        public function user_delete($user) {
             $is_dn = ldap_explode_dn($user, 1);
             if ( !$is_dn ) {
                 list($this->userid, $this->domain) = $this->_qualify_id($user);
@@ -287,6 +287,23 @@
             }
 
             return $this->delete($user_dn);
+        }
+
+        public function user_info($user) {
+            $is_dn = ldap_explode_dn($user, 1);
+            if ( !$is_dn ) {
+                list($this->userid, $this->domain) = $this->_qualify_id($user);
+                $root_dn = $this->_from_domain_to_rootdn($this->domain);
+                $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
+            } else {
+                $user_dn = $user;
+            }
+
+            if (!$user_dn) {
+                return FALSE;
+            }
+
+            return $this->search($user_dn);
         }
 
         public function users_list() {
@@ -332,12 +349,6 @@
         /*
             Deprecated, use domain_root_dn()
         */
-
-        public function _from_domain_to_rootdn($domain = '')
-        {
-            // Issue deprecation warning
-            return $this->domain_root_dn($domain);
-        }
 
         public function user_type_attribute_filter($type = FALSE)
         {
