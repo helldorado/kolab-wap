@@ -89,7 +89,7 @@
             $result = $auth->user_info($getdata['user']);
 
             if ($result) {
-                return $this->normalize_result($result);
+                return $result;
             } else {
                 return FALSE;
             }

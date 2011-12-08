@@ -89,7 +89,7 @@
             {
                 error_log("Username is not a DN");
                 list($this->userid, $this->domain) = $this->_qualify_id($username);
-                $root_dn = $this->_from_domain_to_rootdn($this->domain);
+                $root_dn = $this->domain_root_dn($this->domain);
                 $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $username . ')');
                 error_log("Found user DN: $user_dn for user: $username");
             }
@@ -276,7 +276,7 @@
             $is_dn = ldap_explode_dn($user, 1);
             if ( !$is_dn ) {
                 list($this->userid, $this->domain) = $this->_qualify_id($user);
-                $root_dn = $this->_from_domain_to_rootdn($this->domain);
+                $root_dn = $this->domain_root_dn($this->domain);
                 $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
             } else {
                 $user_dn = $user;
@@ -293,7 +293,7 @@
             $is_dn = ldap_explode_dn($user, 1);
             if ( !$is_dn ) {
                 list($this->userid, $this->domain) = $this->_qualify_id($user);
-                $root_dn = $this->_from_domain_to_rootdn($this->domain);
+                $root_dn = $this->domain_root_dn($this->domain);
                 $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
             } else {
                 $user_dn = $user;
