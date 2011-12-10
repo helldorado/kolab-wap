@@ -115,6 +115,18 @@
                 $uid = strtolower($uid);
                 $uid = str_replace(' ', '', $uid);
 
+                $orig_uid = $uid;
+
+                $auth = Auth::get_instance($_SESSION['user']->get_domain());
+
+                $user = $auth->user_find_by_attribute(Array('uid' => $uid));
+
+                $x = 2;
+                while ($auth->user_find_by_attribute(Array('uid' => $uid))) {
+                    $uid = $orig_uid . $x;
+                    $x++;
+                }
+
                 return Array('uid' => $uid);
             }
 

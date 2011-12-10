@@ -289,6 +289,28 @@
             return $this->delete($user_dn);
         }
 
+        public function user_find_by_attribute($userdata) {
+            $filter = "(&";
+
+            foreach ($userdata as $key => $value) {
+                $filter .= "(" . $key . "=" . $value . ")";
+            }
+
+            $filter .= ")";
+
+            $base_dn = $this->conf->get($this->domain, "base_dn");
+
+            $result = $this->normalize_result($this->search($base_dn, $filter, array_keys($userdata)));
+
+            if (count($result) > 0) {
+                error_log("Results found: " . implode(', ', array_keys($result)));
+                return $result;
+            } else {
+                error_log("No result");
+                return FALSE;
+            }
+        }
+
         public function user_info($user) {
             $is_dn = ldap_explode_dn($user, 1);
             if ( !$is_dn ) {
