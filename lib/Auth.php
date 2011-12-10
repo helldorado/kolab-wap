@@ -181,8 +181,12 @@
             return $this->_auth[$_SESSION['user']->get_domain()]->user_delete($userdata);
         }
 
+        public function user_find_by_attribute($userdata) {
+            return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($userdata);
+        }
+
         public function user_info($userdata) {
-            return $this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata);
+            return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata));
         }
     }
 ?>
