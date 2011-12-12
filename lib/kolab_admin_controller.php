@@ -33,6 +33,9 @@
 
             // TODO: register services based on config or whatsoever
             $this->add_service('form_value', 'kolab_admin_form_value_actions');
+            $this->add_service('group_types', 'kolab_admin_group_types_actions');
+            $this->add_service('group', 'kolab_admin_group_actions');
+            $this->add_service('groups', 'kolab_admin_groups_actions');
             $this->add_service('user_types', 'kolab_admin_user_types_actions');
             $this->add_service('user', 'kolab_admin_user_actions');
             $this->add_service('users', 'kolab_admin_users_actions');
@@ -214,6 +217,9 @@
             return array('capabilities' => $result);
         }
 
+        private function get_domain() {
+            return Array('domain' => $_SESSION['user']->get_domain());
+        }
 
         /**
          * End the current user ession
@@ -224,6 +230,14 @@
             return true;
         }
 
+        private function select_domain($getdata) {
+            if (isset($getdata['domain'])) {
+                $_SESSION['user']->set_domain($getdata['domain']);
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         /* ========  Utility functions  ======== */
 
