@@ -8,8 +8,8 @@
         public function capabilities($domain)
         {
             return array(
-                    'list' => 'l',
-                    'info' => 'r',
+                    'list' => 'r',
+//                     'search' => 'r',
                 );
         }
 
