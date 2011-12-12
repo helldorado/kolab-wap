@@ -8,7 +8,13 @@
         public function capabilities($domain)
         {
             return array(
-                    'list' => 'l',
+                    'add' => 'w',
+                    'delete' => 'w',
+//                     'edit' => 'w',
+//                     'find' => 'r',
+//                     'find_by_any_attribute' => 'r',
+//                     'find_by_attribute' => 'r',
+//                     'find_by_attributes' => 'r',
                     'info' => 'r',
                 );
         }
