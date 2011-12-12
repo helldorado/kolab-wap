@@ -210,6 +210,25 @@
             return $this->search($this->conf->get($section, 'domain_base_dn'), $this->conf->get($section, 'kolab_domain_filter'));
         }
 
+        public function find_user_groups($member_dn) {
+            $groups = Array();
+
+            $root_dn = $this->domain_root_dn($this->domain);
+
+            $entries = $this->search($root_dn, "(|" .
+                    "(&(objectclass=groupofnames)(member=$member_dn))" .
+                    "(&((objectclass=groupofuniquenames)(uniquemember=$member_dn)))" .
+                ")");
+
+            $entries = $this->normalize_result($entries);
+
+            foreach ($entries as $entry_dn => $entry_attributes) {
+                $groups[] = $entry_dn;
+            }
+
+            return $groups;
+        }
+
         public function group_info($group) {
             $is_dn = ldap_explode_dn($group, 1);
             if ( !$is_dn ) {
