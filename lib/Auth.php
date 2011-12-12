@@ -130,6 +130,10 @@
             }
         }
 
+        public function find_user_groups($member_dn) {
+            return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn));
+        }
+
         public function group_info($groupdata) {
             return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata));
         }

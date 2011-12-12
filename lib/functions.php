@@ -48,14 +48,7 @@
         // The $_SESSION variable is controlled through lib/User.php's
         // _authenticate()
         //
-        if ( isset($_SESSION['user']->_authenticated) ) {
-            error_log("Logged in proper");
-            return $_SESSION['user']->_authenticated;
-        } else {
-            error_log("Not logged in!");
-            return FALSE;
-        }
-
+        return $_SESSION['user']->authenticated();
     }
 
 ?>

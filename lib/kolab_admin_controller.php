@@ -135,7 +135,7 @@
             session_id($sess_id);
             session_start();
 
-            if (isset($_SESSION['user']) && $_SESSION['user']->_authenticated) {
+            if (isset($_SESSION['user']) && $_SESSION['user']->authenticated()) {
                 return true;
             }
 
