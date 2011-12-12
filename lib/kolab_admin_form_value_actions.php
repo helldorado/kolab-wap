@@ -8,8 +8,13 @@
         public function capabilities($domain)
         {
             return array(
-                    'list' => 'l',
-                    'info' => 'r',
+                    'generate_cn' => 'w',
+                    'generate_displayname' => 'w',
+                    'generate_mail' => 'w',
+                    'generate_password' => 'r',
+                    'generate_uid' => 'w',
+                    'generate_userpassword' => 'r',
+//                     'info' => 'r',
                 );
         }
 
