@@ -49,13 +49,27 @@
         }
 
         public function get_domain() {
-            if ($this->domain) {
-                return $this->domain;
-            } elseif ($this->working_domain) {
+            if ($this->working_domain) {
                 return $this->working_domain;
+            } elseif ($this->domain) {
+                return $this->domain;
             } else {
                 throw new Exception("No domain selected to work on", 1024);
             }
+        }
+
+        public function reset_domain() {
+            // Validate domain
+            // Validate access to domain
+            // Set $this->working_domain
+            $this->working_domain = $this->domain;
+        }
+
+        public function set_domain($domain) {
+            // Validate domain
+            // Validate access to domain
+            // Set $this->working_domain
+            $this->working_domain = $domain;
         }
 
     }
