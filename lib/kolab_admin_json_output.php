@@ -14,7 +14,7 @@
             if (!is_array($data))
                 $data = array();
 
-            $this->send(array('status' => 'OK') + $data);
+            $this->send(array('status' => 'OK', 'result' => $data));
         }
 
 
