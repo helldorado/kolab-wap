@@ -82,7 +82,20 @@
                 $sn = str_replace(' ', '', $sn);
                 $sn = strtolower($sn);
 
-                return Array('mail' => $givenname . "." . $sn . "@" . $_SESSION['user']->get_domain());
+                $mail = $givenname . "." . $sn . "@" . $_SESSION['user']->get_domain();
+
+                $orig_mail = $mail;
+
+                $auth = Auth::get_instance($_SESSION['user']->get_domain());
+
+                $x = 2;
+                while ($auth->user_find_by_attribute(Array('mail' => $mail))) {
+                    list($mail_local, $mail_domain) = explode('@', $orig_mail);
+                    $mail = $mail_local . $x . '@' . $mail_domain;
+                    $x++;
+                }
+
+                return Array('mail' => $mail);
             }
 
         }
