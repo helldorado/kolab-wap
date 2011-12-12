@@ -54,15 +54,19 @@
         }
 
         public function get($key1, $key2 = NULL) {
+            return $this->expand($this->get_raw($key1, $key2));
+        }
+
+        public function get_raw($key1, $key2 = NULL) {
             if (isset($this->_conf[$key1])) {
                 if ($key2) {
                     if (isset($this->_conf[$key1][$key2])) {
-                        return $this->expand($this->_conf[$key1][$key2]);
+                        return $this->_conf[$key1][$key2];
                     } elseif (isset($this->_conf['kolab'][$key2])) {
-                        return $this->expand($this->_conf['kolab'][$key2]);
+                        return $this->_conf['kolab'][$key2];
                     }
                 } else {
-                    return $this->expand($this->_conf[$key1]);
+                    return $this->_conf[$key1];
                 }
             }
 
@@ -74,18 +78,22 @@
 #            echo "</pre>";
 
             if (isset($this->_conf['kolab'][$key1])) {
-                return $this->expand($this->_conf['kolab'][$key1]);
+                return $this->_conf['kolab'][$key1];
             } elseif (isset($this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1])) {
-                return $this->expand($this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1]);
+                return $this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1];
             }
 
         }
 
-        private function expand($str) {
+        public function expand($str, $custom = FALSE) {
             if (preg_match_all('/%\((?P<variable>\w+)\)s/', $str, $matches)) {
                 if (isset($matches['variable']) && !empty($matches['variable'])) {
                     if (is_array($matches['variable'])) {
                         foreach ($matches['variable'] as $key => $value) {
+                            if (is_array($custom) && array_key_exists($value, $custom)) {
+                                $str = str_replace("%(" . $value . ")s", $custom[$value], $str);
+                            }
+
                             $str = str_replace("%(" . $value . ")s", $this->get($value), $str);
                         }
 
