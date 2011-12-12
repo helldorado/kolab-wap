@@ -47,7 +47,7 @@
                 $this->username = $username;
                 $this->password = $password;
                 $this->domain = $this->auth->domain;
-                $this->_groups = $this->groups();
+#                $this->_groups = $this->groups();
             }
 
             return $this->_authenticated;
@@ -67,26 +67,28 @@
             }
         }
 
-        private function groups() {
+        public function groups() {
+            #error_log("Called " . __FUNCTION__ . " on line " . __LINE__ . " of " . __FILE__);
+            #debug_print_backtrace();
+
             if ($this->_groups || (is_array($this->_groups) && count($this->_groups) >= 1))
                 return $this->_groups;
 
             $this->_groups = Array();
-            if (!$this->auth)
-                $this->auth = Auth::get_instance();
+            $this->auth = Auth::get_instance();
 
-            $entry = $this->auth->normalize_result(
-                    $this->auth->search(
-                            $this->auth->user_find_by_attribute(Array('mail' => $this->username))
-                        )
-                );
+            $entry = $this->auth->user_find_by_attribute(Array('mail' => $this->username));
 
-            foreach ($entry as $dn => $attributes) {
-                if (array_key_exists('memberof', $attributes)) {
-                    $this->_groups = (array)($attributes['memberof']);
-                } else {
-                    $this->_groups = $this->auth->find_user_groups($dn);
+            if ($entry) {
+                foreach ($entry as $dn => $attributes) {
+                    if (array_key_exists('memberof', $attributes)) {
+                        $this->_groups = (array)($attributes['memberof']);
+                    } else {
+                        $this->_groups = $this->auth->find_user_groups($dn);
+                    }
                 }
+            } else {
+                $this->_groups = Array();
             }
 
             return $this->_groups;

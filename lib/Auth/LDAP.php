@@ -211,13 +211,15 @@
         }
 
         public function find_user_groups($member_dn) {
+            error_log(__FILE__ . "(" . __LINE__ . "): " .  $member_dn);
+
             $groups = Array();
 
             $root_dn = $this->domain_root_dn($this->domain);
 
             $entries = $this->search($root_dn, "(|" .
                     "(&(objectclass=groupofnames)(member=$member_dn))" .
-                    "(&((objectclass=groupofuniquenames)(uniquemember=$member_dn)))" .
+                    "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
                 ")");
 
             $entries = $this->normalize_result($entries);
@@ -342,18 +344,22 @@
             return $this->delete($user_dn);
         }
 
-        public function user_find_by_attribute($userdata) {
+        public function user_find_by_attribute($attribute) {
+            if (!is_array($attribute) || count($attribute) > 1) {
+                return FALSE;
+            }
+
             $filter = "(&";
 
-            foreach ($userdata as $key => $value) {
+            foreach ($attribute as $key => $value) {
                 $filter .= "(" . $key . "=" . $value . ")";
             }
 
             $filter .= ")";
 
-            $base_dn = $this->conf->get($this->domain, "base_dn");
+            $base_dn = $this->domain_root_dn($this->domain);
 
-            $result = $this->normalize_result($this->search($base_dn, $filter, array_keys($userdata)));
+            $result = $this->normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
 
             if (count($result) > 0) {
                 error_log("Results found: " . implode(', ', array_keys($result)));

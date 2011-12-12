@@ -131,7 +131,7 @@
         }
 
         public function find_user_groups($member_dn) {
-            return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn));
+            return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
         }
 
         public function group_info($groupdata) {
@@ -197,8 +197,8 @@
             return $this->_auth[$_SESSION['user']->get_domain()]->user_delete($userdata);
         }
 
-        public function user_find_by_attribute($userdata) {
-            return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($userdata);
+        public function user_find_by_attribute($attribute) {
+            return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($attribute);
         }
 
         public function user_info($userdata) {
