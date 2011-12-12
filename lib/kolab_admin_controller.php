@@ -169,7 +169,7 @@
             if ($valid) {
                 $_SESSION['start'] = time();
                 return Array(
-                        'user' => $_SESSION['user']->_get_username(),
+                        'user' => $_SESSION['user']->get_username(),
                         'domain' => $_SESSION['user']->get_domain(),
                         'session_token' => session_id()
                     );
