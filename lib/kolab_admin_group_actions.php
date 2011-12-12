@@ -8,8 +8,10 @@
         public function capabilities($domain)
         {
             return array(
-                    'list' => 'l',
+                    'add' => 'w',
+                    'delete' => 'w',
                     'info' => 'r',
+                    'members_list' => 'r',
                 );
         }
 
