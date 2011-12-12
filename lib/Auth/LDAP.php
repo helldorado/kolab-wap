@@ -210,6 +210,40 @@
             return $this->search($this->conf->get($section, 'domain_base_dn'), $this->conf->get($section, 'kolab_domain_filter'));
         }
 
+        public function group_info($group) {
+            $is_dn = ldap_explode_dn($group, 1);
+            if ( !$is_dn ) {
+                $root_dn = $this->domain_root_dn($this->domain);
+                $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
+            } else {
+                $group_dn = $user;
+            }
+
+            if (!$group_dn) {
+                return FALSE;
+            }
+
+            return $this->search($group_dn);
+        }
+
+        public function group_members_list($group) {
+            $member_dns = Array();
+
+            $is_dn = ldap_explode_dn($group, 1);
+            if ( !$is_dn ) {
+                $root_dn = $this->domain_root_dn($this->domain);
+                $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
+            } else {
+                $group_dn = $user;
+            }
+
+            if (!$group_dn) {
+                return FALSE;
+            }
+
+            return $this->_list_group_members($group_dn);
+        }
+
         public function llist($base_dn, $filter)
         {
             return $this->_list($base_dn, $filter);
@@ -778,6 +812,33 @@
 ################################################################################
 ################################################################################
 
+        public function _get_group_dn($root_dn, $search_filter)
+        {
+
+            error_log("Searching for a group dn in $root_dn, with search filter: $search_filter");
+
+            $this->_connect();
+
+            if ( ( $this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw')) ) == FALSE )
+            {
+                $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
+            }
+
+            $search_results = ldap_search($this->_connection, $root_dn, $search_filter);
+
+            if ( ( ldap_count_entries($this->_connection, $search_results) == 0 ) == TRUE )
+            {
+                return FALSE;
+            }
+
+            if ( ( $first_entry = ldap_first_entry($this->_connection, $search_results) ) == FALSE )
+                return FALSE;
+            else
+                $group_dn = ldap_get_dn($this->_connection, $first_entry);
+
+            return $group_dn;
+        }
+
         public function _get_user_dn($root_dn, $search_filter)
         {
 
@@ -813,6 +874,132 @@
             return "kanarip@kanarip.com";
         }
 
+        private function _list_group_members($dn, $entry = null) {
+            $group_members = Array();
+
+
+            if (is_array($entry) && in_array('objectclass', $entry)) {
+                if (!in_array(Array('groupofnames', 'groupofuniquenames', 'groupofurls'), $entry['objectclass'])) {
+                    error_log("Called _list_groups_members on a non-group!");
+                } else {
+                    error_log("Called list_group_members(" . $dn . ")");
+                }
+            }
+
+            $entries = $this->normalize_result($this->search($dn));
+
+            foreach ($entries as $entry_dn => $entry) {
+                if (!isset($entry['objectclass'])) {
+                    continue;
+                }
+
+                foreach ( $entry['objectclass'] as $num => $objectclass) {
+                    switch ($objectclass) {
+                        case "groupofnames":
+                            $group_members = array_merge($group_members, $this->_list_group_member($entry_dn, $entry));
+                            break;
+                        case "groupofuniquenames":
+                            $group_members = array_merge($group_members, $this->_list_group_uniquemember($entry_dn, $entry));
+                            break;
+                        case "groupofurls":
+                            $group_members = array_merge($group_members, $this->_list_group_memberurl($entry_dn, $entry));
+                            break;
+                    }
+                }
+            }
+
+            return array_filter($group_members);
+        }
+
+        private function _list_group_member($dn, $entry) {
+            error_log("Called _list_group_member(" . $dn . ")");
+
+            // Use the member attributes to return an array of member ldap objects
+            // NOTE that the member attribute is supposed to contain a DN
+            $group_members = Array();
+            for ( $i = 0; $i < (count($entry['member'])-1); $i++ ) {
+                $result = @ldap_read($this->_connection, $entry['member'][$i], '(objectclass=*)');
+                $members = @ldap_get_entries($this->_connection, $result);
+
+                // Nested groups
+                $group_group_members = $this->list_group_members($entry['member'][$i]);
+                $group_members[] = array_filter(array_merge($group_group_members, $members));
+            }
+
+            return array_filter($group_members);
+        }
+
+        private function _list_group_uniquemember($dn, $entry) {
+            error_log("Called _list_group_uniquemember(" . $dn . ")");
+
+            // Use the member attributes to return an array of member ldap objects
+            // NOTE that the member attribute is supposed to contain a DN
+            $group_members = Array();
+            if (!isset($entry['uniquemember'])) {
+                return $group_members;
+            }
+
+            for ( $i = 0; $i < (count($entry['uniquemember'])-1); $i++ ) {
+                $result = @ldap_read($this->_connection, $entry['uniquemember'][$i], '(objectclass=*)');
+                $members = @ldap_get_entries($this->_connection, $result);
+
+                // Nested groups
+                $group_group_members = $this->list_group_members($entry['uniquemember'][$i]);
+
+                $group_members[] = array_filter(array_merge($group_group_members, $members));
+            }
+
+            return $group_members;
+        }
+
+        private function _list_group_memberurl($dn, $entry) {
+            error_log("Called _list_group_memberurl(" . $dn . ")");
+
+            // Use the member attributes to return an array of member ldap objects
+            // NOTE that the member attribute is supposed to contain a DN
+
+            $group_members = Array();
+
+            if (is_array($entry['memberurl'])) {
+                foreach ($entry['memberurl'] as $url) {
+                    $ldap_uri_components = $this->_parse_memberurl($url);
+                    $entries = $this->normalize_result($this->search($ldap_uri_components[3], $ldap_uri_components[6]));
+                    foreach ($entries as $entry_dn => $_entry) {
+                        error_log("Found " . $entry_dn);
+                        $group_group_members = $this->_list_group_members($entry_dn);
+
+                        if ($group_group_members) {
+                            $group_members = array_merge($group_members, $group_group_members);
+                        } else {
+                            $group_members[] = $entry_dn;
+                        }
+                    }
+                }
+            } else {
+                $ldap_uri_components = $this->_parse_memberurl($entry['memberurl']);
+                $entries = $this->normalize_result($this->search($ldap_uri_components[3], $ldap_uri_components[6]));
+
+                foreach ($entries as $entry_dn => $_entry) {
+                    error_log("Found " . $entry_dn);
+                    $group_group_members = $this->_list_group_members($entry_dn);
+
+                    if ($group_group_members) {
+                        $group_members = array_merge($group_members, $group_group_members);
+                    } else {
+                        $group_members[] = $entry_dn;
+                    }
+                }
+            }
+
+            return array_filter($group_members);
+        }
+
+        private function _parse_memberurl($url) {
+            error_log("Parsing URL: " . $url);
+            preg_match('/(.*):\/\/(.*)\/(.*)\?(.*)\?(.*)\?(.*)/', $url, $matches);
+            return $matches;
+
+        }
+
     }
 ?>
-

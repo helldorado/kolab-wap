@@ -130,6 +130,14 @@
             }
         }
 
+        public function group_info($groupdata) {
+            return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata));
+        }
+
+        public function group_members_list($groupdata) {
+            return $this->_auth[$_SESSION['user']->get_domain()]->group_members_list($groupdata);
+        }
+
         public function list_domains() {
             // TODO: Consider a normal user does not have privileges on
             // the base_dn where domain names and configuration is stored.
