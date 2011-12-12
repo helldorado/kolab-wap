@@ -46,7 +46,7 @@
                 $this->_authenticated = TRUE;
                 $this->username = $username;
                 $this->password = $password;
-                $this->domain = $auth->domain;
+                $this->domain = $this->auth->domain;
                 $this->_groups = $this->groups();
             }
 
@@ -77,7 +77,7 @@
 
             $entry = $this->auth->normalize_result(
                     $this->auth->search(
-                            $this->auth->_get_user_dn($this->username)
+                            $this->auth->user_find_by_attribute(Array('mail' => $this->username))
                         )
                 );
 
