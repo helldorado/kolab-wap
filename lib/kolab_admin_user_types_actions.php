@@ -9,7 +9,6 @@
         {
             return array(
                     'list' => 'l',
-                    'info' => 'r',
                 );
         }
 
