@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{$pagetitle}</title>
+    <link rel="stylesheet" href="{$skin_path}style.css" />
+    <link rel="shortcut icon" type="image/png" href="{$skin_path}images/favicon.png" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/kolab_admin.js"></script>
+</head>
+<body>
+    <div id="logo"></div>
+    <div id="topmenu">
+        <span class="login">{$user.fullname}</span>
+        <span class="logout link icon" title="{t}Logout{/t}" onclick="kadm.main_logout()"></span>
+    </div>
+    <div id="navigation">{$main_menu}</div>
+    <div id="task_navigation">{$task_menu}</div>
+    <div id="content">{$content}</div>
+    <div id="footer">
+        <span id="request_time">{gentime}</span>
+    </div>
+</body>
+{$script}
+</html>
