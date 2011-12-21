@@ -5,6 +5,7 @@
         protected $menu = array(
             'user.default'  => 'menu.users',
             'group.default' => 'menu.groups',
+            'domain.default' => 'menu.domains',
             'about.default' => 'menu.about',
         );
 
