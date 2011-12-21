@@ -3,15 +3,6 @@
 
 class kolab_html
 {
-    const INPUT_NONE = 0;
-    const INPUT_TEXT = 1;
-    const INPUT_PASSWORD = 2;
-    const INPUT_TEXTAREA = 3;
-    const INPUT_CHECKBOX = 4;
-    const INPUT_RADIO = 5;
-    const INPUT_BUTTON = 6;
-    const INPUT_SUBMIT = 7;
-
     public static $common_attribs = array('id', 'class', 'style', 'title', 'align', 'dir');
     public static $event_attribs  = array('onclick', 'ondblclick', 'onmousedown', 'onmouseup',
         'onmouseover', 'onmousemove', 'onmouseout');
@@ -28,59 +19,6 @@ class kolab_html
     public static $a_attribs      = array('href', 'name', 'rel', 'tabindex', 'target');
     public static $form_attribs   = array('action', 'enctype', 'method', 'name', 'target');
     public static $label_attribs  = array('for');
-
-
-    public static function form_table($attribs = array(), $definition = array(), $data = array())
-    {
-        $content = '';
-        if (!empty($definition) && is_array($definition)) {
-            foreach ($definition as $set) {
-                $set_content = '';
-                if (isset($set['fields'])) {
-                    $fields = $set['fields'];
-                }
-                else {
-                    $fields = array($set);
-                }
-
-                $rows = array();
-
-                foreach ($fields as $fieldname => $field) {
-                    $cells = array(
-                        0 => array(
-                            'class' => 'label',
-                            'body' => self::escape($field['label']),
-                        ),
-                        1 => array(
-                            'class' => 'value',
-                            'body' => self::form_element($field),
-                        ),
-                        2 => array(
-                            'class' => 'description',
-                            'body' => $field['description'],
-                        ),
-                    );
-                    $rows[] = array('cells' => $cells);
-                }
-
-                if (!empty($rows)) {
-                    $set_content = self::table(array('body' => $rows, 'class' => 'form'));
-                }
-
-                if ($set_content) {
-                    if (isset($set['fields'])) {
-                        $content .= "\n" . self::fieldset($set, $set_content);
-                    }
-                    else {
-                        $content .= "\n" . $set_content;
-                    }
-                }
-            }
-        }
-
-//        foreach ($definition as $
-        return self::form($attribs, $content);
-    }
 
 
     public static function table($attribs = array(), $content = null)
@@ -145,40 +83,10 @@ class kolab_html
         if (isset($attribs['body'])) {
             $cell .= $attribs['body'];
         }
-        else if (!empty($attribs['element'])) {
-            $cell .= self::form_element($attribs['element']);
-        }
 
         $cell .= "</$tag>";
 
         return $cell;
-    }
-
-    public static function form_element($attribs = array())
-    {
-        $type = isset($attribs['type']) ? $attribs['type'] : 0;
-
-        switch ($type) {
-        case self::INPUT_TEXT:
-        case self::INPUT_PASSWORD:
-            $attribs['type'] = $type == self::INPUT_PASSWORD ? 'password' : 'text';
-            $content = self::input($attribs);
-            break;
-        case self::INPUT_TEXTAREA:
-            $content = self::textarea($attribs);
-            break;
-        case INPUT_NONE:
-        default:
-            if (is_array($attribs)) {
-                $content = isset($attribs['value']) ? $attribs['value'] : '';
-            }
-            else {
-                $content = $attribs;
-            }
-            $content = self::escape($content);
-        }
-
-        return $content;
     }
 
     public static function input($attribs = array())
@@ -189,18 +97,22 @@ class kolab_html
         return sprintf('<input%s />', self::attrib_string($attribs, $elem_attribs));
     }
 
-    public static function textarea($attribs = array())
+    public static function textarea($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$textarea_attribs, self::$input_event_attribs,
             self::$common_attribs, self::$event_attribs);
 
-        $value = isset($attribs['value']) ? self::escape($attribs['value']) : '';
+        $content = isset($attribs['value']) ? $attribs['value'] : '';
+
+        if ($escape) {
+            $content = self::escape($content);
+        }
 
         return sprintf('<textarea%s>%s</textarea>',
-            self::attrib_string($attribs, $elem_attribs), $value);
+            self::attrib_string($attribs, $elem_attribs), $content);
     }
 
-    public static function select($attribs = array())
+    public static function select($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$select_attribs, self::$input_event_attribs,
             self::$common_attribs, self::$event_attribs);
@@ -208,7 +120,7 @@ class kolab_html
         $content = array();
         if (!empty($attribs['options']) && is_array($attribs['options'])) {
             foreach ($attribs['options'] as $option) {
-                $content[] = self::option($option);
+                $content[] = self::option($option, $escape);
             }
         }
 
@@ -216,52 +128,86 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), implode("\n", $content));
     }
 
-    public static function option($attribs = array())
+    public static function option($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$option_attribs, self::$common_attribs);
 
-        $content = isset($attribs['content']) ? self::escape($attribs['content']) : '';
+        $content = isset($attribs['content']) ? $attribs['content'] : '';
+
+        if ($escape) {
+            $content = self::escape($content);
+        }
 
         return sprintf('<textarea%s>%s</textarea>',
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
-    public static function fieldset($attribs = array(), $content = null)
+    public static function fieldset($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$common_attribs);
-        $legend       = isset($attribs['legend']) ? $attribs['legend'] : $attribs['label'];
+
+        $legend  = isset($attribs['legend']) ? $attribs['legend'] : $attribs['label'];
+        $content = isset($attribs['content']) ? $attribs['content'] : '';
+
+        if ($escape) {
+            $legend = self::escape($legend);
+        }
 
         return sprintf('<fieldset%s><legend>%s</legend>%s</fieldset>',
             self::attrib_string($attribs, $elem_attribs), $legend, $content);
     }
 
-    public static function a($attribs = array(), $content = null)
+    public static function a($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$a_attribs, self::$common_attribs, self::$event_attribs);
 
+        $content = isset($attribs['content']) ? $attribs['content'] : '';
+
+        if ($escape) {
+            $content = self::escape($content);
+        }
+
         return sprintf('<a%s>%s</a>',
-            self::attrib_string($attribs, $elem_attribs), self::escape($content));
+            self::attrib_string($attribs, $elem_attribs), $content);
     }
 
-    public static function label($attribs = array(), $content = null)
+    public static function label($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$label_attribs, self::$common_attribs);
 
+        $content = isset($attribs['content']) ? $attribs['content'] : '';
+
+        if ($escape) {
+            $content = self::escape($content);
+        }
+
         return sprintf('<label%s>%s</label>',
-            self::attrib_string($attribs, $elem_attribs), self::escape($content));
+            self::attrib_string($attribs, $elem_attribs), $content);
     }
 
-    public static function div($attribs = array(), $content = null)
+    public static function div($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$common_attribs, self::$event_attribs);
+
+        $content = isset($attribs['content']) ? $attribs['content'] : '';
+
+        if ($escape) {
+            $content = self::escape($content);
+        }
 
         return sprintf('<div%s>%s</div>',
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
-    public static function span($attribs = array(), $content = null)
+    public static function span($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$common_attribs, self::$event_attribs);
+
+        $content = isset($attribs['content']) ? $attribs['content'] : '';
+
+        if ($escape) {
+            $content = self::escape($content);
+        }
 
         return sprintf('<span%s>%s</span>',
             self::attrib_string($attribs, $elem_attribs), $content);
@@ -325,6 +271,6 @@ class kolab_html
 
     public static function escape($value)
     {
-        return htmlspecialchars($value, null, 'UTF-8');
+        return htmlspecialchars($value, null, KADM_CHARSET);
     }
 }

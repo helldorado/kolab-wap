@@ -61,37 +61,42 @@ class kolab_admin_task_user extends kolab_admin_task
         $id     = $this->get_input('id', 'POST');
         $result = $this->api->get('user.info', array('user' => $id));
 
-        $user = $result->get($id);
-
-        $definition = array(
+        $user   = $result->get($id);
+        $form   = new kolab_form();
+        $fields = array(
             'personal' => array(
-                'label' => $this->translate('user.personal'),
+                'label' => 'user.personal',
                 'fields' => array(
                     'givenname' => array(
-                        'label' => $this->translate('user.givenname'),
+                        'label' => 'user.givenname',
                         'description' => '',
-                        'type' => '',
-                        'value' => $user['givenname'],
                     ),
                     'sn' => array(
-                        'label' => $this->translate('user.surname'),
+                        'label' => 'user.surname',
                         'description' => '',
-                        'type' => '',
-                        'value' => $user['sn'],
                     ),
                     'mail' => array(
-                        'label' => $this->translate('user.email'),
-                        'description' => 'sdf sdf sd fs  sdf s dfsdfsdf sdfsdfsfsfs df',
-                        'type' => '',
-                        'value' => $user['mail'],
+                        'label' => 'user.email',
+                        'description' => 'user.email.desc',
                     ),
                 ),
             ),
         );
 
-        $form = kolab_html::form_table(null, $definition);
 
-        $this->output->set_object('content', $form);
+        foreach ($fields as $section_idx => $section) {
+            $form->add_section($section_idx, kolab_html::escape($this->translate($section['label'])));
+            foreach ($section['fields'] as $idx => $field) {
+                $field['section']     = $section_idx;
+                $field['value']       = kolab_html::escape($user[$idx]);
+                $field['label']       = kolab_html::escape($this->translate($field['label']));
+                $field['description'] = kolab_html::escape($this->translate($field['description']));
+
+                $form->add_element($field);
+            }
+        }
+
+        $this->output->set_object('content', $form->output());
     }
 
     public function user_add()

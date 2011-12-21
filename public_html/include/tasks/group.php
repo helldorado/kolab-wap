@@ -31,8 +31,8 @@ class kolab_admin_task_group extends kolab_admin_task
         }
 
         $result = '<ul id="userlist">' . implode("\n", $result) . '</ul>';
-        $this->output->set_object('content', $result);
 */
+        $this->output->set_object('content', $result);
     }
 
     public function action_info()
