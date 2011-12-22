@@ -280,4 +280,8 @@ class kolab_admin_client_task
         return '<ul>' . implode("\n", $menu) . '</ul>';
     }
 
+    public function watermark($name)
+    {
+        $this->output->command('set_watermark', $name);
+    }
 }
