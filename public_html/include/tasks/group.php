@@ -6,7 +6,6 @@ class kolab_admin_task_group extends kolab_admin_task
 
     protected $menu = array(
         'add'  => 'group.add',
-        'list' => 'group.list',
     );
 
     public function action_default()

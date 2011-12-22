@@ -15,8 +15,11 @@ class kolab_admin_task_main extends kolab_admin_task
         // assign token
         $this->output->set_env('token', $_SESSION['user']['token']);
 
+        // add watermark content
+        $this->output->set_env('watermark', $this->output->get_template('watermark'));
+
         // assign default set of translations
-        $this->output->add_translation('loading', 'servererror');
+        $this->output->add_translation('loading', 'servererror', 'search');
 
         $this->output->assign('main_menu', $this->menu());
         $this->output->assign('user', $_SESSION['user']);

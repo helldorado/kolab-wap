@@ -88,10 +88,6 @@ class kolab_form
                 'class' => 'value',
                 'body' => $this->get_element($element),
             ),
-            2 => array(
-                'class' => 'description',
-                'body' => $element['description'],
-            ),
         );
 
         return array('cells' => $cells);
@@ -104,7 +100,16 @@ class kolab_form
         switch ($type) {
         case self::INPUT_TEXT:
         case self::INPUT_PASSWORD:
+            // INPUT type
             $attribs['type'] = $type == self::INPUT_PASSWORD ? 'password' : 'text';
+            // INPUT size
+            if (empty($attribs['size'])) {
+                $attribs['size'] = 40;
+                if (!empty($attribs['maxlength'])) {
+                    $attribs['size'] = $attribs['maxlength'] > 10 ? 40 : 10;
+                }
+            }
+
             $content = kolab_html::input($attribs);
             break;
 

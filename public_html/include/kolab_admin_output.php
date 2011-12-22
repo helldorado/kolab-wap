@@ -135,13 +135,20 @@ class kolab_admin_output
     public function set_object($name, $content, $is_template = false)
     {
         if ($is_template) {
-            ob_start();
-            $this->send_tpl($content);
-            $content = ob_get_contents();
-            ob_end_clean();
+            $content = $this->get_template($content);
         }
 
         $this->objects[$name] = $content;
+    }
+
+    public function get_template($name)
+    {
+        ob_start();
+        $this->send_tpl($name);
+        $content = ob_get_contents();
+        ob_end_clean();
+
+        return $content;
     }
 
     public function command()
