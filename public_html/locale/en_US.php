@@ -43,6 +43,7 @@ $LANG['user.org'] = 'Organization';
 $LANG['user.orgunit'] = 'Organizational Unit';
 $LANG['user.quota'] = 'Quota';
 $LANG['user.fbinterval'] = 'Free-Busy interval';
+$LANG['user.type'] = 'Account type';
 
 $LANG['domain.add'] = 'Add Domain';
 

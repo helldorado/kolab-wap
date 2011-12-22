@@ -101,6 +101,14 @@ class kolab_admin_task_user extends kolab_admin_task
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
                     ),
+                    'accttype' => array(
+                        'label' => 'user.type',
+                        'description' => 'user.type.desc',
+                        'type'        => kolab_form::INPUT_SELECT,
+                        'options'     => array(
+                            'aaa', 'bbb'
+                        ),
+                    ),
                 ),
             ),
             'config' => array(
@@ -195,6 +203,10 @@ class kolab_admin_task_user extends kolab_admin_task
                 $field['value']       = kolab_html::escape($user[$idx]);
                 $field['label']       = kolab_html::escape($this->translate($field['label']));
                 $field['description'] = kolab_html::escape($this->translate($field['description']));
+
+                if (!empty($field['options'])) {
+                    $field['options'] = array_map(array($this, 'translate'), $field['options']);
+                }
 
                 $form->add_element($field);
             }

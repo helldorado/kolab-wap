@@ -120,6 +120,9 @@ class kolab_html
         $content = array();
         if (!empty($attribs['options']) && is_array($attribs['options'])) {
             foreach ($attribs['options'] as $option) {
+                if (!empty($attribs['value']) && $attribs['value'] == $option['value']) {
+                    $option['selected'] = true;
+                }
                 $content[] = self::option($option, $escape);
             }
         }
@@ -138,7 +141,7 @@ class kolab_html
             $content = self::escape($content);
         }
 
-        return sprintf('<textarea%s>%s</textarea>',
+        return sprintf('<option%s>%s</option>',
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 

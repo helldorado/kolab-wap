@@ -10,6 +10,7 @@ class kolab_form
     const INPUT_RADIO = 5;
     const INPUT_BUTTON = 6;
     const INPUT_SUBMIT = 7;
+    const INPUT_SELECT = 8;
 
     private $attribs  = array();
     private $elements = array();
@@ -114,7 +115,18 @@ class kolab_form
             break;
 
         case self::INPUT_TEXTAREA:
-            $content = kolab_html::textarea($attribs);
+            $content = kolab_html::textarea($attribs, true);
+            break;
+
+        case self::INPUT_SELECT:
+            foreach ($attribs['options'] as $idx => $opt) {
+                $attribs['options'][$idx] = array(
+                    'value'   => $idx,
+                    'content' => $opt,
+                );
+            }
+
+            $content = kolab_html::select($attribs);
             break;
 
         default:
