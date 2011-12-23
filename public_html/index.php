@@ -1,32 +1,23 @@
 <?php
 
-/*
- * Kolab Admin Panel
- *
- * (C) Copyright 2011 Kolab Systems AG
- *
- */
+    require_once(dirname(__FILE__) . "/../lib/functions.php");
 
-// application constants
-define('KADM_START', microtime(true));
-define('KADM_VERSION', '0.1');
-define('KADM_CHARSET', 'utf-8');
-define('INSTALL_PATH', dirname($_SERVER['SCRIPT_FILENAME']).'/');
+    // starting task
+    $task = kolab_utils::get_input('task', 'GET');
 
-// environment initialization
-require_once INSTALL_PATH . '/include/init.php';
+    console(__FILE__.":".__LINE__.": " . $task);
 
-// starting task
-$task = kolab_utils::get_input('task', 'GET');
+    if (!$task) {
+        $task = 'main';
+    }
 
-if (!$task) {
-    $task = 'main';
-}
+    console(__FILE__.":".__LINE__.": " . $task);
 
-$class = "kolab_admin_task_$task";
+    $class = "kolab_admin_client_task_$task";
 
-$KADM = new $class;
+    $KADM = new $class;
 
-// run actions and send output
-$KADM->run();
-$KADM->send();
+    // run actions and send output
+    $KADM->run();
+    $KADM->send();
+?>
