@@ -11,22 +11,40 @@ class kolab_form
     const INPUT_BUTTON = 6;
     const INPUT_SUBMIT = 7;
     const INPUT_SELECT = 8;
+    const INPUT_HIDDEN = 9;
 
     private $attribs  = array();
     private $elements = array();
     private $sections = array();
 
 
+    /**
+     * Class constructor.
+     *
+     * @param array $attribs  Form attributes
+     */
     public function __construct($attribs = array())
     {
         $this->attribs = $attribs;
     }
 
+    /**
+     * Adds form section definition.
+     *
+     * @param string $index   Section internal index
+     * @param string $legend  Section label (fieldset's legend)
+     */
     public function add_section($index, $legend)
     {
         $this->sections[$index] = $legend;
     }
 
+    /**
+     * Adds form element definition.
+     *
+     * @param array  $attribs  Element attributes
+     * @param string $section  Section index
+     */
     public function add_element($attribs, $section = null)
     {
         if (!empty($section)) {
@@ -36,6 +54,11 @@ class kolab_form
         $this->elements[] = $attribs;
     }
 
+    /**
+     * Returns HTML output of the form.
+     *
+     * @return string HTML output
+     */
     public function output()
     {
         $content = '';
@@ -91,7 +114,13 @@ class kolab_form
             ),
         );
 
-        return array('cells' => $cells);
+        $attrib = array('cells' => $cells);
+
+        if ($element['required']) {
+            $attrib['class'] = 'required';
+        }
+
+        return $attrib;
     }
 
     private function get_element($attribs)
@@ -114,7 +143,19 @@ class kolab_form
             $content = kolab_html::input($attribs);
             break;
 
+        case self::INPUT_HIDDEN:
+            $attribs['type'] = 'hidden';
+            $content = kolab_html::input($attribs);
+            break;
+
         case self::INPUT_TEXTAREA:
+            if (empty($attribs['rows'])) {
+                $attribs['rows'] = 5;
+            }
+            if (empty($attribs['cols'])) {
+                $attribs['cols'] = 50;
+            }
+
             $content = kolab_html::textarea($attribs, true);
             break;
 
@@ -136,6 +177,10 @@ class kolab_form
             else {
                 $content = $attribs;
             }
+        }
+
+        if (!empty($attribs['suffix'])) {
+            $content .= ' ' . $attribs['suffix'];
         }
 
         return $content;

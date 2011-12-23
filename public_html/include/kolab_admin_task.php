@@ -17,9 +17,12 @@ class kolab_admin_task
     protected $page_title = 'Kolab Admin Panel';
     protected $menu = array();
 
-    static $translation = array();
+    protected static $translation = array();
 
 
+    /**
+     * Class constructor.
+     */
     public function __construct()
     {
         $this->config_init();
@@ -31,6 +34,9 @@ class kolab_admin_task
         $this->auth();
     }
 
+    /**
+     * Localization initialization.
+     */
     private function locale_init()
     {
         $aliases = array(
@@ -78,6 +84,9 @@ class kolab_admin_task
         self::$translation = $LANG;
     }
 
+    /**
+     * Configuration initialization.
+     */
     private function config_init()
     {
         include_once INSTALL_PATH . '/config/config.php';
@@ -85,22 +94,31 @@ class kolab_admin_task
         $this->config = $CONFIG;
     }
 
+    /**
+     * Output initialization.
+     */
     private function output_init()
     {
         $skin = $this->config_get('skin', 'default');
         $this->output = new kolab_admin_output($skin);
     }
 
+    /**
+     * API initialization
+     */
     private function api_init()
     {
         $url = $this->config_get('api_url', '');
         $this->api = new kolab_admin_api($url);
     }
 
+    /**
+     * User authentication (and authorization).
+     */
     private function auth()
     {
         if (isset($_POST['login'])) {
-            $login  = $this->get_input('login', 'POST');
+            $login = $this->get_input('login', 'POST');
 
             if ($login['username']) {
                 $result = $this->api->login($login['username'], $login['password']);
@@ -132,24 +150,9 @@ class kolab_admin_task
 
     }
 
-    private function action_logout()
-    {
-        if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token'])) {
-            $this->api->logout();
-        }
-        unset($_SESSION['user']);
-
-        if ($this->output->is_ajax()) {
-            $this->output->command('main_logout');
-        }
-        else {
-            $this->output->assign('login', $this->get_input('login', 'POST'));
-            $this->output->add_translation('loginerror');
-            $this->output->send('login');
-        }
-        exit;
-    }
-
+    /**
+     * Main execution.
+     */
     public function run()
     {
         // Initialize locales
@@ -175,9 +178,13 @@ class kolab_admin_task
         }
     }
 
+    /**
+     * Security checks and input validation.
+     */
     public function input_checks()
     {
         $ajax = $this->output->is_ajax();
+
         // Check AJAX-only tasks
         if ($this->ajax_only && !$ajax) {
             $this->raise_error(500, 'Invalid request type!');
@@ -192,9 +199,46 @@ class kolab_admin_task
         }
     }
 
-    public function raise_error($code, $msg)
+    /**
+     * Logout action.
+     */
+    private function action_logout()
     {
-        // @TODO: log
+        if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token'])) {
+            $this->api->logout();
+        }
+        unset($_SESSION['user']);
+
+        if ($this->output->is_ajax()) {
+            $this->output->command('main_logout');
+        }
+        else {
+            $this->output->assign('login', $this->get_input('login', 'POST'));
+            $this->output->add_translation('loginerror');
+            $this->output->send('login');
+        }
+        exit;
+    }
+
+    /**
+     * Error action (with error logging).
+     *
+     * @param int    $code  Error code
+     * @param string $msg   Error message
+     * @param array  $args  Optional arguments (type, file, line)
+     */
+    public function raise_error($code, $msg, $type = 'PHP')
+    {
+        $log_entry = sprintf("%s Error: %s%s (%s)",
+            isset($args['type']) ? $args['type'] : 'PHP',
+            $msg,
+            isset($arg_arr['file']) ? sprintf(' in %s on line %d', $args['file'], $args['line']) : '',
+            $_SERVER['REQUEST_METHOD']);
+
+        if (!write_log('errors', $log_entry)) {
+            // send error to PHPs error handler if write_log() didn't succeed
+            trigger_error($msg);
+        }
 
         if ($this->output->is_ajax()) {
             header("HTTP/1.0 $code $msg");
@@ -207,6 +251,9 @@ class kolab_admin_task
         exit;
     }
 
+    /**
+     * Output sending.
+     */
     public function send()
     {
         $template = $this->get_task();
@@ -219,6 +266,11 @@ class kolab_admin_task
         exit;
     }
 
+    /**
+     * Returns name of the current task.
+     *
+     * @return string Task name
+     */
     public function get_task()
     {
         $class_name = get_class($this);
@@ -228,11 +280,24 @@ class kolab_admin_task
         }
     }
 
+    /**
+     * Returns configuration option value.
+     *
+     * @param string $name      Option name
+     * @param mixed  $fallback  Default value
+     *
+     * @return mixed Option value
+     */
     public function config_get($name, $fallback = null)
     {
         return isset($this->config[$name]) ? $this->config[$name] : $fallback;
     }
 
+    /**
+     * Returns translation of defined label/message.
+     *
+     * @return string Translated string.
+     */
     public static function translate()
     {
         $args = func_get_args();
@@ -257,12 +322,37 @@ class kolab_admin_task
         return $content;
     }
 
+    /**
+     * Returns input parameter value.
+     *
+     * @param string $name       Parameter name
+     * @param string $type       Parameter type (GET|POST|NULL)
+     * @param bool   $allow_html Enable to strip invalid/unsecure content
+     *
+     * @see kolab_utils::get_input
+     * @return mixed Input value.
+     */
     public static function get_input($name, $type = null, $allow_html = false)
     {
-        return kolab_utils::get_input($name, $type = null, $allow_html = false);
+        if ($type == 'GET') {
+            $type = kolab_utils::REQUEST_GET;
+        }
+        else if ($type == 'POST') {
+            $type = kolab_utils::REQUEST_POST;
+        }
+        else {
+            $type = kolab_utils::REQUEST_ANY;
+        }
+
+        return kolab_utils::get_input($name, $type, $allow_html);
     }
 
-    public function menu()
+    /**
+     * Returns task menu output.
+     *
+     * @return string HTML output
+     */
+    protected function menu()
     {
         if (empty($this->menu)) {
             return '';
@@ -288,7 +378,10 @@ class kolab_admin_task
         return '<ul>' . implode("\n", $menu) . '</ul>';
     }
 
-    public function watermark($name)
+    /**
+     * Adds watermark page definition into main page.
+     */
+    protected function watermark($name)
     {
         $this->output->command('set_watermark', $name);
     }

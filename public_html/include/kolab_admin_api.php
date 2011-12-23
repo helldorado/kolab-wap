@@ -13,7 +13,6 @@ class kolab_admin_api
      */
     private $base_url;
 
-
     const STATUS_OK    = 0;
     const STATUS_ERROR = 1;
 
@@ -22,7 +21,7 @@ class kolab_admin_api
     /**
      * Class constructor.
      *
-     * @param string $base_url Base URL of Kolab API
+     * @param string $base_url Base URL of the Kolab API
      */
     public function __construct($base_url)
     {
@@ -41,6 +40,10 @@ class kolab_admin_api
     }
 
     /**
+     * Logs specified user into the API
+     *
+     * @param string $username User name
+     * @param string $password User password
      *
      * @return array Session user data (token, domain)
      */
@@ -61,6 +64,11 @@ class kolab_admin_api
         }
     }
 
+    /**
+     * Logs specified user out of the API
+     *
+     * @return bool True on success, False on failure
+     */
     public function logout()
     {
         $response = $this->get('system.quit');
@@ -68,16 +76,34 @@ class kolab_admin_api
         return $response->get_error_code() ? false : true;
     }
 
+    /**
+     * Sets session token value.
+     *
+     * @param string $token  Token string
+     */
     public function set_session_token($token)
     {
         $this->request->setHeader('X-Session-Token', $token);
     }
 
+    /**
+     * Gets capabilities of the API (according to logged in user).
+     *
+     * @return kolab_admin_api_result  Capabilities response
+     */
     public function get_capabilities()
     {
         $this->get('system.capabilities');
     }
 
+    /**
+     * API's GET request.
+     *
+     * @param string $action  Action name
+     * @param array  $args    Request arguments
+     *
+     * @return kolab_admin_api_result  Response
+     */
     public function get($action, $args = array())
     {
         $url = $this->build_url($action, $args);
@@ -87,6 +113,15 @@ class kolab_admin_api
         return $this->get_response($url);
     }
 
+    /**
+     * API's POST request.
+     *
+     * @param string $action    Action name
+     * @param array  $url_args  URL arguments
+     * @param array  $post      POST arguments
+     *
+     * @return kolab_admin_api_result  Response
+     */
     public function post($action, $url_args = array(), $post = array())
     {
         $url = $this->build_url($action, $url_args);

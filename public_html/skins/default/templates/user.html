@@ -1,8 +1,19 @@
-<div id="task_header">
+<div id="toc" class="user">
     <div id="search">
-        {t}search{/t}: <input type="text" id="search_input" name="search" value="" />
+        <div class="searchinput">
+            <input type="text" id="searchinput" name="search" value="{t}search{/t}" class="inactive" />
+            <span class="searchactions">
+                <span id="search-details" title="{t}search.criteria{/t}" onclick="search_details()"></span>
+                <span id="search-reset" title="{t}search.reset{/t}" onclick="search_reset()"></span>
+            </span>
+        </div>
+        <div class="searchdetails">
+            <fieldset>
+                <legend>{t}search.criteria{/t}</legend>
+                <label for="">{t}search.field{/t}</label>
+            </fieldset>
+        </div>
     </div>
+    <div id="userlist"></div>
 </div>
-<div id="task_content">
-
-</div>
+<div id="taskcontent" class="user"></div>

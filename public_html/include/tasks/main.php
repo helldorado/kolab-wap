@@ -5,7 +5,6 @@ class kolab_admin_task_main extends kolab_admin_task
     protected $menu = array(
         'user.default'   => 'menu.users',
         'group.default'  => 'menu.groups',
-        'domain.default' => 'menu.domains',
         'about.default'  => 'menu.about',
     );
 

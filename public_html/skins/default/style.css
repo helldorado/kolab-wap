@@ -24,6 +24,7 @@ textarea {
   border-radius: 3px;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
+  padding-left: 2px;
 }
 
 table.list {
@@ -77,9 +78,11 @@ fieldset {
   border-radius: 3px;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
+  margin-top: 10px;
 }
 
 legend {
+  padding-left: 0;
   color: #909090;
 }
 
@@ -88,8 +91,15 @@ table.form {
 }
 
 table.form td {
-  padding: 3px 5px;
-  background-color: #f0f0f0;
+  padding: 1px 5px;
+}
+
+table.form tr.required input {
+  background-color: #f0f9ff;
+}
+
+table.form tr.error input {
+  background-color: #f5e3e3;
 }
 
 td.label {
@@ -97,11 +107,6 @@ td.label {
   text-align: right;
   font-weight: bold;
   white-space: nowrap;
-}
-
-td.description {
-  color: #909090;
-  font-size: 10px;
 }
 
 /**** Common UI elements ****/
@@ -184,7 +189,7 @@ td.description {
   min-height: 400px;
   margin: 0 15px;
   padding: 10px;
-  background-color: #f5f5f5;/*#e4ecf2;#f0f5ff;*/
+  background-color: #f5f5f5;
   border: 1px solid #d0d0d0;
   border-radius: 3px;
   -moz-border-radius: 3px;
@@ -272,7 +277,111 @@ td.description {
   outline: none;
 }
 
+#taskcontent {
+  min-height: 380px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+}
+
+#toc {
+  min-height: 380px;
+  float: left;
+}
+
+#search {
+  padding: 7px;
+  margin-bottom: 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  background-color: #e0e0e0;
+}
+
+#searchinput {
+  border: none;
+  background-color: white;
+  margin-left: 2px;
+}
+
+#searchinput:focus {
+  outline: none;
+}
+
+.searchinput {
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  overflow: hidden;
+}
+
+.searchactions {
+  float: left;
+  padding: 1px;
+  margin-left: -1px;
+  margin-top: -1px;
+  height: 18px;
+  width: 37px;
+  border: 1px solid #d0d0d0;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  -moz-border-radius-topleft: 3px;
+  -moz-border-radius-bottomleft: 3px;
+  -webkit-border-top-left-radius: 3px;
+  -webkit-border-left-right-radius: 3px;
+}
+
+#search-reset,
+#search-details {
+  display: block;
+  float: left;
+  width: 18px;
+  height: 18px;
+  background: url(images/buttons.png) 0 0 no-repeat;
+}
+
+#search-reset:hover,
+#search-details:hover {
+  background-color: white;
+}
+
+#search-reset {
+  background-position: -1px 0;
+  border-left: 1px solid #e0e0e0;
+}
+
+#search-details {
+  background-position: -21px 0;
+}
+
+.searchdetails {
+  display: none;
+}
+
+#search fieldset {
+  margin: 0;
+  color: #909090;
+  margin-top: 5px;
+}
+
 /**** Common classes ****/
+
+.watermark {
+  padding-top: 40px;
+  text-align: center;
+  width: 100%;
+}
 
 .link {
   cursor: pointer;
@@ -283,6 +392,14 @@ td.description {
   height: 16px;
 }
 
+.inactive {
+  color: #d0d0d0;
+}
+
+td.label {
+  min-width: 120px;
+}
+
 /**** Login form elements ****/
 
 #login_form {
@@ -290,7 +407,7 @@ td.description {
   margin-top: 75px;
   padding: 20px;
   width: 330px;
-  background-color: #e8e8e8;/*#f0f4fd;*/
+  background-color: #e0e0e0;
   border: 1px solid #d0d0d0;
   border-radius: 3px;
   -moz-border-radius: 3px;
@@ -323,6 +440,14 @@ td.description {
 
 /**** User task elements ****/
 
-#task_content {
-  margin-top: 10px;
+#taskcontent.user {
+  margin-left: 275px;
+}
+
+#toc.user {
+  width: 265px;
+}
+
+#userlist table {
+  width: 100%;
 }
