@@ -25,7 +25,7 @@ class kolab_admin_client_task
      */
     public function __construct()
     {
-        $this->conf = Conf::get_instance();
+        $this->config_init();
         $this->output_init();
         $this->api_init();
 
@@ -58,12 +58,12 @@ class kolab_admin_client_task
             $lang = $lang[0];
             $lang = str_replace('-', '_', $lang);
 
-            if (file_exists(dirname(__FILE__) . "/locale/$lang.php")) {
+            if (file_exists(INSTALL_PATH . "/locale/$lang.php")) {
                 $language = $lang;
                 break;
             }
             if (isset($aliases[$lang]) && ($alias = $aliases[$lang])
-                && file_exists(dirname(__FILE__) . "/locale/$alias.php")
+                && file_exists(INSTALL_PATH . "/locale/$alias.php")
             ) {
                 $language = $alias;
                 break;
@@ -71,10 +71,10 @@ class kolab_admin_client_task
         }
 
         $LANG = array();
-        @include dirname(__FILE__) . '/locale/en_US.php';
+        @include INSTALL_PATH . '/locale/en_US.php';
 
         if (isset($language)) {
-            @include dirname(__FILE__) . "/locale/$language.php";
+            @include INSTALL_PATH . "/locale/$language.php";
             setlocale(LC_ALL, $language . '.utf8', 'en_US.utf8');
         }
         else {
@@ -84,26 +84,20 @@ class kolab_admin_client_task
         self::$translation = $LANG;
     }
 
-<<<<<<< HEAD:public_html/include/kolab_admin_task.php
     /**
      * Configuration initialization.
      */
     private function config_init()
     {
-        include_once INSTALL_PATH . '/config/config.php';
-
-        $this->config = $CONFIG;
+        $this->config = Conf::get_instance();
     }
 
     /**
      * Output initialization.
      */
-=======
->>>>>>> fa17922ff4fa6617851d6dc4147da0d8660ca2bc:lib/kolab_admin_client_task.php
     private function output_init()
     {
-        $skin = $this->conf->get('kolab_wap', 'skin');
-
+        $skin = $this->config_get('skin', 'default');
         $this->output = new kolab_admin_client_output($skin);
     }
 
@@ -112,7 +106,7 @@ class kolab_admin_client_task
      */
     private function api_init()
     {
-        $url = $this->conf->get('kolab_wap', 'api_url');
+        $url = $this->config_get('api_url', '');
         $this->api = new kolab_admin_api($url);
     }
 
@@ -127,23 +121,39 @@ class kolab_admin_client_task
             if ($login['username']) {
                 $result = $this->api->login($login['username'], $login['password']);
 
-                if ($result) {
-                    $this->api->set_session_token($result['token']);
+                if ($token = $result->get('session_token')) {
+                    $user = array('token' => $token, 'domain' => $result->get('domain'));
+
+                    $this->api->set_session_token($user['token']);
+
                     // find user settings
                     $res = $this->api->get('user.info', array('user' => $login['username']));
                     $res = $res->get();
 
                     if (is_array($res) && ($res = array_shift($res))) {
-                        $result['language'] = $res['preferredlanguage'];
-                        $result['fullname'] = $res['cn'];
+                        $user['language'] = $res['preferredlanguage'];
+                        $user['fullname'] = $res['cn'];
                     }
 
-                    $_SESSION['user'] = $result;
+                    // Initialize list of user types
+                    $this->user_types();
+
+                    $_SESSION['user'] = $user;
                     header('Location: ?');
                     die;
                 }
                 else {
-                    $this->output->command('display_message', 'loginerror', 'error');
+                    $code  = $result->get_error_code();
+                    $str   = $result->get_error_str();
+                    $label = 'loginerror';
+
+                    if ($code == kolab_admin_api::ERROR_INTERNAL
+                        || $code == kolab_admin_api::ERROR_CONNECTION
+                    ) {
+                        $label = 'internalerror';
+                        $this->raise_error(500, 'Login failed. ' . $str);
+                    }
+                    $this->output->command('display_message', $label, 'error');
                 }
             }
         }
@@ -191,18 +201,15 @@ class kolab_admin_client_task
 
         // Check AJAX-only tasks
         if ($this->ajax_only && !$ajax) {
-            $this->raise_error(500, 'Invalid request type!');
+            $this->raise_error(500, 'Invalid request type!', null, true);
         }
 
         // CSRF prevention
-        $token  = $ajax ? kolab_utils::get_request_header('X-KAP-Request') : $this->get_input('token');
+        $token  = $ajax ? kolab_utils::request_header('X-KAP-Request') : $this->get_input('token');
         $task   = $this->get_task();
 
-        console("Ajax:", $ajax, "Token:",  $token, "X-KAP-Request:", kolab_utils::get_request_header('X-KAP-Request'));
-        console("User session token:", $_SESSION['user']['token'], "Task:", $task);
-
         if ($task != 'main' && $token != $_SESSION['user']['token']) {
-            $this->raise_error(403, 'Invalid request data!');
+            $this->raise_error(403, 'Invalid request data!', null, true);
         }
     }
 
@@ -214,14 +221,14 @@ class kolab_admin_client_task
         if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token'])) {
             $this->api->logout();
         }
-        unset($_SESSION['user']);
+        $_SESSION = array();
 
         if ($this->output->is_ajax()) {
             $this->output->command('main_logout');
         }
         else {
             $this->output->assign('login', $this->get_input('login', 'POST'));
-            $this->output->add_translation('loginerror');
+            $this->output->add_translation('loginerror', 'internalerror');
             $this->output->send('login');
         }
         exit;
@@ -230,21 +237,25 @@ class kolab_admin_client_task
     /**
      * Error action (with error logging).
      *
-     * @param int    $code  Error code
-     * @param string $msg   Error message
-     * @param array  $args  Optional arguments (type, file, line)
+     * @param int    $code   Error code
+     * @param string $msg    Error message
+     * @param array  $args   Optional arguments (type, file, line)
+     * @param bool   $output Enable to send output and finish
      */
-    public function raise_error($code, $msg, $type = 'PHP')
+    public function raise_error($code, $msg, $args = array(), $output = false)
     {
-        $log_entry = sprintf("%s Error: %s%s (%s)",
+        $log_line = sprintf("%s Error: %s (%s)",
             isset($args['type']) ? $args['type'] : 'PHP',
-            $msg,
-            isset($arg_arr['file']) ? sprintf(' in %s on line %d', $args['file'], $args['line']) : '',
+            $msg . (isset($args['file']) ? sprintf(' in %s on line %d', $args['file'], $args['line']) : ''),
             $_SERVER['REQUEST_METHOD']);
 
-        if (!write_log('errors', $log_entry)) {
+        if (!write_log('errors', $log_line)) {
             // send error to PHPs error handler if write_log() didn't succeed
             trigger_error($msg);
+        }
+
+        if (!$output) {
+            return;
         }
 
         if ($this->output->is_ajax()) {
@@ -287,7 +298,6 @@ class kolab_admin_client_task
         }
     }
 
-<<<<<<< HEAD:public_html/include/kolab_admin_task.php
     /**
      * Returns configuration option value.
      *
@@ -298,7 +308,8 @@ class kolab_admin_client_task
      */
     public function config_get($name, $fallback = null)
     {
-        return isset($this->config[$name]) ? $this->config[$name] : $fallback;
+        $value = $this->config->get('kolab_wap', $name);
+        return $value !== null ? $value : $fallback;
     }
 
     /**
@@ -306,8 +317,6 @@ class kolab_admin_client_task
      *
      * @return string Translated string.
      */
-=======
->>>>>>> fa17922ff4fa6617851d6dc4147da0d8660ca2bc:lib/kolab_admin_client_task.php
     public static function translate()
     {
         $args = func_get_args();
@@ -388,15 +397,31 @@ class kolab_admin_client_task
         return '<ul>' . implode("\n", $menu) . '</ul>';
     }
 
-<<<<<<< HEAD:public_html/include/kolab_admin_task.php
     /**
      * Adds watermark page definition into main page.
      */
     protected function watermark($name)
-=======
-    public function watermark($name)
->>>>>>> fa17922ff4fa6617851d6dc4147da0d8660ca2bc:lib/kolab_admin_client_task.php
     {
         $this->output->command('set_watermark', $name);
     }
+
+    /**
+     * Returns list of user types.
+     *
+     * @param array List of user types
+     */
+    protected function user_types()
+    {
+        if (!isset($_SESSION['user_types'])) {
+            $result = $this->api->post('user_types.list');
+            $list   = $result->get();
+
+            if (is_array($list)) {
+                $_SESSION['user_types'] = $list;
+            }
+        }
+
+        return $_SESSION['user_types'];
+    }
+
 }

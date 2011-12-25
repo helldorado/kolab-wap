@@ -1,6 +1,5 @@
 <?php
 
-require_once("HTTP/Request2.php");
 
 class kolab_admin_api
 {
@@ -17,7 +16,8 @@ class kolab_admin_api
     const STATUS_OK    = 0;
     const STATUS_ERROR = 1;
 
-    const ERROR_INTERNAL = 500;
+    const ERROR_INTERNAL   = 100;
+    const ERROR_CONNECTION = 200;
 
     /**
      * Class constructor.
@@ -27,6 +27,14 @@ class kolab_admin_api
     public function __construct($base_url)
     {
         $this->base_url = $base_url;
+        $this->init();
+    }
+
+    /**
+     * Initializes HTTP Request object.
+     */
+    public function init()
+    {
         $this->request = new HTTP_Request2();
     }
 
@@ -36,7 +44,7 @@ class kolab_admin_api
      * @param string $username User name
      * @param string $password User password
      *
-     * @return array Session user data (token, domain)
+     * @return kolab_admin_api_result Request response
      */
     public function login($username, $password)
     {
@@ -47,12 +55,7 @@ class kolab_admin_api
 
         $response = $this->post('system.authenticate', null, $query);
 
-        if ($token = $response->get('session_token')) {
-            return array(
-                'token'  => $token,
-                'domain' => $response->get('domain'),
-            );
-        }
+        return $response;
     }
 
     /**
@@ -74,7 +77,6 @@ class kolab_admin_api
      */
     public function set_session_token($token)
     {
-        console("Setting X-Session-Token header to: " . $token);
         $this->request->setHeader('X-Session-Token', $token);
     }
 
@@ -162,7 +164,7 @@ class kolab_admin_api
         }
         catch (Exception $e) {
             return new kolab_admin_api_result(null,
-                self::ERROR_INTERNAL, $e->getMessage());
+                self::ERROR_CONNECTION, $e->getMessage());
         }
 
         try {
@@ -173,14 +175,13 @@ class kolab_admin_api
                 self::ERROR_INTERNAL, $e->getMessage());
         }
 
-//print_r($body);
         $body     = @json_decode($body, true);
         $err_code = null;
         $err_str  = null;
 
         if (is_array($body) && (empty($body['status']) || $body['status'] != 'OK')) {
-            $err_code = !empty($data['code']) ? $data['code'] : self::ERROR_INTERNAL;
-            $err_str  = !empty($data['reason']) ? $data['reason'] : 'Unknown error';
+            $err_code = !empty($body['code']) ? $body['code'] : self::ERROR_INTERNAL;
+            $err_str  = !empty($body['reason']) ? $body['reason'] : 'Unknown error';
         }
         else if (!is_array($body)) {
             $err_code = self::ERROR_INTERNAL;
@@ -189,4 +190,5 @@ class kolab_admin_api
 
         return new kolab_admin_api_result($body, $err_code, $err_str);
     }
+
 }

@@ -119,13 +119,16 @@ class kolab_html
 
         $content = array();
         if (!empty($attribs['options']) && is_array($attribs['options'])) {
-            foreach ($attribs['options'] as $option) {
-<<<<<<< HEAD:public_html/include/kolab_html.php
+            foreach ($attribs['options'] as $idx => $option) {
+                if (!is_array($option)) {
+                    $option = array('content' => $option);
+                }
+                if (empty($option['value'])) {
+                    $option['value'] = $idx;
+                }
                 if (!empty($attribs['value']) && $attribs['value'] == $option['value']) {
                     $option['selected'] = true;
                 }
-=======
->>>>>>> fa17922ff4fa6617851d6dc4147da0d8660ca2bc:lib/kolab_html.php
                 $content[] = self::option($option, $escape);
             }
         }
@@ -139,13 +142,6 @@ class kolab_html
         $elem_attribs = array_merge(self::$option_attribs, self::$common_attribs);
 
         $content = isset($attribs['content']) ? $attribs['content'] : '';
-<<<<<<< HEAD:public_html/include/kolab_html.php
-=======
-
-        if ($escape) {
-            $content = self::escape($content);
-        }
->>>>>>> fa17922ff4fa6617851d6dc4147da0d8660ca2bc:lib/kolab_html.php
 
         if ($escape) {
             $content = self::escape($content);

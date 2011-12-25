@@ -23,12 +23,12 @@ class kolab_admin_api_result
 
     public function get_error_code()
     {
-        $this->error_code;
+        return $this->error_code;
     }
 
     public function get_error_str()
     {
-        $this->error_str;
+        return $this->error_str;
     }
 
     public function get($name = null)

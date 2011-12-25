@@ -20,9 +20,9 @@ class kolab_admin_client_output
         require_once 'Smarty/Smarty.class.php';
 
         $SMARTY = new Smarty;
+
         $SMARTY->template_dir = 'skins/' . $this->skin . '/templates';
-        $SMARTY->compile_dir  = 'cache';
-        $SMARTY->plugins_dir  = dirname(__FILE__) . '/Smarty/plugins/';
+        $SMARTY->compile_dir  = INSTALL_PATH . '/../cache';
         $SMARTY->debugging    = false;
 
         $this->tpl = $SMARTY;

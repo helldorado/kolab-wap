@@ -1,23 +1,26 @@
 <?php
 
-    require_once(dirname(__FILE__) . "/../lib/functions.php");
+/*
+ * Kolab Admin Panel
+ *
+ * (C) Copyright 2011 Kolab Systems AG
+ *
+ */
 
-    // starting task
-    $task = kolab_utils::get_input('task', 'GET');
+// environment initialization
+require_once '../lib/functions.php';
 
-    console(__FILE__.":".__LINE__.": " . $task);
+// starting task
+$task = kolab_utils::get_input('task', kolab_utils::REQUEST_GET);
 
-    if (!$task) {
-        $task = 'main';
-    }
+if (!$task) {
+    $task = 'main';
+}
 
-    console(__FILE__.":".__LINE__.": " . $task);
+$class = "kolab_admin_client_task_$task";
 
-    $class = "kolab_admin_client_task_$task";
+$KADM = new $class;
 
-    $KADM = new $class;
-
-    // run actions and send output
-    $KADM->run();
-    $KADM->send();
-?>
+// run actions and send output
+$KADM->run();
+$KADM->send();

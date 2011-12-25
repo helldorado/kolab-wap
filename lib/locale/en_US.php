@@ -5,6 +5,8 @@ $LANG['password'] = 'Password';
 $LANG['loading'] = 'Loading...';
 $LANG['error'] = 'Error';
 $LANG['servererror'] = 'Server Error!';
+$LANG['loginerror'] = 'Incorrect username or password!';
+$LANG['internalerror'] = 'Internal system error!';
 
 $LANG['search'] = 'Search';
 $LANG['search.criteria'] = 'Search criteria';
@@ -62,4 +64,3 @@ $LANG['group.add'] = 'Add Group';
 $LANG['MB'] = 'MB';
 $LANG['days'] = 'days';
 
-$LANG['loginerror'] = 'Incorrect username or password!';
