@@ -160,6 +160,17 @@
             return $users;
         }
 
+        public function list_groups($domain = NULL) {
+            $this->connect($domain);
+            if ($domain === NULL) {
+                $domain = $this->conf->get('primary_domain');
+            }
+
+            $groups = $this->_auth[$domain]->list_groups();
+
+            return $groups;
+        }
+
         public function normalize_result($results) {
             return LDAP::normalize_result($results);
         }
