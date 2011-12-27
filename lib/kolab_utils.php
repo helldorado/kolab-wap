@@ -13,7 +13,7 @@ class kolab_utils
      *
      * @return mixed  Header value or null if not available
      */
-    public static function request_header($name)
+    public static function get_request_header($name)
     {
         if (function_exists('getallheaders')) {
             $hdrs = array_change_key_case(getallheaders(), CASE_UPPER);
