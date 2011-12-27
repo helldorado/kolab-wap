@@ -265,6 +265,10 @@
             return $this->_list_group_members($group_dn);
         }
 
+        public function groups_list() {
+            return $this->search("ou=Groups,dc=klab,dc=cc", "(|(objectClass=kolabgroupofnames)(objectclass=kolabgroupofuniquenames)(objectclass=kolabgroupofurls))", Array("cn"));
+        }
+
         public function llist($base_dn, $filter)
         {
             return $this->_list($base_dn, $filter);
@@ -272,6 +276,10 @@
 
         public function list_domains() {
             return $this->domains_list();
+        }
+
+        public function list_groups() {
+            return $this->groups_list();
         }
 
         public function list_users() {
