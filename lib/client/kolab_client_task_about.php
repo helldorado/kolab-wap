@@ -1,6 +1,6 @@
 <?php
 
-class kolab_admin_client_task_about extends kolab_admin_client_task
+class kolab_client_task_about extends kolab_client_task
 {
     protected $ajax_only = true;
 

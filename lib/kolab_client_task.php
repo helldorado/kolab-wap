@@ -1,7 +1,7 @@
 <?php
 
 
-class kolab_admin_client_task
+class kolab_client_task
 {
     /**
      * @var kolab_admin_output
@@ -29,6 +29,7 @@ class kolab_admin_client_task
         $this->output_init();
         $this->api_init();
 
+        ini_set('session.use_cookies', 'On');
         session_start();
 
         $this->auth();
@@ -98,7 +99,7 @@ class kolab_admin_client_task
     private function output_init()
     {
         $skin = $this->config_get('skin', 'default');
-        $this->output = new kolab_admin_client_output($skin);
+        $this->output = new kolab_client_output($skin);
     }
 
     /**
@@ -107,7 +108,7 @@ class kolab_admin_client_task
     private function api_init()
     {
         $url = $this->config_get('api_url', '');
-        $this->api = new kolab_admin_api($url);
+        $this->api = new kolab_api($url);
     }
 
     /**
@@ -147,8 +148,8 @@ class kolab_admin_client_task
                     $str   = $result->get_error_str();
                     $label = 'loginerror';
 
-                    if ($code == kolab_admin_api::ERROR_INTERNAL
-                        || $code == kolab_admin_api::ERROR_CONNECTION
+                    if ($code == kolab_api::ERROR_INTERNAL
+                        || $code == kolab_api::ERROR_CONNECTION
                     ) {
                         $label = 'internalerror';
                         $this->raise_error(500, 'Login failed. ' . $str);
@@ -293,7 +294,7 @@ class kolab_admin_client_task
     {
         $class_name = get_class($this);
 
-        if (preg_match('/^kolab_admin_client_task_([a-z]+)$/', $class_name, $m)) {
+        if (preg_match('/^kolab_client_task_([a-z]+)$/', $class_name, $m)) {
             return $m[1];
         }
     }

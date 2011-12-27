@@ -1,6 +1,6 @@
 <?php
 
-class kolab_admin_api_result
+class kolab_api_result
 {
     /**
      * @var array

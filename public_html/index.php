@@ -17,7 +17,7 @@ if (!$task) {
     $task = 'main';
 }
 
-$class = "kolab_admin_client_task_$task";
+$class = "kolab_client_task_$task";
 
 $KADM = new $class;
 

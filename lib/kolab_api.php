@@ -1,7 +1,7 @@
 <?php
 
 
-class kolab_admin_api
+class kolab_api
 {
     /**
      * @var HTTP_Request2
@@ -44,7 +44,7 @@ class kolab_admin_api
      * @param string $username User name
      * @param string $password User password
      *
-     * @return kolab_admin_api_result Request response
+     * @return kolab_api_result Request response
      */
     public function login($username, $password)
     {
@@ -83,7 +83,7 @@ class kolab_admin_api
     /**
      * Gets capabilities of the API (according to logged in user).
      *
-     * @return kolab_admin_api_result  Capabilities response
+     * @return kolab_api_result  Capabilities response
      */
     public function get_capabilities()
     {
@@ -96,7 +96,7 @@ class kolab_admin_api
      * @param string $action  Action name
      * @param array  $args    Request arguments
      *
-     * @return kolab_admin_api_result  Response
+     * @return kolab_api_result  Response
      */
     public function get($action, $args = array())
     {
@@ -114,7 +114,7 @@ class kolab_admin_api
      * @param array  $url_args  URL arguments
      * @param array  $post      POST arguments
      *
-     * @return kolab_admin_api_result  Response
+     * @return kolab_api_result  Response
      */
     public function post($action, $url_args = array(), $post = array())
     {
@@ -154,7 +154,7 @@ class kolab_admin_api
      *
      * @param Net_URL2 $url URL object
      *
-     * @return kolab_admin_api_result Response object
+     * @return kolab_api_result Response object
      */
     private function get_response($url)
     {
@@ -163,7 +163,7 @@ class kolab_admin_api
             $response = $this->request->send();
         }
         catch (Exception $e) {
-            return new kolab_admin_api_result(null,
+            return new kolab_api_result(null,
                 self::ERROR_CONNECTION, $e->getMessage());
         }
 
@@ -171,7 +171,7 @@ class kolab_admin_api
             $body = $response->getBody();
         }
         catch (Exception $e) {
-            return new kolab_admin_api_result(null,
+            return new kolab_api_result(null,
                 self::ERROR_INTERNAL, $e->getMessage());
         }
 
@@ -188,7 +188,7 @@ class kolab_admin_api
             $err_str  = 'Unable to decode response';
         }
 
-        return new kolab_admin_api_result($body, $err_code, $err_str);
+        return new kolab_api_result($body, $err_code, $err_str);
     }
 
 }

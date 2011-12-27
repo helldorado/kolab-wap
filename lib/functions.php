@@ -13,7 +13,6 @@ define('INSTALL_PATH', dirname(__FILE__));
 $crit_opts = array(
     'mbstring.func_overload' => 0,
     'magic_quotes_runtime' => 0,
-    'session.use_cookies' => 1,
 );
 foreach ($crit_opts as $optname => $optval) {
     if ($optval != ini_get($optname)) {

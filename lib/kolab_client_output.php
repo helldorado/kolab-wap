@@ -1,6 +1,6 @@
 <?php
 
-class kolab_admin_client_output
+class kolab_client_output
 {
     private $tpl_vars = array();
     private $env = array();
@@ -23,7 +23,7 @@ class kolab_admin_client_output
 
         $SMARTY->template_dir = 'skins/' . $this->skin . '/templates';
         $SMARTY->compile_dir  = INSTALL_PATH . '/../cache';
-        $SMARTY->plugins_dir  = dirname(__FILE__) . '/Smarty/plugins/';
+        $SMARTY->plugins_dir  = INSTALL_PATH . '/Smarty/plugins/';
         $SMARTY->debugging    = false;
 
         $this->tpl = $SMARTY;
@@ -69,7 +69,7 @@ class kolab_admin_client_output
 
         $this->labels = array_unique($this->labels);
         foreach ($this->labels as $label) {
-            $response['labels'][$label] = kolab_admin_client_task::translate($label);
+            $response['labels'][$label] = kolab_client_task::translate($label);
         }
 
         return json_encode($response);
@@ -94,7 +94,7 @@ class kolab_admin_client_output
         $this->labels = array_unique($this->labels);
         if (!empty($this->labels)) {
             foreach ($this->labels as $label) {
-                $labels[$label] = kolab_admin_client_task::translate($label);
+                $labels[$label] = kolab_client_task::translate($label);
             }
             $script[] = 'kadm.tdef(' . json_encode($labels) . ');';
         }
