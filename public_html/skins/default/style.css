@@ -285,6 +285,7 @@ td.label {
   border-radius: 3px;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
+  overflow-x: auto;
 }
 
 #toc {
@@ -398,6 +399,85 @@ td.label {
 
 td.label {
   min-width: 120px;
+}
+
+.formtitle {
+  color: #ff9900;
+  font-size: 18px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.formbuttons {
+  text-align: center;
+}
+
+.formbuttons input {
+  margin: 5px;
+}
+
+/***** tabbed interface elements *****/
+
+div.tabsbar
+{
+  height: 22px;
+  border-bottom: 1px solid #d0d0d0;
+  white-space: nowrap;
+  margin: 10px 5px 0 5px;
+  background-color: #f0f0f0;
+}
+
+span.tablink,
+span.tablink-selected
+{
+  float: left;
+  height: 23px !important;
+  height: 22px;
+  overflow: hidden;
+  background: url(images/tabs-left.gif) top left no-repeat;
+  font-weight: bold;
+}
+
+span.tablink
+{
+  cursor: pointer;
+}
+
+span.tablink-selected
+{
+  cursor: default;
+  background-position: 0px -23px;
+}
+
+span.tablink a,
+span.tablink-selected a
+{
+  display: inline-block;
+  padding: 4px 10px 0 5px;
+  margin-left: 5px;
+  height: 23px;
+  color: #808080;
+  max-width: 185px;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  background: url(images/tabs-right.gif) top right no-repeat;
+  outline: none;
+}
+
+span.tablink-selected a
+{
+  cursor: inherit;
+  color: #514949;
+  background-position: right -23px;
+}
+
+fieldset.tabbed
+{
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: none;
 }
 
 /**** Login form elements ****/

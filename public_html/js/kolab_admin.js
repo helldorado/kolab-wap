@@ -8,6 +8,7 @@ function kolab_admin()
   this.translations = {};
   this.request_timeout = 300;
   this.message_time = 4000;
+  this.events = {};
 
   // set jQuery ajax options
   $.ajaxSetup({
@@ -138,6 +139,21 @@ function kolab_admin()
       return url + '?' + name + '=' + value;
   };
 
+  this.trigger_event = function(event, data)
+  {
+    if (this.events[event])
+      for (var i in this.events[event])
+        this.events[event][i](data);
+  };
+
+  this.add_event_listener = function(event, func)
+  {
+    if (!this.events[event])
+      this.events[event] = [];
+
+    this.events[event].push(func);
+  };
+
 
   /*********************************************************/
   /*********           GUI functionality           *********/
@@ -191,9 +207,15 @@ function kolab_admin()
       $('#message').fadeOut('normal', function() { $(this).remove(); });
   };
 
+  this.set_watermark = function(id)
+  {
+    if (this.env.watermark)
+      $('#'+id).html(this.env.watermark);
+  }
+
 
   /********************************************************/
-  /*********        remote request methods        *********/
+  /*********        Remote request methods        *********/
   /********************************************************/
 
   // compose a valid url with the given parameters
@@ -292,7 +314,7 @@ function kolab_admin()
 
 
   /********************************************************/
-  /*********            helper methods            *********/
+  /*********            Helper methods            *********/
   /********************************************************/
 
   // disable/enable all fields of a form
@@ -328,7 +350,7 @@ function kolab_admin()
 
 
   /*********************************************************/
-  /*********          client commands              *********/
+  /*********          Client commands              *********/
   /*********************************************************/
 
   this.main_logout = function()

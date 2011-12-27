@@ -85,8 +85,13 @@ class kolab_client_task_user extends kolab_client_task
 
     private function user_form($attribs, $data = array())
     {
-        $form   = new kolab_form();
-        $utypes = $this->user_types();
+        if (empty($attribs['id'])) {
+            $attribs['id'] = 'user-form';
+        }
+
+        $form    = new kolab_form($attribs);
+        $utypes  = $this->user_types();
+        $form_id = $attribs['id'];
 
         foreach ($utypes as $idx => $elem) {
             $utypes[$idx] = array('value' => $elem['key'], 'content' => $elem['name']);
@@ -121,6 +126,66 @@ class kolab_client_task_user extends kolab_client_task
                         'description' => 'user.title.desc',
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 10,
+                    ),
+                    'telephoneNumber' => array(
+                        'label' => 'user.phone',
+                        'description' => 'user.phone.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
+                    'facsimileTelephoneNumber' => array(
+                        'label' => 'user.fax',
+                        'description' => 'user.fax.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
+                    'o' => array(
+                        'label' => 'user.org',
+                        'description' => 'user.org.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
+                    'ou' => array(
+                        'label' => 'user.orgunit',
+                        'description' => 'user.orgunit.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
+                    'roomNumber' => array(
+                        'label' => 'user.room',
+                        'description' => 'user.room.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 10,
+                    ),
+                    'street' => array(
+                        'label' => 'user.street',
+                        'description' => 'user.street.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
+                    'l' => array(
+                        'label' => 'user.city',
+                        'description' => 'user.city.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
+                    'postOfficeBox' => array(
+                        'label' => 'user.postbox',
+                        'description' => 'user.postbox.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 20,
+                    ),
+                    'postalCode' => array(
+                        'label' => 'user.postcode',
+                        'description' => 'user.postcode.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 10,
+                    ),
+                    'c' => array(
+                        'label' => 'user.country',
+                        'description' => 'user.country.desc',
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 2,
                     ),
                 ),
             ),
@@ -209,71 +274,6 @@ class kolab_client_task_user extends kolab_client_task
                     ),
                 ),
             ),
-            'contact' => array(
-                'label' => 'user.contact',
-                'fields' => array(
-                    'telephoneNumber' => array(
-                        'label' => 'user.phone',
-                        'description' => 'user.phone.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'facsimileTelephoneNumber' => array(
-                        'label' => 'user.fax',
-                        'description' => 'user.fax.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'o' => array(
-                        'label' => 'user.org',
-                        'description' => 'user.org.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'ou' => array(
-                        'label' => 'user.orgunit',
-                        'description' => 'user.orgunit.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'roomNumber' => array(
-                        'label' => 'user.room',
-                        'description' => 'user.room.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 10,
-                    ),
-                    'street' => array(
-                        'label' => 'user.street',
-                        'description' => 'user.street.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'l' => array(
-                        'label' => 'user.city',
-                        'description' => 'user.city.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'postOfficeBox' => array(
-                        'label' => 'user.postbox',
-                        'description' => 'user.postbox.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 20,
-                    ),
-                    'postalCode' => array(
-                        'label' => 'user.postcode',
-                        'description' => 'user.postcode.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 10,
-                    ),
-                    'c' => array(
-                        'label' => 'user.country',
-                        'description' => 'user.country.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 2,
-                    ),
-                ),
-            ),
         );
 
         // Parse elements and add them to the form object
@@ -317,6 +317,17 @@ class kolab_client_task_user extends kolab_client_task
                 $form->add_element($field);
             }
         }
+
+        $form->set_title(kolab_html::escape($data['displayname']));
+
+        $form->add_button(array(
+            'value'   => kolab_html::escape($this->translate('submit')),
+            'onclick' => "kadm.save_user('$form_id')",
+        ));
+        $form->add_button(array(
+            'value'   => kolab_html::escape($this->translate('delete')),
+            'onclick' => "kadm.delete_user('$form_id')",
+        ));
 
         return $form->output();
     }

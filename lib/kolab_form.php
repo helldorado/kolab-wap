@@ -16,6 +16,8 @@ class kolab_form
     private $attribs  = array();
     private $elements = array();
     private $sections = array();
+    private $buttons  = array();
+    private $title;
 
 
     /**
@@ -52,6 +54,26 @@ class kolab_form
         }
 
         $this->elements[] = $attribs;
+    }
+
+    /**
+     * Adds form button definition.
+     *
+     * @param array  $attribs   Button attributes
+     */
+    public function add_button($attribs)
+    {
+        $this->buttons[] = $attribs;
+    }
+
+    /**
+     * Sets form title (header).
+     *
+     * @param string $content  Form header content
+     */
+    public function set_title($content)
+    {
+        $this->title = $content;
     }
 
     /**
@@ -98,7 +120,38 @@ class kolab_form
              $content = kolab_html::table(array('body' => $rows, 'class' => 'form'));
         }
 
-        return kolab_html::form($this->attribs, $content);
+        // Add form buttons
+        if (!empty($this->buttons)) {
+            $buttons = '';
+            foreach ($this->buttons as $button) {
+                $button['type'] = 'button';
+                if (empty($button['value'])) {
+                    $button['value'] = $button['label'];
+                }
+                $buttons .= kolab_html::input($button);
+            }
+
+            $content .= "\n" . kolab_html::div(array(
+                'class'   => 'formbuttons',
+                'content' => $buttons
+            ));
+        }
+
+        // Build form
+        $content = kolab_html::form($this->attribs, $content);
+
+        // Add title element
+        if ($this->title) {
+            $content = kolab_html::span(array(
+                'content' => $this->title,
+                'class'   => 'formtitle',
+            )) . "\n" . $content;
+        }
+
+        // Add event trigger, so UI can rebuild the form e.g. adding tabs
+        $content .= kolab_html::script('kadm.trigger_event(\'form-loaded\', \'' . $this->attribs['id'] . '\')');
+
+        return $content;
     }
 
     private function form_row($element)

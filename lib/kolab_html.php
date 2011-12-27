@@ -230,6 +230,15 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    public static function script($content = null, $escape = false)
+    {
+        if ($escape) {
+            $content = self::escape($content);
+        }
+
+        return sprintf('<script type="text/javascript">%s</script>', $content);
+    }
+
     /**
      * Create string with attributes
      *
