@@ -17,7 +17,7 @@ class kolab_client_task_group extends kolab_client_task
     public function action_list()
     {
 //        $content = 'test output from users.list';
-        $result = $this->api->post('groups.list');
+        $result = $this->api->get('groups.list');
         $result = (array) $result->get();
 /*
         foreach ($result as $idx => $item) {
