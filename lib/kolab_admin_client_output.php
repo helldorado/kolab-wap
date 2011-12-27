@@ -23,6 +23,7 @@ class kolab_admin_client_output
 
         $SMARTY->template_dir = 'skins/' . $this->skin . '/templates';
         $SMARTY->compile_dir  = INSTALL_PATH . '/../cache';
+        $SMARTY->plugins_dir  = dirname(__FILE__) . '/Smarty/plugins/';
         $SMARTY->debugging    = false;
 
         $this->tpl = $SMARTY;
