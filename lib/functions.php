@@ -60,23 +60,6 @@ function query($query, $_conn = 'kolab_wap') {
     return $sql->query($query);
 }
 
-function need_login() {
-    print "You are not logged in<br/>";
-    print '<form method="post">';
-    print '<input type="text" name="username" /><br/>';
-    print '<input type="password" name="password" /><br/>';
-    print '<input type="submit" name="submit" value="Log in"/></form>';
-    echo "<pre>"; print_r($_SESSION); echo "</pre>";
-    exit;
-}
-
-function valid_login() {
-    // The $_SESSION variable is controlled through lib/User.php's
-    // _authenticate()
-    //
-    return $_SESSION['user']->authenticated();
-}
-
 /**
  * Prints debug info into the 'console' log
  */
