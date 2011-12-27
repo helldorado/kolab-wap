@@ -8,12 +8,12 @@ define('KADM_VERSION', '0.1');
 define('KADM_CHARSET', 'utf-8');
 define('INSTALL_PATH', dirname(__FILE__));
 
-
 // Check critical PHP settings here.
 $crit_opts = array(
     'mbstring.func_overload' => 0,
     'magic_quotes_runtime' => 0,
 );
+
 foreach ($crit_opts as $optname => $optval) {
     if ($optval != ini_get($optname)) {
         die("ERROR: Wrong '$optname' option value!");
