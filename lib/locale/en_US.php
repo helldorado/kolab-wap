@@ -63,4 +63,5 @@ $LANG['group.add'] = 'Add Group';
 
 $LANG['MB'] = 'MB';
 $LANG['days'] = 'days';
-
+$LANG['submit.button'] = 'Sumbit';
+$LANG['delete.button'] = 'Delete';

@@ -95,5 +95,8 @@ function write_log($name, $line) {
         fwrite($fp, $line);
         fflush($fp);
         fclose($fp);
+        return true;
     }
+
+    return false;
 }

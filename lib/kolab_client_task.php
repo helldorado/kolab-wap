@@ -162,7 +162,6 @@ class kolab_client_task
             $this->api->set_session_token($_SESSION['user']['token']);
             return;
         }
-
     }
 
     /**
@@ -173,12 +172,13 @@ class kolab_client_task
         // Initialize locales
         $this->locale_init();
 
-        // Run security checks
-        $this->input_checks();
-
+        // Session check
         if (empty($_SESSION['user']) || empty($_SESSION['user']['token'])) {
             $this->action_logout();
         }
+
+        // Run security checks
+        $this->input_checks();
 
         $action = $this->get_input('action', 'GET');
 
@@ -230,8 +230,9 @@ class kolab_client_task
         else {
             $this->output->assign('login', $this->get_input('login', 'POST'));
             $this->output->add_translation('loginerror', 'internalerror');
-            $this->output->send('login');
         }
+
+        $this->output->send('login');
         exit;
     }
 
@@ -252,7 +253,7 @@ class kolab_client_task
 
         if (!write_log('errors', $log_line)) {
             // send error to PHPs error handler if write_log() didn't succeed
-            trigger_error($msg);
+            trigger_error($msg, E_USER_ERROR);
         }
 
         if (!$output) {
