@@ -294,6 +294,7 @@ td.label {
 
 #toc {
   float: left;
+  width: 260px;
   min-height: 380px;
 }
 
@@ -420,6 +421,12 @@ td.label {
   margin: 5px;
 }
 
+div.vsplitter {
+  float: left;
+  width: 10px;
+  min-height: 400px;
+}
+
 /***** tabbed interface elements *****/
 
 div.tabsbar
@@ -523,14 +530,6 @@ fieldset.tabbed
 }
 
 /**** User task elements ****/
-
-#taskcontent.user {
-  margin-left: 275px;
-}
-
-#toc.user {
-  width: 265px;
-}
 
 #userlist table {
   width: 100%;
