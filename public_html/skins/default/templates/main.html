@@ -13,13 +13,13 @@
     <div id="logo"></div>
     <div id="topmenu">
         <span class="login">{$user.fullname}</span>
-        <span class="logout link icon" title="{t}Logout{/t}" onclick="kadm.main_logout()"></span>
+        <span class="logout link icon" title="{$engine->translate('Logout')}" onclick="kadm.main_logout()"></span>
     </div>
     <div id="navigation">{$main_menu}</div>
     <div id="task_navigation">{$task_menu}</div>
     <div id="content">{$content}</div>
     <div id="footer">
-        <span id="request_time">{gentime}</span>
+        <span id="request_time">{$engine->gentime()}</span>
     </div>
 </body>
 {$script}

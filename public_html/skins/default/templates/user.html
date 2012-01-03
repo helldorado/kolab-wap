@@ -1,16 +1,16 @@
 <div id="toc" class="user">
     <div id="search">
         <div class="searchinput">
-            <input type="text" id="searchinput" name="search" value="{t}search{/t}" class="inactive" />
+            <input type="text" id="searchinput" name="search" value="{$engine->translate('search')}" class="inactive" />
             <span class="searchactions">
-                <span id="search-details" title="{t}search.criteria{/t}" onclick="search_details()"></span>
-                <span id="search-reset" title="{t}search.reset{/t}" onclick="search_reset()"></span>
+                <span id="search-details" title="{$engine->translate('search.criteria')}" onclick="search_details()"></span>
+                <span id="search-reset" title="{$engine->translate('search.reset')}" onclick="search_reset()"></span>
             </span>
         </div>
         <div class="searchdetails">
             <fieldset>
-                <legend>{t}search.criteria{/t}</legend>
-                <label for="">{t}search.field{/t}</label>
+                <legend>{$engine->translate('search.criteria')}</legend>
+                <label for="">{$engine->translate('search.field')}</label>
             </fieldset>
         </div>
     </div>

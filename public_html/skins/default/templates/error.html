@@ -9,7 +9,7 @@
 <body>
     <div id="message" class="error" style="display: block">
         <div>
-            <span><b>{t}error{/t} {$error_code}:</b><br />{$error_message}</span>
+            <span><b>{$engine->translate('error')} {$error_code}:</b><br />{$error_message}</span>
         </div>
     </div>
     <div id="logo"></div>
@@ -17,6 +17,6 @@
     <div id="navigation"></div>
     <div id="task_navigation"></div>
     <div id="content"></div>
-    <div id="footer">{gentime}</div>
+    <div id="footer">{$engine->gentime()}</div>
 </body>
 </html>

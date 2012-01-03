@@ -172,6 +172,9 @@ class kolab_client_task
         // Initialize locales
         $this->locale_init();
 
+        // Assign self to template variable
+        $this->output->assign('engine', $this);
+
         // Session check
         if (empty($_SESSION['user']) || empty($_SESSION['user']['token'])) {
             $this->action_logout();
@@ -426,4 +429,57 @@ class kolab_client_task
         return $_SESSION['user_types'];
     }
 
+    /**
+     * Returns execution time in seconds
+     *
+     * @param string Execution time
+     */
+    public function gentime()
+    {
+        return sprintf('%.4f', microtime(true) - KADM_START);
+    }
+
+    /**
+     * Returns HTML output of login form
+     *
+     * @param string HTML output
+     */
+    public function login_form()
+    {
+        $post = $this->get_input('login', 'POST');
+
+        $username = kolab_html::label(array(
+                'for'     => 'login_name',
+                'content' => $this->translate('username')), true)
+            . kolab_html::input(array(
+                'type'  => 'text',
+                'id'    => 'login_name',
+                'name'  => 'login[username]',
+                'value' => $post['username']));
+
+        $password = kolab_html::label(array(
+                'for'     => 'login_pass',
+                'content' => $this->translate('password')), true)
+            . kolab_html::input(array(
+                'type'  => 'password',
+                'id'    => 'login_pass',
+                'name'  => 'login[password]',
+                'value' => ''));
+
+        $button = kolab_html::input(array(
+            'type'  => 'submit',
+            'id'    => 'login_submit',
+            'value' => $this->translate('login')));
+
+        $form = kolab_html::form(array(
+            'id'     => 'login_form',
+            'name'   => 'login',
+            'method' => 'post',
+            'action' => '?'),
+            kolab_html::span(array('content' => $username))
+            . kolab_html::span(array('content' => $password))
+            . $button);
+
+        return $form;
+    }
 }

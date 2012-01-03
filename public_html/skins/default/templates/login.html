@@ -13,20 +13,8 @@
     <div id="topmenu"></div>
     <div id="navigation"></div>
     <div id="task_navigation"></div>
-    <div id="content">
-        <form id="login_form" name="login" method="post" action="?">
-            <span>
-                <label for="login_name">{t}username{/t}:</label>
-                <input id="login_name" type="text" name="login[username]" value="{$login.username}" />
-            </span>
-            <span>
-                <label for="login_pass">{t}password{/t}:</label>
-                <input id="login_pass" type="password" name="login[password]" value="" />
-            </span>
-            <input id="login_submit" type="submit" value="{t}Login{/t}" />
-        </form>
-    </div>
-    <div id="footer">{gentime}</div>
+    <div id="content">{$engine->login_form()}</div>
+    <div id="footer">{$engine->gentime()}</div>
 </body>
 {$script}
 </html>
