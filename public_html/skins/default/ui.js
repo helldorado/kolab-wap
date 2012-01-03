@@ -1,9 +1,31 @@
+/**
+ * Search form events
+ */
+function search_init()
+{
+  $('#searchinput').addClass('inactive')
+    .blur(function() {
+      if (this.value == '')
+        $(this).val(kadm.t('search')).addClass('inactive');
+    })
+    .keypress(function(e) {
+      if (this.value && e.which == 13) { // ENTER key
+        // @TODO: search request
+      }
+    })
+    .click(function() {
+      if (this.value == kadm.t('search'))
+        $(this).val('').removeClass('inactive');
+    });
+}
 
 function search_reset()
 {
   var input = $('#searchinput');
 
-  input.val(kadm.t('search'));
+  input.val(kadm.t('search')).addClass('inactive');
+
+  // @TODO: reseting search
 }
 
 function search_details()
@@ -16,23 +38,10 @@ function search_details()
     div.slideUp(200);
 }
 
-function search_click()
-{
-
-}
-
-function search_key()
-{
-
-}
-
-function form_loaded(data)
-{
-  init_tabs(data);
-}
-
-// Fieldsets-to-tabs converter
-// Warning: don't place "caller" <script> inside page element (id)
+/**
+ * Fieldsets-to-tabs converter
+ * Warning: don't place "caller" <script> inside page element (id)
+ */
 function init_tabs(id, current)
 {
   var content = $('#'+id),
@@ -83,5 +92,12 @@ function show_tab(id, index)
   });
 }
 
-// Initialization
+function form_loaded(data)
+{
+  init_tabs(data);
+}
+
+/**
+ * UI Initialization
+ */
 kadm.add_event_listener('form-loaded', form_loaded);

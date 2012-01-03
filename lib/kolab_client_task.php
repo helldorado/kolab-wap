@@ -231,7 +231,6 @@ class kolab_client_task
             $this->output->command('main_logout');
         }
         else {
-            $this->output->assign('login', $this->get_input('login', 'POST'));
             $this->output->add_translation('loginerror', 'internalerror');
         }
 
