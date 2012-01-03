@@ -13,7 +13,7 @@ function search_init()
         // @TODO: search request
       }
     })
-    .click(function() {
+    .focus(function() {
       if (this.value == kadm.t('search'))
         $(this).val('').removeClass('inactive');
     });

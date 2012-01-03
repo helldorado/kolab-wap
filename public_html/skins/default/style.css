@@ -232,20 +232,24 @@ td.label {
 #navigation ul {
   list-style-type: none;
   margin: 0;
-  padding: 9px 0;
+  padding: 8px 0;
 }
 
 #navigation ul li {
   display: inline;
   font-size: 13px;
   font-weight: bold;
-  padding: 9px 0;
+  padding: 8px 0;
 }
 
 #navigation ul li a {
-  padding: 9px 10px;
+  padding: 8px 10px;
   text-decoration: none;
   color: #514949;
+}
+
+#navigation ul li.active {
+  background: url(images/navbg.png) 0 0 repeat-x;
 }
 
 #navigation ul li.active a {
@@ -256,7 +260,7 @@ td.label {
 #task_navigation ul {
   list-style-type: none;
   margin: 0;
-  padding: 1px 0;
+  padding: 0px 0;
 }
 
 #task_navigation ul li {
@@ -289,8 +293,8 @@ td.label {
 }
 
 #toc {
-  min-height: 380px;
   float: left;
+  min-height: 380px;
 }
 
 #search {
