@@ -4,12 +4,12 @@
 class kolab_client_task
 {
     /**
-     * @var kolab_admin_output
+     * @var kolab_client_output
      */
     protected $output;
 
     /**
-     * @var kolab_admin_api
+     * @var kolab_client_api
      */
     protected $api;
 
@@ -108,7 +108,7 @@ class kolab_client_task
     private function api_init()
     {
         $url = $this->config_get('api_url', '');
-        $this->api = new kolab_api($url);
+        $this->api = new kolab_client_api($url);
     }
 
     /**
@@ -148,8 +148,8 @@ class kolab_client_task
                     $str   = $result->get_error_str();
                     $label = 'loginerror';
 
-                    if ($code == kolab_api::ERROR_INTERNAL
-                        || $code == kolab_api::ERROR_CONNECTION
+                    if ($code == kolab_client_api::ERROR_INTERNAL
+                        || $code == kolab_client_api::ERROR_CONNECTION
                     ) {
                         $label = 'internalerror';
                         $this->raise_error(500, 'Login failed. ' . $str);
