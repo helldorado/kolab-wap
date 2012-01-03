@@ -50,6 +50,7 @@ function kolab_admin()
       return label;
   };
 
+  // print a message into browser console
   this.log = function(msg)
   {
     if (window.console && console.log)
@@ -257,8 +258,6 @@ function kolab_admin()
     else
       postdata += (postdata ? '&' : '') + 'remote=1';
 
-    // send request
-    this.log('HTTP POST: ' + url);
     this.set_request_time()
 
     return $.ajax({
