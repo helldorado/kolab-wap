@@ -449,7 +449,7 @@ class kolab_client_task
 
         $username = kolab_html::label(array(
                 'for'     => 'login_name',
-                'content' => $this->translate('username')), true)
+                'content' => $this->translate('login.username')), true)
             . kolab_html::input(array(
                 'type'  => 'text',
                 'id'    => 'login_name',
@@ -458,7 +458,7 @@ class kolab_client_task
 
         $password = kolab_html::label(array(
                 'for'     => 'login_pass',
-                'content' => $this->translate('password')), true)
+                'content' => $this->translate('login.password')), true)
             . kolab_html::input(array(
                 'type'  => 'password',
                 'id'    => 'login_pass',
@@ -468,7 +468,7 @@ class kolab_client_task
         $button = kolab_html::input(array(
             'type'  => 'submit',
             'id'    => 'login_submit',
-            'value' => $this->translate('login')));
+            'value' => $this->translate('login.login')));
 
         $form = kolab_html::form(array(
             'id'     => 'login_form',

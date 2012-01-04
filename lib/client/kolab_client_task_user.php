@@ -349,6 +349,19 @@ class kolab_client_task_user extends kolab_client_task
             'type'    => kolab_form::INPUT_SELECT,
             'options' => array(
                 'name' => kolab_html::escape($this->translate('search.name')),
+                'email' => kolab_html::escape($this->translate('search.email')),
+                'uid' => kolab_html::escape($this->translate('search.uid')),
+            ),
+        ));
+        $form->add_element(array(
+            'section' => 'criteria',
+            'label'   => $this->translate('search.method'),
+            'name'    => 'method',
+            'type'    => kolab_form::INPUT_SELECT,
+            'options' => array(
+                'contains' => kolab_html::escape($this->translate('search.contains')),
+                'is'       => kolab_html::escape($this->translate('search.is')),
+                'prefix'   => kolab_html::escape($this->translate('search.prefix')),
             ),
         ));
 

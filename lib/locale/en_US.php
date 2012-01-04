@@ -1,17 +1,26 @@
 <?php
 
-$LANG['username'] = 'Username';
-$LANG['password'] = 'Password';
 $LANG['loading'] = 'Loading...';
 $LANG['error'] = 'Error';
 $LANG['servererror'] = 'Server Error!';
 $LANG['loginerror'] = 'Incorrect username or password!';
 $LANG['internalerror'] = 'Internal system error!';
 
+$LANG['login.username'] = 'Username:';
+$LANG['login.password'] = 'Password:';
+$LANG['login.login'] = 'Login';
+
 $LANG['search'] = 'Search';
 $LANG['search.criteria'] = 'Search criteria';
 $LANG['search.reset'] = 'Reset';
-$LANG['search.field'] = 'Field';
+$LANG['search.field'] = 'Field:';
+$LANG['search.method'] = 'Method:';
+$LANG['search.contains'] = 'contains';
+$LANG['search.is'] = 'is';
+$LANG['search.prefix'] = 'begins with';
+$LANG['search.name'] = 'name';
+$LANG['search.email'] = 'email';
+$LANG['search.uid'] = 'UID';
 
 $LANG['menu.users'] = 'Users';
 $LANG['menu.groups'] = 'Groups';
