@@ -104,6 +104,7 @@ table.form tr.error input {
 
 td.label {
   width: 1%;
+  min-width: 120px;
   text-align: right;
   font-weight: bold;
   white-space: nowrap;
@@ -114,8 +115,8 @@ td.label {
 #topmenu {
   text-align: right;
   height: 20px;
-  padding-top: 1px;
-  margin: 0 15px;
+  padding: 0;
+  margin: 0 10px;
   white-space: nowrap;
 }
 
@@ -219,8 +220,9 @@ td.label {
 }
 
 #topmenu .logout {
-  background: url(images/logout.png) center no-repeat;
-  padding: 0 20px;
+  background: url(images/logout.png) center 10px no-repeat;
+  padding: 9px 16px;
+  margin: 0px 5px 0px 10px;
 }
 
 #topmenu .login {
@@ -381,6 +383,16 @@ td.label {
   margin-top: 5px;
 }
 
+#search td.label {
+  min-width: 0;
+}
+
+div.vsplitter {
+  float: left;
+  width: 10px;
+  min-height: 400px;
+}
+
 /**** Common classes ****/
 
 .watermark {
@@ -402,10 +414,6 @@ td.label {
   color: #d0d0d0;
 }
 
-td.label {
-  min-width: 120px;
-}
-
 .formtitle {
   color: #ff9900;
   font-size: 18px;
@@ -419,12 +427,6 @@ td.label {
 
 .formbuttons input {
   margin: 5px;
-}
-
-div.vsplitter {
-  float: left;
-  width: 10px;
-  min-height: 400px;
 }
 
 /***** tabbed interface elements *****/
@@ -452,6 +454,7 @@ span.tablink-selected
 span.tablink
 {
   cursor: pointer;
+  text-shadow: white 1px 1px;
 }
 
 span.tablink-selected

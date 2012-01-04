@@ -332,9 +332,25 @@ class kolab_client_task_user extends kolab_client_task
         return $form->output();
     }
 
-    private function search_form()
+    /**
+     * Users search form.
+     *
+     * @return string HTML output of the form
+     */
+    public function search_form()
     {
-        $form = new kolab_form();
+        $form = new kolab_form(array('id' => 'search-form'));
+
+        $form->add_section('criteria', kolab_html::escape($this->translate('search.criteria')));
+        $form->add_element(array(
+            'section' => 'criteria',
+            'label'   => $this->translate('search.field'),
+            'name'    => 'field',
+            'type'    => kolab_form::INPUT_SELECT,
+            'options' => array(
+                'name' => kolab_html::escape($this->translate('search.name')),
+            ),
+        ));
 
         return $form->output();
     }

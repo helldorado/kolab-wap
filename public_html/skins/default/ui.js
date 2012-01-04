@@ -94,7 +94,8 @@ function show_tab(id, index)
 
 function form_loaded(data)
 {
-  init_tabs(data);
+  if (data != 'search-form')
+    init_tabs(data);
 }
 
 /**

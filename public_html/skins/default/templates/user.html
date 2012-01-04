@@ -8,12 +8,7 @@
                 <span id="search-reset" title="{$engine->translate('search.reset')}" onclick="search_reset()"></span>
             </span>
         </div>
-        <div class="searchdetails">
-            <fieldset>
-                <legend>{$engine->translate('search.criteria')}</legend>
-                <label for="">{$engine->translate('search.field')}</label>
-            </fieldset>
-        </div>
+        <div class="searchdetails">{$engine->search_form()}</div>
     </div>
     <div id="userlist"></div>
 </div>
