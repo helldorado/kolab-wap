@@ -8,7 +8,7 @@
         public function capabilities($domain)
         {
             return array(
-                    'list' => 'l',
+                    'list' => 'r',
                 );
         }
 
