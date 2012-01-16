@@ -38,11 +38,12 @@ mb_internal_encoding(KADM_CHARSET);
 @mb_regex_encoding(KADM_CHARSET);
 
 // register autoloader
-function class_autoloader($classname) {
+function class_autoloader($classname)
+{
     $classname = preg_replace('/(Net|MDB2|HTTP)_(.+)/', "\\1/\\2", $classname);
 
     if ($fp = @fopen("$classname.php", 'r', true)) {
-        include_once("$classname.php");
+        include_once "$classname.php";
         fclose($fp);
         return true;
     }
@@ -52,8 +53,9 @@ function class_autoloader($classname) {
 
 spl_autoload_register('class_autoloader');
 
-function query($query, $_conn = 'kolab_wap') {
-    require_once('SQL.php');
+function query($query, $_conn = 'kolab_wap')
+{
+    require_once 'SQL.php';
 
     $sql = SQL::get_instance($_conn);
 
@@ -63,7 +65,8 @@ function query($query, $_conn = 'kolab_wap') {
 /**
  * Prints debug info into the 'console' log
  */
-function console() {
+function console()
+{
     $args = func_get_args();
 
     $msg = array();
@@ -81,7 +84,8 @@ function console() {
  * @param string $name  Name of the log file
  * @param mixed  $line  Line to append
  */
-function write_log($name, $line) {
+function write_log($name, $line)
+{
     if (!is_string($line)) {
         $line = var_export($line, true);
     }

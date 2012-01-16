@@ -419,7 +419,7 @@ class kolab_client_task
         if (!isset($_SESSION['user_types'])) {
             $result = $this->api->post('user_types.list');
             $list   = $result->get();
-
+console($list);
             if (is_array($list)) {
                 $_SESSION['user_types'] = $list;
             }
