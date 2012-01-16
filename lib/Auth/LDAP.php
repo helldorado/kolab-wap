@@ -282,8 +282,8 @@
             return $this->groups_list();
         }
 
-        public function list_users() {
-            return $this->users_list();
+        public function list_users($attributes = array()) {
+            return $this->users_list($attributes = array());
         }
 
         static function normalize_result($__result) {
@@ -378,7 +378,8 @@
             }
         }
 
-        public function user_info($user) {
+        public function user_info($user)
+        {
             $is_dn = ldap_explode_dn($user, 1);
             if ( !$is_dn ) {
                 list($this->userid, $this->domain) = $this->_qualify_id($user);
@@ -395,11 +396,19 @@
             return $this->search($user_dn);
         }
 
-        public function users_list() {
-            return $this->search("ou=People,dc=klab,dc=cc", "(objectClass=kolabinetorgperson)", Array("uid"));
+        public function users_list($attributes = array())
+        {
+            $base_dn = "ou=People,dc=klab,dc=cc";
+            $filter  = "(objectClass=kolabinetorgperson)";
+
+            if (empty($attributes) || !is_array($attributes)) {
+                $attributes = array('*');
+            }
+
+            return $this->search($base_dn, $filter, $attributes);
         }
 
-        public function search($base_dn, $search_filter = '(objectClass=*)', $attributes = Array('*'))
+        public function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
         {
             error_log("Searching $base_dn with filter '$search_filter'");
             return $this->_search($base_dn, $search_filter, $attributes);
