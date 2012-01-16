@@ -24,7 +24,11 @@ class kolab_client_task_user extends kolab_client_task
      */
     public function action_list()
     {
-        $result = $this->api->post('users.list');
+        $post = array(
+            'attributes' => array('displayname'),
+        );
+
+        $result = $this->api->post('users.list', null, $post);
         $result = (array) $result->get();
 
         $rows = $head = array();
@@ -36,13 +40,13 @@ class kolab_client_task_user extends kolab_client_task
 
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
-                if (!is_array($item) || empty($item['uid'])) {
+                if (!is_array($item) || empty($item['displayname'])) {
                     continue;
                 }
 
                 $i++;
                 $cells = array();
-                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['uid']),
+                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['displayname']),
                     'onclick' => "kadm.command('user.info', '$idx')");
                 $rows[] = array('id' => $i, 'class' => 'selectable', 'cells' => $cells);
             }
