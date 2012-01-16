@@ -3,7 +3,7 @@
 require_once dirname(__FILE__) . "/../../lib/functions.php";
 
 // init frontend controller
-$controller = new kolab_admin_api_controller;
+$controller = new kolab_api_controller;
 
 try {
     $postdata = $_SERVER['REQUEST_METHOD'] == 'POST' ? @json_decode(file_get_contents('php://input'), true) : null;

@@ -3,7 +3,7 @@
     /**
      *
      */
-    class kolab_admin_form_value_actions extends kolab_admin_api_service
+    class kolab_form_value_actions extends kolab_api_service
     {
         public function capabilities($domain)
         {

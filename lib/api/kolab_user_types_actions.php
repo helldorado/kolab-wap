@@ -3,7 +3,7 @@
     /**
      *
      */
-    class kolab_admin_user_types_actions extends kolab_admin_api_service
+    class kolab_user_types_actions extends kolab_api_service
     {
         public function capabilities($domain)
         {

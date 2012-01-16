@@ -3,7 +3,7 @@
 /**
  * Main controller class to serve the Kolab Admin API
  */
-class kolab_admin_api_controller
+class kolab_api_controller
 {
     public $output;
 
@@ -14,7 +14,7 @@ class kolab_admin_api_controller
 
     public function __construct()
     {
-        $this->output = new kolab_admin_json_output();
+        $this->output = new kolab_json_output();
 
         if (!empty($_GET['service'])) {
             if (!empty($_GET['method'])) {
@@ -32,14 +32,14 @@ class kolab_admin_api_controller
         }
 
         // TODO: register services based on config or whatsoever
-        $this->add_service('form_value', 'kolab_admin_form_value_actions');
-        $this->add_service('group_types', 'kolab_admin_group_types_actions');
-        $this->add_service('group', 'kolab_admin_group_actions');
-        $this->add_service('groups', 'kolab_admin_groups_actions');
-        $this->add_service('user_types', 'kolab_admin_user_types_actions');
-        $this->add_service('user', 'kolab_admin_user_actions');
-        $this->add_service('users', 'kolab_admin_users_actions');
-        $this->add_service('domains', 'kolab_admin_domains_actions');
+        $this->add_service('form_value', 'kolab_form_value_actions');
+        $this->add_service('group_types', 'kolab_group_types_actions');
+        $this->add_service('group', 'kolab_group_actions');
+        $this->add_service('groups', 'kolab_groups_actions');
+        $this->add_service('user_types', 'kolab_user_types_actions');
+        $this->add_service('user', 'kolab_user_actions');
+        $this->add_service('users', 'kolab_users_actions');
+        $this->add_service('domains', 'kolab_domains_actions');
     }
 
     /**
@@ -72,7 +72,7 @@ class kolab_admin_api_controller
                 $handler = $this->services[$service] = new $handler($this);
             }
 
-            if (is_a($handler, 'kolab_admin_api_service')) {
+            if (is_a($handler, 'kolab_api_service')) {
                 return $handler;
             }
         }

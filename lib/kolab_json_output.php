@@ -3,7 +3,7 @@
 /**
  * View class generating JSON output
  */
-class kolab_admin_json_output
+class kolab_json_output
 {
 
     /**
