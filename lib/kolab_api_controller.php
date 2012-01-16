@@ -100,7 +100,7 @@ class kolab_api_controller
         $service = $this->request['service'];
         $method  = $this->request['method'];
 
-        console("Calling method " . $method . " on service . " . $service);
+        console("Calling method " . $method . " on service " . $service);
         // validate user session
         if ($method != 'authenticate') {
             if (!$this->session_validate($postdata)) {
