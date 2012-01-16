@@ -27,7 +27,10 @@ class kolab_users_actions extends kolab_api_service
         $auth = Auth::get_instance();
 
         if (!empty($post['attributes']) && is_array($post['attributes'])) {
+            // get only supported attributes
             $attributes = array_intersect($this->list_attribs, $post['attributes']);
+            // need to fix array keys
+            $attributes = array_values($attributes);
         }
         if (empty($attributes)) {
             $attributes = (array)$this->list_attribs[0];
