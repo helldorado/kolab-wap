@@ -283,7 +283,7 @@
         }
 
         public function list_users($attributes = array()) {
-            return $this->users_list($attributes = array());
+            return $this->users_list($attributes);
         }
 
         static function normalize_result($__result) {
