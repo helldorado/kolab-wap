@@ -282,8 +282,8 @@
             return $this->groups_list();
         }
 
-        public function list_users($attributes = array()) {
-            return $this->users_list($attributes);
+        public function list_users($attributes = array(), $search = array()) {
+            return $this->users_list($attributes, $search);
         }
 
         static function normalize_result($__result) {
@@ -396,13 +396,50 @@
             return $this->search($user_dn);
         }
 
-        public function users_list($attributes = array())
+        public function users_list($attributes = array(), $search = array())
         {
             $base_dn = "ou=People,dc=klab,dc=cc";
             $filter  = "(objectClass=kolabinetorgperson)";
 
             if (empty($attributes) || !is_array($attributes)) {
                 $attributes = array('*');
+            }
+
+            if (!empty($search) && is_array($search) && !empty($search['params'])) {
+                $s_filter = '';
+                foreach ((array) $search['params'] as $field => $param) {
+                    $value = self::_quote_string($param['value']);
+
+                    switch ((string)$param['type']) {
+                    case 'prefix':
+                        $prefix = '';
+                        $suffix = '*';
+                        break;
+                    case 'suffix':
+                        $prefix = '*';
+                        $suffix = '';
+                        break;
+                    case 'exact':
+                        $prefix = '';
+                        $suffix = '';
+                        break;
+                    case 'both':
+                    default:
+                        $prefix = '*';
+                        $suffix = '*';
+                        break;
+                    }
+
+                    $s_filter .= "($field=$prefix" . $value . "$suffix)";
+                }
+
+                // join search parameters with specified operator ('OR' or 'AND')
+                if (count($search['params']) > 1) {
+                    $s_filter = '(' . ($search['operator'] == 'AND' ? '&' : '|') . $s_filter . ')';
+                }
+
+                // join search filter with objectClass filter
+                $filter = '(&' . $filter . $s_filter . ')';
             }
 
             return $this->search($base_dn, $filter, $attributes);
@@ -1043,5 +1080,45 @@
 
         }
 
+    /**
+     * Quotes attribute value string
+     *
+     * @param string $str Attribute value
+     * @param bool   $dn  True if the attribute is a DN
+     *                                                                                                                                               
+     * @return string Quoted string
+     */
+    private static function _quote_string($str, $dn=false)
+    {
+        // take firt entry if array given
+        if (is_array($str)) {
+            $str = reset($str);
+        }
+
+        if ($dn) {
+            $replace = array(
+                ',' => '\2c',
+                '=' => '\3d',
+                '+' => '\2b',
+                '<' => '\3c',
+                '>' => '\3e',
+                ';' => '\3b',
+                "\\"=> '\5c',
+                '"' => '\22',
+                '#' => '\23'
+            );
+        }
+        else {
+            $replace = array(
+                '*' => '\2a',
+                '(' => '\28',
+                ')' => '\29',
+                "\\" => '\5c',
+                '/' => '\2f'
+            );
+        }
+
+         return strtr($str, $replace);                                                                                                                
     }
-?>
+
+}

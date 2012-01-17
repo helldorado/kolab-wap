@@ -26,6 +26,7 @@ class kolab_users_actions extends kolab_api_service
     {
         $auth = Auth::get_instance();
 
+        // returned attributes
         if (!empty($post['attributes']) && is_array($post['attributes'])) {
             // get only supported attributes
             $attributes = array_intersect($this->list_attribs, $post['attributes']);
@@ -36,7 +37,31 @@ class kolab_users_actions extends kolab_api_service
             $attributes = (array)$this->list_attribs[0];
         }
 
-        $users = $auth->list_users(null, $attributes);
+        // searching
+        $search = array();
+        if (!empty($post['search']) && is_array($post['search'])) {
+            $params = $post['search'];
+            foreach ($params as $idx => $param) {
+                // get only supported attributes
+                if (!in_array($idx, $this->list_attribs)) {
+                    unset($params[$idx]);
+                    continue;
+                }
+
+                // search string
+                if (empty($param['value'])) {
+                    unset($params[$idx]);
+                    continue;
+                }
+            }
+
+            $search['params'] = $params;
+            if (!empty($post['search_operator'])) {
+                $search['operator'] = $post['search_operator'];
+            }
+        }
+
+        $users = $auth->list_users(null, $attributes, $search);
         $users = $auth->normalize_result($users);
 
         return $users;
