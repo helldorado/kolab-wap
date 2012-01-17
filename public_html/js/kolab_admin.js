@@ -255,8 +255,11 @@ function kolab_admin()
 
     if (postdata && typeof postdata === 'object')
       postdata.remote = 1;
-    else
-      postdata += (postdata ? '&' : '') + 'remote=1';
+    else {
+      if (!postdata)
+        postdata = '';
+      postdata += '&remote=1';
+    }
 
     this.set_request_time()
 
@@ -347,6 +350,16 @@ function kolab_admin()
     this.env.request_time = (new Date()).getTime();
   };
 
+  this.serialize_form = function(id)
+  {
+    var i, query = $(id).serializeArray(),
+      json = {};
+
+    for (i in query)
+      json[query[i].name] = query[i].value;
+
+    return json;
+  };
 
   /*********************************************************/
   /*********          Client commands              *********/
@@ -361,6 +374,17 @@ function kolab_admin()
   this.user_info = function(id)
   {
     this.http_post('user.info', {id: id});
+  };
+
+  this.user_list = function(props)
+  {
+    if (props) {
+      if (props.search) {
+        props = $.extend(props, this.serialize_form('#search-form'));
+      }
+    }
+
+    this.http_post('user.list', props);
   };
 
 };

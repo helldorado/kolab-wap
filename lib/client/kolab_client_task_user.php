@@ -28,6 +28,21 @@ class kolab_client_task_user extends kolab_client_task
             'attributes' => array('displayname'),
         );
 
+        // search parameters
+        if (!empty($_POST['search'])) {
+            $search = self::get_input('search', 'POST', true);
+            $field  = self::get_input('field',  'POST', true);
+            $method = self::get_input('method', 'POST', true);
+
+            $post['search'] = array(
+                $field => array(
+                    'value' => $search,
+                    'type'  => $method,
+                ),
+            );
+            $post['search_operator'] = 'OR';
+        }
+
         $result = $this->api->post('users.list', null, $post);
         $result = (array) $result->get();
 
@@ -36,7 +51,7 @@ class kolab_client_task_user extends kolab_client_task
         $i    = 0;
 
         // table header
-        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('user.name'));
+        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('user.list'));
 
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
@@ -352,9 +367,9 @@ class kolab_client_task_user extends kolab_client_task
             'name'    => 'field',
             'type'    => kolab_form::INPUT_SELECT,
             'options' => array(
-                'name' => kolab_html::escape($this->translate('search.name')),
-                'email' => kolab_html::escape($this->translate('search.email')),
-                'uid' => kolab_html::escape($this->translate('search.uid')),
+                'displayname' => kolab_html::escape($this->translate('search.name')),
+                'email'       => kolab_html::escape($this->translate('search.email')),
+                'uid'         => kolab_html::escape($this->translate('search.uid')),
             ),
         ));
         $form->add_element(array(
@@ -363,9 +378,9 @@ class kolab_client_task_user extends kolab_client_task
             'name'    => 'method',
             'type'    => kolab_form::INPUT_SELECT,
             'options' => array(
-                'contains' => kolab_html::escape($this->translate('search.contains')),
-                'is'       => kolab_html::escape($this->translate('search.is')),
-                'prefix'   => kolab_html::escape($this->translate('search.prefix')),
+                'both'   => kolab_html::escape($this->translate('search.contains')),
+                'exact'  => kolab_html::escape($this->translate('search.is')),
+                'prefix' => kolab_html::escape($this->translate('search.prefix')),
             ),
         ));
 

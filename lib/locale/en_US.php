@@ -31,6 +31,7 @@ $LANG['menu.technology'] = 'Technology';
 
 $LANG['user.add'] = 'Add User';
 $LANG['user.name'] = 'Name';
+$LANG['user.list'] = 'Users List';
 $LANG['user.norecords'] = 'No user records found!';
 $LANG['user.personal'] = 'Personal';
 $LANG['user.system'] = 'System';

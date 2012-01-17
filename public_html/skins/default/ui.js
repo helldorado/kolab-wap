@@ -10,7 +10,7 @@ function search_init()
     })
     .keypress(function(e) {
       if (this.value && e.which == 13) { // ENTER key
-        // @TODO: search request
+        kadm.command('user.list', {search: this.value});
       }
     })
     .focus(function() {
@@ -25,7 +25,7 @@ function search_reset()
 
   input.val(kadm.t('search')).addClass('inactive');
 
-  // @TODO: reseting search
+  kadm.command('user.list');
 }
 
 function search_details()
