@@ -149,13 +149,13 @@
             return $this->_auth[$this->domain]->list_domains();
         }
 
-        public function list_users($domain = NULL, $attributes = array()) {
+        public function list_users($domain = NULL, $attributes = array(), $search = array()) {
             $this->connect($domain);
             if ($domain === NULL) {
                 $domain = $this->conf->get('primary_domain');
             }
 
-            $users = $this->_auth[$domain]->list_users($attributes);
+            $users = $this->_auth[$domain]->list_users($attributes, $search);
 
             return $users;
         }
