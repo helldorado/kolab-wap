@@ -37,8 +37,10 @@ class kolab_users_actions extends kolab_api_service
             $attributes = (array)$this->list_attribs[0];
         }
 
-        // searching
         $search = array();
+        $params = array();
+
+        // searching
         if (!empty($post['search']) && is_array($post['search'])) {
             $params = $post['search'];
             foreach ($params as $idx => $param) {
@@ -61,8 +63,18 @@ class kolab_users_actions extends kolab_api_service
             }
         }
 
-        $users = $auth->list_users(null, $attributes, $search);
-        $users = $auth->normalize_result($users);
+        if (!empty($post['sort_by'])) {
+            // check if sort attribute is supported
+            if (in_array($post['sort_by'], $this->list_attribs)) {
+                $params['sort_by'] = $post['sort_by'];            
+            }
+        }
+
+        if (!empty($post['sort_order'])) {
+            $params['sort_order'] = $post['sort_order'] == 'DESC' ? 'DESC' : 'ASC';
+        }
+
+        $users = $auth->list_users(null, $attributes, $search, $params);
 
         return $users;
     }

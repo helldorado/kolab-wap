@@ -15,7 +15,7 @@
 
         public function domains_list($get, $post) {
             $auth = Auth::get_instance();
-            $domains = $auth->normalize_result($auth->list_domains());
+            $domains = $auth->list_domains();
             return $domains;
         }
     }

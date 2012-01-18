@@ -16,7 +16,6 @@
         public function groups_list($get, $post) {
             $auth = Auth::get_instance();
             $groups = $auth->list_groups();
-            $groups = $auth->normalize_result($groups);
             return $groups;
 
         }
