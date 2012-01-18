@@ -51,6 +51,21 @@ table.list tbody tr {
   background-color: #f0f0f0;
 }
 
+table.list tfoot tr {
+  background-color: #e0e0e0;
+}
+
+table.list tfoot tr td {
+  padding: 3px 3px;
+  font-size: 10px;
+  text-shadow: white 1px 1px;
+}
+
+table.list tfoot tr td {
+  border-top: solid 1px white;
+  border-bottom: none;
+}
+
 table.list td:last-child {
   border-right: none;
 }
@@ -68,7 +83,7 @@ table.list tbody tr.selectable:hover {
 }
 
 table.list tbody tr td.empty-body {
-  height: 100px;
+  height: 150px;
   color: #ff9900;
   text-align: center;
 }
@@ -428,6 +443,37 @@ div.vsplitter {
 .formbuttons input {
   margin: 5px;
 }
+
+.listnav {
+  width: 100%;
+  text-align: right;
+}
+
+.listnav a {
+  float: left;
+  display: block;
+  width: 16px;
+  height: 16px;
+  background: url(images/arrow_left.png) center no-repeat;
+}
+
+.listnav a.next {
+  background: url(images/arrow_right.png) center no-repeat;
+}
+
+.listnav a.disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+.listnav span span {
+  float: left;
+  display: block;
+  height: 14px;
+  padding: 1px 5px;
+}
+
+
 
 /***** tabbed interface elements *****/
 

@@ -24,17 +24,26 @@ class kolab_client_task_user extends kolab_client_task
      */
     public function action_list()
     {
-        $post = array(
+        $page_size = 20;
+        $page      = (int) self::get_input('page', 'POST');
+        if (!$page) {
+            $page = 1;
+        }
+
+        // request parameters
+        $post      = array(
             'attributes' => array('displayname'),
 //            'sort_order' => 'ASC',
-            'sort_by' => 'displayname',
+            'sort_by'    => 'displayname',
+            'page_size'  => $page_size,
+            'page'       => $page,
         );
 
         // search parameters
         if (!empty($_POST['search'])) {
             $search = self::get_input('search', 'POST', true);
-            $field  = self::get_input('field',  'POST', true);
-            $method = self::get_input('method', 'POST', true);
+            $field  = self::get_input('field',  'POST');
+            $method = self::get_input('method', 'POST');
 
             $post['search'] = array(
                 $field => array(
@@ -46,14 +55,44 @@ class kolab_client_task_user extends kolab_client_task
         }
 
         $result = $this->api->post('users.list', null, $post);
-        $result = (array) $result->get();
+        $count  = $result->get('count');
+        $result = (array) $result->get('list');
 
-        $rows = $head = array();
+        // calculate records
+        if ($count) {
+            $start = 1 + max(0, $page - 1) * $page_size;
+            $end   = min($start + $page_size - 1, $count);
+        }
+
+        $rows = $head = $foot = array();
         $cols = array('name');
         $i    = 0;
 
         // table header
         $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('user.list'));
+
+        // table footer (navigation)
+        if ($count) {
+            $pages = ceil($count / $page_size);
+            $prev  = max(0, $page - 1);
+            $next  = $page < $pages ? $page + 1 : 0;
+
+            $count = kolab_html::span(array(
+                'content' => $this->translate('user.list.records', $start, $end, $count)), true);
+            $prev = kolab_html::a(array(
+                'class' => 'prev' . ($prev ? '' : ' disabled'),
+                'href'  => '#',
+                'onclick' => $prev ? "kadm.command('user.list', {page: $prev})" : "return false",
+            ));
+            $next = kolab_html::a(array(
+                'class' => 'next' . ($next ? '' : ' disabled'),
+                'href'  => '#',
+                'onclick' => $next ? "kadm.command('user.list', {page: $next})" : "return false",
+            ));
+
+            $foot_body = kolab_html::span(array('content' => $prev . $count . $next));
+        }
+        $foot[0]['cells'][] = array('class' => 'listnav', 'body' => $foot_body);
 
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
@@ -74,8 +113,13 @@ class kolab_client_task_user extends kolab_client_task
             )));
         }
 
-        $table = kolab_html::table(array('id' => 'userlist', 'class' => 'list',
-            'head' => $head, 'body' => $rows));
+        $table = kolab_html::table(array(
+            'id'    => 'userlist',
+            'class' => 'list',
+            'head'  => $head,
+            'body'  => $rows,
+            'foot'  => $foot,
+        ));
 
         $this->watermark('taskcontent');
         $this->output->set_object('userlist', $table);

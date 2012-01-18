@@ -20,7 +20,8 @@ class kolab_client_task_group extends kolab_client_task
     {
 //        $content = 'test output from users.list';
         $result = $this->api->get('groups.list');
-        $result = (array) $result->get();
+        $count  = (int) $result->get('count');
+        $result = (array) $result->get('list');
         foreach ($result as $idx => $item) {
             if (!is_array($item) || empty($item['cn'])) {
                 unset($result[$idx]);
