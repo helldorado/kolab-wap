@@ -75,8 +75,22 @@ class kolab_users_actions extends kolab_api_service
         }
 
         $users = $auth->list_users(null, $attributes, $search, $params);
+        $count = count($users);
 
-        return $users;
+        // pagination
+        if (!empty($post['page_size']) && $count) {
+            $size   = (int) $post['page_size'];
+            $page   = !empty($post['page']) ? $post['page'] : 1;
+            $page   = max(1, (int) $page);
+            $offset = ($page - 1) * $size;
+
+            $users = array_slice($users, $offset, $size, true);
+        }
+
+        return array(
+            'list'  => $users,
+            'count' => $count,
+        );
     }
 
 }
