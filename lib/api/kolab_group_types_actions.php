@@ -1,38 +1,37 @@
 <?php
 
-    /**
-     *
-     */
-    class kolab_group_types_actions extends kolab_api_service
+/**
+ *
+ */
+class kolab_group_types_actions extends kolab_api_service
+{
+    public function capabilities($domain)
     {
-        public function capabilities($domain)
-        {
-            return array(
-                    'list' => 'r',
-                );
-        }
+        return array(
+            'list' => 'r',
+        );
+    }
 
-        public function group_types_list($get, $post) {
-            $result = query("SELECT * FROM group_types");
-            $group_types = Array();
+    public function group_types_list($get, $post)
+    {
+        $result = query("SELECT * FROM group_types");
+        $group_types = Array();
 
-            while ($row = mysql_fetch_assoc($result)) {
-                $group_types[$row['id']] = Array();
+        while ($row = mysql_fetch_assoc($result)) {
+            $group_types[$row['id']] = array();
 
-                foreach ($row as $key => $value) {
-                    if ($key != "id") {
-                        if ($key == "attributes") {
-                            $group_types[$row['id']][$key] = json_decode(unserialize($value), true);
-                        } else {
-                            $group_types[$row['id']][$key] = $value;
-                        }
+            foreach ($row as $key => $value) {
+                if ($key != "id") {
+                    if ($key == "attributes") {
+                        $group_types[$row['id']][$key] = json_decode(unserialize($value), true);
+                    }
+                    else {
+                        $group_types[$row['id']][$key] = $value;
                     }
                 }
             }
-
-            return $group_types;
-
         }
-    }
 
-?>
+        return $group_types;
+    }
+}
