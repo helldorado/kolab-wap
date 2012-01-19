@@ -25,7 +25,8 @@ class kolab_form_value_actions extends kolab_api_service
             throw new Exception("No user type ID specified", 34);
         }
 
-        $user_type = mysql_fetch_assoc(query("SELECT attributes FROM user_types WHERE id = '" . $postdata['user_type_id'] ."'"));
+        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
+        $user_type  = mysql_fetch_assoc($sql_result);
 
         $uta = json_decode(unserialize($user_type['attributes']), true);
 
@@ -47,7 +48,8 @@ class kolab_form_value_actions extends kolab_api_service
             throw new Exception("No user type ID specified", 34);
         }
 
-        $user_type = mysql_fetch_assoc(query("SELECT attributes FROM user_types WHERE id = '" . $postdata['user_type_id'] ."'"));
+        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
+        $user_type  = mysql_fetch_assoc($sql_result);
 
         $uta = json_decode(unserialize($user_type['attributes']), true);
 
@@ -70,7 +72,8 @@ class kolab_form_value_actions extends kolab_api_service
             throw new Exception("No user type ID specified", 34);
         }
 
-        $user_type = mysql_fetch_assoc(query("SELECT attributes FROM user_types WHERE id = '" . $postdata['user_type_id'] ."'"));
+        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
+        $user_type = mysql_fetch_assoc($sql_result);
 
         $uta = json_decode(unserialize($user_type['attributes']), true);
 
@@ -119,7 +122,8 @@ class kolab_form_value_actions extends kolab_api_service
             throw new Exception("No user type ID specified", 34);
         }
 
-        $user_type = mysql_fetch_assoc(query("SELECT attributes FROM user_types WHERE id = '" . $postdata['user_type_id'] ."'"));
+        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
+        $user_type  = mysql_fetch_assoc($sql_result);
 
         $uta = json_decode(unserialize($user_type['attributes']), true);
 

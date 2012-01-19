@@ -1,6 +1,7 @@
 <?php
 
-class SQL {
+class SQL
+{
     static private $instance = array();
 
     private $sql_uri = "mysql://username:password@hostname/database";
@@ -35,14 +36,36 @@ class SQL {
         $this->sql_uri = $conf->get($_conn, 'sql_uri');
     }
 
-    public function query($query)
+    public function query()
     {
         if (!$this->conn) {
             $this->_connect();
         }
 
+        $i     = 0;
+        $start = 0;
+        $query = func_get_arg(0);
+
+        while (strlen($query) > $start && ($pos = strpos($query, '?', $start)) !== false) {
+            $i++;
+            $param = $this->escape(func_get_arg($i));
+
+            $query = substr_replace($query, $param, $pos, 1);
+            $start = $pos + strlen($param) + 1;
+        }
+
         $result = mysql_query($query);
+
         return $result;
+    }
+
+    public function escape($str)
+    {
+        if ($str === null || is_array($str)) {
+            return 'NULL';
+        }
+
+        return "'" . mysql_real_escape_string($str, $this->conn) . "'";
     }
 
     private function _connect()

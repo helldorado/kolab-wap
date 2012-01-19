@@ -14,10 +14,10 @@ class kolab_group_types_actions extends kolab_api_service
 
     public function group_types_list($get, $post)
     {
-        $result = query("SELECT * FROM group_types");
-        $group_types = Array();
+        $sql_result = $this->db->query("SELECT * FROM group_types");
+        $group_types = array();
 
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = mysql_fetch_assoc($sql_result)) {
             $group_types[$row['id']] = array();
 
             foreach ($row as $key => $value) {

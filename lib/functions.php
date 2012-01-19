@@ -53,15 +53,6 @@ function class_autoloader($classname)
 
 spl_autoload_register('class_autoloader');
 
-function query($query, $_conn = 'kolab_wap')
-{
-    require_once 'SQL.php';
-
-    $sql = SQL::get_instance($_conn);
-
-    return $sql->query($query);
-}
-
 /**
  * Prints debug info into the 'console' log
  */

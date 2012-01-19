@@ -21,7 +21,8 @@ class kolab_group_actions extends kolab_api_service
             throw new Exception("No group type ID specified", 346781);
         }
 
-        $group_type = mysql_fetch_assoc(query("SELECT attributes FROM group_types WHERE id = '" . $postdata['group_type_id'] ."'"));
+        $sql_result = $this->db->query("SELECT attributes FROM group_types WHERE id = ?", $postdata['group_type_id']);
+        $group_type = mysql_fetch_assoc($sql_result);
 
         $gta = json_decode(unserialize($group_type['attributes']), true);
 
