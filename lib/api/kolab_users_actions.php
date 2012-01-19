@@ -66,7 +66,7 @@ class kolab_users_actions extends kolab_api_service
         if (!empty($post['sort_by'])) {
             // check if sort attribute is supported
             if (in_array($post['sort_by'], $this->list_attribs)) {
-                $params['sort_by'] = $post['sort_by'];            
+                $params['sort_by'] = $post['sort_by'];
             }
         }
 

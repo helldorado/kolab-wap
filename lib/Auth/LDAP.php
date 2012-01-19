@@ -713,13 +713,9 @@ class LDAP
      */
     private function _errstr()
     {
-        if (($errno = @ldap_errno($this->_connection)) == TRUE) {
-            if (($err2str = @ldap_err2str($errno)) == TRUE) {
+        if ($errno = @ldap_errno($this->_connection)) {
+            if ($err2str = @ldap_err2str($errno)) {
                 return $err2str;
-            }
-            else {
-                // Issue warning
-                return NULL;
             }
         }
 
@@ -1083,7 +1079,7 @@ class LDAP
      *
      * @param string $str Attribute value
      * @param bool   $dn  True if the attribute is a DN
-     *                                                                                                                                               
+     *
      * @return string Quoted string
      */
     private static function _quote_string($str, $dn=false)
@@ -1116,7 +1112,7 @@ class LDAP
             );
         }
 
-         return strtr($str, $replace);                                                                                                                
+         return strtr($str, $replace);
     }
 
 }
