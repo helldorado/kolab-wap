@@ -214,6 +214,9 @@ class kolab_api_controller
 
         // add capabilities of all registered services
         foreach ($this->domains as $domain) {
+            // TODO: 'associateddomain' is very specific to 389ds based deployments, and this
+            // is supposed to be very generic.
+            $domain_name = is_array($domain) ? $domain['associateddomain'] : $domain;
             // define our very own capabilities
             $actions = array(
                 array('action' => 'system.quit', 'type' => 'w'),
@@ -226,9 +229,7 @@ class kolab_api_controller
                 }
             }
 
-            // TODO: 'associateddomain' is very specific to 389ds based deployments, and this
-            // is supposed to be very generic.
-            $result[] = array('domain' => $domain['associateddomain'], 'actions' => $actions);
+            $result[] = array('domain' => $domain_name, 'actions' => $actions);
         }
 
         return array('capabilities' => $result);
