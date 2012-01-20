@@ -9,7 +9,6 @@ class kolab_groups_actions extends kolab_api_service
     {
         return array(
             'list' => 'r',
-            'search' =>  'r',
             );
     }
 
@@ -19,6 +18,16 @@ class kolab_groups_actions extends kolab_api_service
 
         $groups = $auth->list_groups();
         $count  = count($groups);
+
+        // pagination
+        if (!empty($post['page_size']) && $count) {
+            $size   = (int) $post['page_size'];
+            $page   = !empty($post['page']) ? $post['page'] : 1;
+            $page   = max(1, (int) $page);
+            $offset = ($page - 1) * $size;
+
+            $groups = array_slice($groups, $offset, $size, true);
+        }
 
         return array(
             'list'  => $groups,
