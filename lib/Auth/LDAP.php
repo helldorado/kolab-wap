@@ -261,15 +261,20 @@ class LDAP
         return $this->_list_group_members($group_dn);
     }
 
-    public function groups_list()
+    public function groups_list($attributes = array())
     {
-        $filter = "(|"
+        if (empty($attributes)) {
+            $attributes = array('*');
+        }
+    
+        $base_dn = "ou=Groups,dc=klab,dc=cc";
+        $filter  = "(|"
             ."(objectClass=kolabgroupofnames)"
             ."(objectclass=kolabgroupofuniquenames)"
             ."(objectclass=kolabgroupofurls)"
             .")";
 
-        return $this->search("ou=Groups,dc=klab,dc=cc", $filter, array("cn"));
+        return $this->search($base_dn, $filter, $attributes);
     }
 
     public function llist($base_dn, $filter)
@@ -285,9 +290,9 @@ class LDAP
         return $domains;
     }
 
-    public function list_groups()
+    public function list_groups($attributes = array())
     {
-        $groups = $this->groups_list();
+        $groups = $this->groups_list($attributes);
         $groups = $this->normalize_result($groups);
 
         return $groups;
