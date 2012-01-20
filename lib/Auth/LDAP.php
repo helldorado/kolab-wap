@@ -6,7 +6,6 @@
 
 class LDAP
 {
-
     public $_name = "LDAP";
 
     // Needs to be protected and not just private
@@ -363,8 +362,8 @@ class LDAP
             $type_str = 'user';
         }
         else {
-//@TODO: sql injection
-            $_key = mysql_fetch_assoc(query("SELECT key FROM user_types WHERE id = '" . $type  . "'"));
+            $db   = SQL::get_instance();
+            $_key = mysql_fetch_assoc($db->query("SELECT key FROM user_types WHERE id = ?", $type));
             $type_str = $_key['key'];
         }
 
