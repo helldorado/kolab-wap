@@ -32,6 +32,9 @@ class kolab_user_types_actions extends kolab_api_service
             }
         }
 
-        return $user_types;
+        return array(
+            'list'  => $user_types,
+            'count' => count($user_types),
+        );
     }
 }

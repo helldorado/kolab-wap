@@ -219,20 +219,23 @@ class kolab_api_controller
             $domain_name = is_array($domain) ? $domain['associateddomain'] : $domain;
             // define our very own capabilities
             $actions = array(
-                array('action' => 'system.quit', 'type' => 'w'),
+                'system.quit' => array('type' => 'w'),
             );
 
             foreach ($this->services as $sname => $handler) {
                 $service = $this->get_service($sname);
                 foreach ($service->capabilities($domain) as $method => $type) {
-                    $actions[] = array('action' => "$sname.$method", 'type' => $type);
+                    $actions["$sname.$method"] = array('type' => $type);
                 }
             }
 
-            $result[] = array('domain' => $domain_name, 'actions' => $actions);
+            $result[$domain_name] = array('actions' => $actions);
         }
 
-        return array('capabilities' => $result);
+        return array(
+            'list'  => $result,
+            'count' => count($result),
+        );
     }
 
     private function get_domain() {
