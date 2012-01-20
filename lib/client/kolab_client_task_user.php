@@ -31,7 +31,7 @@ class kolab_client_task_user extends kolab_client_task
         }
 
         // request parameters
-        $post      = array(
+        $post = array(
             'attributes' => array('displayname'),
 //            'sort_order' => 'ASC',
             'sort_by'    => 'displayname',

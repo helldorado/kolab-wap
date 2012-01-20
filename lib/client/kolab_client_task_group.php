@@ -18,10 +18,25 @@ class kolab_client_task_group extends kolab_client_task
 
     public function action_list()
     {
-//        $content = 'test output from users.list';
+        $page_size = 20;
+        $page      = (int) self::get_input('page', 'POST');
+        if (!$page) {
+            $page = 1;
+        }
+
+        // request parameters
+        $post = array(
+            'attributes' => array('cn'),
+//            'sort_order' => 'ASC',
+            'sort_by'    => 'cn',
+            'page_size'  => $page_size,
+            'page'       => $page,
+        );
+
         $result = $this->api->get('groups.list');
         $count  = (int) $result->get('count');
         $result = (array) $result->get('list');
+
         foreach ($result as $idx => $item) {
             if (!is_array($item) || empty($item['cn'])) {
                 unset($result[$idx]);
