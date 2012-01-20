@@ -12,6 +12,10 @@ class kolab_users_actions extends kolab_api_service
         'sn',
         'givenname',
         'mail',
+        'objectclass',
+        'uidnumber',
+        'gidnumber',
+        'mailhost',
     );
 
 

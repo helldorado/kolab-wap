@@ -5,6 +5,13 @@
  */
 class kolab_groups_actions extends kolab_api_service
 {
+    public $list_attribs = array(
+        'cn',
+        'gidnumber',
+        'objectclass',
+        'mail',
+    );
+
     public function capabilities($domain)
     {
         return array(
@@ -15,6 +22,17 @@ class kolab_groups_actions extends kolab_api_service
     public function groups_list($get, $post)
     {
         $auth = Auth::get_instance();
+
+        // returned attributes
+        if (!empty($post['attributes']) && is_array($post['attributes'])) {
+            // get only supported attributes
+            $attributes = array_intersect($this->list_attribs, $post['attributes']);
+            // need to fix array keys
+            $attributes = array_values($attributes);
+        }
+        if (empty($attributes)) {
+            $attributes = (array)$this->list_attribs[0];
+        }
 
         $groups = $auth->list_groups();
         $count  = count($groups);
