@@ -136,9 +136,6 @@ class kolab_client_task
                         $user['fullname'] = $res['cn'];
                     }
 
-                    // Initialize list of user types
-                    $this->user_types();
-
                     $_SESSION['user'] = $user;
                     header('Location: ?');
                     die;
@@ -382,6 +379,8 @@ class kolab_client_task
         }
 
         $task = $this->get_task();
+// @TODO: hide menu items according to capabilities
+//        $caps = (array) $this->capabilities();
 
         foreach ($this->menu as $idx => $label) {
             if (strpos($idx, '.')) {
@@ -412,13 +411,13 @@ class kolab_client_task
     /**
      * Returns list of user types.
      *
-     * @param array List of user types
+     * @return array List of user types
      */
     protected function user_types()
     {
         if (!isset($_SESSION['user_types'])) {
             $result = $this->api->post('user_types.list');
-            $list   = $result->get();
+            $list   = $result->get('list');
 
             if (is_array($list)) {
                 $_SESSION['user_types'] = $list;
@@ -426,6 +425,28 @@ class kolab_client_task
         }
 
         return $_SESSION['user_types'];
+    }
+
+
+    /**
+     * Returns list of system capabilities.
+     *
+     * @return array List of system capabilities
+     */
+    protected function capabilities()
+    {
+        if (!isset($_SESSION['capabilities'])) {
+            $result = $this->api->post('system.capabilities');
+            $list   = $result->get('list');
+
+            if (is_array($list)) {
+                $_SESSION['capabilities'] = $list;
+            }
+        }
+
+        $domain = $_SESSION['user']['domain'];
+
+        return $_SESSION['capabilities'][$domain];
     }
 
     /**
