@@ -368,7 +368,7 @@ class kolab_client_task_user extends kolab_client_task
                 }
 
                 if (!empty($field['description'])) {
-                    $description = kolab_html::escape($this->translate($field['description']));
+                    $description = $this->translate($field['description']);
                     if ($description != $field['description']) {
                         $field['title'] = $description;
                     }

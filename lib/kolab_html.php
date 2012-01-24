@@ -289,6 +289,6 @@ class kolab_html
 
     public static function escape($value)
     {
-        return htmlspecialchars($value, null, KADM_CHARSET);
+        return htmlspecialchars($value, ENT_COMPAT, KADM_CHARSET);
     }
 }
