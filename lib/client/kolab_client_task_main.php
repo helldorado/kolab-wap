@@ -20,6 +20,10 @@ class kolab_client_task_main extends kolab_client_task
         // assign default set of translations
         $this->output->add_translation('loading', 'servererror', 'search');
 
+        // Create list of tasks for dashboard
+        // @TODO: check capabilities
+        $this->output->assign('tasks', $this->menu);
+
         $this->output->assign('main_menu', $this->menu());
         $this->output->assign('user', $_SESSION['user']);
     }

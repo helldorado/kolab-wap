@@ -17,7 +17,16 @@
     </div>
     <div id="navigation">{$main_menu}</div>
     <div id="task_navigation">{$task_menu}</div>
-    <div id="content">{$content}</div>
+    <div id="content">
+        <div id="main">
+            {foreach $tasks as $link => $label}
+            <div class="{preg_replace('/\..*$/', '', $link)}" onclick="kadm.command('{$link}', '', this)">
+                <span class="image"></span>
+                <span class="label">{$engine->translate($label)}</span>
+            </div>
+            {/foreach}
+        </div>
+    </div>
     <div id="footer">
         <span id="request_time">{$engine->gentime()}</span>
     </div>

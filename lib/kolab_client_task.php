@@ -392,8 +392,8 @@ class kolab_client_task
                 $class  = $idx;
             }
 
-            $menu[$idx] = sprintf('<li class="%s"><a href="#%s" '
-                .'onclick="return kadm.command(\'%s\', \'\', this)">%s</a></li>',
+            $menu[$idx] = sprintf('<li class="%s">'
+                .'<a href="#%s" onclick="return kadm.command(\'%s\', \'\', this)">%s</a></li>',
                 $class, $idx, $action, $this->translate($label));
         }
 
@@ -427,7 +427,6 @@ class kolab_client_task
         return $_SESSION['user_types'];
     }
 
-
     /**
      * Returns list of system capabilities.
      *
@@ -447,6 +446,20 @@ class kolab_client_task
         $domain = $_SESSION['user']['domain'];
 
         return $_SESSION['capabilities'][$domain];
+    }
+
+    /**
+     * Returns system capability
+     *
+     * @param string $name Capability (key) name
+     *
+     * @return array Capability value if supported, NULL otherwise
+     */
+    protected function get_capability($name)
+    {
+        $caps = $this->capabilities();
+
+        return $caps[$name];
     }
 
     /**

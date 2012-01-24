@@ -578,6 +578,46 @@ fieldset.tabbed
   margin-top: 5px;
 }
 
+/**** Main screen elements ****/
+#main {
+  padding: 30px;
+}
+
+#main div {
+  float: left;
+  margin: 10px;
+  width: 150px;
+  height: 150px;
+  text-align: center;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+}
+
+#main div:hover {
+  background-color: #d6efff;
+}
+
+#main div span.image {
+  display: block;
+  margin: 15px 27px 10px;
+  height: 96px;
+  width: 96px;
+  background: url(images/about.png) center center no-repeat;
+}
+
+#main div.user span.image {
+  background: url(images/users.png) center center no-repeat;
+}
+
+#main div span.label {
+  font-weight: bold;
+
+}
+
 /**** User task elements ****/
 
 #userlist table {
