@@ -213,9 +213,9 @@ td.label {
 }
 
 #footer {
-  color: silver;
+  margin: 2px 15px;
+  color: #b0b0b0;
   font-size: 9px;
-  text-align: center;
   margin-bottom: 10px;
 }
 
@@ -580,7 +580,7 @@ fieldset.tabbed
 
 /**** Main screen elements ****/
 #main {
-  padding: 30px;
+  padding: 5px 30px;
 }
 
 #main div {
@@ -616,6 +616,11 @@ fieldset.tabbed
 #main div span.label {
   font-weight: bold;
 
+}
+
+#reqtime {
+  white-space: nowrap;
+  vertical-align: top;
 }
 
 /**** User task elements ****/

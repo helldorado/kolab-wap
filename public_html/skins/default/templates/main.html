@@ -18,6 +18,7 @@
     <div id="navigation">{$main_menu}</div>
     <div id="task_navigation">{$task_menu}</div>
     <div id="content">
+        <h1>{$engine->translate('welcome')}</h1>
         <div id="main">
             {foreach $tasks as $link => $label}
             <div class="{preg_replace('/\..*$/', '', $link)}" onclick="kadm.command('{$link}', '', this)">
@@ -28,7 +29,18 @@
         </div>
     </div>
     <div id="footer">
-        <span id="request_time">{$engine->gentime()}</span>
+        <table width="100%" cellpadding="0">
+            <tr>
+                <td width="99%">
+                    {$engine->translate('about.community')}<br />
+                    {$engine->translate('about.warranty')}<br />
+                    {$engine->translate('about.support')}
+                </td>
+                <td width="1%" id="reqtime">
+                    {$engine->translate('reqtime', {$engine->gentime()})}
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 {$script}

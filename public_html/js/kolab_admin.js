@@ -273,7 +273,7 @@ function kolab_admin()
   // handle HTTP response
   this.http_response = function(response)
   {
-    var i;
+    var i, el, t;
 
     if (!response)
       return;
@@ -288,8 +288,11 @@ function kolab_admin()
         $('#'+i).html(response.objects[i]);
 
     // Update gen. time
-    if (this.env.request_time)
-      $('#request_time').text(((new Date()).getTime() - this.env.request_time)/1000);
+    if (this.env.request_time) {
+      t = ((new Date()).getTime() - this.env.request_time)/1000;
+      el = $('#reqtime');
+      el.text(el.text().replace(/[0-9.,]+/, t));
+    }
 
     // we have translation labels to add
     if (typeof response.labels === 'object')
