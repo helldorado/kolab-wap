@@ -262,8 +262,13 @@ class kolab_html
                 continue;
             }
 
-            // ignore "internal" or not allowed attributes
-            if ((!empty($allowed) && !isset($allowed[$key])) || $value === null) {
+            // ignore empty values
+            if ($value === null) {
+                continue;
+            }
+
+            // ignore unpermitted attributes, allow "data-"
+            if (!empty($allowed) && strpos($key, 'data-') !== 0 && !isset($allowed[$key])) {
                 continue;
             }
 
