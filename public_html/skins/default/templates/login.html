@@ -14,7 +14,9 @@
     <div id="navigation"></div>
     <div id="task_navigation"></div>
     <div id="content">{$engine->login_form()}</div>
-    <div id="footer">{$engine->gentime()}</div>
+    <div id="footer">
+        {include file="footer.html"}
+    </div>
 </body>
 {$script}
 </html>
