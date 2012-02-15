@@ -180,6 +180,10 @@ class kolab_form
     {
         $type = isset($attribs['type']) ? $attribs['type'] : 0;
 
+        if (!empty($attribs['readonly']) || !empty($attribs['disabled'])) {
+            $attribs['class'] = (!empty($attribs['class']) ? $attribs['class'] . ' ' : '') . 'readonly';
+        }
+
         switch ($type) {
         case self::INPUT_TEXT:
         case self::INPUT_PASSWORD:

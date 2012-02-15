@@ -154,12 +154,13 @@ class kolab_client_task_user extends kolab_client_task
             $attribs['id'] = 'user-form';
         }
 
-        $form    = new kolab_form($attribs);
-        $utypes  = $this->user_types();
-        $form_id = $attribs['id'];
+        $form      = new kolab_form($attribs);
+        $utypes    = (array) $this->user_types();
+        $form_id   = $attribs['id'];
+        $accttypes = array();
 
         foreach ($utypes as $idx => $elem) {
-            $utypes[$idx] = array('value' => $elem['key'], 'content' => $elem['name']);
+            $accttypes[$idx] = array('value' => $elem['key'], 'content' => $elem['name']);
         }
 
         $fields = array(
@@ -296,7 +297,7 @@ class kolab_client_task_user extends kolab_client_task
                         'label' => 'user.type',
                         'description' => 'user.type.desc',
                         'type'        => kolab_form::INPUT_SELECT,
-                        'options'     => $utypes,
+                        'options'     => $accttypes,
                     ),
                 ),
             ),
@@ -341,9 +342,49 @@ class kolab_client_task_user extends kolab_client_task
             ),
         );
 
+        $event_fields = array();
+        $auto_fields  = array();
+
+        // Selected account type
+        $utype = !empty($data['accttype']) ? $data['accttype'] : key($accttypes);
+
+        if ($utype) {
+            $auto_fields = (array) $utypes[$utype]['attributes']['auto_form_fields'];
+        }
+
+        // Mark automatically generated fields as read-only, etc.
+        foreach ($auto_fields as $af_idx => $af) {
+            foreach ($fields as $section_idx => $section) {
+                foreach ($section['fields'] as $idx => $field) {
+                    if ($idx == $af_idx) {
+                        $fields[$section_idx]['fields'][$idx]['readonly'] = true;
+                        $fields[$section_idx]['fields'][$idx]['disabled'] = true;
+                        $fields[$section_idx]['fields'][$idx]['required'] = false;
+
+//                        if (!empty($af['data'])) {
+//                        }
+                        break 2;
+                    }
+                }
+            }
+        }
+
+/*
+        // Hide account type selector if there's only one type
+        if (count($accttypes)) {
+            $fields['system']['fields']['accttype'] = array(
+                'type' => kolab_form::INPUT_HIDDEN,
+            );
+        }
+*/
         // Parse elements and add them to the form object
         foreach ($fields as $section_idx => $section) {
+            if (empty($section['fields'])) {
+                continue;
+            }
+
             $form->add_section($section_idx, kolab_html::escape($this->translate($section['label'])));
+
             foreach ($section['fields'] as $idx => $field) {
                 $field['section']     = $section_idx;
                 $field['label']       = kolab_html::escape($this->translate($field['label']));
@@ -389,10 +430,13 @@ class kolab_client_task_user extends kolab_client_task
             'value'   => kolab_html::escape($this->translate('submit.button')),
             'onclick' => "kadm.save_user('$form_id')",
         ));
-        $form->add_button(array(
-            'value'   => kolab_html::escape($this->translate('delete.button')),
-            'onclick' => "kadm.delete_user('$form_id')",
-        ));
+
+        if ($data !== null) {
+            $form->add_button(array(
+                'value'   => kolab_html::escape($this->translate('delete.button')),
+                'onclick' => "kadm.delete_user('$form_id')",
+            ));
+        }
 
         return $form->output();
     }

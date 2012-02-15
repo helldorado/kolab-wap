@@ -473,6 +473,14 @@ div.vsplitter {
   padding: 1px 5px;
 }
 
+.readonly {
+  color: #a0a0a0;
+}
+
+input.readonly,
+textarea.readonly {
+  background-color: #f5f5f5;
+}
 
 
 /***** tabbed interface elements *****/
