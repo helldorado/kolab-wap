@@ -76,7 +76,7 @@ $LANG['group.add'] = 'Add Group';
 
 $LANG['MB'] = 'MB';
 $LANG['days'] = 'days';
-$LANG['submit.button'] = 'Sumbit';
+$LANG['submit.button'] = 'Submit';
 $LANG['delete.button'] = 'Delete';
 $LANG['about.community'] = 'This is the Community Edition of the <b>Kolab Server</b>.';
 $LANG['about.warranty'] = 'It comes with absolutely <b>no warranties</b> and is typically run entirely self supported. You can find help & information on the community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';

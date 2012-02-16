@@ -396,7 +396,9 @@ function kolab_admin()
     for (i in query)
       json[query[i].name] = query[i].value;
 
-    return json;
+    this.trigger_event('form-serialize', {id: id, json: json});
+
+    return i.json;
   };
 
   /*********************************************************/
@@ -432,7 +434,8 @@ function kolab_admin()
 
   this.user_save = function(props)
   {
-    this.api_post('user.add', {}, 'user_save_response');
+    var data = this.serialize_form('#'+props);
+    this.api_post('user.add', data, 'user_save_response');
   };
 
   this.user_save_response = function(response)

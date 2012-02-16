@@ -327,16 +327,19 @@ class kolab_client_task_user extends kolab_client_task
                         'label' => 'user.alias',
                         'description' => 'user.alias.desc',
                         'type'        => kolab_form::INPUT_TEXTAREA,
+                        'data-type'   => kolab_form::TYPE_LIST,
                     ),
                     'kolabdelegate' => array(
                         'label' => 'user.delegate',
                         'description' => 'user.delegate.desc',
                         'type'        => kolab_form::INPUT_TEXTAREA,
+                        'data-type'   => kolab_form::TYPE_LIST,
                     ),
                     'kolabAllowSMTPRecipient' => array(
                         'label' => 'user.smtp-recipients',
                         'description' => 'user.smtp-recipients.desc',
                         'type'        => kolab_form::INPUT_TEXTAREA,
+                        'data-type'   => kolab_form::TYPE_LIST,
                     ),
                 ),
             ),
@@ -377,6 +380,7 @@ class kolab_client_task_user extends kolab_client_task
             );
         }
 */
+
         // Parse elements and add them to the form object
         foreach ($fields as $section_idx => $section) {
             if (empty($section['fields'])) {
@@ -389,8 +393,14 @@ class kolab_client_task_user extends kolab_client_task
                 $field['section']     = $section_idx;
                 $field['label']       = kolab_html::escape($this->translate($field['label']));
 
-                if (isset($data[$idx])) {
-                    $field['value'] = kolab_html::escape($data[$idx]);
+                if (!empty($data[$idx])) {
+                    if (is_array($data[$idx])) {
+                        $field['value'] = array_map(array('kolab_html', 'escape'), $data[$idx]);
+                        $field['value'] = implode("\n", $field['value']);
+                    }
+                    else {
+                        $field['value'] = kolab_html::escape($data[$idx]);
+                    }
                 }
 
                 if (!empty($field['suffix'])) {

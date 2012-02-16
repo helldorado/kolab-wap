@@ -9,7 +9,7 @@ try {
     $postdata = $_SERVER['REQUEST_METHOD'] == 'POST' ? file_get_contents('php://input') : null;
     $controller->dispatch($postdata);
 } catch(Exception $e) {
-    error_log($e->getMessage());
+    error_log('API Error: ' . $e->getMessage());
     $controller->output->error($e->getMessage(), $e->getCode());
 }
 

@@ -84,7 +84,8 @@ function write_log($name, $line)
     $log_dir = dirname(__FILE__) . '/../logs';
     $logfile = $log_dir . '/' . $name;
     $date    = date('d-M-Y H:i:s O');
-    $line    = sprintf("[%s](%s): %s\n", $date, session_id(), $line);
+    $sess_id = session_id();
+    $line    = sprintf("[%s]%s: %s\n", $date, $sess_id ? "($sess_id)" : '', $line);
 
     if ($fp = @fopen($logfile, 'a')) {
         fwrite($fp, $line);

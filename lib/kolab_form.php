@@ -13,6 +13,8 @@ class kolab_form
     const INPUT_SELECT = 8;
     const INPUT_HIDDEN = 9;
 
+    const TYPE_LIST = 1;
+
     private $attribs  = array();
     private $elements = array();
     private $sections = array();
@@ -149,7 +151,7 @@ class kolab_form
         }
 
         // Add event trigger, so UI can rebuild the form e.g. adding tabs
-        $content .= kolab_html::script('kadm.trigger_event(\'form-loaded\', \'' . $this->attribs['id'] . '\')');
+        $content .= kolab_html::script('kadm.trigger_event(\'form-load\', \'' . $this->attribs['id'] . '\')');
 
         return $content;
     }
@@ -211,6 +213,16 @@ class kolab_form
             }
             if (empty($attribs['cols'])) {
                 $attribs['cols'] = 50;
+            }
+
+            if (!empty($attribs['data-type'])) {
+                switch ($attribs['data-type']) {
+                    case self::TYPE_LIST:
+                        $attribs['data-type'] = 'list';
+                    break;
+                    default:
+                        unset($attribs['data-type']);
+                }
             }
 
             $content = kolab_html::textarea($attribs, true);
