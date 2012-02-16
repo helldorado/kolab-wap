@@ -11,6 +11,7 @@ class kolab_api_controller
     private $request  = array();
     private $services = array();
     private $domains  = array('localhost.localdomain');
+    private static $translation = array();
 
     public function __construct()
     {
@@ -24,7 +25,7 @@ class kolab_api_controller
                 );
             }
             else {
-                throw new Exception("Unknown methods", 400);
+                throw new Exception("Unknown method", 400);
             }
         }
         else {
@@ -117,6 +118,9 @@ class kolab_api_controller
             }
         }
 
+        // init localization
+        $this->locale_init();
+
         // call service method
         $service_handler = $this->get_service($service);
 
@@ -150,7 +154,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $url    .= '/' . $service . '.' . $method;
 
-        console("Proxying to " . $url);
+        console("Proxying " . $url);
 
         $request = new HTTP_Request2();
         $url     = new Net_URL2($url);
@@ -295,7 +299,7 @@ class kolab_api_controller
     }
 
     /**
-     * End the current user ession
+     * End the current user session
      */
     private function quit()
     {
@@ -316,4 +320,58 @@ class kolab_api_controller
     /* ========  Utility functions  ======== */
 
 
+    /**
+     * Localization initialization.
+     */
+    private function locale_init()
+    {
+        // @TODO: read language from logged user data
+        $lang = 'en_US';
+
+        if ($lang != 'en_US' && file_exists(INSTALL_PATH . "/locale/$lang.api.php")) {
+            $language = $lang;
+        }
+
+        $LANG = array();
+        @include INSTALL_PATH . '/locale/en_US.api.php';
+
+        if (isset($language)) {
+            @include INSTALL_PATH . "/locale/$language.api.php";
+            setlocale(LC_ALL, $language . '.utf8', 'en_US.utf8');
+        }
+        else {
+            setlocale(LC_ALL, 'en_US.utf8');
+        }
+
+        self::$translation = $LANG;
+    }
+
+    /**
+     * Returns translation of defined label/message.
+     *
+     * @return string Translated string.
+     */
+    public static function translate()
+    {
+        $args = func_get_args();
+
+        if (is_array($args[0])) {
+            $args = $args[0];
+        }
+
+        $label = $args[0];
+
+        if (isset(self::$translation[$label])) {
+	        $content = trim(self::$translation[$label]);
+        }
+	    else {
+	        $content = $label;
+        }
+
+        for ($i = 1, $len = count($args); $i < $len; $i++) {
+            $content = str_replace('$'.$i, $args[$i], $content);
+        }
+
+        return $content;
+    }
 }

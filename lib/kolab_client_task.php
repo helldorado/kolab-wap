@@ -74,7 +74,7 @@ class kolab_client_task
         $LANG = array();
         @include INSTALL_PATH . '/locale/en_US.php';
 
-        if (isset($language)) {
+        if (!empty($language) && $language != 'en_US') {
             @include INSTALL_PATH . "/locale/$language.php";
             setlocale(LC_ALL, $language . '.utf8', 'en_US.utf8');
         }

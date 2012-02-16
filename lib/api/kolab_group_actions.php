@@ -31,7 +31,7 @@ class kolab_group_actions extends kolab_api_service
         if (isset($gta['form_fields'])) {
             foreach ($gta['form_fields'] as $key => $value) {
                 error_log("form field $key");
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                if (!isset($postdata[$key]) || $postdata[$key] === '') {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {

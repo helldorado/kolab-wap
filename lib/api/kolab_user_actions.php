@@ -22,10 +22,10 @@ class kolab_user_actions extends kolab_api_service
     public function user_add($getdata, $postdata)
     {
         if (!isset($postdata['user_type_id'])) {
-            throw new Exception("No user type ID specified", 346781);
+            throw new Exception($this->controller::translate('user.notypeid'), 346781);
         }
 
-        $sql_result = query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
+        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
         $user_type  = mysql_fetch_assoc($sql_result);
 
         $uta = json_decode(unserialize($user_type['attributes']), true);
