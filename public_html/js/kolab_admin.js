@@ -7,14 +7,14 @@ function kolab_admin()
   this.env = {};
   this.translations = {};
   this.request_timeout = 300;
-  this.message_time = 4000;
+  this.message_time = 3000;
   this.events = {};
 
   // set jQuery ajax options
   $.ajaxSetup({
     cache: false,
     error: function(request, status, err) { ref.http_error(request, status, err); },
-    beforeSend: function(xmlhttp) { xmlhttp.setRequestHeader('X-KAP-Request', ref.env.token); }
+    beforeSend: function(xmlhttp) { xmlhttp.setRequestHeader('X-Session-Token', ref.env.token); }
   });
 
 
@@ -250,8 +250,7 @@ function kolab_admin()
   // send a http POST request to the server
   this.http_post = function(action, postdata)
   {
-    var url = this.url(action),
-      dt = new Date();
+    var url = this.url(action);
 
     if (postdata && typeof postdata === 'object')
       postdata.remote = 1;
@@ -261,11 +260,27 @@ function kolab_admin()
       postdata += '&remote=1';
     }
 
-    this.set_request_time()
+    this.set_request_time();
 
     return $.ajax({
       type: 'POST', url: url, data: postdata, dataType: 'json',
-      success: function(data) { ref.http_response(data); },
+      success: function(data) { kadm.http_response(data); },
+      error: function(o, status, err) { kadm.http_error(o, status, err); }
+    });
+  };
+
+  // send a http POST request to the API service
+  this.api_post = function(action, postdata, func)
+  {
+    var url = 'api/' + action;
+
+    if (!func) func = 'api_response';
+
+    this.set_request_time();
+
+    return $.ajax({
+      type: 'POST', url: url, data: postdata, dataType: 'json',
+      success: function(data) { kadm[func](data); },
       error: function(o, status, err) { kadm.http_error(o, status, err); }
     });
   };
@@ -273,7 +288,7 @@ function kolab_admin()
   // handle HTTP response
   this.http_response = function(response)
   {
-    var i, el, t;
+    var i;
 
     if (!response)
       return;
@@ -287,17 +302,11 @@ function kolab_admin()
       for (i in response.objects)
         $('#'+i).html(response.objects[i]);
 
-    // Update gen. time
-    if (this.env.request_time) {
-      t = ((new Date()).getTime() - this.env.request_time)/1000;
-      el = $('#reqtime');
-      el.text(el.text().replace(/[0-9.,]+/, t));
-    }
-
     // we have translation labels to add
     if (typeof response.labels === 'object')
       this.tdef(response.labels);
 
+    this.update_request_time();
     this.set_busy(false);
 
     // if we get javascript code from server -> execute it
@@ -315,6 +324,22 @@ function kolab_admin()
 
     if (request.status && errmsg)
       this.display_message(this.t('servererror') + ' (' + errmsg + ')', 'error');
+  };
+
+  this.api_response = function(response)
+  {
+    if (!response)
+      return false;
+
+    this.update_request_time();
+    this.set_busy(false);
+
+    if (response.status == 'ERROR') {
+      this.display_message(response.reason, 'error');
+      return false;
+    }
+
+    return true;
   };
 
 
@@ -353,6 +378,16 @@ function kolab_admin()
     this.env.request_time = (new Date()).getTime();
   };
 
+  // Update request time element
+  this.update_request_time = function()
+  {
+    if (this.env.request_time) {
+      var t = ((new Date()).getTime() - this.env.request_time)/1000,
+        el = $('#reqtime');
+      el.text(el.text().replace(/[0-9.,]+/, t));
+    }
+  };
+
   this.serialize_form = function(id)
   {
     var i, query = $(id).serializeArray(),
@@ -388,6 +423,21 @@ function kolab_admin()
     }
 
     this.http_post('user.list', props);
+  };
+
+  this.user_delete = function(props)
+  {
+  
+  };
+
+  this.user_save = function(props)
+  {
+    this.api_post('user.add', {}, 'user_save_response');
+  };
+
+  this.user_save_response = function(response)
+  {
+    this.api_response(response);
   };
 
 };

@@ -108,6 +108,13 @@ class kolab_client_task
     private function api_init()
     {
         $url = $this->config_get('api_url', '');
+
+        if (!$url) {
+            $url = 'https://' . $_SERVER['SERVER_NAME'];
+            $url .= preg_replace('/\?.*$/', '', $_SERVER['REQUEST_URI']);
+            $url .= '/api';
+        }
+
         $this->api = new kolab_client_api($url);
     }
 
@@ -206,7 +213,7 @@ class kolab_client_task
         }
 
         // CSRF prevention
-        $token  = $ajax ? kolab_utils::get_request_header('X-KAP-Request') : $this->get_input('token');
+        $token  = $ajax ? kolab_utils::get_request_header('X-Session-Token') : $this->get_input('token');
         $task   = $this->get_task();
 
         if ($task != 'main' && $token != $_SESSION['user']['token']) {

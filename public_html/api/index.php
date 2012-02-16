@@ -6,7 +6,7 @@ require_once dirname(__FILE__) . "/../../lib/functions.php";
 $controller = new kolab_api_controller;
 
 try {
-    $postdata = $_SERVER['REQUEST_METHOD'] == 'POST' ? @json_decode(file_get_contents('php://input'), true) : null;
+    $postdata = $_SERVER['REQUEST_METHOD'] == 'POST' ? file_get_contents('php://input') : null;
     $controller->dispatch($postdata);
 } catch(Exception $e) {
     error_log($e->getMessage());

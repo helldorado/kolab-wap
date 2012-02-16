@@ -428,13 +428,13 @@ class kolab_client_task_user extends kolab_client_task
 
         $form->add_button(array(
             'value'   => kolab_html::escape($this->translate('submit.button')),
-            'onclick' => "kadm.save_user('$form_id')",
+            'onclick' => "kadm.user_save('$form_id')",
         ));
 
         if ($data !== null) {
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
-                'onclick' => "kadm.delete_user('$form_id')",
+                'onclick' => "kadm.user_delete('$form_id')",
             ));
         }
 

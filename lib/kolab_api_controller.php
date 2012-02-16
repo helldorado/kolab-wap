@@ -97,8 +97,17 @@ class kolab_api_controller
      */
     public function dispatch($postdata)
     {
+        $config = Conf::get_instance();
+
+        // Use proxy
+        if (empty($_GET['proxy']) && ($url = $config->get('kolab_wap', 'api_url'))) {
+            $this->proxy($postdata, $url);
+            return;
+        }
+
         $service = $this->request['service'];
         $method  = $this->request['method'];
+        $postdata = @json_decode($postdata);
 
         console("Calling method " . $method . " on service " . $service);
         // validate user session
@@ -129,6 +138,49 @@ class kolab_api_controller
         else {
             $this->output->error("Internal error", 500);
         }
+    }
+
+
+    /**
+     * Proxies request to the API host
+     */
+    private function proxy($postdata, $url)
+    {
+        $service = $this->request['service'];
+        $method  = $this->request['method'];
+        $url    .= '/' . $service . '.' . $method;
+
+        console("Proxying to " . $url);
+
+        $request = new HTTP_Request2();
+        $url     = new Net_URL2($url);
+        $method  = strtoupper($_SERVER['REQUEST_METHOD']);
+
+        $request->setMethod($method == 'GET' ? HTTP_Request2::METHOD_GET : HTTP_Request2::METHOD_POST);
+        $request->setHeader('X-Session-Token', kolab_utils::get_request_header('X-Session-Token'));
+
+        if ($method == 'GET') {
+            $request->setBody($postdata);
+        }
+
+        try {
+            $request->setUrl($url);
+            $response = $request->send();
+        }
+        catch (Exception $e) {
+            $this->output->error("Internal error", 500);
+        }
+
+        try {
+            $body = $response->getBody();
+        }
+        catch (Exception $e) {
+            $this->output->error("Internal error", 500);
+        }
+
+        header("Content-Type: application/json");
+        echo $body;
+        exit;
     }
 
 
