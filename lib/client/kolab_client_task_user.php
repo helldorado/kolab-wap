@@ -424,7 +424,8 @@ class kolab_client_task_user extends kolab_client_task
             }
         }
 
-        $form->set_title(kolab_html::escape($data['displayname']));
+        $title = $data === null ? $this->translate('user.add') : $data['displayname'];
+        $form->set_title(kolab_html::escape($title));
 
         $form->add_button(array(
             'value'   => kolab_html::escape($this->translate('submit.button')),

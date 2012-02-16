@@ -17,7 +17,7 @@ class kolab_user_types_actions extends kolab_api_service
         $sql_result = $this->db->query("SELECT * FROM user_types");
         $user_types = array();
 
-        while ($row = mysql_fetch_assoc($sql_result)) {
+        while ($row = $this->db->fetch_assoc($sql_result)) {
             $user_types[$row['id']] = array();
 
             foreach ($row as $key => $value) {

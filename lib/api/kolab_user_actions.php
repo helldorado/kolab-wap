@@ -26,7 +26,7 @@ class kolab_user_actions extends kolab_api_service
         }
 
         $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
-        $user_type  = mysql_fetch_assoc($sql_result);
+        $user_type  = $this->db->fetch_assoc($sql_result);
 
         $uta = json_decode(unserialize($user_type['attributes']), true);
 
