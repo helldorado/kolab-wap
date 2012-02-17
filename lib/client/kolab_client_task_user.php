@@ -347,12 +347,14 @@ class kolab_client_task_user extends kolab_client_task
 
         $event_fields = array();
         $auto_fields  = array();
+        $form_fields  = array();
 
         // Selected account type
         $utype = !empty($data['accttype']) ? $data['accttype'] : key($accttypes);
 
         if ($utype) {
             $auto_fields = (array) $utypes[$utype]['attributes']['auto_form_fields'];
+            $form_fields = (array) $utypes[$utype]['attributes']['form_fields'];
         }
 
         // Mark automatically generated fields as read-only, etc.
@@ -372,6 +374,17 @@ class kolab_client_task_user extends kolab_client_task
             }
         }
 
+        // Disable fields not allowed for specified user type
+        foreach ($fields as $section_idx => $section) {
+            foreach ($section['fields'] as $idx => $field) {
+                if (!array_key_exists($idx, $form_fields)) {
+                    $fields[$section_idx]['fields'][$idx]['readonly'] = true;
+                    $fields[$section_idx]['fields'][$idx]['disabled'] = true;
+                    $fields[$section_idx]['fields'][$idx]['required'] = false;
+                }
+            }
+        }
+
 /*
         // Hide account type selector if there's only one type
         if (count($accttypes)) {
@@ -380,6 +393,19 @@ class kolab_client_task_user extends kolab_client_task
             );
         }
 */
+
+        // New user form
+        if ($data === null) {
+            // Pre-populate password fields
+            $pass = $this->api->get('form_value.generate_password');
+            $data['password'] = $data['password2'] = $pass->get('password');
+
+            // Page title
+            $title = $this->translate('user.add');
+        }
+        else {
+            $title = $data['displayname'];
+        }
 
         // Parse elements and add them to the form object
         foreach ($fields as $section_idx => $section) {
@@ -434,7 +460,6 @@ class kolab_client_task_user extends kolab_client_task
             }
         }
 
-        $title = $data === null ? $this->translate('user.add') : $data['displayname'];
         $form->set_title(kolab_html::escape($title));
 
         $form->add_button(array(

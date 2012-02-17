@@ -111,7 +111,7 @@ function form_serialize(data)
   var form = $(data.id);
 
   // replace some textarea fields with pretty/smart input lists
-  $('textarea[data-type="list"]', form).not(':disabled')
+  $('textarea[data-type="list"]', form).not('disabled')
     .each(function() {
     var i, value = [], re = RegExp('^' + this.name + '\[[0-9]+\]$');
 
@@ -135,17 +135,27 @@ function form_init(id)
   var form = $('#'+id), separator = /[,\s\r\n]+/;
 
   // replace some textarea fields with pretty/smart input lists
-  $('textarea[data-type="list"]', form).not(':disabled')
+  $('textarea[data-type="list"]', form)
     .each(function() {
     var i, len, elem, e = $(this),
       list = this.value.split(separator),
-      area = $('<span class="listarea">');
+      area = $('<span class="listarea">'),
+      disabled = e.attr('disabled') || e.attr('readonly');
 
     e.hide();
+
     for (i=0, len=list.length; i<len; i++) {
-      elem = form_list_element(form, {name: this.name+'['+i+']', value: list[i]});
+      elem = form_list_element(form, {
+        name: this.name+'['+i+']',
+        value: list[i],
+        disabled: disabled
+      });
       elem.appendTo(area);
     }
+
+    if (disabled)
+      area.addClass('readonly');
+
     area.appendTo(this.parentNode);
   });
 }
@@ -157,7 +167,10 @@ function form_list_element(form, data)
     + '<span title="" class="add"></span><span title="" class="reset"></span>'
     + '</span><input></span>');
 
-  $('input', elem).attr({name: data.name, value: data.value});
+  $('input', elem).attr({name: data.name, value: data.value, disabled: data.disabled});
+
+  if (data.disabled)
+    return elem;
 
   // attach element creation event
   $('span[class="add"]', elem).click(function() {
