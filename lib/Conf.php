@@ -3,6 +3,8 @@
 class Conf {
     static private $instance;
 
+    const CONFIG_FILE = '/etc/kolab/kolab.conf';
+
     /**
      * This implements the 'singleton' design pattern
      *
@@ -20,11 +22,11 @@ class Conf {
     public function __construct()
     {
         // Do some magic configuration loading here.
-        if (!file_exists('/etc/kolab/kolab.conf')) {
+        if (!file_exists(self::CONFIG_FILE)) {
             return;
         }
 
-        $_ini_raw = file('/etc/kolab/kolab.conf');
+        $_ini_raw = file(self::CONFIG_FILE);
 
         $this->_conf = array();
 

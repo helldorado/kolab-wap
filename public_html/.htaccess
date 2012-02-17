@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine on
-    RewriteBase /rc/admin/public_html
+    RewriteBase /~machniak/kolab-wap/public_html
 
     # Rewrite URLs of the form 'x' to the form 'index.php?q=x'.
     RewriteCond %{REQUEST_FILENAME} !-f

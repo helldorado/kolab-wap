@@ -110,8 +110,9 @@ class kolab_client_task
         $url = $this->config_get('api_url', '');
 
         if (!$url) {
-            $url = 'https://' . $_SERVER['SERVER_NAME'];
-            $url .= preg_replace('/\?.*$/', '', $_SERVER['REQUEST_URI']);
+    	    // @TODO: http/https
+            $url = 'http://' . $_SERVER['SERVER_NAME'];
+            $url .= preg_replace('/\/?\?.*$/', '', $_SERVER['REQUEST_URI']);
             $url .= '/api';
         }
 

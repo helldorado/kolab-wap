@@ -108,7 +108,7 @@ class kolab_api_controller
 
         $service = $this->request['service'];
         $method  = $this->request['method'];
-        $postdata = @json_decode($postdata);
+        $postdata = @json_decode($postdata, true);
 
         console("Calling method " . $method . " on service " . $service);
         // validate user session
@@ -152,22 +152,32 @@ class kolab_api_controller
     {
         $service = $this->request['service'];
         $method  = $this->request['method'];
-        $url    .= '/' . $service . '.' . $method;
+        $url     = rtrim($url, '/') . '/' . $service . '.' . $method;
 
         console("Proxying " . $url);
 
         $request = new HTTP_Request2();
         $url     = new Net_URL2($url);
         $method  = strtoupper($_SERVER['REQUEST_METHOD']);
+        $get     = array('proxy' => 1); // Prevent from infinite redirect
 
         $request->setMethod($method == 'GET' ? HTTP_Request2::METHOD_GET : HTTP_Request2::METHOD_POST);
         $request->setHeader('X-Session-Token', kolab_utils::get_request_header('X-Session-Token'));
 
         if ($method == 'GET') {
+	    parse_str($_SERVER['QUERY_STRING'], $query);
+	    unset($query['service']);
+	    unset($query['method']);
+	    
+	    $query = array_map('urldecode', $query);
+	    $get   = array_merge($query, $get);
+	}
+	else {
             $request->setBody($postdata);
         }
 
         try {
+    	    $url->setQueryVariables($get);
             $request->setUrl($url);
             $response = $request->send();
         }
