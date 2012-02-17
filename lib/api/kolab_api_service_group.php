@@ -3,7 +3,7 @@
 /**
  *
  */
-class kolab_group_actions extends kolab_api_service
+class kolab_api_service_group extends kolab_api_service
 {
     public function capabilities($domain)
     {

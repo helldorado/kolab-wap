@@ -33,14 +33,14 @@ class kolab_api_controller
         }
 
         // TODO: register services based on config or whatsoever
-        $this->add_service('form_value', 'kolab_form_value_actions');
-        $this->add_service('group_types', 'kolab_group_types_actions');
-        $this->add_service('group', 'kolab_group_actions');
-        $this->add_service('groups', 'kolab_groups_actions');
-        $this->add_service('user_types', 'kolab_user_types_actions');
-        $this->add_service('user', 'kolab_user_actions');
-        $this->add_service('users', 'kolab_users_actions');
-        $this->add_service('domains', 'kolab_domains_actions');
+        $this->add_service('form_value', 'kolab_api_service_form_value');
+        $this->add_service('group_types', 'kolab_api_service_group_types');
+        $this->add_service('group', 'kolab_api_service_group');
+        $this->add_service('groups', 'kolab_api_service_groups');
+        $this->add_service('user_types', 'kolab_api_service_user_types');
+        $this->add_service('user', 'kolab_api_service_user');
+        $this->add_service('users', 'kolab_api_service_users');
+        $this->add_service('domains', 'kolab_api_service_domains');
     }
 
     /**

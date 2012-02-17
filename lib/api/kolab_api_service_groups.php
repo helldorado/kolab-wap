@@ -3,7 +3,7 @@
 /**
  *
  */
-class kolab_groups_actions extends kolab_api_service
+class kolab_api_service_groups extends kolab_api_service
 {
     public $list_attribs = array(
         'cn',
