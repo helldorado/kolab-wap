@@ -22,7 +22,7 @@ class kolab_api_service_user extends kolab_api_service
     public function user_add($getdata, $postdata)
     {
         if (!isset($postdata['user_type_id'])) {
-            throw new Exception($this->controller::translate('user.notypeid'), 346781);
+            throw new Exception($this->controller->translate('user.notypeid'), 346781);
         }
 
         $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
