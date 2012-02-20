@@ -160,7 +160,7 @@ class kolab_client_task_user extends kolab_client_task
         $accttypes = array();
 
         foreach ($utypes as $idx => $elem) {
-            $accttypes[$idx] = array('value' => $elem['key'], 'content' => $elem['name']);
+            $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
 
         $fields = array(
@@ -300,7 +300,7 @@ class kolab_client_task_user extends kolab_client_task
                         'maxlength'   => 50,
                         'required'    => true,
                     ),
-                    'accttype' => array(
+                    'user_type_id' => array(
                         'label' => 'user.type',
                         'description' => 'user.type.desc',
                         'type'        => kolab_form::INPUT_SELECT,
@@ -357,7 +357,13 @@ class kolab_client_task_user extends kolab_client_task
         $form_fields  = array();
 
         // Selected account type
-        $utype = !empty($data['accttype']) ? $data['accttype'] : key($accttypes);
+        if (!empty($data['user_type_id'])) {
+            $utype = $data['user_type_id'];
+        }
+        else {
+            $utype = key($accttypes);
+            $data['user_type_id'] = $utype;
+        }
 
         if ($utype) {
             $auto_fields = (array) $utypes[$utype]['attributes']['auto_form_fields'];
@@ -404,14 +410,12 @@ class kolab_client_task_user extends kolab_client_task
 
         $this->output->set_env('auto_fields', $auto_fields);
 
-/*
         // Hide account type selector if there's only one type
         if (count($accttypes)) {
-            $fields['system']['fields']['accttype'] = array(
+            $fields['system']['fields']['user_type_id'] = array(
                 'type' => kolab_form::INPUT_HIDDEN,
             );
         }
-*/
 
         // New user form
         if ($data === null) {
