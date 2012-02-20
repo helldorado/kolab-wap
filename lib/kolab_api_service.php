@@ -36,7 +36,7 @@ abstract class kolab_api_service
      */
     protected function user_type_attributes($type_id, $required = true)
     {
-        if (empty($user_id)) {
+        if (empty($type_id)) {
             if ($required) {
                 throw new Exception($this->controller->translate('user.notypeid'), 34);
             }
