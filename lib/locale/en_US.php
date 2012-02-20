@@ -42,6 +42,7 @@ $LANG['user.config'] = 'Configuration';
 $LANG['user.contact'] = 'Contact';
 $LANG['user.surname'] = 'Surname';
 $LANG['user.givenname'] = 'Given name';
+$LANG['user.displayname'] = 'Display name';
 $LANG['user.email'] = 'Email';
 $LANG['user.initials'] = 'Middle name';
 $LANG['user.title'] = 'Title';

@@ -181,6 +181,13 @@ class kolab_client_task_user extends kolab_client_task
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
                     ),
+                    'displayname' => array(
+                        'label'       => 'user.displayname',
+                        'description' => 'user.displayname.desc',
+                        'required'    => true,
+                        'type'        => kolab_form::INPUT_TEXT,
+                        'maxlength'   => 50,
+                    ),
                     'initials' => array(
                         'label'       => 'user.initials',
                         'description' => 'user.initials.desc',
@@ -366,24 +373,36 @@ class kolab_client_task_user extends kolab_client_task
                         $fields[$section_idx]['fields'][$idx]['disabled'] = true;
                         $fields[$section_idx]['fields'][$idx]['required'] = false;
 
-//                        if (!empty($af['data'])) {
-//                        }
+                        if (!empty($af['data'])) {
+                            foreach ($af['data'] as $afd) {
+                                $event_fields[$afd][] = $af_idx;
+                            }
+                        }
                         break 2;
                     }
                 }
             }
         }
 
-        // Disable fields not allowed for specified user type
         foreach ($fields as $section_idx => $section) {
             foreach ($section['fields'] as $idx => $field) {
+                // Disable fields not allowed for specified user type
                 if (!array_key_exists($idx, $form_fields)) {
                     $fields[$section_idx]['fields'][$idx]['readonly'] = true;
                     $fields[$section_idx]['fields'][$idx]['disabled'] = true;
                     $fields[$section_idx]['fields'][$idx]['required'] = false;
                 }
+
+                // Attach on-change events to some fields, to update
+                // auto-generated field values
+                if (!empty($event_fields[$idx])) {
+                    $event = json_encode(array_unique($event_fields[$idx]));
+                    $fields[$section_idx]['fields'][$idx]['onchange'] = "kadm.form_value_change('$form_id', $event)";
+                }
             }
         }
+
+        $this->output->set_env('auto_fields', $auto_fields);
 
 /*
         // Hide account type selector if there's only one type

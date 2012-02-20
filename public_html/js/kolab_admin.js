@@ -279,7 +279,7 @@ function kolab_admin()
     this.set_request_time();
 
     return $.ajax({
-      type: 'POST', url: url, data: postdata, dataType: 'json',
+      type: 'POST', url: url, data: JSON.stringify(postdata), dataType: 'json',
       success: function(data) { kadm[func](data); },
       error: function(o, status, err) { kadm.http_error(o, status, err); }
     });
@@ -440,9 +440,45 @@ function kolab_admin()
 
   this.user_save_response = function(response)
   {
-    this.api_response(response);
+    if (!this.api_response(response))
+      return;
   };
 
+  this.form_value_change = function(form_id, events)
+  {
+    var i, j, data, e, elem, name, elem_name,
+      form = $('#'+form_id);
+
+    this.set_busy(true, 'loading');
+
+    for (i=0; i<events.length; i++) {
+      name = events[i];
+      e = this.env.auto_fields[name];
+
+      if (!e)
+        continue;
+
+      data = {user_type_id: 1}; // @TODO: get user account type from the form
+      for (j=0; j<e.data.length; j++) {
+        elem_name = e.data[j];
+        if (elem = $('[name="'+elem_name+'"]', form))
+          data[elem_name] = elem.val();
+      }
+
+      this.api_post('form_value.generate_'+name, data, 'form_value_response');
+    }
+
+    this.set_busy(false);
+  };
+
+  this.form_value_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    for (var i in response.result)
+      $('[name="'+i+'"]').val(response.result[i]);
+  };
 };
 
 var kadm = new kolab_admin();
