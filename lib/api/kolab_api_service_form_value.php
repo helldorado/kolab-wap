@@ -21,14 +21,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
     public function generate_cn($getdata, $postdata)
     {
-        if (!isset($postdata['user_type_id'])) {
-            throw new Exception("No user type ID specified", 34);
-        }
-
-        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
-        $user_type  = $this->db->fetch_assoc($sql_result);
-
-        $uta = json_decode(unserialize($user_type['attributes']), true);
+        $uta = $this->user_type_attributes($postdata['user_type_id']);
 
         if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['cn'])) {
             // Use Data Please
@@ -44,14 +37,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
     public function generate_displayname($getdata, $postdata)
     {
-        if (!isset($postdata['user_type_id'])) {
-            throw new Exception("No user type ID specified", 34);
-        }
-
-        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
-        $user_type  = $this->db->fetch_assoc($sql_result);
-
-        $uta = json_decode(unserialize($user_type['attributes']), true);
+        $uta = $this->user_type_attributes($postdata['user_type_id']);
 
         if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['displayname'])) {
             // Use Data Please
@@ -68,14 +54,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
     public function generate_mail($getdata, $postdata)
     {
-        if (!isset($postdata['user_type_id'])) {
-            throw new Exception("No user type ID specified", 34);
-        }
-
-        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
-        $user_type  = $this->db->fetch_assoc($sql_result);
-
-        $uta = json_decode(unserialize($user_type['attributes']), true);
+        $uta = $this->user_type_attributes($postdata['user_type_id']);
 
         if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['mail'])) {
             // Use Data Please
@@ -118,14 +97,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
     public function generate_uid($getdata, $postdata)
     {
-        if (!isset($postdata['user_type_id'])) {
-            throw new Exception("No user type ID specified", 34);
-        }
-
-        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $postdata['user_type_id']);
-        $user_type  = $this->db->fetch_assoc($sql_result);
-
-        $uta = json_decode(unserialize($user_type['attributes']), true);
+        $uta = $this->user_type_attributes($postdata['user_type_id']);
 
         if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['uid'])) {
             // Use Data Please
