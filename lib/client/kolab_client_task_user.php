@@ -158,6 +158,7 @@ class kolab_client_task_user extends kolab_client_task
         $utypes    = (array) $this->user_types();
         $form_id   = $attribs['id'];
         $accttypes = array();
+        $new       = $data === null;
 
         foreach ($utypes as $idx => $elem) {
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
@@ -411,14 +412,14 @@ class kolab_client_task_user extends kolab_client_task
         $this->output->set_env('auto_fields', $auto_fields);
 
         // Hide account type selector if there's only one type
-        if (count($accttypes)) {
+        if (count($accttypes) < 2) {
             $fields['system']['fields']['user_type_id'] = array(
                 'type' => kolab_form::INPUT_HIDDEN,
             );
         }
 
         // New user form
-        if ($data === null) {
+        if ($new) {
             // Pre-populate password fields
             $pass = $this->api->get('form_value.generate_password');
             $data['password'] = $data['password2'] = $pass->get('password');
@@ -490,7 +491,7 @@ class kolab_client_task_user extends kolab_client_task
             'onclick' => "kadm.user_save('$form_id')",
         ));
 
-        if ($data !== null) {
+        if (!$new) {
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
                 'onclick' => "kadm.user_delete('$form_id')",
