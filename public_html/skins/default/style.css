@@ -219,6 +219,7 @@ td.label {
   color: #b0b0b0;
   font-size: 9px;
   margin-bottom: 10px;
+  clear: both;
 }
 
 #loading {
@@ -411,6 +412,10 @@ div.vsplitter {
 }
 
 /**** Common classes ****/
+
+.clear {
+  clear: both;
+}
 
 .watermark {
   padding-top: 40px;
@@ -671,6 +676,7 @@ fieldset.tabbed
 }
 
 /**** Main screen elements ****/
+
 #main {
   padding: 5px 30px;
 }
