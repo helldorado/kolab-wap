@@ -498,9 +498,9 @@ function kolab_admin()
     this.form_error_clear();
 
     // check password
-    if (data.password != data.password2) {
+    if (data.userpassword != data.userpassword2) {
       this.display_message('user.password.mismatch', 'error');
-      this.form_value_error('password2');
+      this.form_value_error('userpassword2');
       return;
     }
 

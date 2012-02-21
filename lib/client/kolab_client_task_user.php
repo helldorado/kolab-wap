@@ -280,7 +280,7 @@ class kolab_client_task_user extends kolab_client_task
                         'maxlength'   => 50,
                         'required'    => true,
                     ),
-                    'password' => array(
+                    'userpassword' => array(
                         'label' => 'user.password',
                         'description' => 'user.password.desc',
                         'type'        => kolab_form::INPUT_TEXT,
@@ -288,7 +288,7 @@ class kolab_client_task_user extends kolab_client_task
                         'required'    => true,
                         'system'      => true,
                     ),
-                    'password2' => array(
+                    'userpassword2' => array(
                         'label' => 'user.password-confirm',
                         'description' => 'user.password-confirm.desc',
                         'type'        => kolab_form::INPUT_TEXT,
@@ -427,8 +427,8 @@ class kolab_client_task_user extends kolab_client_task
         // New user form
         if ($new) {
             // Pre-populate password fields
-            $pass = $this->api->get('form_value.generate_password');
-            $data['password'] = $data['password2'] = $pass->get('password');
+            $pass = $this->api->get('form_value.generate_userpassword');
+            $data['userpassword'] = $data['userpassword2'] = $pass->get('userpassword');
 
             // Page title
             $title = $this->translate('user.add');
