@@ -368,7 +368,7 @@ class LDAP
         }
         else {
             $db   = SQL::get_instance();
-            $_key = $this->db->fetch_assoc($db->query("SELECT key FROM user_types WHERE id = ?", $type));
+            $_key = $db->fetch_assoc($db->query("SELECT key FROM user_types WHERE id = ?", $type));
             $type_str = $_key['key'];
         }
 
