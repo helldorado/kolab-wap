@@ -143,6 +143,10 @@ class kolab_client_task
                         $user['language'] = $res['preferredlanguage'];
                         $user['fullname'] = $res['cn'];
                     }
+                    // @TODO: why user.info returns empty result for 'cn=Directory Manager' login?
+                    else if (preg_match('/^cn=([a-zA-Z ]+)/', $login['username'], $m)) {
+                        $user['fullname'] = $m[1];
+                    }
 
                     $_SESSION['user'] = $user;
                     header('Location: ?');
