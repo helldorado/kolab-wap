@@ -1,6 +1,8 @@
 <?php
 
 $LANG['loading'] = 'Loading...';
+$LANG['saving'] = 'Saving data...';
+$LANG['deleting'] = 'Deleting data...';
 $LANG['error'] = 'Error';
 $LANG['servererror'] = 'Server Error!';
 $LANG['loginerror'] = 'Incorrect username or password!';
@@ -67,12 +69,14 @@ $LANG['user.invitation-policy'] = 'Invitation policy';
 $LANG['user.delegate'] = 'Email delegates';
 $LANG['user.delegate.desc'] = 'Others allowed to send emails with a "From" address of this account';
 $LANG['user.smtp-recipients'] = 'Allowed recipients';
-$LANG['user.smtp-recipients.desc'] = 'Restrict allowed recipients of SMTP messages';
+$LANG['user.smtp-recipients.desc'] = 'Restricts allowed recipients of SMTP messages';
 $LANG['user.uid'] = 'Unique identity (UID)';
 $LANG['user.password'] = 'Password';
 $LANG['user.password-confirm'] = 'Confirm password';
 $LANG['user.password.mismatch'] = 'Passwords do not match!';
 $LANG['user.homeserver'] = 'Mailbox home server';
+$LANG['user.add.success'] = 'User created successfully.';
+$LANG['user.delete.success'] = 'User deleted successfully.';
 
 $LANG['group.add'] = 'Add Group';
 

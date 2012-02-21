@@ -133,6 +133,7 @@ class kolab_client_task_user extends kolab_client_task
         $id     = $this->get_input('id', 'POST');
         $result = $this->api->get('user.info', array('user' => $id));
         $user   = $result->get($id);
+        $user['user'] = $id;
         $output = $this->user_form(null, $user);
 
         $this->output->set_object('taskcontent', $output);
@@ -415,7 +416,8 @@ class kolab_client_task_user extends kolab_client_task
 
         $this->output->set_env('auto_fields', $auto_fields);
         $this->output->set_env('form_id', $form_id);
-        $this->output->add_translation('user.password.mismatch');
+        $this->output->add_translation('user.password.mismatch',
+            'user.add.success', 'user.delete.success');
 
         // Hide account type selector if there's only one type
         if (count($accttypes) < 2) {
@@ -500,9 +502,10 @@ class kolab_client_task_user extends kolab_client_task
         ));
 
         if (!$new) {
+            $user = $data['user'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
-                'onclick' => "kadm.user_delete()",
+                'onclick' => "kadm.user_delete('$user')",
             ));
         }
 

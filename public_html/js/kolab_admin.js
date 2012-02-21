@@ -486,9 +486,20 @@ function kolab_admin()
     this.http_post('user.list', props);
   };
 
-  this.user_delete = function(props)
+  this.user_delete = function(userid)
   {
-  
+    this.set_busy(true, 'deleting');
+    this.api_post('user.delete', {user: userid}, 'user_delete_response');
+  };
+
+  this.user_delete_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('user.delete.success');
+    this.set_watermark('taskcontent');
+    // @TODO: refresh the list
   };
 
   this.user_save = function()
@@ -504,6 +515,7 @@ function kolab_admin()
       return;
     }
 
+    this.set_busy(true, 'saving');
     this.api_post('user.add', data, 'user_save_response');
   };
 
@@ -511,6 +523,10 @@ function kolab_admin()
   {
     if (!this.api_response(response))
       return;
+
+    this.display_message('user.add.success');
+    this.set_watermark('taskcontent');
+    // @TODO: refresh the list
   };
 };
 
