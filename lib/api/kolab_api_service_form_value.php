@@ -56,7 +56,6 @@ class kolab_api_service_form_value extends kolab_api_service
 
             return array("displayname" => $displayname);
         }
-
     }
 
     public function generate_mail($getdata, $postdata)

@@ -390,16 +390,75 @@ function kolab_admin()
 
   this.serialize_form = function(id)
   {
-    var i, query = $(id).serializeArray(),
-      json = {};
+    var i, v, json = {},
+      form = $(id),
+      query = form.serializeArray(),
+      disabled = this.env.auto_fields;
 
     for (i in query)
       json[query[i].name] = query[i].value;
+
+    // read disabled fields too
+    for (i in disabled)
+      if (v = $('[name="'+i+'"]', form).val())
+        json[i] = v;
 
     this.trigger_event('form-serialize', {id: id, json: json});
 
     return json;
   };
+
+  /*********************************************************/
+  /*********                 Forms                 *********/
+  /*********************************************************/
+
+  this.form_value_change = function(events)
+  {
+    var i, j, data, e, elem, name, elem_name,
+      form = $('#'+this.env.form_id),
+      type_id = $('[name="user_type_id"]', form).val();
+
+    this.set_busy(true, 'loading');
+
+    for (i=0; i<events.length; i++) {
+      name = events[i];
+      e = this.env.auto_fields[name];
+
+      if (!e)
+        continue;
+
+      data = {user_type_id: type_id};
+      for (j=0; j<e.data.length; j++) {
+        elem_name = e.data[j];
+        if (elem = $('[name="'+elem_name+'"]', form))
+          data[elem_name] = elem.val();
+      }
+
+      this.api_post('form_value.generate_'+name, data, 'form_value_response');
+    }
+
+    this.set_busy(false);
+  };
+
+  this.form_value_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    for (var i in response.result)
+      $('[name="'+i+'"]').val(response.result[i]);
+  };
+
+  this.form_value_error = function(name)
+  {
+    $('[name="'+name+'"]', $('#'+this.env.form_id)).addClass('error');
+  }
+
+  this.form_error_clear = function()
+  {
+    $('input,textarea', $('#'+this.env.form_id)).removeClass('error');
+
+  }
 
   /*********************************************************/
   /*********          Client commands              *********/
@@ -432,9 +491,19 @@ function kolab_admin()
   
   };
 
-  this.user_save = function(props)
+  this.user_save = function()
   {
-    var data = this.serialize_form('#'+props);
+    var data = this.serialize_form('#'+this.env.form_id);
+
+    this.form_error_clear();
+
+    // check password
+    if (data.password != data.password2) {
+      this.display_message('user.password.mismatch', 'error');
+      this.form_value_error('password2');
+      return;
+    }
+
     this.api_post('user.add', data, 'user_save_response');
   };
 
@@ -442,47 +511,6 @@ function kolab_admin()
   {
     if (!this.api_response(response))
       return;
-  };
-
-  /*********************************************************/
-  /*********                 Forms                 *********/
-  /*********************************************************/
-
-  this.form_value_change = function(form_id, events)
-  {
-    var i, j, data, e, elem, name, elem_name,
-      form = $('#'+form_id),
-      type_id = $('[name="user_type_id"]', form).val();
-
-    this.set_busy(true, 'loading');
-
-    for (i=0; i<events.length; i++) {
-      name = events[i];
-      e = this.env.auto_fields[name];
-
-      if (!e)
-        continue;
-
-      data = {user_type_id: type_id};
-      for (j=0; j<e.data.length; j++) {
-        elem_name = e.data[j];
-        if (elem = $('[name="'+elem_name+'"]', form))
-          data[elem_name] = elem.val();
-      }
-
-      this.api_post('form_value.generate_'+name, data, 'form_value_response');
-    }
-
-    this.set_busy(false);
-  };
-
-  this.form_value_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    for (var i in response.result)
-      $('[name="'+i+'"]').val(response.result[i]);
   };
 };
 

@@ -109,11 +109,13 @@ table.form td {
   padding: 1px 5px;
 }
 
-table.form tr.required input {
+table.form tr.required input,
+table.form tr.required textarea {
   background-color: #f0f9ff;
 }
 
-table.form tr.error input {
+table.form tr input.error,
+table.form tr textarea.error {
   background-color: #f5e3e3;
 }
 
@@ -481,7 +483,6 @@ input.readonly,
 textarea.readonly {
   background-color: #f5f5f5;
 }
-
 
 /********* Form smart inputs *********/
 

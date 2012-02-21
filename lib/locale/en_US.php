@@ -71,6 +71,7 @@ $LANG['user.smtp-recipients.desc'] = 'Restrict allowed recipients of SMTP messag
 $LANG['user.uid'] = 'Unique identity (UID)';
 $LANG['user.password'] = 'Password';
 $LANG['user.password-confirm'] = 'Confirm password';
+$LANG['user.password.mismatch'] = 'Passwords do not match!';
 $LANG['user.homeserver'] = 'Mailbox home server';
 
 $LANG['group.add'] = 'Add Group';

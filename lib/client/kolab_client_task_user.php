@@ -377,10 +377,12 @@ class kolab_client_task_user extends kolab_client_task
         foreach ($auto_fields as $af_idx => $af) {
             foreach ($fields as $section_idx => $section) {
                 foreach ($section['fields'] as $idx => $field) {
-                    if ($idx == $af_idx && empty($field['system'])) {
-                        $fields[$section_idx]['fields'][$idx]['readonly'] = true;
-                        $fields[$section_idx]['fields'][$idx]['disabled'] = true;
-                        $fields[$section_idx]['fields'][$idx]['required'] = false;
+                    if ($idx == $af_idx) {
+                        if (empty($field['system'])) {
+                            $fields[$section_idx]['fields'][$idx]['readonly'] = true;
+                            $fields[$section_idx]['fields'][$idx]['disabled'] = true;
+                            $fields[$section_idx]['fields'][$idx]['required'] = false;
+                        }
 
                         if (!empty($af['data'])) {
                             foreach ($af['data'] as $afd) {
@@ -406,12 +408,14 @@ class kolab_client_task_user extends kolab_client_task
                 // auto-generated field values
                 if (!empty($event_fields[$idx])) {
                     $event = json_encode(array_unique($event_fields[$idx]));
-                    $fields[$section_idx]['fields'][$idx]['onchange'] = "kadm.form_value_change('$form_id', $event)";
+                    $fields[$section_idx]['fields'][$idx]['onchange'] = "kadm.form_value_change($event)";
                 }
             }
         }
 
         $this->output->set_env('auto_fields', $auto_fields);
+        $this->output->set_env('form_id', $form_id);
+        $this->output->add_translation('user.password.mismatch');
 
         // Hide account type selector if there's only one type
         if (count($accttypes) < 2) {
@@ -490,13 +494,13 @@ class kolab_client_task_user extends kolab_client_task
 
         $form->add_button(array(
             'value'   => kolab_html::escape($this->translate('submit.button')),
-            'onclick' => "kadm.user_save('$form_id')",
+            'onclick' => "kadm.user_save()",
         ));
 
         if (!$new) {
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
-                'onclick' => "kadm.user_delete('$form_id')",
+                'onclick' => "kadm.user_delete()",
             ));
         }
 
