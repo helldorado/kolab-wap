@@ -31,7 +31,9 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            return array("cn" => $postdata['givenname'] . " " . $postdata['sn']);
+            $cn = trim($postdata['givenname'] . " " . $postdata['sn']);
+
+            return array("cn" => $cn);
         }
     }
 
@@ -47,7 +49,12 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            return array("displayname" => $postdata['sn'] . ", " . $postdata['givenname']);
+            $displayname = $postdata['givenname'];
+            if ($postdata['sn']) {
+                $displayname = $postdata['sn'] . ", " . $displayname;
+            }
+
+            return array("displayname" => $displayname);
         }
 
     }
@@ -68,8 +75,10 @@ class kolab_api_service_form_value extends kolab_api_service
             $sn        = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
 
             $givenname = strtolower($givenname);
-            $sn        = str_replace(' ', '', $sn);
             $sn        = strtolower($sn);
+
+            $givenname = preg_replace('/[^a-z-_]/i', '', $givenname);
+            $sn        = preg_replace('/[^a-z-_]/i', '', $sn);
 
             $mail = $givenname . "." . $sn . "@" . $_SESSION['user']->get_domain();
 
@@ -109,13 +118,11 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $uid = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
             $uid = strtolower($uid);
-            $uid = str_replace(' ', '', $uid);
+            $uid = preg_replace('/[^a-z-_]/i', '', $uid);
 
             $orig_uid = $uid;
 
             $auth = Auth::get_instance($_SESSION['user']->get_domain());
-
-            $user = $auth->user_find_by_attribute(array('uid' => $uid));
 
             $x = 2;
             while ($auth->user_find_by_attribute(array('uid' => $uid))) {
