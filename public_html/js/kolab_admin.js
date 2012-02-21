@@ -444,10 +444,15 @@ function kolab_admin()
       return;
   };
 
+  /*********************************************************/
+  /*********                 Forms                 *********/
+  /*********************************************************/
+
   this.form_value_change = function(form_id, events)
   {
     var i, j, data, e, elem, name, elem_name,
-      form = $('#'+form_id);
+      form = $('#'+form_id),
+      type_id = $('[name="user_type_id"]', form).val();
 
     this.set_busy(true, 'loading');
 
@@ -458,7 +463,7 @@ function kolab_admin()
       if (!e)
         continue;
 
-      data = {user_type_id: 1}; // @TODO: get user account type from the form
+      data = {user_type_id: type_id};
       for (j=0; j<e.data.length; j++) {
         elem_name = e.data[j];
         if (elem = $('[name="'+elem_name+'"]', form))
