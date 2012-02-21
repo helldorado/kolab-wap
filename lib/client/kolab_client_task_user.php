@@ -435,6 +435,8 @@ class kolab_client_task_user extends kolab_client_task
         }
         else {
             $title = $data['displayname'];
+            // remove password
+            $data['userpassword'] = '';
         }
 
         // Parse elements and add them to the form object
