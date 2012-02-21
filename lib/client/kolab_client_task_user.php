@@ -286,6 +286,7 @@ class kolab_client_task_user extends kolab_client_task
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
                         'required'    => true,
+                        'system'      => true,
                     ),
                     'password2' => array(
                         'label' => 'user.password-confirm',
@@ -293,6 +294,7 @@ class kolab_client_task_user extends kolab_client_task
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
                         'required'    => true,
+                        'system'      => true,
                     ),
                     'kolabhomeserver' => array(
                         'label' => 'user.homeserver',
@@ -375,7 +377,7 @@ class kolab_client_task_user extends kolab_client_task
         foreach ($auto_fields as $af_idx => $af) {
             foreach ($fields as $section_idx => $section) {
                 foreach ($section['fields'] as $idx => $field) {
-                    if ($idx == $af_idx) {
+                    if ($idx == $af_idx && empty($field['system'])) {
                         $fields[$section_idx]['fields'][$idx]['readonly'] = true;
                         $fields[$section_idx]['fields'][$idx]['disabled'] = true;
                         $fields[$section_idx]['fields'][$idx]['required'] = false;
@@ -394,7 +396,7 @@ class kolab_client_task_user extends kolab_client_task
         foreach ($fields as $section_idx => $section) {
             foreach ($section['fields'] as $idx => $field) {
                 // Disable fields not allowed for specified user type
-                if (!array_key_exists($idx, $form_fields)) {
+                if (empty($field['system']) && !array_key_exists($idx, $form_fields)) {
                     $fields[$section_idx]['fields'][$idx]['readonly'] = true;
                     $fields[$section_idx]['fields'][$idx]['disabled'] = true;
                     $fields[$section_idx]['fields'][$idx]['required'] = false;

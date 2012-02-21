@@ -398,7 +398,7 @@ function kolab_admin()
 
     this.trigger_event('form-serialize', {id: id, json: json});
 
-    return i.json;
+    return json;
   };
 
   /*********************************************************/
