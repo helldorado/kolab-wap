@@ -56,11 +56,19 @@ class SQL
 
         $result = mysql_query($query);
 
+        if (!$result) {
+            write_log('errors', 'SQL Error: ' . mysql_error($this->conn));
+        }
+
         return $result;
     }
 
     public function fetch_assoc($result)
     {
+        if (!$result) {
+            return array();
+        }
+
         return mysql_fetch_assoc($result);
     }
 
