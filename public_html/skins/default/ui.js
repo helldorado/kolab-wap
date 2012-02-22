@@ -33,7 +33,10 @@ function search_init()
     })
     .keypress(function(e) {
       if (this.value && e.which == 13) { // ENTER key
-        kadm.command('user.list', {search: this.value});
+        var props = kadm.serialize_form('#search-form');
+        props.search = this.value;
+
+        kadm.command('user.list', props);
       }
     })
     .focus(function() {
@@ -48,7 +51,7 @@ function search_reset()
 
   input.val(kadm.t('search')).addClass('inactive');
 
-  kadm.command('user.list');
+  kadm.command('user.list', {search: ''});
 }
 
 function search_details()

@@ -498,11 +498,11 @@ function kolab_admin()
 
   this.user_list = function(props)
   {
-    if (props) {
-      if (props.search) {
-        props = $.extend(props, this.serialize_form('#search-form'));
-      }
-    }
+    if (!props)
+      props = {};
+
+    if (props.search === undefined && this.env.search_request)
+      props.search_request = this.env.search_request;
 
     this.http_post('user.list', props);
   };
@@ -518,9 +518,14 @@ function kolab_admin()
     if (!this.api_response(response))
       return;
 
+    var page = this.env.list_page;
+
+    // goto previous page if last user on the current page has been deleted
+    if (this.env.list_count)
+      page -= 1;
+
     this.display_message('user.delete.success');
-    this.set_watermark('taskcontent');
-    // @TODO: refresh the list
+    this.command('user.list', {page: page});
   };
 
   this.user_save = function()
@@ -546,8 +551,7 @@ function kolab_admin()
       return;
 
     this.display_message('user.add.success');
-    this.set_watermark('taskcontent');
-    // @TODO: refresh the list
+    this.command('user.list', {page: this.env.list_page});
   };
 };
 

@@ -48,7 +48,7 @@ class kolab_client_task_user extends kolab_client_task
     {
         $page_size = 20;
         $page      = (int) self::get_input('page', 'POST');
-        if (!$page) {
+        if (!$page || $page < 1) {
             $page = 1;
         }
 
@@ -67,15 +67,24 @@ class kolab_client_task_user extends kolab_client_task
             $field  = self::get_input('field',  'POST');
             $method = self::get_input('method', 'POST');
 
-            $post['search'] = array(
+            $search_request = array(
                 $field => array(
                     'value' => $search,
                     'type'  => $method,
                 ),
             );
+        }
+        else if (!empty($_POST['search_request'])) {
+            $search_request = self::get_input('search_request', 'POST');
+            $search_request = @unserialize(base64_decode($search_request));
+        }
+
+        if (!empty($search_request)) {
+            $post['search']          = $search_request;
             $post['search_operator'] = 'OR';
         }
 
+        // get users list
         $result = $this->api->post('users.list', null, $post);
         $count  = $result->get('count');
         $result = (array) $result->get('list');
@@ -99,7 +108,7 @@ class kolab_client_task_user extends kolab_client_task
             $prev  = max(0, $page - 1);
             $next  = $page < $pages ? $page + 1 : 0;
 
-            $count = kolab_html::span(array(
+            $count_str = kolab_html::span(array(
                 'content' => $this->translate('user.list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
@@ -112,10 +121,11 @@ class kolab_client_task_user extends kolab_client_task
                 'onclick' => $next ? "kadm.command('user.list', {page: $next})" : "return false",
             ));
 
-            $foot_body = kolab_html::span(array('content' => $prev . $count . $next));
+            $foot_body = kolab_html::span(array('content' => $prev . $count_str . $next));
         }
         $foot[0]['cells'][] = array('class' => 'listnav', 'body' => $foot_body);
 
+        // table body
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
                 if (!is_array($item) || empty($item['displayname'])) {
@@ -142,6 +152,10 @@ class kolab_client_task_user extends kolab_client_task
             'body'  => $rows,
             'foot'  => $foot,
         ));
+
+        $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
+        $this->output->set_env('list_page', $page);
+        $this->output->set_env('list_count', $count);
 
         $this->watermark('taskcontent');
         $this->output->set_object('userlist', $table);
