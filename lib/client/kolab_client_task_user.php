@@ -286,7 +286,7 @@ class kolab_client_task_user extends kolab_client_task
                         'description' => 'user.password.desc',
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
-                        'required'    => true,
+                        'required'    => $new ? true : false,
                         'system'      => true,
                     ),
                     'userpassword2' => array(
@@ -294,7 +294,7 @@ class kolab_client_task_user extends kolab_client_task
                         'description' => 'user.password-confirm.desc',
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
-                        'required'    => true,
+                        'required'    => $new ? true : false,
                         'system'      => true,
                     ),
                     'kolabhomeserver' => array(
