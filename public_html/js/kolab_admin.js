@@ -349,14 +349,12 @@ function kolab_admin()
 
   this.api_response = function(response)
   {
-    if (!response)
-      return false;
-
     this.update_request_time();
     this.set_busy(false);
 
-    if (response.status == 'ERROR') {
-      this.display_message(response.reason, 'error');
+    if (!response || response.status != 'OK') {
+      var msg = response && response.reason ? response.reason : this.t('servererror');
+      this.display_message(msg, 'error');
       return false;
     }
 
