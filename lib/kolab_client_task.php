@@ -103,11 +103,11 @@ class kolab_client_task
      */
     private function api_init()
     {
-        $url = $this->config_get('api_url', '');
+       $url = $this->config_get('api_url', '');
 
         if (!$url) {
-    	    // @TODO: http/https
-            $url = 'http://' . $_SERVER['SERVER_NAME'];
+            $url = kolab_utils::https_check() ? 'https://' : 'http://';
+            $url .= $_SERVER['SERVER_NAME'];
             $url .= preg_replace('/\/?\?.*$/', '', $_SERVER['REQUEST_URI']);
             $url .= '/api';
         }

@@ -103,6 +103,10 @@ class kolab_utils
 
     /**
      * Make sure the string ends with a slash
+     *
+     * @param string $str String to parse
+     *
+     * @return string String with one slash at the end
      */
     public static function slashify($str)
     {
@@ -111,10 +115,31 @@ class kolab_utils
 
     /**
      * Remove slash at the end of the string
+     *
+     * @param string $str String to parse
+     *
+     * @return string String without any slashes at the end
      */
     public static function unslashify($str)
     {
         return preg_replace('/\/$/', '', $str);
     }
 
+    /**
+     * Check if secure protocol is being used.
+     *
+     * @return bool True when using https protocol, False otherwise
+     */
+    public static function https_check()
+    {
+        if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) != 'off') {
+            return true;
+        }
+
+        if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https') {
+            return true;
+        }
+
+        return false;
+    }
 }
