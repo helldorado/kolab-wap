@@ -23,6 +23,9 @@
  +--------------------------------------------------------------------------+
 */
 
+/**
+ * Output functionality for Kolab Web Admin Client
+ */
 class kolab_client_output
 {
     private $tpl_vars = array();
@@ -32,13 +35,21 @@ class kolab_client_output
     private $labels = array();
     private $skin;
 
+    /**
+     * Class constructor.
+     *
+     * @param string $skin Interface skin name
+     */
     public function __construct($skin = null)
     {
         $this->skin = $skin ? $skin : 'default';
         $this->init();
     }
 
-    public function init()
+    /**
+     * Initialization.
+     */
+    private function init()
     {
         require_once 'Smarty/Smarty.class.php';
 
@@ -52,6 +63,11 @@ class kolab_client_output
         $this->tpl = $SMARTY;
     }
 
+    /**
+     * Sends output to the browser.
+     *
+     * @param string $template HTML template name
+     */
     public function send($template = null)
     {
         if ($this->is_ajax()) {
@@ -62,6 +78,9 @@ class kolab_client_output
         }
     }
 
+    /**
+     * JSON output.
+     */
     private function send_json()
     {
         header('Content-Type: application/json');
@@ -98,6 +117,11 @@ class kolab_client_output
         return json_encode($response);
     }
 
+    /**
+     * HTML output.
+     *
+     * @param string $template HTML template name
+     */
     private function send_tpl($template)
     {
         if (!$template) {
@@ -142,21 +166,45 @@ class kolab_client_output
         $this->tpl->display($template . '.html');
     }
 
+    /**
+     * Request type checker.
+     *
+     * @return bool True on AJAX request, False otherwise
+     */
     public function is_ajax()
     {
         return !empty($_REQUEST['remote']);
     }
 
+    /**
+     * Assigns value to a template variable.
+     *
+     * @param string $name  Variable name
+     * @param mixed  $value Variable value
+     */
     public function assign($name, $value)
     {
         $this->tpl_vars[$name] = $value;
     }
 
+    /**
+     * Assigns value to browser environment.
+     *
+     * @param string $name  Variable name
+     * @param mixed  $value Variable value
+     */
     public function set_env($name, $value)
     {
         $this->env[$name] = $value;
     }
 
+    /**
+     * Sets conntent of a HTML object.
+     *
+     * @param string $name        Object's identifier (HTML ID attribute)
+     * @param string $content     Object's content
+     * @param bool   $is_template Set to true if $content is a template name
+     */
     public function set_object($name, $content, $is_template = false)
     {
         if ($is_template) {
@@ -166,6 +214,13 @@ class kolab_client_output
         $this->objects[$name] = $content;
     }
 
+    /**
+     * Returns HTML template output.
+     *
+     * @param string $name Template name
+     *
+     * @return string Template output
+     */
     public function get_template($name)
     {
         ob_start();
@@ -176,18 +231,20 @@ class kolab_client_output
         return $content;
     }
 
+    /**
+     * Sets javascript command (to be added to the request).
+     */
     public function command()
     {
         $this->commands[] = func_get_args();
     }
 
+    /**
+     * Adds one or more translation labels to the browser env.
+     */
     public function add_translation()
     {
         $this->labels = array_merge($this->labels, func_get_args());
     }
 
-    public static function escape($str)
-    {
-    
-    }
 }

@@ -22,7 +22,9 @@
  +--------------------------------------------------------------------------+
 */
 
-
+/**
+ * Helper class to connect to the API
+ */
 class kolab_client_api
 {
     /**
