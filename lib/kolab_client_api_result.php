@@ -22,6 +22,9 @@
  +--------------------------------------------------------------------------+
 */
 
+/**
+ * API result wrapper
+ */
 class kolab_client_api_result
 {
     /**
@@ -33,6 +36,13 @@ class kolab_client_api_result
     private $error_str;
 
 
+    /**
+     * Class constructor.
+     *
+     * @param array $data        Result data
+     * @param int   $error_code  Error code
+     * @param string $error_str  Error message
+     */
     public function __construct($data = array(), $error_code = null, $error_str = null)
     {
         if (is_array($data) && isset($data['result'])) {
@@ -43,16 +53,33 @@ class kolab_client_api_result
         $this->error_str = $error_str;
     }
 
+    /**
+     * Error code getter.
+     *
+     * @return int Error code
+     */
     public function get_error_code()
     {
         return $this->error_code;
     }
 
+    /**
+     * Error message getter.
+     *
+     * @return string Error message
+     */
     public function get_error_str()
     {
         return $this->error_str;
     }
 
+    /**
+     * Response data getter.
+     *
+     * @param string $name Response member name
+     *
+     * @return array|string Data member or complete response data (when $name is null)
+     */
     public function get($name = null)
     {
         if ($name !== null) {
