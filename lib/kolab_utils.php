@@ -55,7 +55,7 @@ class kolab_utils
      *
      * @param string $name       Parameter name
      * @param int    $type       Parameter type
-     * @param bool   $allow_html Enable to strip invalid/unsecure content
+     * @param bool   $allow_html Disables stripping of insecure content (HTML tags)
      *
      * @return mixed Input value
      */
@@ -78,7 +78,7 @@ class kolab_utils
      * Input parsing.
      *
      * @param mixed  $value      Input value
-     * @param bool   $allow_html Enable to strip invalid/unsecure content
+     * @param bool   $allow_html Disables stripping of insecure content (HTML tags)
      *
      * @return mixed Input value
      */

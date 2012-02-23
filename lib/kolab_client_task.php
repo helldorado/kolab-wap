@@ -407,7 +407,7 @@ class kolab_client_task
      *
      * @param string $name       Parameter name
      * @param string $type       Parameter type (GET|POST|NULL)
-     * @param bool   $allow_html Enable to strip invalid/unsecure content
+     * @param bool   $allow_html Disables stripping of insecure content (HTML tags)
      *
      * @see kolab_utils::get_input
      * @return mixed Input value.
