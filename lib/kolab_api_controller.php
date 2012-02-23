@@ -256,6 +256,8 @@ class kolab_api_controller
      *
      * @param array GET request parameters
      * @param array POST data
+     *
+     * @param array|false Authentication result
      */
     private function authenticate($request, $postdata)
     {
@@ -308,7 +310,8 @@ class kolab_api_controller
             $domain_name = is_array($domain) ? $domain['associateddomain'] : $domain;
             // define our very own capabilities
             $actions = array(
-                'system.quit' => array('type' => 'w'),
+                'system.quit'      => array('type' => 'w'),
+                'system.configure' => array('type' => 'w'),
             );
 
             foreach ($this->services as $sname => $handler) {
@@ -350,6 +353,36 @@ class kolab_api_controller
         }
     }
 
+    /**
+     * Configure current user session parameters
+     *
+     * @param array $request  GET request parameters
+     * @param array $postdata POST data
+     *
+     * @return array|false
+     */
+    private function configure($request, $postdata)
+    {
+        if (!$this->session_validate($postdata)) {
+            return false;
+        }
+
+        $result = array();
+
+        foreach ($postdata as $key => $value) {
+            switch ($key) {
+            case 'language':
+                if (preg_match('/^[a-z]{2}_[A-Z]{2}$/', $value)) {
+                    $_SESSION['language'] = $value;
+                    $result[$key] = $value;
+                }
+                break;
+            }
+        }
+
+        return $result;
+    }
+
     /* ========  Utility functions  ======== */
 
 
@@ -358,23 +391,21 @@ class kolab_api_controller
      */
     private function locale_init()
     {
-        // @TODO: read language from logged user data
         $lang = 'en_US';
 
-        if ($lang != 'en_US' && file_exists(INSTALL_PATH . "/locale/$lang.api.php")) {
-            $language = $lang;
+        // @TODO: read language of logged user in authenticate?
+        if (!empty($_SESSION['language'])) {
+            $lang = $_SESSION['language'];
         }
 
         $LANG = array();
         @include INSTALL_PATH . '/locale/en_US.api.php';
 
-        if (isset($language)) {
+        if ($lang != 'en_US' && file_exists(INSTALL_PATH . "/locale/$lang.api.php")) {
             @include INSTALL_PATH . "/locale/$language.api.php";
-            setlocale(LC_ALL, $language . '.utf8', 'en_US.utf8');
         }
-        else {
-            setlocale(LC_ALL, 'en_US.utf8');
-        }
+
+        setlocale(LC_ALL, $lang . '.utf8', 'en_US.utf8');
 
         self::$translation = $LANG;
     }

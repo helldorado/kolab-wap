@@ -63,47 +63,20 @@ class kolab_client_task
      */
     private function locale_init()
     {
-        $aliases = array(
-            'de' => 'de_DE',
-            'en' => 'en_US',
-            'pl' => 'pl_PL',
-        );
+        $language = $this->get_language();
+        $LANG     = array();
 
-        // UI language
-        $langs = !empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
-        $langs = explode(',', $langs);
-
-        if (!empty($_SESSION['user']) && !empty($_SESSION['user']['language'])) {
-            array_unshift($langs, $_SESSION['user']['language']);
+        if (!$language) {
+            $language = 'en_US';
         }
 
-        while ($lang = array_shift($langs)) {
-            $lang = explode(';', $lang);
-            $lang = $lang[0];
-            $lang = str_replace('-', '_', $lang);
-
-            if (file_exists(INSTALL_PATH . "/locale/$lang.php")) {
-                $language = $lang;
-                break;
-            }
-            if (isset($aliases[$lang]) && ($alias = $aliases[$lang])
-                && file_exists(INSTALL_PATH . "/locale/$alias.php")
-            ) {
-                $language = $alias;
-                break;
-            }
-        }
-
-        $LANG = array();
         @include INSTALL_PATH . '/locale/en_US.php';
 
-        if (!empty($language) && $language != 'en_US') {
+        if ($language != 'en_US') {
             @include INSTALL_PATH . "/locale/$language.php";
-            setlocale(LC_ALL, $language . '.utf8', 'en_US.utf8');
         }
-        else {
-            setlocale(LC_ALL, 'en_US.utf8');
-        }
+
+        setlocale(LC_ALL, $language . '.utf8', 'en_US.utf8');
 
         self::$translation = $LANG;
     }
@@ -143,6 +116,46 @@ class kolab_client_task
     }
 
     /**
+     * Returns system language (locale) setting.
+     *
+     * @return string Language code
+     */
+    private function get_language()
+    {
+        $aliases = array(
+            'de' => 'de_DE',
+            'en' => 'en_US',
+            'pl' => 'pl_PL',
+        );
+
+        // UI language
+        $langs = !empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
+        $langs = explode(',', $langs);
+
+        if (!empty($_SESSION['user']) && !empty($_SESSION['user']['language'])) {
+            array_unshift($langs, $_SESSION['user']['language']);
+        }
+
+        while ($lang = array_shift($langs)) {
+            $lang = explode(';', $lang);
+            $lang = $lang[0];
+            $lang = str_replace('-', '_', $lang);
+
+            if (file_exists(INSTALL_PATH . "/locale/$lang.php")) {
+                return $lang;
+            }
+
+            if (isset($aliases[$lang]) && ($alias = $aliases[$lang])
+                && file_exists(INSTALL_PATH . "/locale/$alias.php")
+            ) {
+                return $alias;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * User authentication (and authorization).
      */
     private function auth()
@@ -171,7 +184,19 @@ class kolab_client_task
                         $user['fullname'] = $m[1];
                     }
 
+                    // Save user data
                     $_SESSION['user'] = $user;
+
+                    if (($language = $this->get_language()) && $language != 'en_US') {
+                        $_SESSION['user']['language'] = $language;
+                        $session_config['language']   = $language;
+                    }
+
+                    // Configure API session
+                    if (!empty($session_config)) {
+                        $this->api->post('system.configure', null, $session_config);
+                    }
+
                     header('Location: ?');
                     die;
                 }
