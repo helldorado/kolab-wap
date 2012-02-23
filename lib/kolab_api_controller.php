@@ -188,19 +188,19 @@ class kolab_api_controller
         $request->setHeader('X-Session-Token', kolab_utils::get_request_header('X-Session-Token'));
 
         if ($method == 'GET') {
-	    parse_str($_SERVER['QUERY_STRING'], $query);
-	    unset($query['service']);
-	    unset($query['method']);
-	    
-	    $query = array_map('urldecode', $query);
-	    $get   = array_merge($query, $get);
-	}
-	else {
+            parse_str($_SERVER['QUERY_STRING'], $query);
+            unset($query['service']);
+            unset($query['method']);
+
+            $query = array_map('urldecode', $query);
+            $get   = array_merge($query, $get);
+        }
+        else {
             $request->setBody($postdata);
         }
 
         try {
-    	    $url->setQueryVariables($get);
+            $url->setQueryVariables($get);
             $request->setUrl($url);
             $response = $request->send();
         }
