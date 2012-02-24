@@ -42,6 +42,7 @@ class kolab_form
     private $sections = array();
     private $buttons  = array();
     private $title;
+    private $active_section;
 
 
     /**
@@ -63,6 +64,17 @@ class kolab_form
     public function add_section($index, $legend)
     {
         $this->sections[$index] = $legend;
+    }
+
+
+    /**
+     * Activate form section.
+     *
+     * @param string $index   Section internal index
+     */
+    public function activate_section($index)
+    {
+        $this->active_section = $index;
     }
 
     /**
@@ -123,8 +135,9 @@ class kolab_form
 
                 if (!empty($rows)) {
                     $content .= "\n" . kolab_html::fieldset(array(
-                        'legend' => $set,
-                        'content' => kolab_html::table(array('body' => $rows, 'class' => 'form'))
+                        'legend'  => $set,
+                        'content' => kolab_html::table(array('body' => $rows, 'class' => 'form')),
+                        'class'   => $this->active_section == $set_idx ? 'active' : '',
                     ));
                 }
             }

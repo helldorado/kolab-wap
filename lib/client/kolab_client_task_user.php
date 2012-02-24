@@ -180,7 +180,8 @@ class kolab_client_task_user extends kolab_client_task
      */
     public function action_add()
     {
-        $output = $this->user_form(null, null);
+        $data   = $this->get_input('data', 'POST');
+        $output = $this->user_form(null, $data, true);
 
         $this->output->set_object('taskcontent', $output);
     }
@@ -194,8 +195,8 @@ class kolab_client_task_user extends kolab_client_task
         $form      = new kolab_form($attribs);
         $utypes    = (array) $this->user_types();
         $form_id   = $attribs['id'];
+        $add_mode  = empty($data['user']);
         $accttypes = array();
-        $new       = $data === null;
 
         foreach ($utypes as $idx => $elem) {
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
@@ -322,7 +323,7 @@ class kolab_client_task_user extends kolab_client_task
                         'description' => 'user.password.desc',
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
-                        'required'    => $new ? true : false,
+                        'required'    => $add_mode ? true : false,
                         'system'      => true,
                     ),
                     'userpassword2' => array(
@@ -330,7 +331,7 @@ class kolab_client_task_user extends kolab_client_task
                         'description' => 'user.password-confirm.desc',
                         'type'        => kolab_form::INPUT_TEXT,
                         'maxlength'   => 50,
-                        'required'    => $new ? true : false,
+                        'required'    => $add_mode ? true : false,
                         'system'      => true,
                     ),
                     'kolabhomeserver' => array(
@@ -345,6 +346,8 @@ class kolab_client_task_user extends kolab_client_task
                         'description' => 'user.type.desc',
                         'type'        => kolab_form::INPUT_SELECT,
                         'options'     => $accttypes,
+                        'system'      => $add_mode ? true : false,
+                        'onchange'    => "kadm.user_save(true, 'system')",
                     ),
                 ),
             ),
@@ -462,19 +465,26 @@ class kolab_client_task_user extends kolab_client_task
             );
         }
 
-        // New user form
-        if ($new) {
-            // Pre-populate password fields
-            $pass = $this->api->get('form_value.generate_userpassword');
-            $data['userpassword'] = $data['userpassword2'] = $pass->get('userpassword');
+        // Create mode
+        if ($add_mode) {
+            if (empty($data['userpassword'])) {
+                // Pre-populate password fields
+                $pass = $this->api->get('form_value.generate_userpassword');
+                $data['userpassword'] = $data['userpassword2'] = $pass->get('userpassword');
+            }
 
             // Page title
             $title = $this->translate('user.add');
         }
+        // Edit mode
         else {
             $title = $data['displayname'];
+
             // remove password
             $data['userpassword'] = '';
+
+            // Remove user type selector
+            unset($fields['system']['fields']['user_type_id']);
         }
 
         // Parse elements and add them to the form object
@@ -537,12 +547,16 @@ class kolab_client_task_user extends kolab_client_task
             'onclick' => "kadm.user_save()",
         ));
 
-        if (!$new) {
+        if (!$add_mode) {
             $user = $data['user'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
                 'onclick' => "kadm.user_delete('$user')",
             ));
+        }
+
+        if (!empty($data['section'])) {
+            $form->activate_section($data['section']);
         }
 
         return $form->output();

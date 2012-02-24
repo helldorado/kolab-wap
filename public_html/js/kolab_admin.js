@@ -531,9 +531,15 @@ function kolab_admin()
     this.command('user.list', {page: page});
   };
 
-  this.user_save = function()
+  this.user_save = function(reload, section)
   {
     var data = this.serialize_form('#'+this.env.form_id);
+
+    if (reload) {
+      data.section = section;
+      this.http_post('user.add', {data: data});
+      return;
+    }
 
     this.form_error_clear();
 

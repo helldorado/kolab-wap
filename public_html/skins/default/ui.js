@@ -76,7 +76,11 @@ function init_tabs(id, current)
   if (!fs.length)
     return;
 
-  current = current ? current : 0;
+  // find active fieldset
+  if (!current) {
+    current = 0;
+    fs.each(function(idx) { if ($(this).hasClass('active')) { current = idx; return false; } });
+  }
 
   // first hide not selected tabs
   fs.each(function(idx) { if (idx != current) $(this).hide(); });
