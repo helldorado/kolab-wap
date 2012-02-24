@@ -134,8 +134,9 @@ class kolab_api_controller
         $postdata = @json_decode($postdata, true);
 
         console("Calling method " . $method . " on service " . $service);
+
         // validate user session
-        if ($method != 'authenticate') {
+        if ($service != 'system' || $method != 'authenticate') {
             if (!$this->session_validate($postdata)) {
                 throw new Exception("Invalid session", 403);
             }
@@ -363,10 +364,6 @@ class kolab_api_controller
      */
     private function configure($request, $postdata)
     {
-        if (!$this->session_validate($postdata)) {
-            return false;
-        }
-
         $result = array();
 
         foreach ($postdata as $key => $value) {
