@@ -355,6 +355,11 @@ function kolab_admin()
     if (!response || response.status != 'OK') {
       var msg = response && response.reason ? response.reason : this.t('servererror');
       this.display_message(msg, 'error');
+
+      // Logout on invalid-session error
+      if (response.code == 403)
+        this.main_logout();
+
       return false;
     }
 
