@@ -169,7 +169,7 @@ function form_init(id)
     .each(function() {
     var i, len, elem, e = $(this),
       list = this.value.split(separator),
-      area = $('<span class="listarea">'),
+      area = $('<span class="listarea"></span>'),
       disabled = e.attr('disabled') || e.attr('readonly');
 
     e.hide();
