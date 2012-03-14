@@ -110,7 +110,7 @@ class LDAP
             $root_dn = "";
         }
 
-        if (($bind_ok = $this->_bind($user_dn, $password)) == TRUE) {
+        if (($bind_ok = $this->_bind($user_dn, $password)) == true) {
             $this->_unbind();
 
             if (isset($_SESSION['user'])) {
@@ -123,11 +123,11 @@ class LDAP
                 error_log("Successfully bound with User DN: " . $user_dn . " but not saving it to the session");
             }
 
-            return TRUE;
+            return true;
         }
         else {
             error_log("LDAP Error: " . $this->_errstr());
-            return FALSE;
+            return false;
         }
     }
 
@@ -148,7 +148,7 @@ class LDAP
         return $this->_delete($dn);
     }
 
-    public function domain_add($domain, $domain_alias = FALSE, $prepopulate = TRUE)
+    public function domain_add($domain, $domain_alias = false, $prepopulate = true)
     {
         // Apply some routines for access control to this function here.
         if ($domain_alias) {
@@ -164,7 +164,7 @@ class LDAP
         return $this->_ldap->domain_exists($domain);
     }
 
-    public function domain_list($rev_sort = FALSE)
+    public function domain_list($rev_sort = false)
     {
         return $this->_ldap->domain_list($rev_sort);
     }
@@ -178,7 +178,7 @@ class LDAP
         $conf = Conf::get_instance();
 
         if ($domain == '') {
-            return FALSE;
+            return false;
         }
 
         error_log("Searching for domain $domain");
@@ -187,14 +187,14 @@ class LDAP
 
         error_log("From domain to root dn");
 
-        if (($this->_bind($conf->get('ldap', 'bind_dn'), $conf->get('ldap', 'bind_pw'))) == FALSE) {
+        if (($this->_bind($conf->get('ldap', 'bind_dn'), $conf->get('ldap', 'bind_pw'))) == false) {
             error_log("WARNING: Invalid Service bind credentials supplied");
             $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
         }
 
-        if (($results = ldap_search($this->_connection, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')')) == FALSE) {
+        if (($results = ldap_search($this->_connection, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')')) == false) {
             error_log("No results?");
-            return FALSE;
+            return false;
         }
 
         $domain = ldap_first_entry($this->_connection, $results);
@@ -259,7 +259,7 @@ class LDAP
         }
 
         if (!$group_dn) {
-            return FALSE;
+            return false;
         }
 
         return $this->search($group_dn);
@@ -277,7 +277,7 @@ class LDAP
         }
 
         if (!$group_dn) {
-            return FALSE;
+            return false;
         }
 
         return $this->_list_group_members($group_dn);
@@ -418,7 +418,7 @@ class LDAP
         }
 
         if (!$user_dn) {
-            return FALSE;
+            return false;
         }
 
         return $this->delete($user_dn);
@@ -426,8 +426,12 @@ class LDAP
 
     public function user_find_by_attribute($attribute)
     {
-        if (!is_array($attribute) || count($attribute) > 1) {
-            return FALSE;
+        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
+            return false;
+        }
+
+        if (empty($attribute[key($attribute)])) {
+            return false;
         }
 
         $filter = "(&";
@@ -448,7 +452,7 @@ class LDAP
         }
         else {
             error_log("No result");
-            return FALSE;
+            return false;
         }
     }
 
@@ -465,7 +469,7 @@ class LDAP
         }
 
         if (!$user_dn) {
-            return FALSE;
+            return false;
         }
 
         return $this->search($user_dn);
@@ -561,7 +565,7 @@ class LDAP
         Deprecated, use domain_root_dn()
     */
 
-    public function user_type_attribute_filter($type = FALSE)
+    public function user_type_attribute_filter($type = false)
     {
         global $conf;
 
@@ -582,7 +586,7 @@ class LDAP
         return $attributes_filter;
     }
 
-    public function user_type_search_filter($type = FALSE)
+    public function user_type_search_filter($type = false)
     {
         global $conf;
 
@@ -640,12 +644,12 @@ class LDAP
         $this->_connect();
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        if (($add_result = ldap_add($this->_connection, $entry_dn, $attributes)) == FALSE) {
+        if (($add_result = ldap_add($this->_connection, $entry_dn, $attributes)) == false) {
             // Issue warning
-            return FALSE;
+            return false;
         }
 
-        return TRUE;
+        return true;
     }
 
     /**
@@ -659,16 +663,16 @@ class LDAP
         error_log("->_bind() Binding with $dn");
 
         if (!$dn || !$pw) {
-            return FALSE;
+            return false;
         }
 
-        if (($bind_ok = ldap_bind($this->_connection, $dn, $pw)) == FALSE) {
+        if (($bind_ok = ldap_bind($this->_connection, $dn, $pw)) == false) {
             error_log("LDAP Error: " . $this->_errstr());
             // Issue error message
-            return FALSE;
+            return false;
         }
         else {
-            return TRUE;
+            return true;
         }
     }
 
@@ -677,13 +681,13 @@ class LDAP
      */
     private function _connect()
     {
-        if ($this->_connection == FALSE) {
+        if ($this->_connection == false) {
             // TODO: Debug logging
             error_log("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
             $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
 
-            if ($connection == FALSE) {
-                $this->_connection = FALSE;
+            if ($connection == false) {
+                $this->_connection = false;
                 // TODO: Debug logging
                 error_log("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
             }
@@ -707,12 +711,12 @@ class LDAP
         $this->_connect();
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        if (($delete_result = ldap_delete($this->_connection, $entry_dn)) == FALSE) {
+        if (($delete_result = ldap_delete($this->_connection, $entry_dn)) == false) {
             // Issue warning
-            return FALSE;
+            return false;
         }
         else {
-            return TRUE;
+            return true;
         }
     }
 
@@ -721,19 +725,19 @@ class LDAP
      */
     private function _disconnect()
     {
-        if ($this->_connection == FALSE) {
-            return TRUE;
+        if ($this->_connection == false) {
+            return true;
         }
 
-        if (($result = ldap_close($this->_connection)) == TRUE) {
-            $this->_connection = FALSE;
-            return TRUE;
+        if (($result = ldap_close($this->_connection)) == true) {
+            $this->_connection = false;
+            return true;
         }
 
         // Issue a warning
-        $this->_connection = FALSE;
-        $this->_ldap = FALSE;
-        return FALSE;
+        $this->_connection = false;
+        $this->_ldap = false;
+        return false;
     }
 
     /**
@@ -761,11 +765,11 @@ class LDAP
     {
         $ldap_entries = array( "count" => 0 );
 
-        if (($ldap_list = @ldap_list($this->_connection, $base_dn, $filter)) == FALSE) {
+        if (($ldap_list = @ldap_list($this->_connection, $base_dn, $filter)) == false) {
             //message("LDAP Error: Could not search " . $base_dn . ": " . $this->_errstr() );
         }
         else {
-            if (($ldap_entries = @ldap_get_entries($this->_connection, $ldap_list)) == FALSE) {
+            if (($ldap_entries = @ldap_get_entries($this->_connection, $ldap_list)) == false) {
                 //message("LDAP Error: No entries for " . $filter . " in " . $base_dn . ": " . $this->_errstr());
             }
         }
@@ -781,14 +785,14 @@ class LDAP
         error_log("Searching with user " . $_SESSION['user']->user_bind_dn);
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        if (($search_results = @ldap_search($this->_connection, $base_dn, $search_filter, $attributes)) == FALSE) {
+        if (($search_results = @ldap_search($this->_connection, $base_dn, $search_filter, $attributes)) == false) {
             #message("Could not search in " . __METHOD__ . " in " . __FILE__ . " on line " . __LINE__ . ": " . $this->_errstr());
-            return FALSE;
+            return false;
         }
 
-        if (($entries = ldap_get_entries($this->_connection, $search_results)) == FALSE) {
+        if (($entries = ldap_get_entries($this->_connection, $search_results)) == false) {
             #message("Could not get the results of the search: " . $this->_errstr());
-            return FALSE;
+            return false;
         }
 
         return $entries;
@@ -797,11 +801,11 @@ class LDAP
     /**
      * Shortcut to ldap_unbind()
      */
-    private function _unbind($yes = FALSE, $really = FALSE)
+    private function _unbind($yes = false, $really = false)
     {
         if ($yes && $really) {
             ldap_unbind($this->_connection);
-            $this->_connection = FALSE;
+            $this->_connection = false;
         }
         else {
             // What?
@@ -810,7 +814,7 @@ class LDAP
             // - in case of fail, bind as user
         }
 
-        return TRUE;
+        return true;
     }
 
     /*
@@ -829,31 +833,31 @@ class LDAP
     private function _probe_root_dn($entry_root_dn)
     {
         error_log("Running for entry root dn: " . $entry_root_dn);
-        if (($tmp_connection = ldap_connect($this->_ldap_server)) == FALSE) {
+        if (($tmp_connection = ldap_connect($this->_ldap_server)) == false) {
             //message("LDAP Error: " . $this->_errstr());
-            return FALSE;
+            return false;
         }
 
         error_log("User DN: " . $_SESSION['user']->user_bind_dn);
 
-        if (($bind_success = ldap_bind($tmp_connection, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw)) == FALSE) {
+        if (($bind_success = ldap_bind($tmp_connection, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw)) == false) {
             //message("LDAP Error: " . $this->_errstr());
-            return FALSE;
+            return false;
         }
 
-        if (($list_success = ldap_list($tmp_connection, $entry_root_dn, '(objectClass=*)', array('*', 'aci'))) == FALSE) {
+        if (($list_success = ldap_list($tmp_connection, $entry_root_dn, '(objectClass=*)', array('*', 'aci'))) == false) {
             #message("LDAP Error: " . $this->_errstr());
-            return FALSE;
+            return false;
         }
 
 #        print_r(ldap_get_entries($tmp_connection, $list_success));
 /*
         if (ldap_count_entries($tmp_connection, $list_success) == 0) {
             echo "<li>Listed things, but got no results";
-            return FALSE;
+            return false;
         }
 */
-        return TRUE;
+        return true;
     }
 
     /**
@@ -918,18 +922,18 @@ class LDAP
 
         $this->_connect();
 
-        if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == FALSE) {
+        if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
 
         $search_results = ldap_search($this->_connection, $root_dn, $search_filter);
 
         if (ldap_count_entries($this->_connection, $search_results) == 0) {
-            return FALSE;
+            return false;
         }
 
-        if (($first_entry = ldap_first_entry($this->_connection, $search_results)) == FALSE) {
-            return FALSE;
+        if (($first_entry = ldap_first_entry($this->_connection, $search_results)) == false) {
+            return false;
         }
 
         $group_dn = ldap_get_dn($this->_connection, $first_entry);
@@ -942,7 +946,7 @@ class LDAP
 
         $this->_connect();
 
-        if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == FALSE) {
+        if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
             //message("WARNING: Invalid Service bind credentials supplied");
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
@@ -951,11 +955,11 @@ class LDAP
 
         if (ldap_count_entries($this->_connection, $search_results) == 0) {
             //message("No entries found for the user dn in " . __METHOD__);
-            return FALSE;
+            return false;
         }
 
-        if (($first_entry = ldap_first_entry($this->_connection, $search_results)) == FALSE) {
-            return FALSE;
+        if (($first_entry = ldap_first_entry($this->_connection, $search_results)) == false) {
+            return false;
         }
 
         $user_dn = ldap_get_dn($this->_connection, $first_entry);
