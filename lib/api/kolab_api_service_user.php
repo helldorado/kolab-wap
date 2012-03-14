@@ -114,7 +114,12 @@ class kolab_api_service_user extends kolab_api_service
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->user_info($getdata['user']);
+        $user   = $getdata['user'];
+        $result = $auth->user_info($user);
+
+        // add user type id to the result
+        $objectclass = $result[$user]['objectclass'];
+        $result[$user]['user_type_id'] = $this->user_type_id($objectclass);
 
         if ($result) {
             return $result;

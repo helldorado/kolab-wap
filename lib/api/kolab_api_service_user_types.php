@@ -37,23 +37,7 @@ class kolab_api_service_user_types extends kolab_api_service
 
     public function user_types_list($get, $post)
     {
-        $sql_result = $this->db->query("SELECT * FROM user_types");
-        $user_types = array();
-
-        while ($row = $this->db->fetch_assoc($sql_result)) {
-            $user_types[$row['id']] = array();
-
-            foreach ($row as $key => $value) {
-                if ($key != "id") {
-                    if ($key == "attributes") {
-                        $user_types[$row['id']][$key] = json_decode(unserialize($value), true);
-                    }
-                    else {
-                        $user_types[$row['id']][$key] = $value;
-                    }
-                }
-            }
-        }
+        $user_types = $this->user_types();
 
         return array(
             'list'  => $user_types,
