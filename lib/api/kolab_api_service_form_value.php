@@ -107,6 +107,17 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function generate_gidnumber($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
+            $auth = Auth::get_instance($_SESSION['user']->get_domain());
+
+            // TODO: Take a policy to use a known group ID, a known group (by name?)
+            // and/or create user private groups.
+            return array('gidnumber' => 500);
+        }
+    }
+
     private function generate_homedirectory($postdata, $attribs = array())
     {
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['homedirectory'])) {
@@ -206,6 +217,17 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             return array('uid' => $uid);
+        }
+    }
+
+    private function generate_uidnumber($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
+            $auth = Auth::get_instance($_SESSION['user']->get_domain());
+
+            // TODO: Actually poll $auth for users with a uidNumber set, and take the next one.
+
+            return array('uidnumber' => 500);
         }
     }
 
