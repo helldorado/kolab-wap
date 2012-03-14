@@ -30,6 +30,7 @@ abstract class kolab_api_service
 {
     protected $controller;
     protected $db;
+    protected $cache = array();
 
     /**
      * Class constructor.
@@ -65,16 +66,13 @@ abstract class kolab_api_service
             return array();
         }
 
-        $sql_result = $this->db->query("SELECT attributes FROM user_types WHERE id = ?", $type_id);
-        $user_type  = $this->db->fetch_assoc($sql_result);
+        $user_types = $this->user_types();
 
-        if (empty($user_type)) {
+        if (empty($user_types[$type_id])) {
             throw new Exception($this->controller->translate('user.invalidtypeid'), 35);
         }
 
-        $uta = json_decode(unserialize($user_type['attributes']), true);
-
-        return $uta;
+        return $user_types[$user_id]['attributes'];
     }
 
     /**
@@ -95,16 +93,13 @@ abstract class kolab_api_service
             return array();
         }
 
-        $sql_result = $this->db->query("SELECT attributes FROM group_types WHERE id = ?", $type_id);
-        $group_type = $this->db->fetch_assoc($sql_result);
+        $group_types = $this->group_types();
 
-        if (empty($group_type)) {
+        if (empty($group_types[$type_id])) {
             throw new Exception($this->controller->translate('group.invalidtypeid'), 35);
         }
 
-        $uta = json_decode(unserialize($group_type['attributes']), true);
-
-        return $uta;
+        return $group_types[$type_id]['attributes'];
     }
 
     /**
@@ -160,6 +155,10 @@ abstract class kolab_api_service
      */
     protected function user_types()
     {
+        if (!empty($this->cache['user_types'])) {
+            return $this->cache['user_types'];
+        }
+    
         $sql_result = $this->db->query("SELECT * FROM user_types");
         $user_types = array();
 
@@ -178,6 +177,38 @@ abstract class kolab_api_service
             }
         }
 
-        return $user_types;
+        return $this->cache['user_types'] = $user_types;
+    }
+
+    /**
+     * Returns group types definitions.
+     *
+     * @return array Group types.
+     */
+    protected function group_types()
+    {
+        if (!empty($this->cache['group_types'])) {
+            return $this->cache['group_types'];
+        }
+    
+        $sql_result = $this->db->query("SELECT * FROM group_types");
+        $group_types = array();
+
+        while ($row = $this->db->fetch_assoc($sql_result)) {
+            $group_types[$row['id']] = array();
+
+            foreach ($row as $key => $value) {
+                if ($key != "id") {
+                    if ($key == "attributes") {
+                        $group_types[$row['id']][$key] = json_decode(unserialize($value), true);
+                    }
+                    else {
+                        $group_types[$row['id']][$key] = $value;
+                    }
+                }
+            }
+        }
+
+        return $this->cache['group_types'] = $group_types;
     }
 }

@@ -40,7 +40,7 @@ class kolab_api_service_group extends kolab_api_service
 
     public function group_add($getdata, $postdata)
     {
-        $gta = $this->user_type_attributes($postdata['group_type_id']);
+        $gta = $this->group_type_attributes($postdata['group_type_id']);
         $group_attributes = array();
 
         if (isset($gta['form_fields'])) {
