@@ -72,7 +72,7 @@ abstract class kolab_api_service
             throw new Exception($this->controller->translate('user.invalidtypeid'), 35);
         }
 
-        return $user_types[$user_id]['attributes'];
+        return $user_types[$type_id]['attributes'];
     }
 
     /**
