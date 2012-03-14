@@ -107,6 +107,36 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function generate_homedirectory($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['homedirectory'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['homedirectory']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            $uid = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
+            $uid = strtolower($uid);
+            $uid = preg_replace('/[^a-z-_]/i', '', $uid);
+
+            $orig_uid = $uid;
+
+            $auth = Auth::get_instance($_SESSION['user']->get_domain());
+
+            $x = 2;
+            while ($auth->user_find_by_attribute(array('uid' => $uid))) {
+                $uid = $orig_uid . $x;
+                $x++;
+            }
+
+            // TODO: Home directory base path from configuration?
+
+            return array('homedirectory' => '/home/'.$uid);
+        }
+    }
+
     private function generate_mail($postdata, $attribs = array())
     {
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
