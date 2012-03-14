@@ -24,7 +24,7 @@
 */
 
 /**
- *
+ * Service providing functionality related to HTML forms generation/validation.
  */
 class kolab_api_service_form_value extends kolab_api_service
 {
@@ -32,23 +32,51 @@ class kolab_api_service_form_value extends kolab_api_service
     public function capabilities($domain)
     {
         return array(
-            'generate_cn' => 'w',
-            'generate_displayname' => 'w',
-            'generate_mail' => 'w',
-            'generate_password' => 'r',
-            'generate_uid' => 'w',
-            'generate_userpassword' => 'r',
-//            'info' => 'r',
+            'generate' => 'r',
         );
     }
 
-    public function generate_cn($getdata, $postdata)
+    /**
+     * Generation of auto-filled field values.
+     *
+     * @param array $getdata   GET parameters
+     * @param array $postdata  POST parameters. Required parameters:
+     *                         - attribute: attribute name
+     *                         - user_type_id or group_type_id: Type identifier
+     *
+     * @return array Response with attribute name as a key
+     */
+    public function generate($getdata, $postdata)
     {
-        $uta = $this->user_type_attributes($postdata['user_type_id']);
+        if (empty($postdata['attribute'])) {
+            throw new Exception($this->controller->translate('form_value.noattribute'), 35);
+        }
 
-        if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['cn'])) {
+        $method_name = 'generate_' . strtolower($postdata['attribute']);
+
+        if (!method_exists($this, $method_name)) {
+            throw new Exception($this->controller->translate('form_value.unknownattribute'), 36);
+        }
+
+        if (isset($postdata['user_type_id'])) {
+            $attribs = $this->user_type_attributes($postdata['user_type_id']);
+        }
+        else if (isset($postdata['group_type_id'])) {
+            $attribs = $this->group_type_attributes($postdata['group_type_id']);
+        }
+        else {
+            $attribs = array();
+        }
+
+        return $this->{$method_name}($postdata, $attribs);
+    }
+
+
+    private function generate_cn($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['cn'])) {
             // Use Data Please
-            foreach ($uta['auto_form_fields']['cn']['data'] as $key) {
+            foreach ($attribs['auto_form_fields']['cn']['data'] as $key) {
                 if (!isset($postdata[$key])) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
@@ -60,13 +88,11 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
-    public function generate_displayname($getdata, $postdata)
+    private function generate_displayname($postdata, $attribs = array())
     {
-        $uta = $this->user_type_attributes($postdata['user_type_id']);
-
-        if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['displayname'])) {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['displayname'])) {
             // Use Data Please
-            foreach ($uta['auto_form_fields']['displayname']['data'] as $key) {
+            foreach ($attribs['auto_form_fields']['displayname']['data'] as $key) {
                 if (!isset($postdata[$key])) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
@@ -81,13 +107,11 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
-    public function generate_mail($getdata, $postdata)
+    private function generate_mail($postdata, $attribs = array())
     {
-        $uta = $this->user_type_attributes($postdata['user_type_id']);
-
-        if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['mail'])) {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
             // Use Data Please
-            foreach ($uta['auto_form_fields']['mail']['data'] as $key) {
+            foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
                 if (!isset($postdata[$key])) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
@@ -119,20 +143,18 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
-    public function generate_password($getdata, $postdata)
+    private function generate_password($postdata, $attribs = array())
     {
         exec("head -c 200 /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c15", $userpassword_plain);
         $userpassword_plain = $userpassword_plain[0];
         return array('password' => $userpassword_plain);
     }
 
-    public function generate_uid($getdata, $postdata)
+    private function generate_uid($postdata, $attribs = array())
     {
-        $uta = $this->user_type_attributes($postdata['user_type_id']);
-
-        if (isset($uta['auto_form_fields']) && isset($uta['auto_form_fields']['uid'])) {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uid'])) {
             // Use Data Please
-            foreach ($uta['auto_form_fields']['uid']['data'] as $key) {
+            foreach ($attribs['auto_form_fields']['uid']['data'] as $key) {
                 if (!isset($postdata[$key])) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
@@ -156,9 +178,9 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
-    public function generate_userpassword($getdata, $postdata)
+    private function generate_userpassword($postdata, $attribs = array())
     {
-        $password = $this->generate_password($getdata, $postdata);
+        $password = $this->generate_password($getdata, $postdata, $attribs);
         return array('userpassword' => $password['password']);
     }
 
