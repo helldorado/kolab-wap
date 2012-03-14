@@ -148,10 +148,13 @@ class kolab_api_controller
         // call service method
         $service_handler = $this->get_service($service);
 
-        if (method_exists($service_handler, $method)) {
+        // get only public methods
+        $service_methods = get_class_methods($service_handler);
+
+        if (in_array($method, $service_methods)) {
             $result = $service_handler->$method($_GET, $postdata);
         }
-        else if (method_exists($service_handler, $service . "_" . $method)) {
+        else if (in_array($service . "_" . $method, $service_methods)) {
             $call_method = $service . "_" . $method;
             $result = $service_handler->$call_method($_GET, $postdata);
         }
