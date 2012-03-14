@@ -198,9 +198,57 @@ class kolab_client_task_user extends kolab_client_task
         $add_mode  = empty($data['user']);
         $accttypes = array();
 
-        foreach ($utypes as $idx => $elem) {
-            $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
+        $result = Array();
+        $current_user_type_score = -1;
+
+        for ($i=0; $i < count($data['objectclass']); $i++) {
+            $data['objectclass'][$i] = strtolower($data['objectclass'][$i]);
         }
+
+        $data_ocs = $data['objectclass'];
+
+        console("Data objectclasses (i.e. \$data_ocs): " . implode(", ", $data_ocs));
+
+        foreach ($utypes as $idx => $elem) {
+
+            $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
+
+            // Unless we're in add mode, detect the user type.
+            if (!$add_mode) {
+
+                $ref_ocs = $elem['attributes']['fields']['objectclass'];
+
+                console("Reference objectclasses (\$ref_ocs for " . $elem['key'] . "): " . implode(", ", $ref_ocs));
+
+                // Eliminate the duplicates between the $data_ocs and $ref_ocs
+                $_data_ocs = array_diff($data_ocs, $ref_ocs);
+                $_ref_ocs = array_diff($ref_ocs, $data_ocs);
+
+                console("\$data_ocs not in \$ref_ocs (" . $elem['key'] . "): " . implode(", ", $_data_ocs));
+                console("\$ref_ocs not in \$data_ocs (" . $elem['key'] . "): " . implode(", ", $_ref_ocs));
+
+                $differences = count($_data_ocs) + count($_ref_ocs);
+                $commonalities = count($data_ocs) - $differences;
+
+                console("Commonalities/differences (" . $elem['key'] . "): " . $commonalities . " / " . $differences);
+
+                if ($differences > 0) {
+                    $user_type_score = ($commonalities / $differences);
+                } else {
+                    $user_type_score = $commonalities;
+                }
+
+                console("Score for user type " . $elem['name'] . ": " . $user_type_score);
+
+                if ($user_type_score > $current_user_type_score) {
+                    console("Score for user type " . $elem['name'] . " is greater than score for user type " . $current_user_type['name']);
+                    $current_user_type = $elem;
+                    $current_user_type_score = $user_type_score;
+                }
+            }
+        }
+
+        console("A little bird tells me we need to use user_type_name " . $current_user_type['name']);
 /*
         $fields = array(
             'personal' => array(
