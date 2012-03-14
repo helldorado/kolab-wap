@@ -79,6 +79,11 @@ $LANG['user.password.mismatch'] = 'Passwords do not match!';
 $LANG['user.homeserver'] = 'Mailbox home server';
 $LANG['user.add.success'] = 'User created successfully.';
 $LANG['user.delete.success'] = 'User deleted successfully.';
+$LANG['user.preferredlanguage'] = 'Native tongue';
+$LANG['user.gidnumber'] = 'Primary group number';
+$LANG['user.homedirectory'] = 'Home directory';
+$LANG['user.shell'] = 'Shell';
+$LANG['user.uidnumber'] = 'User ID number';
 
 $LANG['group.add'] = 'Add Group';
 
