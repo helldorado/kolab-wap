@@ -168,7 +168,7 @@ abstract class kolab_api_service
             foreach ($row as $key => $value) {
                 if ($key != "id") {
                     if ($key == "attributes") {
-                        $user_types[$row['id']][$key] = json_decode(unserialize($value), true);
+                        $user_types[$row['id']][$key] = json_decode($value, true);
                     }
                     else {
                         $user_types[$row['id']][$key] = $value;
@@ -200,7 +200,7 @@ abstract class kolab_api_service
             foreach ($row as $key => $value) {
                 if ($key != "id") {
                     if ($key == "attributes") {
-                        $group_types[$row['id']][$key] = json_decode(unserialize($value), true);
+                        $group_types[$row['id']][$key] = json_decode($value, true);
                     }
                     else {
                         $group_types[$row['id']][$key] = $value;
