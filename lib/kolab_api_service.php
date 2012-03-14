@@ -77,4 +77,34 @@ abstract class kolab_api_service
         return $uta;
     }
 
+    /**
+     * Returns attributes of specified group type.
+     *
+     * @param int  $type_id  Group type identifier
+     * @param bool $required Throws exception on empty ID
+     *
+     * @return array Group type attributes
+     */
+    protected function group_type_attributes($type_id, $required = true)
+    {
+        if (empty($type_id)) {
+            if ($required) {
+                throw new Exception($this->controller->translate('group.notypeid'), 34);
+            }
+
+            return array();
+        }
+
+        $sql_result = $this->db->query("SELECT attributes FROM group_types WHERE id = ?", $type_id);
+        $group_type = $this->db->fetch_assoc($sql_result);
+
+        if (empty($group_type)) {
+            throw new Exception($this->controller->translate('group.invalidtypeid'), 35);
+        }
+
+        $uta = json_decode(unserialize($group_type['attributes']), true);
+
+        return $uta;
+    }
+
 }

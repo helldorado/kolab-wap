@@ -451,14 +451,14 @@ function kolab_admin()
       if (!e)
         continue;
 
-      data = {user_type_id: type_id};
+      data = {user_type_id: type_id, attribute: name};
       for (j=0; j<e.data.length; j++) {
         elem_name = e.data[j];
         if (elem = $('[name="'+elem_name+'"]', form))
           data[elem_name] = elem.val();
       }
 
-      this.api_post('form_value.generate_'+name, data, 'form_value_response');
+      this.api_post('form_value.generate', data, 'form_value_response');
     }
 
     this.set_busy(false);

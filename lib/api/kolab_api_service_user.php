@@ -62,9 +62,9 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    $method         = 'generate_' . $key;
-                    $res            = $form_service->$method($getdata, $postdata);
-                    $postdata[$key] = $res[$key];
+                    $postdata['attribute'] = $key;
+                    $res                   = $form_service->generate($getdata, $postdata);
+                    $postdata[$key]        = $res[$key];
                 }
                 $user_attributes[$key] = $postdata[$key];
             }

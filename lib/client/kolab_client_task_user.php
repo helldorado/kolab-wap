@@ -517,7 +517,8 @@ class kolab_client_task_user extends kolab_client_task
         if ($add_mode) {
             if (empty($data['userpassword'])) {
                 // Pre-populate password fields
-                $pass = $this->api->get('form_value.generate_userpassword');
+                $post = array('attribute' => 'userpassword');
+                $pass = $this->api->post('form_value.generate', null, $post);
                 $data['userpassword'] = $data['userpassword2'] = $pass->get('userpassword');
             }
 

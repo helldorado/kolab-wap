@@ -40,16 +40,8 @@ class kolab_api_service_group extends kolab_api_service
 
     public function group_add($getdata, $postdata)
     {
-        if (!isset($postdata['group_type_id'])) {
-            throw new Exception("No group type ID specified", 346781);
-        }
-
-        $sql_result = $this->db->query("SELECT attributes FROM group_types WHERE id = ?", $postdata['group_type_id']);
-        $group_type = $this->db->fetch_assoc($sql_result);
-
-        $gta = json_decode(unserialize($group_type['attributes']), true);
-
-        $group_attributes = Array();
+        $gta = $this->user_type_attributes($postdata['group_type_id']);
+        $group_attributes = array();
 
         if (isset($gta['form_fields'])) {
             foreach ($gta['form_fields'] as $key => $value) {
