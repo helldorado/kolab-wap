@@ -201,7 +201,7 @@ class kolab_client_task_user extends kolab_client_task
         foreach ($utypes as $idx => $elem) {
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
-
+/*
         $fields = array(
             'personal' => array(
                 'label' => 'user.personal',
@@ -394,10 +394,50 @@ class kolab_client_task_user extends kolab_client_task
                 ),
             ),
         );
+*/
+        // Form sections
+        $sections = array(
+            'personal' => 'user.personal',
+            'system'   => 'user.system',
+            'config'   => 'user.config',
+            'other'    => 'user.other',
+        );
+
+        // field-to-section map and fields order
+        $fields = array(
+            'givenname'     => 'personal',
+            'sn'            => 'personal',
+            'displayname'   => 'personal',
+            'cn'            => 'personal',
+            'initials'      => 'personal',
+            'title'         => 'personal',
+            'telephonenumber' => 'personal',
+            'facsimiletelephonenumber' => 'personal',
+            'o'             => 'personal',
+            'ou'            => 'personal',
+            'roomnumber'    => 'personal',
+            'street'        => 'personal',
+            'l'             => 'personal',
+            'postofficebox' => 'personal',
+            'postalcode'    => 'personal',
+            'c'             => 'personal',
+            'mail'          => 'system',
+            'uid'           => 'system',
+            'userpassword'  => 'system',
+            'userpassword2' => 'system',
+            'kolabhomeserver' => 'system',
+            'cyrususerquota' =>  'config',
+            'kolabfreebusyfuture' =>  'config',
+            'kolabinvitationpolicy' =>  'config',
+            'alias'         =>  'config',
+            'kolabdelegate' =>  'config',
+            'kolaballowsmtprecipient' => 'config',
+        );
 
         $event_fields = array();
         $auto_fields  = array();
         $form_fields  = array();
+        $_fields      = array();
 
         // Selected account type
         if (!empty($data['user_type_id'])) {
@@ -414,53 +454,65 @@ class kolab_client_task_user extends kolab_client_task
         }
 
         // Mark automatically generated fields as read-only, etc.
-        foreach ($auto_fields as $af_idx => $af) {
-            foreach ($fields as $section_idx => $section) {
-                foreach ($section['fields'] as $idx => $field) {
-                    if ($idx == $af_idx) {
-                        if (empty($field['system'])) {
-                            $fields[$section_idx]['fields'][$idx]['readonly'] = true;
-                            $fields[$section_idx]['fields'][$idx]['disabled'] = true;
-                            $fields[$section_idx]['fields'][$idx]['required'] = false;
-                        }
+        foreach ($auto_fields as $idx => $field) {
+            $_fields[$idx] = array(
+                'readonly' => true,
+                'disabled' => true,
+                'section'  => isset($fields[$idx]) ? $fields[$idx] : 'other',
+                // assume auto-generated field is of type text
+                'type'        => kolab_form::INPUT_TEXT,
+                'maxlength'   => 50,
+            );
 
-                        if (!empty($af['data'])) {
-                            foreach ($af['data'] as $afd) {
-                                $event_fields[$afd][] = $af_idx;
-                            }
-                        }
-                        break 2;
-                    }
-                }
+            if (!empty($field['data'])) {
+                 foreach ($field['data'] as $fd) {
+                     $event_fields[$fd][] = $idx;
+                 }
             }
         }
 
-        foreach ($fields as $section_idx => $section) {
-            foreach ($section['fields'] as $idx => $field) {
-                // Disable fields not allowed for specified user type
-                if (empty($field['system']) && !array_key_exists($idx, $form_fields)) {
-                    $fields[$section_idx]['fields'][$idx]['readonly'] = true;
-                    $fields[$section_idx]['fields'][$idx]['disabled'] = true;
-                    $fields[$section_idx]['fields'][$idx]['required'] = false;
-                }
+        // Other fields
+        foreach ($form_fields as $idx => $field) {
+            $_fields[$idx] = array(
+                'section'  => isset($fields[$idx]) ? $fields[$idx] : 'other',
+                'required' => true,
+            );
 
-                // Attach on-change events to some fields, to update
-                // auto-generated field values
-                if (!empty($event_fields[$idx])) {
-                    $event = json_encode(array_unique($event_fields[$idx]));
-                    $fields[$section_idx]['fields'][$idx]['onchange'] = "kadm.form_value_change($event)";
+            switch ($field['type']) {
+            case 'select':
+                $_fields[$idx]['type'] = kolab_form::INPUT_SELECT;
+                break;
+            default:
+                $_fields[$idx]['type'] = kolab_form::INPUT_TEXT;
+                if (isset($field['maxlength'])) {
+                    $_fields[$idx]['maxlength'] = $field['maxlength'];
                 }
+            }
+
+            // Attach on-change events to some fields, to update
+            // auto-generated field values
+            if (!empty($event_fields[$idx])) {
+                $event = json_encode(array_unique($event_fields[$idx]));
+                $_fields[$idx]['onchange'] = "kadm.form_value_change($event)";
             }
         }
 
-        $this->output->set_env('auto_fields', $auto_fields);
-        $this->output->set_env('form_id', $form_id);
-        $this->output->add_translation('user.password.mismatch',
-            'user.add.success', 'user.delete.success');
+        // Add user type id selector
+        $_fields['user_type_id'] = array(
+            'section'  => 'system',
+            'type'     => kolab_form::INPUT_SELECT,
+            'options'  => $accttypes,
+            'onchange' => "kadm.user_save(true, 'system')",
+        );
+
+        // Add password confirmation
+        if (isset($_fields['userpassword'])) {
+            $_fields['userpassword2'] = $_fields['userpassword'];
+        }
 
         // Hide account type selector if there's only one type
-        if (count($accttypes) < 2) {
-            $fields['system']['fields']['user_type_id'] = array(
+        if (count($accttypes) < 2 || !$add_mode) {
+            $_fields['user_type_id'] = array(
                 'type' => kolab_form::INPUT_HIDDEN,
             );
         }
@@ -483,22 +535,34 @@ class kolab_client_task_user extends kolab_client_task
 
             // remove password
             $data['userpassword'] = '';
+        }
 
-            // Remove user type selector
-            unset($fields['system']['fields']['user_type_id']);
+        // Sort
+        foreach ($fields as $idx => $val) {
+            if (array_key_exists($idx, $_fields)) {
+                $fields[$idx] = $_fields[$idx];
+                unset($_fields[$idx]);
+            }
+            else {
+                unset($fields[$idx]);
+            }
+        }
+        if (!empty($_fields)) {
+            $fields = array_merge($fields, $_fields);
         }
 
         // Parse elements and add them to the form object
-        foreach ($fields as $section_idx => $section) {
-            if (empty($section['fields'])) {
-                continue;
-            }
+        foreach ($sections as $section_idx => $section) {
+            $form->add_section($section_idx, kolab_html::escape($this->translate($section)));
 
-            $form->add_section($section_idx, kolab_html::escape($this->translate($section['label'])));
+            foreach ($fields as $idx => $field) {
+                if ($field['section'] != $section_idx) {
+                    continue;
+                }
 
-            foreach ($section['fields'] as $idx => $field) {
+                $field['label']       = kolab_html::escape($this->translate("user.$idx"));
+                $field['description'] = "user.$idx.desc";
                 $field['section']     = $section_idx;
-                $field['label']       = kolab_html::escape($this->translate($field['label']));
 
                 if (!empty($data[$idx])) {
                     if (is_array($data[$idx])) {
@@ -509,11 +573,11 @@ class kolab_client_task_user extends kolab_client_task
                         $field['value'] = kolab_html::escape($data[$idx]);
                     }
                 }
-
+/*
                 if (!empty($field['suffix'])) {
                     $field['suffix'] = kolab_html::escape($this->translate($field['suffix']));
                 }
-
+*/
                 if (!empty($field['options'])) {
                     foreach ($field['options'] as $opt_idx => $option) {
                         if (is_array($option)) {
@@ -559,6 +623,11 @@ class kolab_client_task_user extends kolab_client_task
         if (!empty($data['section'])) {
             $form->activate_section($data['section']);
         }
+
+        $this->output->set_env('auto_fields', $auto_fields);
+        $this->output->set_env('form_id', $form_id);
+        $this->output->add_translation('user.password.mismatch',
+            'user.add.success', 'user.delete.success');
 
         return $form->output();
     }
