@@ -185,6 +185,14 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function generate_mailhost($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
+            // This value is determined by the Kolab Daemon
+            return array('mailhost' => '');
+        }
+    }
+
     private function generate_password($postdata, $attribs = array())
     {
         exec("head -c 200 /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c15", $userpassword_plain);
