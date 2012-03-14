@@ -473,8 +473,10 @@ class LDAP
 
     public function users_list($attributes = array(), $search = array(), $params = array())
     {
-        $base_dn = "ou=People,dc=klab,dc=cc";
-        $filter  = "(objectClass=kolabinetorgperson)";
+        $conf = Conf::get_instance();
+
+        $base_dn = $conf->get('ldap', 'user_base_dn');
+        $filter  = $conf->get('ldap', 'user_filter');
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
