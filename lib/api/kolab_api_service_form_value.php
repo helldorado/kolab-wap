@@ -126,7 +126,8 @@ class kolab_api_service_form_value extends kolab_api_service
             $givenname = preg_replace('/[^a-z-_]/i', '', $givenname);
             $sn        = preg_replace('/[^a-z-_]/i', '', $sn);
 
-            $mail = $givenname . "." . $sn . "@" . $_SESSION['user']->get_domain();
+            $local = trim($givenname . '.' . $sn, '.');
+            $mail  = $local . '@' . $_SESSION['user']->get_domain();
 
             $orig_mail = $mail;
 
