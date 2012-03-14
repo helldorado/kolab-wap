@@ -421,6 +421,7 @@ class kolab_client_task_user extends kolab_client_task
             'postofficebox' => 'personal',
             'postalcode'    => 'personal',
             'c'             => 'personal',
+            'preferredlanguage' => 'personal',
             'mail'          => 'system',
             'uid'           => 'system',
             'userpassword'  => 'system',
@@ -480,6 +481,16 @@ class kolab_client_task_user extends kolab_client_task
 
             switch ($field['type']) {
             case 'select':
+                if (!isset($field['values'])) {
+                    // @TODO: call form_value.list_options
+                }
+
+                if (!empty($field['values']['default'])) {
+                    $_fields[$idx]['value'] = $field['values']['default'];
+                    unset($field['values']['default']);
+                }
+
+                $_fields[$idx]['options'] = array_combine($field['values'], $field['values']);
                 $_fields[$idx]['type'] = kolab_form::INPUT_SELECT;
                 break;
             default:
