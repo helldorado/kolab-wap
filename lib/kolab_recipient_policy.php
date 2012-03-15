@@ -51,7 +51,16 @@ class kolab_recipient_policy {
                 $_key = $key;
             }
 
-            $userdata[$_key] = str_replace(' ', '', $userdata[$key]);
+            if (isset($userdata['preferredlanguage'])) {
+                setlocale(LC_ALL, $userdata['preferredlanguage']);
+            }
+
+            if (!is_array($userdata[$_key])) {
+                $orig_value = $userdata[$key];
+
+                $userdata[$_key] = iconv('UTF-8', 'ASCII//TRANSLIT', $userdata[$key]);
+                $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $userdata[$_key]);
+            }
         }
 
         return $userdata;
