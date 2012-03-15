@@ -213,6 +213,7 @@ class kolab_client_task_user extends kolab_client_task
         // field-to-section map and fields order
         $fields = array(
             'user_type_id'              => 'personal',
+            'user_type_id_name'         => 'personal',
             'givenname'                 => 'personal',
             'sn'                        => 'personal',
             'displayname'               => 'personal',
@@ -367,6 +368,13 @@ class kolab_client_task_user extends kolab_client_task
 
             // remove password
             $data['userpassword'] = '';
+
+            // Add user type name
+            $_fields['user_type_id_name'] = array(
+                'label'    => 'user.user_type_id',
+                'section'  => 'personal',
+                'value'    => $accttypes[$utype]['content'],
+            );
         }
 
         // Sort
@@ -392,7 +400,11 @@ class kolab_client_task_user extends kolab_client_task
                     continue;
                 }
 
-                $field['label']       = kolab_html::escape($this->translate("user.$idx"));
+                if (empty($field['label'])) {
+                    $field['label'] = "user.$idx";
+                }
+
+                $field['label']       = kolab_html::escape($this->translate($field['label']));
                 $field['description'] = "user.$idx.desc";
                 $field['section']     = $section_idx;
 
