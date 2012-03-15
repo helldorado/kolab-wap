@@ -122,6 +122,49 @@ class kolab_api_service_form_value extends kolab_api_service
         return $result;
     }
 
+    /**
+     * Generation of values for fields of type SELECT.
+     *
+     * @param array $getdata   GET parameters
+     * @param array $postdata  POST parameters. Required parameters:
+     *                         - attributes: list of attribute names
+     *                         - user_type_id or group_type_id: Type identifier
+     *
+     * @return array Response with attribute name as a key
+     */
+    public function select_options($getdata, $postdata)
+    {
+        if (isset($postdata['user_type_id'])) {
+            $attribs = $this->user_type_attributes($postdata['user_type_id']);
+        }
+        else if (isset($postdata['group_type_id'])) {
+            $attribs = $this->group_type_attributes($postdata['group_type_id']);
+        }
+        else {
+            $attribs = array();
+        }
+
+        $attributes = (array) $postdata['attributes'];
+        $result     = array();
+
+        foreach ($attributes as $attr_name) {
+            if (empty($attr_name)) {
+                continue;
+            }
+
+            $method_name = 'select_options_' . strtolower($attr_name);
+
+            if (!method_exists($this, $method_name)) {
+                $result[$attr_name] = array();
+                continue;
+            }
+
+            $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
+        }
+
+        return $result;
+    }
+
     private function generate_alias($postdata, $attribs = array())
     {
         return $this->generate_secondary_mail($postdata, $attribs);
@@ -319,4 +362,14 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function select_options_preferredlanguage($postdata, $attribs = array())
+    {
+        return array(
+            'en_US',
+            'de_DE',
+            'de_CH',
+            'en_GB',
+            'fr_FR',  
+        );
+    }
 }
