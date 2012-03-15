@@ -530,7 +530,7 @@ class kolab_client_task_user extends kolab_client_task
             'section'  => 'personal',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
-            'onchange' => "kadm.user_save(true, 'system')",
+            'onchange' => "kadm.user_save(true, 'personal')",
         );
 
         // Add password confirmation
