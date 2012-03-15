@@ -71,6 +71,10 @@ class kolab_api_service_form_value extends kolab_api_service
         return $this->{$method_name}($postdata, $attribs);
     }
 
+    private function generate_alias($postdata, $attribs = array())
+    {
+        return $this->generate_secondary_mail($postdata, $attribs);
+    }
 
     private function generate_cn($postdata, $attribs = array())
     {
@@ -82,6 +86,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
+            // TODO: Generate using policy from configuration
             $cn = trim($postdata['givenname'] . " " . $postdata['sn']);
 
             return array("cn" => $cn);
@@ -98,10 +103,19 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
+            // TODO: Generate using policy from configuration
             $displayname = $postdata['givenname'];
             if ($postdata['sn']) {
                 $displayname = $postdata['sn'] . ", " . $displayname;
             }
+
+            // TODO: Figure out what may be sent as an additional comment;
+            //
+            // Examples:
+            //
+            //  - van Meeuwen, Jeroen (Kolab Systems)
+            //  - Doe, John (Contractor)
+            //
 
             return array("displayname" => $displayname);
         }
@@ -128,61 +142,22 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            $uid = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
-            $uid = strtolower($uid);
-            $uid = preg_replace('/[^a-z-_]/i', '', $uid);
-
-            $orig_uid = $uid;
-
-            $auth = Auth::get_instance($_SESSION['user']->get_domain());
-
-            $x = 2;
-            while ($auth->user_find_by_attribute(array('uid' => $uid))) {
-                $uid = $orig_uid . $x;
-                $x++;
-            }
+            // TODO: Home directory attribute to use
+            $uid = $this->generate_uid($postdata, $attribs);
 
             // TODO: Home directory base path from configuration?
-
             return array('homedirectory' => '/home/'.$uid);
         }
     }
 
     private function generate_mail($postdata, $attribs = array())
     {
-        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
-            // Use Data Please
-            foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
-                if (!isset($postdata[$key])) {
-                    throw new Exception("Key not set: " . $key, 12356);
-                }
-            }
+        return $this->generate_primary_mail($postdata, $attribs);
+    }
 
-            $givenname = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['givenname']);
-            $sn        = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
-
-            $givenname = strtolower($givenname);
-            $sn        = strtolower($sn);
-
-            $givenname = preg_replace('/[^a-z-_]/i', '', $givenname);
-            $sn        = preg_replace('/[^a-z-_]/i', '', $sn);
-
-            $local = trim($givenname . '.' . $sn, '.');
-            $mail  = $local . '@' . $_SESSION['user']->get_domain();
-
-            $orig_mail = $mail;
-
-            $auth = Auth::get_instance($_SESSION['user']->get_domain());
-
-            $x = 2;
-            while ($auth->user_find_by_attribute(array('mail' => $mail))) {
-                list($mail_local, $mail_domain) = explode('@', $orig_mail);
-                $mail = $mail_local . $x . '@' . $mail_domain;
-                $x++;
-            }
-
-            return array('mail' => $mail);
-        }
+    private function generate_mailalternateaddress($postdata, $attribs = array())
+    {
+        return $this->generate_secondary_mail($postdata, $attribs);
     }
 
     private function generate_mailhost($postdata, $attribs = array())
@@ -195,9 +170,51 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_password($postdata, $attribs = array())
     {
+        // TODO: Password complexity policy.
         exec("head -c 200 /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c15", $userpassword_plain);
         $userpassword_plain = $userpassword_plain[0];
         return array('password' => $userpassword_plain);
+    }
+
+    private function generate_primary_mail($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            $primary_mail = kolab_recipient_policy::primary_mail($postdata);
+
+            return array('mail' => $primary_mail);
+        }
+    }
+
+    private function generate_secondary_mail($postdata, $attribs = array())
+    {
+        $secondary_mail_address = Array();
+
+        if (isset($attribs['auto_form_fields'])) {
+            if (isset($attribs['auto_form_fields']['alias'])) {
+                $secondary_mail_key = 'alias';
+            } elseif (isset($attribs['auto_form_fields']['mailalternateaddress'])) {
+                $secondary_mail_key = 'mailalternateaddress';
+            } else {
+                throw new Exception("No valid input for secondary mail address(es)", 478);
+            }
+
+            foreach ($attribs['auto_form_fields'][$secondary_mail_key]['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 456789);
+                }
+            }
+
+            $secondary_mail = kolab_recipient_policy::secondary_mail($postdata);
+
+            return Array($secondary_mail_key => $secondary_mail);
+        }
     }
 
     private function generate_uid($postdata, $attribs = array())
@@ -210,6 +227,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
+            // TODO: Use preferredlanguage
             $uid = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
             $uid = strtolower($uid);
             $uid = preg_replace('/[^a-z-_]/i', '', $uid);
@@ -234,7 +252,6 @@ class kolab_api_service_form_value extends kolab_api_service
             $auth = Auth::get_instance($_SESSION['user']->get_domain());
 
             // TODO: Actually poll $auth for users with a uidNumber set, and take the next one.
-
             return array('uidnumber' => 500);
         }
     }
