@@ -519,8 +519,9 @@ span.listelement:first-child {
 span.listelement input {
   border: none;
   background-color: transparent;
-  margin-left: 2px;
-  width: 325px;
+  padding-left: 2px;
+  width: 330px;
+  height: 19px;
 }
 
 span.listelement input:focus {
@@ -529,7 +530,7 @@ span.listelement input:focus {
 
 span.listelement span.actions {
   float: left;
-  padding: 1px;
+  padding: 1px 0;
   margin-left: -1px;
   margin-top: -1px;
   height: 18px;
