@@ -576,4 +576,50 @@ class kolab_client_task
 
         return $form;
     }
+
+    /**
+     * Returns form element definition based on field attributes
+     *
+     * @param array $field Field attributes
+     *
+     * @return array Field definition
+     */
+    protected function form_element_type($field)
+    {
+        $result = array();
+
+        switch ($field['type']) {
+        case 'select':
+            if (!isset($field['values'])) {
+                // @TODO: call form_value.list_options
+            }
+
+            if (!empty($field['values']['default'])) {
+                $result['value'] = $field['values']['default'];
+                unset($field['values']['default']);
+            }
+
+            $result['type'] = kolab_form::INPUT_SELECT;
+            if (!empty($field['values'])) {
+                $result['options'] = array_combine($field['values'], $field['values']);
+            }
+            else {
+                $result['options'] = array('');
+            }
+            break;
+
+        case 'list':
+            $result['type']      = kolab_form::INPUT_TEXTAREA;
+            $result['data-type'] = kolab_form::TYPE_LIST;
+            break;
+
+        default:
+            $result['type'] = kolab_form::INPUT_TEXT;
+            if (isset($field['maxlength'])) {
+                $result['maxlength'] = $field['maxlength'];
+            }
+        }
+
+        return $result;
+    }
 }

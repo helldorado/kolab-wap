@@ -201,200 +201,7 @@ class kolab_client_task_user extends kolab_client_task
         foreach ($utypes as $idx => $elem) {
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
-/*
-        $fields = array(
-            'personal' => array(
-                'label' => 'user.personal',
-                'fields' => array(
-                    'givenname' => array(
-                        'label'       => 'user.givenname',
-                        'description' => 'user.givenname.desc',
-                        'required'    => true,
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'sn' => array(
-                        'label'       => 'user.surname',
-                        'description' => 'user.surname.desc',
-                        'required'    => true,
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'displayname' => array(
-                        'label'       => 'user.displayname',
-                        'description' => 'user.displayname.desc',
-                        'required'    => true,
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'initials' => array(
-                        'label'       => 'user.initials',
-                        'description' => 'user.initials.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'title' => array(
-                        'label'       => 'user.title',
-                        'description' => 'user.title.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 10,
-                    ),
-                    'telephoneNumber' => array(
-                        'label' => 'user.phone',
-                        'description' => 'user.phone.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'facsimileTelephoneNumber' => array(
-                        'label' => 'user.fax',
-                        'description' => 'user.fax.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'o' => array(
-                        'label' => 'user.org',
-                        'description' => 'user.org.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'ou' => array(
-                        'label' => 'user.orgunit',
-                        'description' => 'user.orgunit.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'roomNumber' => array(
-                        'label' => 'user.room',
-                        'description' => 'user.room.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 10,
-                    ),
-                    'street' => array(
-                        'label' => 'user.street',
-                        'description' => 'user.street.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'l' => array(
-                        'label' => 'user.city',
-                        'description' => 'user.city.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                    ),
-                    'postOfficeBox' => array(
-                        'label' => 'user.postbox',
-                        'description' => 'user.postbox.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 20,
-                    ),
-                    'postalCode' => array(
-                        'label' => 'user.postcode',
-                        'description' => 'user.postcode.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 10,
-                    ),
-                    'c' => array(
-                        'label' => 'user.country',
-                        'description' => 'user.country.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 2,
-                    ),
-                ),
-            ),
-            'system' => array(
-                'label' => 'user.system',
-                'fields' => array(
-                    'mail' => array(
-                        'label' => 'user.email',
-                        'description' => 'user.email.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                        'required'    => true,
-                    ),
-                    'uid' => array(
-                        'label' => 'user.uid',
-                        'description' => 'user.uid.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                        'required'    => true,
-                    ),
-                    'userpassword' => array(
-                        'label' => 'user.password',
-                        'description' => 'user.password.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                        'required'    => $add_mode ? true : false,
-                        'system'      => true,
-                    ),
-                    'userpassword2' => array(
-                        'label' => 'user.password-confirm',
-                        'description' => 'user.password-confirm.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                        'required'    => $add_mode ? true : false,
-                        'system'      => true,
-                    ),
-                    'kolabhomeserver' => array(
-                        'label' => 'user.homeserver',
-                        'description' => 'user.homeserver.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 50,
-                        'required'    => true,
-                    ),
-                    'user_type_id' => array(
-                        'label' => 'user.type',
-                        'description' => 'user.type.desc',
-                        'type'        => kolab_form::INPUT_SELECT,
-                        'options'     => $accttypes,
-                        'system'      => $add_mode ? true : false,
-                        'onchange'    => "kadm.user_save(true, 'system')",
-                    ),
-                ),
-            ),
-            'config' => array(
-                'label' => 'user.config',
-                'fields' => array(
-                    'cyrus-userquota' => array(
-                        'label' => 'user.quota',
-                        'description' => 'user.quota.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 10,
-                        'suffix'      => 'MB',
-                    ),
-                    'kolabFreeBusyFuture' => array(
-                        'label' => 'user.fbinterval',
-                        'description' => 'user.fbinterval.desc',
-                        'type'        => kolab_form::INPUT_TEXT,
-                        'maxlength'   => 5,
-                        'suffix'      => 'days',
-                    ),
-                    'kolabinvitationpolicy' => array(
-                        'label' => 'user.invitation-policy',
-                        'description' => 'user.invitation-policy.desc',
-                        'type'        => kolab_form::INPUT_TEXTAREA,
-                    ),
-                    'alias' => array(
-                        'label' => 'user.alias',
-                        'description' => 'user.alias.desc',
-                        'type'        => kolab_form::INPUT_TEXTAREA,
-                        'data-type'   => kolab_form::TYPE_LIST,
-                    ),
-                    'kolabdelegate' => array(
-                        'label' => 'user.delegate',
-                        'description' => 'user.delegate.desc',
-                        'type'        => kolab_form::INPUT_TEXTAREA,
-                        'data-type'   => kolab_form::TYPE_LIST,
-                    ),
-                    'kolabAllowSMTPRecipient' => array(
-                        'label' => 'user.smtp-recipients',
-                        'description' => 'user.smtp-recipients.desc',
-                        'type'        => kolab_form::INPUT_TEXTAREA,
-                        'data-type'   => kolab_form::TYPE_LIST,
-                    ),
-                ),
-            ),
-        );
-*/
+
         // Form sections
         $sections = array(
             'personal' => 'user.personal',
@@ -467,14 +274,15 @@ class kolab_client_task_user extends kolab_client_task
 
         // Mark automatically generated fields as read-only, etc.
         foreach ($auto_fields as $idx => $field) {
-            $_fields[$idx] = array(
-                'readonly' => true,
-                'disabled' => true,
-                'section'  => isset($fields[$idx]) ? $fields[$idx] : 'other',
-                // assume auto-generated field is of type text
-                'type'        => kolab_form::INPUT_TEXT,
-                'maxlength'   => 50,
-            );
+            // merge with field definition from
+            if (isset($form_fields[$idx])) {
+                $field = array_merge($field, $form_fields[$idx]);
+            }
+
+            $_fields[$idx] = $this->form_element_type($field);
+            $_fields[$idx]['section'] = isset($fields[$idx]) ? $fields[$idx] : 'other';
+            $_fields[$idx]['readonly'] = true;
+            $_fields[$idx]['disabled'] = true;
 
             if (is_array($field) && !empty($field['data'])) {
                  foreach ($field['data'] as $fd) {
@@ -485,37 +293,13 @@ class kolab_client_task_user extends kolab_client_task
 
         // Other fields
         foreach ($form_fields as $idx => $field) {
-            $_fields[$idx] = array(
-                'section'  => isset($fields[$idx]) ? $fields[$idx] : 'other',
-                'required' => true,
-            );
-
-            switch ($field['type']) {
-            case 'select':
-                if (!isset($field['values'])) {
-                    // @TODO: call form_value.list_options
-                }
-
-                if (!empty($field['values']['default'])) {
-                    $_fields[$idx]['value'] = $field['values']['default'];
-                    unset($field['values']['default']);
-                }
-
-                $_fields[$idx]['type'] = kolab_form::INPUT_SELECT;
-                if (!empty($field['values'])) {
-                    $_fields[$idx]['options'] = array_combine($field['values'], $field['values']);
-                }
-                else {
-                    $_fields[$idx]['options'] = array('');
-                }
-                break;
-
-            default:
-                $_fields[$idx]['type'] = kolab_form::INPUT_TEXT;
-                if (isset($field['maxlength'])) {
-                    $_fields[$idx]['maxlength'] = $field['maxlength'];
-                }
+            if (!isset($_fields[$idx])) {
+                $_fields[$idx] = $this->form_element_type($field);
+                $_fields[$idx]['section'] = isset($fields[$idx]) ? $fields[$idx] : 'other';
             }
+//            $_fields[$idx]['required'] = true;
+            $_fields[$idx]['readonly'] = false;
+            $_fields[$idx]['disabled'] = false;
 
             // Attach on-change events to some fields, to update
             // auto-generated field values
@@ -540,9 +324,7 @@ class kolab_client_task_user extends kolab_client_task
 
         // Hide account type selector if there's only one type
         if (count($accttypes) < 2 || !$add_mode) {
-            $_fields['user_type_id'] = array(
-                'type' => kolab_form::INPUT_HIDDEN,
-            );
+            $_fields['user_type_id']['type'] = kolab_form::INPUT_HIDDEN;
         }
 
         // Create mode
