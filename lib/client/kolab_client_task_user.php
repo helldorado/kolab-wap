@@ -501,8 +501,10 @@ class kolab_client_task_user extends kolab_client_task
                     unset($field['values']['default']);
                 }
 
-                $_fields[$idx]['options'] = array_combine($field['values'], $field['values']);
                 $_fields[$idx]['type'] = kolab_form::INPUT_SELECT;
+                if (!empty($field['values'])) {
+                    $_fields[$idx]['options'] = array_combine($field['values'], $field['values']);
+                }
                 break;
             default:
                 $_fields[$idx]['type'] = kolab_form::INPUT_TEXT;
