@@ -35,8 +35,8 @@ class kolab_html
     public static $td_attribs     = array('colspan', 'rowspan');
     public static $textarea_attribs = array('cols', 'rows', 'disabled', 'name', 'readonly', 'tabindex');
     public static $input_attribs  = array('checked', 'disabled', 'name', 'readonly', 'tabindex',
-        'type', 'size', 'maxlength', 'value');
-    public static $select_attribs = array('multiple', 'name', 'size', 'disabled');
+        'type', 'size', 'maxlength', 'value', 'autofocus');
+    public static $select_attribs = array('multiple', 'name', 'size', 'disabled', 'autofocus');
     public static $option_attribs = array('selected', 'value', 'disabled');
     public static $a_attribs      = array('href', 'name', 'rel', 'tabindex', 'target');
     public static $form_attribs   = array('action', 'enctype', 'method', 'name', 'target');
@@ -300,7 +300,7 @@ class kolab_html
             }
 
             // boolean attributes
-            if (preg_match('/^(checked|multiple|disabled|selected|readonly)$/', $key)) {
+            if (preg_match('/^(checked|multiple|disabled|selected|readonly|autofocus)$/', $key)) {
                 if ($value) {
                     $attrib_arr[] = sprintf('%s="%s"', $key, $key);
                 }

@@ -548,7 +548,8 @@ class kolab_client_task
                 'type'  => 'text',
                 'id'    => 'login_name',
                 'name'  => 'login[username]',
-                'value' => $post['username']));
+                'value' => $post['username'],
+                'autofocus' => true));
 
         $password = kolab_html::label(array(
                 'for'     => 'login_pass',
