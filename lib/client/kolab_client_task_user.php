@@ -405,6 +405,7 @@ class kolab_client_task_user extends kolab_client_task
 
         // field-to-section map and fields order
         $fields = array(
+            'user_type_id'              => 'personal',
             'givenname'                 => 'personal',
             'sn'                        => 'personal',
             'displayname'               => 'personal',
@@ -520,7 +521,7 @@ class kolab_client_task_user extends kolab_client_task
 
         // Add user type id selector
         $_fields['user_type_id'] = array(
-            'section'  => 'system',
+            'section'  => 'personal',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
             'onchange' => "kadm.user_save(true, 'system')",
