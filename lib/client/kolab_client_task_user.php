@@ -476,7 +476,7 @@ class kolab_client_task_user extends kolab_client_task
                 'maxlength'   => 50,
             );
 
-            if (!empty($field['data'])) {
+            if (is_array($field) && !empty($field['data'])) {
                  foreach ($field['data'] as $fd) {
                      $event_fields[$fd][] = $idx;
                  }
@@ -505,7 +505,11 @@ class kolab_client_task_user extends kolab_client_task
                 if (!empty($field['values'])) {
                     $_fields[$idx]['options'] = array_combine($field['values'], $field['values']);
                 }
+                else {
+                    $_fields[$idx]['options'] = array('');
+                }
                 break;
+
             default:
                 $_fields[$idx]['type'] = kolab_form::INPUT_TEXT;
                 if (isset($field['maxlength'])) {
@@ -545,7 +549,7 @@ class kolab_client_task_user extends kolab_client_task
         if ($add_mode) {
             if (empty($data['userpassword'])) {
                 // Pre-populate password fields
-                $post = array('attribute' => 'userpassword');
+                $post = array('attributes' => array('userpassword'));
                 $pass = $this->api->post('form_value.generate', null, $post);
                 $data['userpassword'] = $pass->get('userpassword');
             }

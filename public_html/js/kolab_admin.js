@@ -438,9 +438,10 @@ function kolab_admin()
 
   this.form_value_change = function(events)
   {
-    var i, j, data, e, elem, name, elem_name,
+    var i, j, e, elem, name, elem_name,
       form = $('#'+this.env.form_id),
-      type_id = $('[name="user_type_id"]', form).val();
+      type_id = $('[name="user_type_id"]', form).val(),
+      data = {user_type_id: type_id, attributes: []};
 
     this.set_busy(true, 'loading');
 
@@ -451,16 +452,15 @@ function kolab_admin()
       if (!e)
         continue;
 
-      data = {user_type_id: type_id, attribute: name};
+      data.attributes.push(name);
       for (j=0; j<e.data.length; j++) {
         elem_name = e.data[j];
-        if (elem = $('[name="'+elem_name+'"]', form))
+        if (!data[elem_name] && (elem = $('[name="'+elem_name+'"]', form)))
           data[elem_name] = elem.val();
       }
-
-      this.api_post('form_value.generate', data, 'form_value_response');
     }
 
+    this.api_post('form_value.generate', data, 'form_value_response');
     this.set_busy(false);
   };
 

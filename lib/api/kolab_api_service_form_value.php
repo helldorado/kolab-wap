@@ -48,16 +48,6 @@ class kolab_api_service_form_value extends kolab_api_service
      */
     public function generate($getdata, $postdata)
     {
-        if (empty($postdata['attribute'])) {
-            throw new Exception($this->controller->translate('form_value.noattribute'), 35);
-        }
-
-        $method_name = 'generate_' . strtolower($postdata['attribute']);
-
-        if (!method_exists($this, $method_name)) {
-            throw new Exception($this->controller->translate('form_value.unknownattribute'), 36);
-        }
-
         if (isset($postdata['user_type_id'])) {
             $attribs = $this->user_type_attributes($postdata['user_type_id']);
         }
@@ -68,7 +58,24 @@ class kolab_api_service_form_value extends kolab_api_service
             $attribs = array();
         }
 
-        return $this->{$method_name}($postdata, $attribs);
+        $attributes = (array) $postdata['attributes'];
+        $result     = array();
+
+        foreach ($attributes as $attr_name) {
+            if (empty($attr_name)) {
+                continue;
+            }
+
+            $method_name = 'generate_' . strtolower($attr_name);
+
+            if (!method_exists($this, $method_name)) {
+                continue;
+            }
+
+            $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
+        }
+
+        return $result;
     }
 
 
@@ -84,7 +91,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $cn = trim($postdata['givenname'] . " " . $postdata['sn']);
 
-            return array("cn" => $cn);
+            return $cn;
         }
     }
 
@@ -103,7 +110,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 $displayname = $postdata['sn'] . ", " . $displayname;
             }
 
-            return array("displayname" => $displayname);
+            return $displayname;
         }
     }
 
@@ -114,7 +121,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             // TODO: Take a policy to use a known group ID, a known group (by name?)
             // and/or create user private groups.
-            return array('gidnumber' => 500);
+            return 500;
         }
     }
 
@@ -143,8 +150,7 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             // TODO: Home directory base path from configuration?
-
-            return array('homedirectory' => '/home/'.$uid);
+            return '/home/' . $uid;
         }
     }
 
@@ -181,7 +187,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 $x++;
             }
 
-            return array('mail' => $mail);
+            return $mail;
         }
     }
 
@@ -189,15 +195,19 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
             // This value is determined by the Kolab Daemon
-            return array('mailhost' => '');
+            return '';
         }
     }
 
     private function generate_password($postdata, $attribs = array())
     {
         exec("head -c 200 /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c15", $userpassword_plain);
-        $userpassword_plain = $userpassword_plain[0];
-        return array('password' => $userpassword_plain);
+        return $userpassword_plain[0];
+    }
+
+    private function generate_userpassword($postdata, $attribs = array())
+    {
+        return $this->generate_password($postdata, $attribs);
     }
 
     private function generate_uid($postdata, $attribs = array())
@@ -224,7 +234,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 $x++;
             }
 
-            return array('uid' => $uid);
+            return $uid;
         }
     }
 
@@ -235,14 +245,8 @@ class kolab_api_service_form_value extends kolab_api_service
 
             // TODO: Actually poll $auth for users with a uidNumber set, and take the next one.
 
-            return array('uidnumber' => 500);
+            return 500;
         }
-    }
-
-    private function generate_userpassword($postdata, $attribs = array())
-    {
-        $password = $this->generate_password($getdata, $postdata, $attribs);
-        return array('userpassword' => $password['password']);
     }
 
 }

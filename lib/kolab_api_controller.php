@@ -84,8 +84,6 @@ class kolab_api_controller
      */
     public function get_service($service)
     {
-        error_log($service);
-
         // we are the system!
         if ($service == 'system') {
             return $this;
