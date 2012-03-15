@@ -581,24 +581,28 @@ class kolab_client_task
      * Returns form element definition based on field attributes
      *
      * @param array $field Field attributes
+     * @param array $data  Attribute values
      *
      * @return array Field definition
      */
-    protected function form_element_type($field)
+    protected function form_element_type($field, $data = array())
     {
         $result = array();
 
         switch ($field['type']) {
         case 'select':
             if (!isset($field['values'])) {
-                // @TODO: call form_value.list_options
+                $data['attributes'] = array($field['name']);
+                $resp = $this->api->post('form_value.select_options', null, $data);
+                $field['values'] = $resp->get($field['name']);
+console($resp);
             }
 
             if (!empty($field['values']['default'])) {
                 $result['value'] = $field['values']['default'];
                 unset($field['values']['default']);
             }
-
+console($field['values']);
             $result['type'] = kolab_form::INPUT_SELECT;
             if (!empty($field['values'])) {
                 $result['options'] = array_combine($field['values'], $field['values']);

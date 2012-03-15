@@ -288,6 +288,7 @@ class kolab_client_task_user extends kolab_client_task
                 unset($data[$idx]);
             }
 
+            $field['name'] = $idx;
             $_fields[$idx] = $this->form_element_type($field);
             $_fields[$idx]['section'] = isset($fields[$idx]) ? $fields[$idx] : 'other';
             $_fields[$idx]['readonly'] = true;
@@ -314,6 +315,7 @@ class kolab_client_task_user extends kolab_client_task
         // Other fields
         foreach ($form_fields as $idx => $field) {
             if (!isset($_fields[$idx])) {
+                $field['name'] = $idx;
                 $_fields[$idx] = $this->form_element_type($field);
                 $_fields[$idx]['section'] = isset($fields[$idx]) ? $fields[$idx] : 'other';
             }
