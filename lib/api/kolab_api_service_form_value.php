@@ -41,7 +41,7 @@ class kolab_api_service_form_value extends kolab_api_service
      *
      * @param array $getdata   GET parameters
      * @param array $postdata  POST parameters. Required parameters:
-     *                         - attribute: attribute name
+     *                         - attributes: list of attribute names
      *                         - user_type_id or group_type_id: Type identifier
      *
      * @return array Response with attribute name as a key
@@ -73,6 +73,50 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validation of field values.
+     *
+     * @param array $getdata   GET parameters
+     * @param array $postdata  POST parameters. Required parameters:
+     *                         - user_type_id or group_type_id: Type identifier
+     *
+     * @return array Response with attribute name as a key
+     */
+    public function validate($getdata, $postdata)
+    {
+        if (isset($postdata['user_type_id'])) {
+            $attribs = $this->user_type_attributes($postdata['user_type_id']);
+        }
+        else if (isset($postdata['group_type_id'])) {
+            $attribs = $this->group_type_attributes($postdata['group_type_id']);
+        }
+        else {
+            $attribs = array();
+        }
+
+        $result = array();
+
+        foreach ((array)$postdata as $attr_name => $attr_value) {
+            if (empty($attr_name)) {
+                continue;
+            }
+            if (preg_match('/^[a-z]+_type_id$/i', $attr_name)) {
+                continue;
+            }
+
+            $method_name = 'validate_' . strtolower($attr_name);
+
+            if (!method_exists($this, $method_name)) {
+                $result[$attr_name] = 'OK';
+                continue;
+            }
+
+            $result[$attr_name] = $this->{$method_name}($attr_value);
         }
 
         return $result;
