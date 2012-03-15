@@ -120,6 +120,7 @@ class kolab_form
     public function output()
     {
         $content = '';
+        $hidden  = array();
 
         if (!empty($this->sections)) {
             foreach ($this->sections as $set_idx => $set) {
@@ -127,6 +128,11 @@ class kolab_form
 
                 foreach ($this->elements as $element) {
                     if (empty($element['section']) || $element['section'] != $set_idx) {
+                        continue;
+                    }
+
+                    if ($element['type'] == self::INPUT_HIDDEN) {
+                        $hidden[] = $this->get_element($element);
                         continue;
                     }
 
@@ -150,11 +156,20 @@ class kolab_form
                 continue;
             }
 
+            if ($element['type'] == self::INPUT_HIDDEN) {
+                $hidden[] = $this->get_element($element);
+                continue;
+            }
+
             $rows[] = $this->form_row($element);
         }
 
         if (!empty($rows)) {
-             $content = kolab_html::table(array('body' => $rows, 'class' => 'form'));
+            $content = kolab_html::table(array('body' => $rows, 'class' => 'form'));
+        }
+
+        if (!empty($hidden)) {
+            $content .= implode("\n", $hidden);
         }
 
         // Add form buttons

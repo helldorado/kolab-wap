@@ -257,6 +257,7 @@ class kolab_client_task_user extends kolab_client_task
         $auto_fields  = array();
         $form_fields  = array();
         $_fields      = array();
+        $auto_attribs = array();
 
         // Selected account type
         if (!empty($data['user_type_id'])) {
@@ -274,9 +275,16 @@ class kolab_client_task_user extends kolab_client_task
 
         // Mark automatically generated fields as read-only, etc.
         foreach ($auto_fields as $idx => $field) {
+            if (!is_array($field)) {
+                continue;
+            }
             // merge with field definition from
             if (isset($form_fields[$idx])) {
                 $field = array_merge($field, $form_fields[$idx]);
+            }
+            // remove auto-generated value on user type change, it will be re-generated
+            else if ($add_mode) {
+                unset($data[$idx]);
             }
 
             $_fields[$idx] = $this->form_element_type($field);
@@ -284,10 +292,21 @@ class kolab_client_task_user extends kolab_client_task
             $_fields[$idx]['readonly'] = true;
             $_fields[$idx]['disabled'] = true;
 
-            if (is_array($field) && !empty($field['data'])) {
+            // build auto_attribs and event_fields lists
+            $is_data = 0;
+            if (!empty($field['data'])) {
                  foreach ($field['data'] as $fd) {
                      $event_fields[$fd][] = $idx;
+                     if (isset($data[$fd])) {
+                        $is_data++;
+                     }
                  }
+                 if (count($field['data']) == $is_data) {
+                     $auto_attribs[] = $idx;
+                 }
+            }
+            else {
+                $auto_attribs[] = $idx;
             }
         }
 
@@ -329,12 +348,14 @@ class kolab_client_task_user extends kolab_client_task
 
         // Create mode
         if ($add_mode) {
-            if (empty($data['userpassword'])) {
-                // Pre-populate password fields
-                $post = array('attributes' => array('userpassword'));
-                $pass = $this->api->post('form_value.generate', null, $post);
-                $data['userpassword'] = $pass->get('userpassword');
+            // (Re-|Pre-)populate auto_form_fields
+            if (!empty($auto_attribs)) {
+                $data = array_merge((array)$data, array('attributes' => $auto_attribs));
+                $resp = $this->api->post('form_value.generate', null, $data);
+                $data = array_merge((array)$data, (array)$resp->get());
             }
+
+            // copy password to password confirm field
             $data['userpassword2'] = $data['userpassword'];
 
             // Page title

@@ -244,7 +244,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $primary_mail = kolab_recipient_policy::primary_mail($postdata);
 
-            return array('mail' => $primary_mail);
+            return $primary_mail;
         }
     }
 
@@ -269,7 +269,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $secondary_mail = kolab_recipient_policy::secondary_mail($postdata);
 
-            return Array($secondary_mail_key => $secondary_mail);
+            return $secondary_mail;
         }
     }
 
