@@ -431,6 +431,9 @@ class kolab_client_task_user extends kolab_client_task
             'alias'                     => 'system',
             'mailhost'                  => 'system',
             'kolabhomeserver'           => 'system',
+            'uidnumber'                 => 'system',
+            'gidnumber'                 => 'system',
+            'homedirectory'             => 'system',
 
             'mailquota'                 => 'config',
             'cyrususerquota'            => 'config',
@@ -439,6 +442,7 @@ class kolab_client_task_user extends kolab_client_task
             'kolabdelegate'             => 'config',
             'kolaballowsmtprecipient'   => 'config',
             'kolaballowsmtpsender'      => 'config',
+            'shell'                     => 'config',
         );
 
         $event_fields = array();
