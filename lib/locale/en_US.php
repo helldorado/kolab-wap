@@ -69,6 +69,7 @@ $LANG['user.fbinterval'] = 'Free-Busy interval';
 $LANG['user.fbinterval.desc'] = 'Leave blank for default (60 days)';
 $LANG['user.user_type_id'] = 'Account type';
 $LANG['user.alias'] = 'Secondary Email Address(es)';
+$LANG['user.mailalternateaddress'] = 'Secondary Email Address(es)';
 $LANG['user.invitation-policy'] = 'Invitation policy';
 $LANG['user.delegate'] = 'Email delegates';
 $LANG['user.delegate.desc'] = 'Others allowed to send emails with a "From" address of this account';

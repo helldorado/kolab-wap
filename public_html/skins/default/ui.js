@@ -153,41 +153,61 @@ function form_serialize(data)
       }
     }
 
-    data.json[this.name] = value.join("\n");
+    data.json[this.name] = value;
   });
 
   return data;
 }
 
+// Form element update handler
+function form_element_update(data)
+{
+  var elem = $('[name="'+data.name+'"]');
+
+  if (!elem.length)
+    return;
+
+  if (elem.attr('data-type') == 'list') {
+    // remove old wrapper
+    $('span[class="listarea"]', elem.parent()).remove();
+    // insert new list element
+    form_element_wrapper(elem.get(0));
+  }
+}
+
 // Form initialization
 function form_init(id)
 {
-  var form = $('#'+id), separator = /[,\s\r\n]+/;
+  var form = $('#'+id);
 
   // replace some textarea fields with pretty/smart input lists
   $('textarea[data-type="list"]', form)
-    .each(function() {
-    var i, len, elem, e = $(this),
-      list = this.value.split(separator),
-      area = $('<span class="listarea"></span>'),
-      disabled = e.attr('disabled') || e.attr('readonly');
+    .each(function() { form_element_wrapper(this); });
+}
 
-    e.hide();
+// Replaces form element with smart element
+function form_element_wrapper(form_element)
+{
+  var i, len, elem, e = $(form_element),
+    list = form_element.value.split("\n"),
+    area = $('<span class="listarea"></span>'),
+    disabled = e.attr('disabled') || e.attr('readonly');
 
-    for (i=0, len=list.length; i<len; i++) {
-      elem = form_list_element(form, {
-        name: this.name+'['+i+']',
-        value: list[i],
-        disabled: disabled
-      });
-      elem.appendTo(area);
-    }
+  e.hide();
 
-    if (disabled)
-      area.addClass('readonly');
+  for (i=0, len=list.length; i<len; i++) {
+    elem = form_list_element(form_element.form, {
+      name: form_element.name+'['+i+']',
+      value: list[i],
+      disabled: disabled
+    });
+    elem.appendTo(area);
+  }
 
-    area.appendTo(this.parentNode);
-  });
+  if (disabled)
+    area.addClass('readonly');
+
+  area.appendTo(form_element.parentNode);
 }
 
 // Creates smart list element
@@ -233,3 +253,4 @@ function form_list_element(form, data)
  */
 kadm.add_event_listener('form-load', form_load);
 kadm.add_event_listener('form-serialize', form_serialize);
+kadm.add_event_listener('form-element-update', form_element_update);

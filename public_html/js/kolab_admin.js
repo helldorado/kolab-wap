@@ -412,6 +412,10 @@ function kolab_admin()
     }
   };
 
+  /*********************************************************/
+  /*********                 Forms                 *********/
+  /*********************************************************/
+
   this.serialize_form = function(id)
   {
     var i, v, json = {},
@@ -429,12 +433,16 @@ function kolab_admin()
 
     this.trigger_event('form-serialize', {id: id, json: json});
 
+    // convert values of list elements to array type
+    $('textarea[data-type="list"]', form).each(function() {
+      var name = this.name;
+      // maybe already converted by skin engine
+      if (json[name] && !$.isArray(json[name]))
+        json[name] = $(this).val().split("\n");
+    });
+
     return json;
   };
-
-  /*********************************************************/
-  /*********                 Forms                 *********/
-  /*********************************************************/
 
   this.form_value_change = function(events)
   {
@@ -466,11 +474,18 @@ function kolab_admin()
 
   this.form_value_response = function(response)
   {
+    var i, val;
     if (!this.api_response(response))
       return;
 
-    for (var i in response.result)
-      $('[name="'+i+'"]').val(response.result[i]);
+    for (i in response.result) {
+      val = response.result[i];
+      if ($.isArray(val))
+        val = val.join("\n");
+      $('[name="'+i+'"]').val(val);
+
+      this.trigger_event('form-element-update', {name: i});
+    }
   };
 
   this.form_value_error = function(name)
