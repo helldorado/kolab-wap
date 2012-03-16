@@ -78,6 +78,17 @@ class kolab_api_service_form_value extends kolab_api_service
         return $result;
     }
 
+    public function list_options($getdata, $postdata)
+    {
+        switch ($postdata['attribute']) {
+            case "preferredlanguage":
+                return $this->list_options_preferredlanguage();
+                break;
+            default:
+                break;
+        }
+    }
+
     /**
      * Validation of field values.
      *
@@ -317,6 +328,13 @@ class kolab_api_service_form_value extends kolab_api_service
             // TODO: Actually poll $auth for users with a uidNumber set, and take the next one.
             return 500;
         }
+    }
+
+    private function list_options_preferredlanguage()
+    {
+        $db = SQL::get_instance();
+        $attribute = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = 'preferredlanguage'"));
+        return json_decode($attribute['option_values']);
     }
 
 }
