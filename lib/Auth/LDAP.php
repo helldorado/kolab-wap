@@ -253,6 +253,7 @@ class LDAP
         $conf = Conf::get_instance();
 
         $command = Array(
+                # TODO: Very 64-bit specific
                 '/usr/lib64/mozldap/ldapsearch',
                 '-x',
                 '-h',
@@ -321,10 +322,11 @@ class LDAP
 
         $root_dn = $this->domain_root_dn($this->domain);
 
+        # TODO: Do not query for both, it's either one or the other
         $entries = $this->search($root_dn, "(|" .
-            "(&(objectclass=groupofnames)(member=$member_dn))" .
-            "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
-        ")");
+                "(&(objectclass=groupofnames)(member=$member_dn))" .
+                "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
+            ")");
 
         $entries = $this->normalize_result($entries);
 
@@ -343,6 +345,7 @@ class LDAP
             $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
         }
         else {
+            # TODO: Where does user come from?
             $group_dn = $user;
         }
 
@@ -379,6 +382,7 @@ class LDAP
 
         # TODO: From config
         $base_dn = "ou=Groups,dc=klab,dc=cc";
+        # TODO: From config
         $filter  = "(|"
             ."(objectClass=kolabgroupofnames)"
             ."(objectclass=kolabgroupofuniquenames)"
@@ -522,12 +526,19 @@ class LDAP
             $type_str = $_key['key'];
         }
 
+        // Check if the user_type has a specific base DN specified.
         $base_dn = $this->conf->get($this->domain, $type_str . "_user_base_dn");
-        if (!$base_dn) {
-            $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
-        }
+        // If not, take the regular user_base_dn
+        if (!$base_dn)
+            $base_dn = $this->conf->get($this->domain, "user_base_dn");
 
-        // TODO: The rdn is configurable as well
+        // If no user_base_dn either, take the user type specific from the parent
+        // configuration
+        if (!$base_dn)
+            $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
         $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
 
         return $this->add($dn, $attrs);
@@ -689,10 +700,6 @@ class LDAP
         return array(implode('@', $username_parts), $domain_name);
     }
 
-    /*
-        Deprecated, use domain_root_dn()
-    */
-
     public function user_type_attribute_filter($type = false)
     {
         global $conf;
@@ -709,7 +716,7 @@ class LDAP
             $attributes_filter[] = is_array($value) ? $key : $value;
         }
 
-        echo "<li>"; print_r($attributes_filter);
+//         console($attributes_filter);
 
         return $attributes_filter;
     }
@@ -769,6 +776,7 @@ class LDAP
 
     private function _add($entry_dn, $attributes)
     {
+        // Always bind with the session credentials
         $this->_connect();
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
@@ -837,7 +845,8 @@ class LDAP
     private function _delete($entry_dn)
     {
         $this->_connect();
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        // Always bind with the session credentials
+        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         if (($delete_result = ldap_delete($this->_connection, $entry_dn)) == false) {
             // Issue warning
@@ -1094,11 +1103,6 @@ class LDAP
         return $user_dn;
     }
 
-
-    public function _get_email_address()
-    {
-        return "kanarip@kanarip.com";
-    }
 
     private function _list_group_members($dn, $entry = null)
     {
