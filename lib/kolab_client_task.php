@@ -629,12 +629,13 @@ class kolab_client_task
     /**
      * HTML Form elements preparation.
      *
-     * @param string $name        Object name (user, group, etc.)
-     * @param array  $data        Object data
+     * @param string $name         Object name (user, group, etc.)
+     * @param array  $data         Object data
+     * @param array  $extra_fields Extra field names
      *
      * @return array Fields list, Object types list, Current type ID
      */
-    protected function form_prepare($name, &$data)
+    protected function form_prepare($name, &$data, $extra_fields = array())
     {
         $types        = (array) $this->{$name . '_types'}();
         $form_id      = $attribs['id'];
@@ -645,6 +646,8 @@ class kolab_client_task
         $form_fields  = array();
         $fields       = array();
         $auto_attribs = array();
+
+        $extra_fields = array_flip($extra_fields);
 
         // Selected account type
         if (!empty($data[$name . '_type_id'])) {
@@ -662,6 +665,7 @@ class kolab_client_task
         // Mark automatically generated fields as read-only, etc.
         foreach ($auto_fields as $idx => $field) {
             if (!is_array($field)) {
+                unset($auto_fields[$idx]);
                 continue;
             }
             // merge with field definition from
@@ -678,6 +682,8 @@ class kolab_client_task
             $fields[$idx]['readonly'] = true;
             $fields[$idx]['disabled'] = true;
 
+            $extra_fields[$idx] = true;
+
             // build auto_attribs and event_fields lists
             $is_data = 0;
             if (!empty($field['data'])) {
@@ -693,6 +699,7 @@ class kolab_client_task
             }
             else {
                 $auto_attribs[] = $idx;
+                unset($auto_fields[$idx]);
             }
         }
 
@@ -701,6 +708,9 @@ class kolab_client_task
             if (!isset($fields[$idx])) {
                 $field['name'] = $idx;
                 $fields[$idx] = $this->form_element_type($field);
+            }
+            else {
+                unset($extra_fields[$idx]);
             }
 //            $fields[$idx]['required'] = true;
             $fields[$idx]['readonly'] = false;
@@ -714,7 +724,10 @@ class kolab_client_task
             }
         }
 
+        // Register list of auto-generated fields
         $this->output->set_env('auto_fields', $auto_fields);
+        // Register list of disabled fields
+        $this->output->set_env('extra_fields', array_keys($extra_fields));
 
         // (Re-|Pre-)populate auto_form_fields
         if ($add_mode) {
