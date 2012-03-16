@@ -170,18 +170,123 @@ class kolab_client_task_group extends kolab_client_task
         $id     = $this->get_input('id', 'POST');
         $result = $this->api->get('group.info', array('group' => $id));
         $group  = $result->get($id);
+
         $group['group'] = $id;
+        $output = $this->group_form(null, $group);
 
-        $this->output->set_object('taskcontent', print_r($group, true));
+        $this->output->set_object('taskcontent', $output);
     }
 
-    public function group_add()
-    {
-    
-    }
-
+    /**
+     * Group search action.
+     */
     public function search_form()
     {
         return '';
+    }
+
+    /**
+     * Groups adding (form) action.
+     */
+    public function action_add()
+    {
+        $data   = $this->get_input('data', 'POST');
+        $output = $this->group_form(null, $data, true);
+
+        $this->output->set_object('taskcontent', $output);
+    }
+
+    /**
+     * Group edit/add form.
+     */
+    private function group_form($attribs, $data = array())
+    {
+        if (empty($attribs['id'])) {
+            $attribs['id'] = 'group-form';
+        }
+
+        // Form sections
+        $sections = array(
+            'system'   => 'group.system',
+            'other'    => 'group.other',
+        );
+
+        // field-to-section map and fields order
+        $fields_map = array(
+            'group_type_id'       => 'system',
+            'group_type_id_name'  => 'system',
+            'cn'                  => 'system',
+            'gidnumber'           => 'system',
+            'mail'                => 'system',
+            'uniquemember'        => 'system',
+        );
+
+        // Prepare fields
+        list($fields, $types, $type) = $this->form_prepare('group', $data);
+
+        $add_mode  = empty($data['group']);
+        $accttypes = array();
+
+        foreach ($types as $idx => $elem) {
+            $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
+        }
+
+        // Add user type id selector
+        $fields['group_type_id'] = array(
+            'section'  => 'system',
+            'type'     => kolab_form::INPUT_SELECT,
+            'options'  => $accttypes,
+            'onchange' => "kadm.group_save(true, 'system')",
+        );
+
+        // Hide account type selector if there's only one type
+        if (count($accttypes) < 2 || !$add_mode) {
+            $fields['group_type_id']['type'] = kolab_form::INPUT_HIDDEN;
+        }
+
+        // Create mode
+        if ($add_mode) {
+            // Page title
+            $title = $this->translate('group.add');
+        }
+        // Edit mode
+        else {
+            $title = $data['cn'];
+
+            // Add user type name
+            $fields['group_type_id_name'] = array(
+                'label'    => 'group.group_type_id',
+                'section'  => 'system',
+                'value'    => $accttypes[$type]['content'],
+            );
+        }
+
+        // Create form object and populate with fields
+        $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data);
+
+        $form->set_title(kolab_html::escape($title));
+
+        $this->output->add_translation('group.add.success', 'group.delete.success');
+
+        return $form->output();
+    }
+
+    /**
+     * Returns list of group types.
+     *
+     * @return array List of group types
+     */
+    public function group_types()
+    {
+        if (!isset($_SESSION['group_types'])) {
+            $result = $this->api->post('group_types.list');
+            $list   = $result->get('list');
+
+            if (is_array($list)) {
+                $_SESSION['group_types'] = $list;
+            }
+        }
+
+        return $_SESSION['group_types'];
     }
 }

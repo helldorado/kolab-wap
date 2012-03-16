@@ -92,6 +92,14 @@ $LANG['group.add'] = 'Add Group';
 $LANG['group.norecords'] = 'No group records found!';
 $LANG['group.list'] = 'Groups List';
 $LANG['group.list.records'] = '$1 to $2 of $3';
+$LANG['group.cn'] = 'Common name';
+$LANG['group.mail'] = 'Primary Email Address';
+$LANG['group.group_type_id'] = 'Group type';
+$LANG['group.add.success'] = 'Group created successfully.';
+$LANG['group.delete.success'] = 'Group deleted successfully.';
+$LANG['group.gidnumber'] = 'Primary group number';
+$LANG['group.system'] = 'System';
+$LANG['group.other'] = 'Other';
 
 $LANG['MB'] = 'MB';
 $LANG['days'] = 'days';
