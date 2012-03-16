@@ -199,7 +199,8 @@ function form_element_wrapper(form_element)
     elem = form_list_element(form_element.form, {
       name: form_element.name+'['+i+']',
       value: list[i],
-      disabled: disabled
+      disabled: disabled,
+      maxlength: e.attr('data-maxlength')
     });
     elem.appendTo(area);
   }
@@ -217,7 +218,7 @@ function form_list_element(form, data)
     + '<span title="" class="add"></span><span title="" class="reset"></span>'
     + '</span><input></span>');
 
-  $('input', elem).attr({name: data.name, value: data.value, disabled: data.disabled});
+  $('input', elem).attr(data);
 
   if (data.disabled)
     return elem;

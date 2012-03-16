@@ -614,6 +614,10 @@ class kolab_client_task
         case 'list':
             $result['type']      = kolab_form::INPUT_TEXTAREA;
             $result['data-type'] = kolab_form::TYPE_LIST;
+
+            if (!empty($field['maxlength'])) {
+                $result['data-maxlength'] = $field['maxlength'];
+            }
             break;
 
         default:
