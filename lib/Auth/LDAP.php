@@ -345,8 +345,7 @@ class LDAP
             $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
         }
         else {
-            # TODO: Where does user come from?
-            $group_dn = $user;
+            $group_dn = $group;
         }
 
         if (!$group_dn) {
@@ -364,7 +363,7 @@ class LDAP
             $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
         }
         else {
-            $group_dn = $user;
+            $group_dn = $group;
         }
 
         if (!$group_dn) {
