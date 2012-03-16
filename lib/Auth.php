@@ -189,6 +189,12 @@ class Auth {
         return $this->_auth[$this->domain]->list_domains();
     }
 
+    public function list_rights($subject)
+    {
+        $this->connect();
+        return $this->_auth[$this->domain]->effective_rights($subject);
+    }
+
     public function list_users($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
         $this->connect($domain);

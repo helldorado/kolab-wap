@@ -581,17 +581,20 @@ class kolab_client_task
      * Returns form element definition based on field attributes
      *
      * @param array $field Field attributes
+     * @param array $data  Attribute values
      *
      * @return array Field definition
      */
-    protected function form_element_type($field)
+    protected function form_element_type($field, $data = array())
     {
         $result = array();
 
         switch ($field['type']) {
         case 'select':
             if (!isset($field['values'])) {
-                // @TODO: call form_value.list_options
+                $data['attributes'] = array($field['name']);
+                $resp = $this->api->post('form_value.select_options', null, $data);
+                $field['values'] = $resp->get($field['name']);
             }
 
             if (!empty($field['values']['default'])) {
@@ -622,4 +625,237 @@ class kolab_client_task
 
         return $result;
     }
+
+    /**
+     * HTML Form elements preparation.
+     *
+     * @param string $name         Object name (user, group, etc.)
+     * @param array  $data         Object data
+     * @param array  $extra_fields Extra field names
+     *
+     * @return array Fields list, Object types list, Current type ID
+     */
+    protected function form_prepare($name, &$data, $extra_fields = array())
+    {
+        $types        = (array) $this->{$name . '_types'}();
+        $form_id      = $attribs['id'];
+        $add_mode     = empty($data[$name]);
+
+        $event_fields = array();
+        $auto_fields  = array();
+        $form_fields  = array();
+        $fields       = array();
+        $auto_attribs = array();
+
+        $extra_fields = array_flip($extra_fields);
+
+        // Selected account type
+        if (!empty($data[$name . '_type_id'])) {
+            $type = $data[$name . '_type_id'];
+        }
+        else {
+            $data[$name . '_type_id'] = $type = key($types);
+        }
+
+        if ($type) {
+            $auto_fields = (array) $types[$type]['attributes']['auto_form_fields'];
+            $form_fields = (array) $types[$type]['attributes']['form_fields'];
+        }
+
+        // Mark automatically generated fields as read-only, etc.
+        foreach ($auto_fields as $idx => $field) {
+            if (!is_array($field)) {
+                unset($auto_fields[$idx]);
+                continue;
+            }
+            // merge with field definition from
+            if (isset($form_fields[$idx])) {
+                $field = array_merge($field, $form_fields[$idx]);
+            }
+            // remove auto-generated value on type change, it will be re-generated
+            else if ($add_mode) {
+                unset($data[$idx]);
+            }
+
+            $field['name'] = $idx;
+            $fields[$idx] = $this->form_element_type($field);
+            $fields[$idx]['readonly'] = true;
+            $fields[$idx]['disabled'] = true;
+
+            $extra_fields[$idx] = true;
+
+            // build auto_attribs and event_fields lists
+            $is_data = 0;
+            if (!empty($field['data'])) {
+                 foreach ($field['data'] as $fd) {
+                     $event_fields[$fd][] = $idx;
+                     if (isset($data[$fd])) {
+                        $is_data++;
+                     }
+                 }
+                 if (count($field['data']) == $is_data) {
+                     $auto_attribs[] = $idx;
+                 }
+            }
+            else {
+                $auto_attribs[] = $idx;
+                unset($auto_fields[$idx]);
+            }
+        }
+
+        // Other fields
+        foreach ($form_fields as $idx => $field) {
+            if (!isset($fields[$idx])) {
+                $field['name'] = $idx;
+                $fields[$idx] = $this->form_element_type($field);
+            }
+            else {
+                unset($extra_fields[$idx]);
+            }
+//            $fields[$idx]['required'] = true;
+            $fields[$idx]['readonly'] = false;
+            $fields[$idx]['disabled'] = false;
+
+            // Attach on-change events to some fields, to update
+            // auto-generated field values
+            if (!empty($event_fields[$idx])) {
+                $event = json_encode(array_unique($event_fields[$idx]));
+                $fields[$idx]['onchange'] = "kadm.form_value_change($event)";
+            }
+        }
+
+        // Register list of auto-generated fields
+        $this->output->set_env('auto_fields', $auto_fields);
+        // Register list of disabled fields
+        $this->output->set_env('extra_fields', array_keys($extra_fields));
+
+        // (Re-|Pre-)populate auto_form_fields
+        if ($add_mode) {
+            if (!empty($auto_attribs)) {
+                $data = array_merge((array)$data, array('attributes' => $auto_attribs));
+                $resp = $this->api->post('form_value.generate', null, $data);
+                $data = array_merge((array)$data, (array)$resp->get());
+            }
+        }
+
+        return array($fields, $types, $type);
+    }
+
+    /**
+     * HTML Form creation.
+     *
+     * @param string $name       Object name (user, group, etc.)
+     * @param array  $attribs    HTML attributes of the form
+     * @param array  $sections   List of form sections
+     * @param array  $fields     Fields list (from self::form_prepare())
+     * @param array  $fields_map Fields map (used for sorting and sections assignment)
+     * @param array  $data       Object data
+     *
+     * @return kolab_form HTML Form object
+     */
+    protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data)
+    {
+        // Assign sections to fields
+        foreach ($fields as $idx => $field) {
+            if (!$field['section']) {
+                $fields[$idx]['section'] = isset($fields_map[$idx]) ? $fields_map[$idx] : 'other';
+            }
+        }
+
+        // Sort
+        foreach ($fields_map as $idx => $val) {
+            if (array_key_exists($idx, $fields)) {
+                $fields_map[$idx] = $fields[$idx];
+                unset($fields[$idx]);
+            }
+            else {
+                unset($fields_map[$idx]);
+            }
+        }
+        if (!empty($fields)) {
+            $fields_map = array_merge($fields_map, $fields);
+        }
+
+        $form = new kolab_form($attribs);
+
+        // Parse elements and add them to the form object
+        foreach ($sections as $section_idx => $section) {
+            $form->add_section($section_idx, kolab_html::escape($this->translate($section)));
+
+            foreach ($fields_map as $idx => $field) {
+                if ($field['section'] != $section_idx) {
+                    continue;
+                }
+
+                if (empty($field['label'])) {
+                    $field['label'] = "user.$idx";
+                }
+
+                $field['label']       = kolab_html::escape($this->translate($field['label']));
+                $field['description'] = "user.$idx.desc";
+                $field['section']     = $section_idx;
+
+                if (!empty($data[$idx])) {
+                    if (is_array($data[$idx])) {
+                        $field['value'] = array_map(array('kolab_html', 'escape'), $data[$idx]);
+                        $field['value'] = implode("\n", $field['value']);
+                    }
+                    else {
+                        $field['value'] = kolab_html::escape($data[$idx]);
+                    }
+                }
+/*
+                if (!empty($field['suffix'])) {
+                    $field['suffix'] = kolab_html::escape($this->translate($field['suffix']));
+                }
+*/
+                if (!empty($field['options'])) {
+                    foreach ($field['options'] as $opt_idx => $option) {
+                        if (is_array($option)) {
+                            $field['options'][$opt_idx]['content'] = kolab_html::escape($this->translate($option['content']));
+                        }
+                        else {
+                            $field['options'][$opt_idx] = kolab_html::escape($this->translate($option));
+                        }
+                    }
+                }
+
+                if (!empty($field['description'])) {
+                    $description = $this->translate($field['description']);
+                    if ($description != $field['description']) {
+                        $field['title'] = $description;
+                    }
+                    unset($field['description']);
+                }
+
+                if (empty($field['name'])) {
+                    $field['name'] = $idx;
+                }
+
+                $form->add_element($field);
+            }
+        }
+
+        if (!empty($data['section'])) {
+            $form->activate_section($data['section']);
+        }
+
+        $form->add_button(array(
+            'value'   => kolab_html::escape($this->translate('submit.button')),
+            'onclick' => "kadm.{$name}_save()",
+        ));
+
+        if ($data[$name]) {
+            $id = $data[$name];
+            $form->add_button(array(
+                'value'   => kolab_html::escape($this->translate('delete.button')),
+                'onclick' => "kadm.{$name}_delete('{$id}')",
+            ));
+        }
+
+        $this->output->set_env('form_id', $attribs['id']);
+
+        return $form;
+    }
+
 }

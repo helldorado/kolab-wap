@@ -421,15 +421,15 @@ function kolab_admin()
     var i, v, json = {},
       form = $(id),
       query = form.serializeArray(),
-      disabled = this.env.auto_fields;
+      extra = this.env.extra_fields;
 
     for (i in query)
       json[query[i].name] = query[i].value;
 
-    // read disabled fields too
-    for (i in disabled)
-      if (v = $('[name="'+i+'"]', form).val())
-        json[i] = v;
+    // read extra (disabled) fields
+    for (i=0; i<extra.length; i++)
+      if (v = $('[name="'+extra[i]+'"]', form).val())
+        json[extra[i]] = v;
 
     this.trigger_event('form-serialize', {id: id, json: json});
 
