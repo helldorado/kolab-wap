@@ -365,7 +365,7 @@ class kolab_api_service_form_value extends kolab_api_service
     private function select_options_preferredlanguage($postdata, $attribs = array())
     {
         $db        = SQL::get_instance();
-        $query     = $db->query("SELECT option_values FROM options WHERE attribute = 'preferredlanguage'")
+        $query     = $db->query("SELECT option_values FROM options WHERE attribute = 'preferredlanguage'");
         $attribute = $db->fetch_assoc($query);
 
         return json_decode($attribute['option_values']);
