@@ -437,7 +437,7 @@ function kolab_admin()
     $('textarea[data-type="list"]', form).each(function() {
       var name = this.name;
       // maybe already converted by skin engine
-      if (json[name] && !$.isArray(json[name]))
+      if (!json[name] || !$.isArray(json[name]))
         json[name] = $(this).val().split("\n");
     });
 
@@ -618,3 +618,10 @@ function kolab_admin()
 };
 
 var kadm = new kolab_admin();
+
+// Add escape() method to RegExp object
+// http://dev.rubyonrails.org/changeset/7271
+RegExp.escape = function(str)
+{
+  return String(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
+};

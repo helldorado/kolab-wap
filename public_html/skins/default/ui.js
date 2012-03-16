@@ -141,18 +141,17 @@ function form_serialize(data)
   var form = $(data.id);
 
   // replace some textarea fields with pretty/smart input lists
-  $('textarea[data-type="list"]', form).not('disabled')
-    .each(function() {
-    var i, value = [], re = RegExp('^' + this.name + '\[[0-9]+\]$');
+  $('textarea[data-type="list"]', form).not('disabled').each(function() {
+    var i, v, value = [],
+      re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9]+\]$');
 
     for (i in data.json) {
       if (i.match(re)) {
-        if (i.value)
-          value.push(i.value);
+        if (v = $('input[name="'+i+'"]', form).val())
+          value.push(v);
         delete data.json[i];
       }
     }
-
     data.json[this.name] = value;
   });
 
