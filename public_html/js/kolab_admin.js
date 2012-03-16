@@ -577,6 +577,44 @@ function kolab_admin()
     this.display_message('user.add.success');
     this.command('user.list', {page: this.env.list_page});
   };
+
+  this.group_info = function(id)
+  {
+    this.http_post('group.info', {id: id});
+  };
+
+  this.group_list = function(props)
+  {
+    if (!props)
+      props = {};
+
+    if (props.search === undefined && this.env.search_request)
+      props.search_request = this.env.search_request;
+
+    this.http_post('group.list', props);
+  };
+
+  this.group_delete = function(groupid)
+  {
+    this.set_busy(true, 'deleting');
+    this.api_post('group.delete', {group: userid}, 'group_delete_response');
+  };
+
+  this.group_delete_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    var page = this.env.list_page;
+
+    // goto previous page if last user on the current page has been deleted
+    if (this.env.list_count)
+      page -= 1;
+
+    this.display_message('group.delete.success');
+    this.command('group.list', {page: page});
+  };
+
 };
 
 var kadm = new kolab_admin();

@@ -89,6 +89,9 @@ $LANG['user.shell'] = 'Shell';
 $LANG['user.uidnumber'] = 'User ID number';
 
 $LANG['group.add'] = 'Add Group';
+$LANG['group.norecords'] = 'No group records found!';
+$LANG['group.list'] = 'Groups List';
+$LANG['group.list.records'] = '$1 to $2 of $3';
 
 $LANG['MB'] = 'MB';
 $LANG['days'] = 'days';

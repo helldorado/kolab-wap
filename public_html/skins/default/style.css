@@ -722,8 +722,9 @@ fieldset.tabbed
   vertical-align: top;
 }
 
-/**** User task elements ****/
+/**** User/Group task elements ****/
 
-#userlist table {
+#userlist table,
+#grouplist table {
   width: 100%;
 }
