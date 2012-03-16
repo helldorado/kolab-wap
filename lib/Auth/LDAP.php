@@ -36,6 +36,24 @@ class LDAP
     protected $user_bind_dn;
     protected $user_bind_pw;
 
+    protected $attribute_level_rights_map = Array(
+            "r" => "read",
+            "s" => "search",
+            "w" => "write",
+            "o" => "delete",
+            "c" => "compare",
+            "W" => "write",
+            "O" => "delete"
+        );
+
+    protected $entry_level_rights_map = Array(
+            "a" => "add",
+            "d" => "delete",
+            "n" => "modrdn",
+            "v" => "read"
+        );
+
+
     // This is the default and should actually be set through Conf.
     private $_ldap_uri = 'ldap://localhost:389/';
 
@@ -192,6 +210,7 @@ class LDAP
             $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
         }
 
+        # TODO: Get domain_attr from config
         if (($results = ldap_search($this->_connection, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')')) == false) {
             error_log("No results?");
             return false;
@@ -202,6 +221,7 @@ class LDAP
 
 //        echo "<pre>"; print_r($domain_info); echo "</pre>";
 
+        // TODO: Also very 389 specific
         if (isset($domain_info['inetDomainBaseDN'][0])) {
             $domain_rootdn = $domain_info['inetDomainBaseDN'][0];
         }
@@ -223,6 +243,74 @@ class LDAP
         $filter  = $this->conf->get($section, 'kolab_domain_filter');
 
         return $this->search($base_dn, $filter);
+    }
+
+    public function effective_rights($subject_dn)
+    {
+        $attributes = Array();
+        $output = Array();
+
+        $conf = Conf::get_instance();
+
+        $command = Array(
+                '/usr/lib64/mozldap/ldapsearch',
+                '-x',
+                '-h',
+                # TODO: Get from conf
+                'ldap.klab.cc',
+                '-b',
+                # TODO: Get from conf
+                'dc=klab,dc=cc',
+                '-D',
+                '"' . $_SESSION['user']->user_bind_dn . '"',
+                '-w',
+                '"' . $_SESSION['user']->user_bind_pw . '"',
+                '-J',
+                '"' . implode(
+                        ':',
+                        Array(
+                                '1.3.6.1.4.1.42.2.27.9.5.2',            # OID
+                                'true',                                 # Criticality
+                                'dn:' . $_SESSION['user']->user_bind_dn # User DN
+                            )
+                    ) . '"',
+                '"(entrydn=' . $subject_dn . ')"'
+
+            );
+
+        exec(implode(' ', $command), $output);
+
+        $lines = Array();
+        foreach ($output as $line_num => $line) {
+            if (substr($line, 0, 1) == " ") {
+                $lines[count($lines)-1] .= trim($line);
+            } else {
+                $lines[] = trim($line);
+            }
+        }
+
+        foreach ($lines as $line) {
+            $line_components = explode(':', $line);
+            $attribute_name = array_shift($line_components);
+            $attribute_value = trim(implode(':', $line_components));
+
+            switch ($attribute_name) {
+                case "attributeLevelRights":
+                    $attributes[$attribute_name] = $this->parse_attribute_level_rights($attribute_value);
+                    break;
+                case "dn":
+                    $attributes[$attribute_name] = $attribute_value;
+                    break;
+                case "entryLevelRights":
+                    $attributes[$attribute_name] = $this->parse_entry_level_rights($attribute_value);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return $attributes;
     }
 
     public function find_user_groups($member_dn)
@@ -288,7 +376,8 @@ class LDAP
         if (empty($attributes)) {
             $attributes = array('*');
         }
-    
+
+        # TODO: From config
         $base_dn = "ou=Groups,dc=klab,dc=cc";
         $filter  = "(|"
             ."(objectClass=kolabgroupofnames)"
@@ -371,6 +460,45 @@ class LDAP
         }
 
         return $result;
+    }
+
+    private function parse_attribute_level_rights($attribute_value) {
+        $attribute_value = str_replace(", ", ",", $attribute_value);
+        $attribute_values = explode(",", $attribute_value);
+
+        $attribute_value = Array();
+
+        foreach ($attribute_values as $access_right) {
+            $access_right_components = explode(":", $access_right);
+            $access_attribute = array_shift($access_right_components);
+            $access_value = array_shift($access_right_components);
+
+            $attribute_value[$access_attribute] = Array();
+
+            for ($i = 0; $i < strlen($access_value); $i++) {
+                $method = $this->attribute_level_rights_map[substr($access_value, $i, 1)];
+
+                if (!in_array($method, $attribute_value[$access_attribute])) {
+                    $attribute_value[$access_attribute][] = $method;
+                }
+            }
+        }
+
+        return $attribute_value;
+    }
+
+    private function parse_entry_level_rights($attribute_value) {
+        $_attribute_value = Array();
+
+        for ($i = 0; $i < strlen($attribute_value); $i++) {
+            $method = $this->entry_level_rights_map[substr($attribute_value, $i, 1)];
+
+            if (!in_array($method, $_attribute_value)) {
+                $_attribute_value[] = $method;
+            }
+        }
+
+        return $_attribute_value;
     }
 
     /**
