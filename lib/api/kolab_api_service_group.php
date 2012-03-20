@@ -130,9 +130,9 @@ class kolab_api_service_group extends kolab_api_service
 
         $result = $auth->group_members_list($getdata['group']);
 
-        if ($result) {
-            return $result;
-        }
-        return FALSE;
+        return array(
+            'list'  => $result,
+            'count' => count($result),
+        );
     }
 }
