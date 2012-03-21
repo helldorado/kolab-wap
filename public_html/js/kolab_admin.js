@@ -676,7 +676,7 @@ function kolab_admin()
     var i, v, json = {},
       form = $(id),
       query = form.serializeArray(),
-      extra = this.env.extra_fields;
+      extra = this.env.extra_fields ? this.env.extra_fields : [];
 
     for (i in query)
       json[query[i].name] = query[i].value;
