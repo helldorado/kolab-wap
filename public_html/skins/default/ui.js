@@ -143,7 +143,7 @@ function form_serialize(data)
   // replace some textarea fields with pretty/smart input lists
   $('textarea[data-type="list"]', form).not('disabled').each(function() {
     var i, v, value = [],
-      re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9]+\]$');
+      re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9-]+\]$');
 
     for (i in data.json) {
       if (i.match(re)) {
@@ -152,6 +152,14 @@ function form_serialize(data)
         delete data.json[i];
       }
     }
+
+    // autocompletion lists data is stored in env variable
+    if (kadm.env.assoc_fields[this.name]) {
+      value = [];
+      for (i in kadm.env.assoc_fields[this.name])
+        value.push(i);
+    }
+
     data.json[this.name] = value;
   });
 
@@ -187,65 +195,150 @@ function form_init(id)
 // Replaces form element with smart element
 function form_element_wrapper(form_element)
 {
-  var i, len, elem, e = $(form_element),
-    list = form_element.value.split("\n"),
-    area = $('<span class="listarea"></span>'),
-    disabled = e.attr('disabled') || e.attr('readonly');
+  var i, j = 0, len, elem, e = $(form_element),
+    list = kadm.env.assoc_fields[form_element.name],
+    disabled = e.attr('disabled') || e.attr('readonly'),
+    autocomplete = e.attr('data-autocomplete'),
+    maxlength = e.attr('data-maxlength'),
+    area = $('<span class="listarea"></span>');
 
   e.hide();
 
-  for (i=0, len=list.length; i<len; i++) {
+  // add autocompletion input
+  if (!disabled && autocomplete) {
     elem = form_list_element(form_element.form, {
-      name: form_element.name+'['+i+']',
+      maxlength: maxlength,
+      autocomplete: autocomplete,
+      element: e
+    }, -1);
+
+    elem.appendTo(area);
+    kadm.ac_init(elem, {attribute: form_element.name, oninsert: form_element_insert_func});
+  }
+
+  if (!list && form_element.value)
+    list = $.extend({}, form_element.value.split("\n"));
+
+  // add input rows
+  for (i in list) {
+    elem = form_list_element(form_element.form, {
       value: list[i],
+      key: i,
       disabled: disabled,
-      maxlength: e.attr('data-maxlength')
-    });
+      maxlength: maxlength,
+      autocomplete: autocomplete,
+      element: e
+    }, j++);
+
     elem.appendTo(area);
   }
 
   if (disabled)
     area.addClass('readonly');
+  if (autocomplete)
+    area.addClass('autocomplete');
 
   area.appendTo(form_element.parentNode);
 }
 
 // Creates smart list element
-function form_list_element(form, data)
+function form_list_element(form, data, idx)
 {
-  var elem = $('<span class="listelement"><span class="actions">'
-    + '<span title="" class="add"></span><span title="" class="reset"></span>'
-    + '</span><input></span>');
+  var content, elem, input,
+    key = data.key,
+    orig = data.element
+    ac = data.autocomplete;
 
-  $('input', elem).attr(data);
+  data.name = data.name || orig.attr('name') + '[' + idx + ']';
+  data.disabled = data.disabled || (ac && idx >= 0);
+  data.readonly = data.readonly || (ac && idx >= 0);
 
-  if (data.disabled)
+  // remove internal attributes
+  delete data['element'];
+  delete data['autocomplete'];
+  delete data['key'];
+
+  // build element content
+  content = '<span class="listelement"><span class="actions">'
+    + (!ac ? '<span title="" class="add"></span>' : ac && idx == -1 ? '<span title="" class="search"></span>' : '')
+    + (!ac || idx >= 0 ? '<span title="" class="reset"></span>' : '')
+    + '</span><input></span>';
+
+  elem = $(content);
+  input = $('input', elem);
+
+  // Set INPUT attributes
+  input.attr(data);
+
+  if (data.readonly)
+    input.addClass('readonly');
+
+  if (ac && idx == -1)
+    input.addClass('autocomplete');
+
+  if (data.disabled && !ac)
     return elem;
 
   // attach element creation event
-  $('span[class="add"]', elem).click(function() {
-    var dt = (new Date()).getTime(),
-      span = $(this.parentNode.parentNode),
-      name = data.name.replace(/\[[0-9]+\]$/, ''),
-      elem = form_list_element(form, {name: name+'['+dt+']'});
+  if (!ac)
+    $('span[class="add"]', elem).click(function() {
+      var dt = (new Date()).getTime(),
+        span = $(this.parentNode.parentNode),
+        name = data.name.replace(/\[[0-9]+\]$/, ''),
+        elem = form_list_element(form, {name: name}, dt);
 
-    span.after(elem);
-    $('input', elem).focus();
-  });
+      span.after(elem);
+      $('input', elem).focus();
+      kadm.ac_stop();
+    });
 
   // attach element deletion event
-  $('span[class="reset"]', elem).click(function() {
-    var l, span = $(this.parentNode.parentNode),
-      name = data.name.replace(/\[[0-9]+\]$/, ''),
-      l = $('input[name^="' + name + '"]', form);
+  if (!ac || idx >= 0)
+    $('span[class="reset"]', elem).click(function() {
+      var span = $(this.parentNode.parentNode),
+        name = data.name.replace(/\[[0-9]+\]$/, ''),
+        l = $('input[name^="' + name + '"]', form),
+        key = $(this).data('key');
 
-    if (l.length > 1)
-      span.remove();
-    else
-      $('input', span).val('').focus();
-  });
+      if (ac || l.length > 1)
+        span.remove();
+      else
+        $('input', span).val('').focus();
+
+      // delete key from internal field representation
+      if (key !== undefined && kadm.env.assoc_fields[name])
+        delete kadm.env.assoc_fields[name][key];
+
+      kadm.ac_stop();
+    }).data('key', key);
 
   return elem;
+}
+
+function form_element_insert_func(key, val)
+{
+  var elem, input = $(this.ac_input).get(0),
+    dt = (new Date()).getTime(),
+    span = $(input.parentNode),
+    name = input.name.replace(/\[-1\]$/, '');
+
+  // reset autocomplete input
+  input.value = '';
+
+  // check if element doesn't exist on the list already
+  if (kadm.env.assoc_fields[name][key])
+    return;
+
+  // add element
+  elem = form_list_element(input.form, {
+    name: name,
+    autocomplete: true,
+    value: val
+    }, dt);
+  span.after(elem);
+
+  // update field variable
+  kadm.env.assoc_fields[name][key] = val;
 }
 
 /**

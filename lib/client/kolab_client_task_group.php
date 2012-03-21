@@ -261,6 +261,27 @@ class kolab_client_task_group extends kolab_client_task
             );
         }
 
+        // Members (get member names)
+        if (!empty($data['group'])) {
+            // find members attribute name
+            foreach (array('member', 'uniquemember') as $attr) {
+                if (isset($fields[$attr]) && isset($data[$attr])) {
+                    $attr_name = $attr;
+                }
+            }
+            if (!empty($attr_name)) {
+                $result = $this->api->get('group.members_list', array('group' => $data['group']));
+                $list   = (array) $result->get('list');
+                $data[$attr_name] = $this->parse_members($list);
+            }
+        }
+
+$fields['debug'] = array(
+    'label' => 'debug',
+    'section' => 'system',
+    'value' => '<pre>'.kolab_html::escape(print_r($data, true)).'</pre>',
+);
+
         // Create form object and populate with fields
         $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data);
 
@@ -269,6 +290,19 @@ class kolab_client_task_group extends kolab_client_task
         $this->output->add_translation('group.add.success', 'group.delete.success');
 
         return $form->output();
+    }
+
+    private function parse_members($list)
+    {
+        // convert to key=>value array, see kolab_api_service_form_value::list_options_uniquemember()
+        foreach ($list as $idx => $value) {
+            $list[$idx] = $value['displayname'];
+            if (!empty($value['mail'])) {
+                $list[$idx] .= ' <' . $value['mail'] . '>';
+            }
+        }
+
+        return $list;
     }
 
     /**

@@ -38,7 +38,6 @@ function kolab_admin()
     beforeSend: function(xmlhttp) { xmlhttp.setRequestHeader('X-Session-Token', ref.env.token); }
   });
 
-
   /*********************************************************/
   /*********          basic utilities              *********/
   /*********************************************************/
@@ -357,7 +356,7 @@ function kolab_admin()
       this.display_message(msg, 'error');
 
       // Logout on invalid-session error
-      if (response.code == 403)
+      if (response && response.code == 403)
         this.main_logout();
 
       return false;
@@ -411,6 +410,262 @@ function kolab_admin()
       el.text(el.text().replace(/[0-9.,]+/, t));
     }
   };
+
+
+  /*********************************************************/
+  /*********     keyboard autocomplete methods     *********/
+  /*********************************************************/
+
+  this.ac_init = function(obj, props)
+  {
+    obj.keydown(function(e) { return kadm.ac_keydown(e, props); })
+      .attr('autocomplete', 'off');
+  };
+
+  // handler for keyboard events on autocomplete-fields
+  this.ac_keydown = function(e, props)
+  {
+    if (this.ac_timer)
+      clearTimeout(this.ac_timer);
+
+    var highlight, key = e.which;
+
+    switch (key) {
+      case 38:  // arrow up
+      case 40:  // arrow down
+        if (!this.ac_visible())
+          break;
+
+        var dir = key == 38 ? 1 : 0;
+
+        highlight = $('.selected', this.ac_pane).get(0);
+
+        if (!highlight)
+          highlight = this.ac_pane.__ul.firstChild;
+
+        if (highlight)
+          this.ac_select(dir ? highlight.previousSibling : highlight.nextSibling);
+
+        return e.stopPropagation();
+
+      case 9:   // tab
+        if (e.shiftKey || !this.ac_visible()) {
+          this.ac_stop();
+          return;
+        }
+
+      case 13:  // enter
+        if (!this.ac_visible())
+          return false;
+
+        // insert selected item and hide selection pane
+        this.ac_insert(this.ac_selected);
+        this.ac_stop();
+
+        return e.stopPropagation();
+
+      case 27:  // escape
+        this.ac_stop();
+        return;
+
+      case 37:  // left
+      case 39:  // right
+        if (!e.shiftKey)
+	      return;
+    }
+
+    // start timer
+    this.ac_timer = window.setTimeout(function() { kadm.ac_start(props); }, 200);
+    this.ac_input = e.target;
+
+    return true;
+  };
+
+  this.ac_visible = function()
+  {
+    return (this.ac_selected !== null && this.ac_selected !== undefined && this.ac_value);
+  };
+
+  this.ac_select = function(node)
+  {
+    if (!node)
+      return;
+
+    var current = $('.selected', this.ac_pane);
+
+    if (current.length)
+      current.removeClass('selected');
+
+    $(node).addClass('selected');
+    this.ac_selected = node._id;
+  };
+
+  // autocomplete search processor
+  this.ac_start = function(props)
+  {
+    var q = this.ac_input ? this.ac_input.value : null,
+      min = this.env.autocomplete_min_length,
+      old_value = this.ac_value,
+      ac = this.ac_data;
+
+    if (q === null)
+      return;
+
+    // trim query string
+    q = $.trim(q);
+
+    // Don't (re-)search if the last results are still active
+    if (q == old_value)
+      return;
+
+    // Stop and destroy last search
+    this.ac_stop();
+
+    if (q.length && q.length < min) {
+      if (!this.ac_info) {
+        this.ac_info = this.display_message(
+          this.t('search.acchars').replace('$min', min));
+      }
+      return;
+    }
+
+    this.ac_value = q;
+
+    // ...string is empty
+    if (!q.length)
+      return;
+
+    // ...new search value contains old one, but the old result was empty
+    if (old_value && old_value.length && q.indexOf(old_value) == 0 && this.ac_result && !this.ac_result.length)
+      return;
+
+    var i, xhr, data = props,
+      action = props && props.action ? props.action : 'form_value.list_options';
+
+    this.ac_oninsert = props.oninsert;
+    data.search = q;
+    delete data['action'];
+    delete data['insert_func'];
+
+    this.display_message(this.t('search.loading'), 'loading');
+    xhr = this.api_post(action, data, 'ac_result');
+    this.ac_data = xhr;
+  };
+
+  this.ac_result = function(response)
+  {
+    // search stopped in meantime?
+    if (!this.ac_value)
+      return;
+
+    if (!this.api_response(response))
+      return;
+
+    // ignore this outdated search response
+    if (this.ac_input && response.result.search != this.ac_value)
+      return;
+
+    // display search results
+    var i, ul, li, text,
+      result = response.result.list,
+      pos = $(this.ac_input).offset(),
+      value = this.ac_value,
+      rx = new RegExp('(' + RegExp.escape(value) + ')', 'ig');
+
+    // create results pane if not present
+    if (!this.ac_pane) {
+      ul = $('<ul>');
+      this.ac_pane = $('<div>').attr('id', 'autocompletepane')
+        .css({ position:'absolute', 'z-index':30000 }).append(ul).appendTo(document.body);
+      this.ac_pane.__ul = ul[0];
+    }
+
+    ul = this.ac_pane.__ul;
+
+    // reset content
+    ul.innerHTML = '';
+    // move the results pane right under the input box
+    this.ac_pane.css({left: (pos.left - 1)+'px', top: (pos.top + this.ac_input.offsetHeight - 1)+'px', display: 'none'});
+
+    // add each result line to the list
+    for (i in result) {
+      text = result[i];
+      li = document.createElement('LI');
+      li.innerHTML = text.replace(rx, '##$1%%').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/##([^%]+)%%/g, '<b>$1</b>');
+      li.onmouseover = function() { kadm.ac_select(this); };
+      li.onmouseup = function() { kadm.ac_click(this) };
+      li._id = i;
+      ul.appendChild(li);
+    }
+
+    if (ul.childNodes.length) {
+      this.ac_pane.show();
+
+      // select the first
+      li = $('li:first', ul);
+      li.addClass('selected');
+      this.ac_selected = li.get(0)._id;
+    }
+
+    this.env.ac_result = result;
+  };
+
+  this.ac_click = function(node)
+  {
+    if (this.ac_input)
+      this.ac_input.focus();
+
+    this.ac_insert(node._id);
+    this.ac_stop();
+  };
+
+  this.ac_insert = function(id)
+  {
+    var val = this.env.ac_result[id];
+
+    if (typeof this.ac_oninsert == 'function')
+      this.ac_oninsert(id, val);
+    else
+      $(this.ac_input).val(val);
+  };
+
+  this.ac_blur = function()
+  {
+    if (this.ac_timer)
+      clearTimeout(this.ac_timer);
+
+    this.ac_input = null;
+    this.ac_stop();
+  };
+
+  this.ac_stop = function()
+  {
+    this.ac_selected = null;
+    this.ac_value = '';
+
+    if (this.ac_pane)
+      this.ac_pane.hide();
+
+    this.ac_destroy();
+  };
+
+  // Clears autocomplete data/requests
+  this.ac_destroy = function()
+  {
+    if (this.ac_data)
+      this.ac_data.abort();
+
+    if (this.ac_info)
+      this.hide_message(this.ac_info);
+
+    if (this.ac_msg)
+      this.hide_message(this.ac_msg);
+
+    this.ac_data = null;
+    this.ac_info = null;
+    this.ac_msg = null;
+  };
+
 
   /*********************************************************/
   /*********                 Forms                 *********/
@@ -615,9 +870,32 @@ function kolab_admin()
     this.command('group.list', {page: page});
   };
 
-};
+  this.group_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id);
 
-var kadm = new kolab_admin();
+    if (reload) {
+      data.section = section;
+      this.http_post('group.add', {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    this.set_busy(true, 'saving');
+    this.api_post('group.add', data, 'group_save_response');
+  };
+
+  this.group_save_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('group.add.success');
+    this.command('group.list', {page: this.env.list_page});
+  };
+
+};
 
 // Add escape() method to RegExp object
 // http://dev.rubyonrails.org/changeset/7271
@@ -625,3 +903,11 @@ RegExp.escape = function(str)
 {
   return String(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
 };
+
+var kadm = new kolab_admin();
+
+// general click handler
+$(document).click(function() {
+  // destroy autocompletion
+  kadm.ac_stop();
+});

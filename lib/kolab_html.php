@@ -316,6 +316,13 @@ class kolab_html
 
     public static function escape($value)
     {
+        if (is_array($value)) {
+            foreach ($value as $idx => $val) {
+                $value[$idx] = self::escape($val);
+            }
+            return $value;
+        }
+
         return htmlspecialchars($value, ENT_COMPAT, KADM_CHARSET);
     }
 }

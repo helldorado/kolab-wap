@@ -40,7 +40,8 @@ class kolab_client_task_main extends kolab_client_task
         $this->output->set_env('watermark', $this->output->get_template('watermark'));
 
         // assign default set of translations
-        $this->output->add_translation('loading', 'saving', 'deleting', 'servererror', 'search');
+        $this->output->add_translation('loading', 'saving', 'deleting', 'servererror',
+            'search', 'search.loading', 'search.acchars');
 
         // Create list of tasks for dashboard
         // @TODO: check capabilities

@@ -618,6 +618,9 @@ class kolab_client_task
             if (!empty($field['maxlength'])) {
                 $result['data-maxlength'] = $field['maxlength'];
             }
+            if (!empty($field['autocomplete'])) {
+                $result['data-autocomplete'] = true;
+            }
             break;
 
         default:
@@ -781,6 +784,7 @@ class kolab_client_task
         }
 
         $form = new kolab_form($attribs);
+        $assoc_fields = array();
 
         // Parse elements and add them to the form object
         foreach ($sections as $section_idx => $section) {
@@ -792,20 +796,24 @@ class kolab_client_task
                 }
 
                 if (empty($field['label'])) {
-                    $field['label'] = "user.$idx";
+                    $field['label'] = "$name.$idx";
                 }
 
                 $field['label']       = kolab_html::escape($this->translate($field['label']));
-                $field['description'] = "user.$idx.desc";
+                $field['description'] = "$name.$idx.desc";
                 $field['section']     = $section_idx;
 
                 if (!empty($data[$idx])) {
-                    if (is_array($data[$idx])) {
-                        $field['value'] = array_map(array('kolab_html', 'escape'), $data[$idx]);
-                        $field['value'] = implode("\n", $field['value']);
+                    $field['value'] = $data[$idx];
+
+                    // Convert data for the list field with autocompletion
+                    if ($field['data-type'] == kolab_form::TYPE_LIST && kolab_utils::is_assoc($data[$idx])) {
+                        $assoc_fields[$idx] = $data[$idx];
+                        $field['value'] = array_keys($data[$idx]);
                     }
-                    else {
-                        $field['value'] = kolab_html::escape($data[$idx]);
+
+                    if (is_array($field['value'])) {
+                        $field['value'] = implode("\n", $field['value']);
                     }
                 }
 /*
@@ -858,6 +866,7 @@ class kolab_client_task
         }
 
         $this->output->set_env('form_id', $attribs['id']);
+        $this->output->set_env('assoc_fields', $assoc_fields);
 
         return $form;
     }

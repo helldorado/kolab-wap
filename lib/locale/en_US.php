@@ -25,6 +25,8 @@ $LANG['search.prefix'] = 'begins with';
 $LANG['search.name'] = 'name';
 $LANG['search.email'] = 'email';
 $LANG['search.uid'] = 'UID';
+$LANG['search.loading'] = 'Searching...';
+$LANG['search.acchars'] = 'At least $min characters required for autocompletion';
 
 $LANG['menu.users'] = 'Users';
 $LANG['menu.groups'] = 'Groups';
@@ -98,6 +100,7 @@ $LANG['group.group_type_id'] = 'Group type';
 $LANG['group.add.success'] = 'Group created successfully.';
 $LANG['group.delete.success'] = 'Group deleted successfully.';
 $LANG['group.gidnumber'] = 'Primary group number';
+$LANG['group.uniquemember'] = 'Members';
 $LANG['group.system'] = 'System';
 $LANG['group.other'] = 'Other';
 

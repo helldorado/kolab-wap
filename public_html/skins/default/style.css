@@ -25,6 +25,7 @@ textarea {
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
   padding-left: 2px;
+  color: black;
 }
 
 table.list {
@@ -494,6 +495,9 @@ textarea.readonly {
 span.listarea {
   display: block;
   width: 370px;
+  max-height: 209px;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin: 0 0 1px;
   padding: 0;
   background-color: white;
@@ -520,7 +524,8 @@ span.listelement input {
   border: none;
   background-color: transparent;
   padding-left: 2px;
-  width: 330px;
+  /* FIXME: it should be 330px, but when listarea has scroller, input jumps below action buttons */
+  width: 314px;
   height: 19px;
 }
 
@@ -561,16 +566,82 @@ span.listelement span.actions span.add {
   background-position: -43px 0;
 }
 
+span.listelement span.actions span.search {
+  background-position: -65px 0;
+  cursor: default;
+}
+
 span.listarea.readonly {
   background-color: #f5f5f5;
 }
 
+input.readonly,
 span.listarea.readonly span.listelement input {
   color: #a0a0a0;
+  cursor: default;
+}
+
+span.listarea.autocomplete span.listelement input {
+  color: #514949;
+}
+
+span.listarea.autocomplete span.listelement input.autocomplete {
+  color: black;
 }
 
 span.listarea.readonly span.listelement span.actions {
   opacity: .5;
+}
+
+.autocomplete > span.listelement input {
+  /* FIXME: it should be 348px, but when listarea has scroller, input jumps below action buttons */
+  width: 332px;
+}
+
+.autocomplete > span.listelement span.actions {
+  width: 18px;
+}
+
+.autocomplete > span.listelement span.actions span.reset {
+  border-left: none;
+}
+
+.autocomplete > span.listelement span.actions span.search:hover {
+  background-color: #f0f0f0;
+}
+
+/*****   autocomplete list   *****/
+
+#autocompletepane
+{
+  background-color: white;
+  border: 1px solid #d0d0d0;
+  min-width: 351px;
+}
+
+#autocompletepane ul
+{
+  margin: 0px;
+  padding: 2px;
+  list-style-image: none;
+  list-style-type: none;
+}
+
+#autocompletepane ul li
+{
+  display: block;
+  height: 16px;
+  font-size: 11px;
+  padding-left: 6px;
+  padding-top: 2px;
+  padding-right: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#autocompletepane ul li.selected
+{
+  background-color: #d6efff;
 }
 
 /***** tabbed interface elements *****/

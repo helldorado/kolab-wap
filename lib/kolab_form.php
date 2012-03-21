@@ -34,6 +34,7 @@ class kolab_form
     const INPUT_SUBMIT = 7;
     const INPUT_SELECT = 8;
     const INPUT_HIDDEN = 9;
+    const INPUT_CUSTOM = 10;
 
     const TYPE_LIST = 1;
 
@@ -279,9 +280,10 @@ class kolab_form
             break;
 
         case self::INPUT_SELECT:
-            $content = kolab_html::select($attribs);
+            $content = kolab_html::select($attribs, true);
             break;
 
+        case self::INPUT_CUSTOM:
         default:
             if (is_array($attribs)) {
                 $content = isset($attribs['value']) ? $attribs['value'] : '';
