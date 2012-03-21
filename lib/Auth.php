@@ -266,6 +266,11 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($attribute);
     }
 
+    public function user_get_attribute($user, $attribute)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_get_attribute($user, $attribute);
+    }
+
     public function user_info($userdata)
     {
         return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata));

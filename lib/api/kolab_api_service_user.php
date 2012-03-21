@@ -121,6 +121,22 @@ class kolab_api_service_user extends kolab_api_service
         $objectclass = $result[$user]['objectclass'];
         $result[$user]['user_type_id'] = $this->user_type_id($objectclass);
 
+        // Search for attributes associated with the type_id that are not part
+        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
+        $uta = $this->user_type_attributes($result[$user]['user_type_id']);
+
+        foreach ($uta as $field_type => $attributes) {
+            foreach ($attributes as $attribute => $data) {
+                if (!array_key_exists($attribute, $result[$user])) {
+                    $attribute_value = $auth->user_get_attribute($user, $attribute);
+                    if ($attribute_value) {
+                        console("Got:", $attribute_value);
+                        $result[$user][$attribute] = $attribute_value;
+                    }
+                }
+            }
+        }
+
         if ($result) {
             return $result;
         }

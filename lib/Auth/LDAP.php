@@ -594,6 +594,17 @@ class LDAP
         }
     }
 
+    public function user_get_attribute($user_dn, $attribute)
+    {
+        $result = $this->normalize_result($this->search($user_dn, '(objectclass=*)', array($attribute)));
+
+        if (array_key_exists($attribute, $result[$user_dn])) {
+            return $result[$user_dn][$attribute];
+        } else {
+            return FALSE;
+        }
+    }
+
     public function user_info($user)
     {
         $is_dn = ldap_explode_dn($user, 1);
