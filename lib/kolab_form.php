@@ -202,7 +202,7 @@ class kolab_form
         }
 
         // Add event trigger, so UI can rebuild the form e.g. adding tabs
-        $content .= kolab_html::script('kadm.trigger_event(\'form-load\', \'' . $this->attribs['id'] . '\')');
+        $content .= kolab_html::script('kadm.form_init(\'' . $this->attribs['id'] . '\')');
 
         return $content;
     }

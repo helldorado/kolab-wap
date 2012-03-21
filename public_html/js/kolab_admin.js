@@ -668,6 +668,226 @@ function kolab_admin()
 
 
   /*********************************************************/
+  /*********            Forms widgets              *********/
+  /*********************************************************/
+
+  // Form initialization
+  this.form_init = function(id)
+  {
+    var form = $('#'+id);
+
+    this.trigger_event('form-load', id);
+
+    // replace some textarea fields with pretty/smart input lists
+    $('textarea[data-type="list"]', form)
+      .each(function() { kadm.form_element_wrapper(this); });
+  };
+
+  // Form serialization
+  this.form_serialize = function(data)
+  {
+    var form = $(data.id);
+
+    // replace some textarea fields with pretty/smart input lists
+    $('textarea[data-type="list"]', form).not('disabled').each(function() {
+      var i, v, value = [],
+        re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9-]+\]$');
+
+      for (i in data.json) {
+        if (i.match(re)) {
+          if (v = $('input[name="'+i+'"]', form).val())
+            value.push(v);
+          delete data.json[i];
+        }
+      }
+
+      // autocompletion lists data is stored in env variable
+      if (kadm.env.assoc_fields[this.name]) {
+        value = [];
+        for (i in kadm.env.assoc_fields[this.name])
+          value.push(i);
+      }
+
+      data.json[this.name] = value;
+    });
+
+    return data;
+  };
+
+  // Form element update handler
+  this.form_element_update = function(data)
+  {
+    var elem = $('[name="'+data.name+'"]');
+
+    if (!elem.length)
+      return;
+
+    if (elem.attr('data-type') == 'list') {
+      // remove old wrapper
+      $('span[class="listarea"]', elem.parent()).remove();
+      // insert new list element
+      this.form_element_wrapper(elem.get(0));
+    }
+  };
+
+  // Replaces form element with smart element
+  this.form_element_wrapper = function(form_element)
+  {
+    var i, j = 0, len, elem, e = $(form_element),
+      list = this.env.assoc_fields[form_element.name],
+      disabled = e.attr('disabled') || e.attr('readonly'),
+      autocomplete = e.attr('data-autocomplete'),
+      maxlength = e.attr('data-maxlength'),
+      area = $('<span class="listarea"></span>');
+
+    e.hide();
+
+    // add autocompletion input
+    if (!disabled && autocomplete) {
+      elem = this.form_list_element(form_element.form, {
+        maxlength: maxlength,
+        autocomplete: autocomplete,
+        element: e
+      }, -1);
+
+      elem.appendTo(area);
+      this.ac_init(elem, {attribute: form_element.name, oninsert: this.form_element_oninsert});
+    }
+
+    if (!list) {
+      if (form_element.value)
+        list = $.extend({}, form_element.value.split("\n"));
+      else if (!autocomplete)
+        list = {0: ''};
+    }
+
+    // add input rows
+    for (i in list) {
+      elem = this.form_list_element(form_element.form, {
+        value: list[i],
+        key: i,
+        disabled: disabled,
+        maxlength: maxlength,
+        autocomplete: autocomplete,
+        element: e
+      }, j++);
+
+      elem.appendTo(area);
+    }
+
+    if (disabled)
+      area.addClass('readonly');
+    if (autocomplete)
+      area.addClass('autocomplete');
+
+    area.appendTo(form_element.parentNode);
+  };
+
+  // Creates smart list element
+  this.form_list_element = function(form, data, idx)
+  {
+    var content, elem, input,
+      key = data.key,
+      orig = data.element
+      ac = data.autocomplete;
+
+    data.name = data.name || orig.attr('name') + '[' + idx + ']';
+    data.disabled = data.disabled || (ac && idx >= 0);
+    data.readonly = data.readonly || (ac && idx >= 0);
+
+    // remove internal attributes
+    delete data['element'];
+    delete data['autocomplete'];
+    delete data['key'];
+
+    // build element content
+    content = '<span class="listelement"><span class="actions">'
+      + (!ac ? '<span title="" class="add"></span>' : ac && idx == -1 ? '<span title="" class="search"></span>' : '')
+      + (!ac || idx >= 0 ? '<span title="" class="reset"></span>' : '')
+      + '</span><input></span>';
+
+    elem = $(content);
+    input = $('input', elem);
+
+    // Set INPUT attributes
+    input.attr(data);
+
+    if (data.readonly)
+      input.addClass('readonly');
+
+    if (ac && idx == -1)
+      input.addClass('autocomplete');
+
+    if (data.disabled && !ac)
+      return elem;
+
+    // attach element creation event
+    if (!ac)
+      $('span[class="add"]', elem).click(function() {
+        var dt = (new Date()).getTime(),
+          span = $(this.parentNode.parentNode),
+          name = data.name.replace(/\[[0-9]+\]$/, ''),
+          elem = kadm.form_list_element(form, {name: name}, dt);
+
+        span.after(elem);
+        $('input', elem).focus();
+        kadm.ac_stop();
+      });
+
+    // attach element deletion event
+    if (!ac || idx >= 0)
+      $('span[class="reset"]', elem).click(function() {
+        var span = $(this.parentNode.parentNode),
+          name = data.name.replace(/\[[0-9]+\]$/, ''),
+          l = $('input[name^="' + name + '"]', form),
+          key = $(this).data('key');
+
+        if (ac || l.length > 1)
+          span.remove();
+        else
+          $('input', span).val('').focus();
+
+        // delete key from internal field representation
+        if (key !== undefined && kadm.env.assoc_fields[name])
+          delete kadm.env.assoc_fields[name][key];
+
+        kadm.ac_stop();
+      }).data('key', key);
+
+    return elem;
+  };
+
+  this.form_element_oninsert = function(key, val)
+  {
+    var elem, input = $(this.ac_input).get(0),
+      dt = (new Date()).getTime(),
+      span = $(input.parentNode),
+      name = input.name.replace(/\[-1\]$/, ''),
+      af = kadm.env.assoc_fields;
+
+    // reset autocomplete input
+    input.value = '';
+
+    // check if element doesn't exist on the list already
+    if (!af[name])
+      af[name] = {};
+    if (af[name][key])
+      return;
+
+    // add element
+    elem = kadm.form_list_element(input.form, {
+      name: name,
+      autocomplete: true,
+      value: val
+      }, dt);
+    span.after(elem);
+
+    // update field variable
+    af[name][key] = val;
+  };
+
+
+  /*********************************************************/
   /*********                 Forms                 *********/
   /*********************************************************/
 
@@ -676,7 +896,7 @@ function kolab_admin()
     var i, v, json = {},
       form = $(id),
       query = form.serializeArray(),
-      extra = this.env.extra_fields ? this.env.extra_fields : [];
+      extra = this.env.extra_fields || [];
 
     for (i in query)
       json[query[i].name] = query[i].value;
@@ -686,8 +906,8 @@ function kolab_admin()
       if (v = $('[name="'+extra[i]+'"]', form).val())
         json[extra[i]] = v;
 
-    this.trigger_event('form-serialize', {id: id, json: json});
-
+    this.form_serialize({id: id, json: json});
+/*
     // convert values of list elements to array type
     $('textarea[data-type="list"]', form).each(function() {
       var name = this.name;
@@ -695,7 +915,7 @@ function kolab_admin()
       if (!json[name] || !$.isArray(json[name]))
         json[name] = $(this).val().split("\n");
     });
-
+*/
     return json;
   };
 
@@ -735,11 +955,12 @@ function kolab_admin()
 
     for (i in response.result) {
       val = response.result[i];
+      // @TODO: indexed list support
       if ($.isArray(val))
         val = val.join("\n");
       $('[name="'+i+'"]').val(val);
 
-      this.trigger_event('form-element-update', {name: i});
+      this.form_element_update({name: i});
     }
   };
 
@@ -904,6 +1125,7 @@ RegExp.escape = function(str)
   return String(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
 };
 
+// Initialize application object (don't change var name!)
 var kadm = new kolab_admin();
 
 // general click handler
