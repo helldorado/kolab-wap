@@ -32,7 +32,10 @@ class kolab_api_service_form_value extends kolab_api_service
     public function capabilities($domain)
     {
         return array(
-            'generate' => 'r',
+            'generate'       => 'r',
+            'validate'       => 'r',
+            'select_options' => 'r',
+            'list_options'   => 'r',
         );
     }
 
@@ -161,6 +164,50 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
         }
+
+        return $result;
+    }
+
+    /**
+     * Generation of values for fields of type LIST.
+     *
+     * @param array $getdata   GET parameters
+     * @param array $postdata  POST parameters. Required parameters:
+     *                         - attribute: attribute name
+     *                         - user_type_id or group_type_id: Type identifier
+     *
+     * @return array Response with attribute name as a key
+     */
+    public function list_options($getdata, $postdata)
+    {
+        if (isset($postdata['user_type_id'])) {
+            $attribs = $this->user_type_attributes($postdata['user_type_id']);
+        }
+        else if (isset($postdata['group_type_id'])) {
+            $attribs = $this->group_type_attributes($postdata['group_type_id']);
+        }
+        else {
+            $attribs = array();
+        }
+
+        $attr_name = $postdata['attribute'];
+        $result    = array(
+            // return search value, so client can match response to request
+            'search' => $postdata['search'],
+            'list'   => array(),
+        );
+
+        if (empty($attr_name)) {
+            return $result;
+        }
+
+        $method_name = 'list_options_' . strtolower($attr_name);
+
+        if (!method_exists($this, $method_name)) {
+            return $result;
+        }
+
+        $result['list'] = $this->{$method_name}($postdata, $attribs);
 
         return $result;
     }
@@ -369,5 +416,34 @@ class kolab_api_service_form_value extends kolab_api_service
         $attribute = $db->fetch_assoc($query);
 
         return json_decode($attribute['option_values']);
+    }
+
+    private function list_options_uniquemember($postdata, $attribs = array())
+    {
+        $service = $this->controller->get_service('users');
+
+        $keyword = array('value' => $postdata['search']);
+        $data    = array(
+            'attributes' => array('displayname', 'mail'),
+            'page_size'  => 15,
+            'search'     => array(
+                'displayname' => $keyword,
+                'cn'          => $keyword,
+                'mail'        => $keyword,
+            ),
+        );
+
+        $result = $service->users_list(null, $data);
+        $list   = $result['list'];
+
+        // convert to key=>value array
+        foreach ($list as $idx => $value) {
+            $list[$idx] = $value['displayname'];
+            if (!empty($value['mail'])) {
+                $list[$idx] .= ' <' . $value['mail'] . '>';
+            }
+        }
+
+        return $list;
     }
 }

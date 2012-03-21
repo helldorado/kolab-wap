@@ -1107,7 +1107,6 @@ class LDAP
     {
         $group_members = array();
 
-
         if (is_array($entry) && in_array('objectclass', $entry)) {
             if (!in_array(array('groupofnames', 'groupofuniquenames', 'groupofurls'), $entry['objectclass'])) {
                 error_log("Called _list_groups_members on a non-group!");
@@ -1124,7 +1123,7 @@ class LDAP
                 continue;
             }
 
-            foreach ( $entry['objectclass'] as $num => $objectclass) {
+            foreach ($entry['objectclass'] as $objectclass) {
                 switch ($objectclass) {
                 case "groupofnames":
                     $group_members = array_merge($group_members, $this->_list_group_member($entry_dn, $entry));
@@ -1146,16 +1145,28 @@ class LDAP
     {
         error_log("Called _list_group_member(" . $dn . ")");
 
+        $group_members = array();
+        if (empty($entry['member'])) {
+            return $group_members;
+        }
+
         // Use the member attributes to return an array of member ldap objects
         // NOTE that the member attribute is supposed to contain a DN
-        $group_members = array();
-        for ($i = 0; $i < (count($entry['member'])-1); $i++) {
-            $result  = @ldap_read($this->_connection, $entry['member'][$i], '(objectclass=*)');
-            $members = @ldap_get_entries($this->_connection, $result);
+        foreach ($entry['member'] as $member) {
+            $result = @ldap_read($this->_connection, $member, '(objectclass=*)');
+
+            if (!$result) {
+                continue;
+            }
+
+            $member_entry = $this->normalize_result(@ldap_get_entries($this->_connection, $result));
+            $group_members[$member] = array_pop($member_entry);
 
             // Nested groups
-            $group_group_members = $this->list_group_members($entry['member'][$i]);
-            $group_members[] = array_filter(array_merge($group_group_members, $members));
+//            $group_group_members = $this->_list_group_members($member, $member_entry);
+//            if ($group_group_members) {
+//                $group_members = array_merge($group_group_members, $group_members);
+//            }
         }
 
         return array_filter($group_members);
@@ -1168,20 +1179,28 @@ class LDAP
         // Use the member attributes to return an array of member ldap objects
         // NOTE that the member attribute is supposed to contain a DN
         $group_members = array();
-        if (!isset($entry['uniquemember'])) {
+        if (empty($entry['uniquemember'])) {
             return $group_members;
         }
 
-        for ($i = 0; $i < (count($entry['uniquemember'])-1); $i++) {
-            $result  = @ldap_read($this->_connection, $entry['uniquemember'][$i], '(objectclass=*)');
-            $members = @ldap_get_entries($this->_connection, $result);
+        foreach ($entry['uniquemember'] as $member) {
+            $result = @ldap_read($this->_connection, $member, '(objectclass=*)');
+
+            if (!$result) {
+                continue;
+            }
+
+            $member_entry = $this->normalize_result(@ldap_get_entries($this->_connection, $result));
+            $group_members[$member] = array_pop($member_entry);
 
             // Nested groups
-            $group_group_members = $this->list_group_members($entry['uniquemember'][$i]);
-            $group_members[] = array_filter(array_merge($group_group_members, $members));
+//            $group_group_members = $this->_list_group_members($member, $member_entry);
+//            if ($group_group_members) {
+//                $group_members = array_merge($group_group_members, $group_members);
+//            }
         }
 
-        return $group_members;
+        return array_filter($group_members);
     }
 
     private function _list_group_memberurl($dn, $entry)
@@ -1193,37 +1212,17 @@ class LDAP
 
         $group_members = array();
 
-        if (is_array($entry['memberurl'])) {
-            foreach ($entry['memberurl'] as $url) {
-                $ldap_uri_components = $this->_parse_memberurl($url);
-                $entries = $this->normalize_result($this->search($ldap_uri_components[3], $ldap_uri_components[6]));
-                foreach ($entries as $entry_dn => $_entry) {
-                    error_log("Found " . $entry_dn);
-                    $group_group_members = $this->_list_group_members($entry_dn);
-
-                    if ($group_group_members) {
-                        $group_members = array_merge($group_members, $group_group_members);
-                    }
-                    else {
-                        $group_members[] = $entry_dn;
-                    }
-                }
-            }
-        }
-        else {
-            $ldap_uri_components = $this->_parse_memberurl($entry['memberurl']);
+        foreach ((array)$entry['memberurl'] as $url) {
+            $ldap_uri_components = $this->_parse_memberurl($url);
             $entries = $this->normalize_result($this->search($ldap_uri_components[3], $ldap_uri_components[6]));
-
             foreach ($entries as $entry_dn => $_entry) {
+                $group_members[$entry_dn] = $_entry;
                 error_log("Found " . $entry_dn);
-                $group_group_members = $this->_list_group_members($entry_dn);
-
-                if ($group_group_members) {
-                     $group_members = array_merge($group_members, $group_group_members);
-                }
-                else {
-                    $group_members[] = $entry_dn;
-                }
+                // Nested group
+//                $group_group_members = $this->_list_group_members($entry_dn, $_entry);
+//                if ($group_group_members) {
+//                    $group_members = array_merge($group_members, $group_group_members);
+//                }
             }
         }
 
