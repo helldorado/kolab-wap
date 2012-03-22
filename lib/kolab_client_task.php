@@ -182,7 +182,7 @@ class kolab_client_task
                     }
                     // @TODO: why user.info returns empty result for 'cn=Directory Manager' login?
                     else if (preg_match('/^cn=([a-zA-Z ]+)/', $login['username'], $m)) {
-                        $user['fullname'] = $m[1];
+                        $user['fullname'] = ucwords($m[1]);
                     }
 
                     // Save user data
@@ -501,13 +501,13 @@ class kolab_client_task
             return $this->cache['user_names'][$dn];
         }
 
-        if (preg_match('/^cn=([a-z ]+)$/i', $dn, $m)) {
-            $username = $m[1];
-        }
-        else {
-            $result   = $this->api->get('user.info', array('user' => $dn));
-            $user     = $result->get($dn);
-            $username = $user['displayname'];
+        $result   = $this->api->get('user.info', array('user' => $dn));
+        $user     = $result->get($dn);
+
+        if (empty($user) || empty($user['displayname'])) {
+            if (preg_match('/^cn=([a-zA=Z ]+)/', $dn, $m)) {
+                $username = ucwords($m[1]);
+            }
         }
 
         return $this->cache['user_names'][$dn] = $username;
