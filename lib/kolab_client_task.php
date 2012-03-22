@@ -476,16 +476,18 @@ class kolab_client_task
      */
     protected function user_types()
     {
-        if (!isset($_SESSION['user_types'])) {
-            $result = $this->api->post('user_types.list');
-            $list   = $result->get('list');
-
-            if (is_array($list)) {
-                $_SESSION['user_types'] = $list;
-            }
+        if (isset($_SESSION['user_types'])) {
+            return $_SESSION['user_types'];
         }
 
-        return $_SESSION['user_types'];
+        $result = $this->api->post('user_types.list');
+        $list   = $result->get('list');
+
+        if (is_array($list) && !$this->config_get('devel_mode')) {
+            $_SESSION['user_types'] = $list;
+        }
+
+        return $list;
     }
 
     /**
