@@ -64,6 +64,7 @@ class kolab_api_controller
         $this->add_service('user', 'kolab_api_service_user');
         $this->add_service('users', 'kolab_api_service_users');
         $this->add_service('domains', 'kolab_api_service_domains');
+        $this->add_service('roles', 'kolab_api_service_roles');
     }
 
     /**

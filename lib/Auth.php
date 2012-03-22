@@ -219,6 +219,18 @@ class Auth {
         return $groups;
     }
 
+    public function list_roles($domain = NULL, $attributes = array(), $search = array(), $params = array())
+    {
+        $this->connect($domain);
+        if ($domain === NULL) {
+            $domain = $this->conf->get('primary_domain');
+        }
+
+        $roles = $this->_auth[$domain]->list_roles($attributes, $search, $params);
+
+        return $roles;
+    }
+
     public function primary_for_valid_domain($domain)
     {
         $this->domains = $this->list_domains();
