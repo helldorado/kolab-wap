@@ -173,7 +173,7 @@ class Auth {
 
     public function group_info($groupdata)
     {
-        return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata));
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata);
     }
 
     public function group_members_list($groupdata)
@@ -217,11 +217,6 @@ class Auth {
         $groups = $this->_auth[$domain]->list_groups($attributes, $search, $params);
 
         return $groups;
-    }
-
-    public function normalize_result($results)
-    {
-        return LDAP::normalize_result($results);
     }
 
     public function primary_for_valid_domain($domain)
@@ -273,6 +268,6 @@ class Auth {
 
     public function user_info($userdata)
     {
-        return $this->normalize_result($this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata));
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata);
     }
 }

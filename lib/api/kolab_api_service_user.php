@@ -117,21 +117,26 @@ class kolab_api_service_user extends kolab_api_service
         $user   = $getdata['user'];
         $result = $auth->user_info($user);
 
+        // normalize result
+        $dn                = key($result);
+        $result            = $result[$dn];
+        $result['entrydn'] = $dn;
+
         // add user type id to the result
-        $objectclass = $result[$user]['objectclass'];
-        $result[$user]['user_type_id'] = $this->user_type_id($objectclass);
+        $result['user_type_id'] = $this->user_type_id($result['objectclass']);
 
         // Search for attributes associated with the type_id that are not part
         // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
-        $uta = $this->user_type_attributes($result[$user]['user_type_id']);
+        if ($result['user_type_id']) {
+            $uta = $this->user_type_attributes($result['user_type_id']);
 
-        foreach ($uta as $field_type => $attributes) {
-            foreach ($attributes as $attribute => $data) {
-                if (!array_key_exists($attribute, $result[$user])) {
-                    $attribute_value = $auth->user_get_attribute($user, $attribute);
-                    if ($attribute_value) {
-                        console("Got:", $attribute_value);
-                        $result[$user][$attribute] = $attribute_value;
+            foreach ($uta as $field_type => $attributes) {
+                foreach ($attributes as $attribute => $data) {
+                    if (!array_key_exists($attribute, $result[$user])) {
+                        $attribute_value = $auth->user_get_attribute($user, $attribute);
+                        if ($attribute_value) {
+                            $result[$attribute] = $attribute_value;
+                        }
                     }
                 }
             }

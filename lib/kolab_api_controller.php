@@ -295,7 +295,7 @@ class kolab_api_controller
     private function capabilities()
     {
         $auth = Auth::get_instance();
-        $this->domains = $auth->normalize_result($auth->list_domains());
+        $this->domains = $auth->list_domains();
 
         $result = array();
 

@@ -113,6 +113,11 @@ class kolab_api_service_group extends kolab_api_service
         $auth   = Auth::get_instance();
         $result = $auth->group_info($getdata['group']);
 
+        // normalize result
+        $dn                = key($result);
+        $result            = $result[$dn];
+        $result['entrydn'] = $dn;
+
         if ($result) {
             return $result;
         }

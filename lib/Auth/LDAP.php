@@ -352,7 +352,7 @@ class LDAP
             return false;
         }
 
-        return $this->search($group_dn);
+        return $this->normalize_result($this->search($group_dn));
     }
 
     public function group_members_list($group)
@@ -641,7 +641,7 @@ class LDAP
             return false;
         }
 
-        return $this->search($user_dn);
+        return $this->normalize_result($this->search($user_dn));
     }
 
     public function users_list($attributes = array(), $search = array())
