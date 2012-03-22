@@ -39,7 +39,7 @@ class kolab_api_service_groups extends kolab_api_service
     {
         return array(
             'list' => 'r',
-            );
+        );
     }
 
     public function groups_list($get, $post)
@@ -57,7 +57,44 @@ class kolab_api_service_groups extends kolab_api_service
             $attributes = (array)$this->list_attribs[0];
         }
 
-        $groups = $auth->list_groups();
+        $search = array();
+        $params = array();
+
+        // searching
+        if (!empty($post['search']) && is_array($post['search'])) {
+            $params = $post['search'];
+            foreach ($params as $idx => $param) {
+                // get only supported attributes
+                if (!in_array($idx, $this->list_attribs)) {
+                    unset($params[$idx]);
+                    continue;
+                }
+
+                // search string
+                if (empty($param['value'])) {
+                    unset($params[$idx]);
+                    continue;
+                }
+            }
+
+            $search['params'] = $params;
+            if (!empty($post['search_operator'])) {
+                $search['operator'] = $post['search_operator'];
+            }
+        }
+
+        if (!empty($post['sort_by'])) {
+            // check if sort attribute is supported
+            if (in_array($post['sort_by'], $this->list_attribs)) {
+                $params['sort_by'] = $post['sort_by'];
+            }
+        }
+
+        if (!empty($post['sort_order'])) {
+            $params['sort_order'] = $post['sort_order'] == 'DESC' ? 'DESC' : 'ASC';
+        }
+
+        $groups = $auth->list_groups(null, $attributes, $search, $params);
         $count  = count($groups);
 
         // pagination

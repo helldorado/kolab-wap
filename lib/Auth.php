@@ -207,14 +207,14 @@ class Auth {
         return $users;
     }
 
-    public function list_groups($domain = NULL, $attributes = array())
+    public function list_groups($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
         $this->connect($domain);
         if ($domain === NULL) {
             $domain = $this->conf->get('primary_domain');
         }
 
-        $groups = $this->_auth[$domain]->list_groups($attributes);
+        $groups = $this->_auth[$domain]->list_groups($attributes, $search, $params);
 
         return $groups;
     }

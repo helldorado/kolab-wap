@@ -373,12 +373,8 @@ class LDAP
         return $this->_list_group_members($group_dn);
     }
 
-    public function groups_list($attributes = array())
+    public function groups_list($attributes = array(), $search = array())
     {
-        if (empty($attributes)) {
-            $attributes = array('*');
-        }
-
         # TODO: From config
         $base_dn = "ou=Groups,dc=klab,dc=cc";
         # TODO: From config
@@ -387,6 +383,15 @@ class LDAP
             ."(objectclass=kolabgroupofuniquenames)"
             ."(objectclass=kolabgroupofurls)"
             .")";
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        if ($s_filter = $this->_search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
+        }
 
         return $this->search($base_dn, $filter, $attributes);
     }
@@ -404,10 +409,25 @@ class LDAP
         return $domains;
     }
 
-    public function list_groups($attributes = array())
+    public function list_groups($attributes = array(), $search = array(), $params = array())
     {
-        $groups = $this->groups_list($attributes);
+        if (!empty($params['sort_by'])) {
+            if (!in_array($params['sort_by'], $attributes)) {
+                $attributes[] = $params['sort_by'];
+            }
+        }
+
+        $groups = $this->groups_list($attributes, $search);
         $groups = $this->normalize_result($groups);
+
+        if (!empty($params['sort_by'])) {
+            $this->sort_result_key = $params['sort_by'];
+            uasort($groups, array($this, 'sort_result'));
+
+            if ($params['sort_order'] == 'DESC') {
+                $groups = array_reverse($groups, true);
+            }
+        }
 
         return $groups;
     }
@@ -624,7 +644,7 @@ class LDAP
         return $this->search($user_dn);
     }
 
-    public function users_list($attributes = array(), $search = array(), $params = array())
+    public function users_list($attributes = array(), $search = array())
     {
         $conf = Conf::get_instance();
 
@@ -635,39 +655,7 @@ class LDAP
             $attributes = array('*');
         }
 
-        if (!empty($search) && is_array($search) && !empty($search['params'])) {
-            $s_filter = '';
-            foreach ((array) $search['params'] as $field => $param) {
-                $value = self::_quote_string($param['value']);
-
-                switch ((string)$param['type']) {
-                case 'prefix':
-                    $prefix = '';
-                    $suffix = '*';
-                    break;
-                case 'suffix':
-                    $prefix = '*';
-                    $suffix = '';
-                    break;
-                case 'exact':
-                    $prefix = '';
-                    $suffix = '';
-                    break;
-                case 'both':
-                default:
-                    $prefix = '*';
-                    $suffix = '*';
-                    break;
-                }
-
-                $s_filter .= "($field=$prefix" . $value . "$suffix)";
-            }
-
-            // join search parameters with specified operator ('OR' or 'AND')
-            if (count($search['params']) > 1) {
-                $s_filter = '(' . ($search['operator'] == 'AND' ? '&' : '|') . $s_filter . ')';
-            }
-
+        if ($s_filter = $this->_search_filter($search)) {
             // join search filter with objectClass filter
             $filter = '(&' . $filter . $s_filter . ')';
         }
@@ -725,8 +713,6 @@ class LDAP
         foreach ($conf->user_types[$type]['attributes'] as $key => $value) {
             $attributes_filter[] = is_array($value) ? $key : $value;
         }
-
-//         console($attributes_filter);
 
         return $attributes_filter;
     }
@@ -943,6 +929,50 @@ class LDAP
         }
 
         return $entries;
+    }
+
+    /**
+     * Create LDAP search filter string according to defined parameters.
+     */
+    private function _search_filter($search)
+    {
+        if (empty($search) || !is_array($search) || empty($search['params'])) {
+            return null;
+        }
+    
+        $filter = '';
+        foreach ((array) $search['params'] as $field => $param) {
+            $value = self::_quote_string($param['value']);
+
+            switch ((string)$param['type']) {
+            case 'prefix':
+                $prefix = '';
+                $suffix = '*';
+                break;
+            case 'suffix':
+                $prefix = '*';
+                $suffix = '';
+                break;
+            case 'exact':
+                $prefix = '';
+                $suffix = '';
+                break;
+            case 'both':
+            default:
+                $prefix = '*';
+                $suffix = '*';
+                break;
+            }
+
+            $filter .= "($field=$prefix" . $value . "$suffix)";
+        }
+
+        // join search parameters with specified operator ('OR' or 'AND')
+        if (count($search['params']) > 1) {
+            $filter = '(' . ($search['operator'] == 'AND' ? '&' : '|') . $filter . ')';
+        }
+
+        return $filter;
     }
 
     /**

@@ -39,6 +39,7 @@ class kolab_api_service_users extends kolab_api_service
         'uidnumber',
         'gidnumber',
         'mailhost',
+        'dn',
     );
 
 
