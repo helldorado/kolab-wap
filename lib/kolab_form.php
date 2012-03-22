@@ -250,6 +250,10 @@ class kolab_form
                 }
             }
 
+            if ($attribs['size'] >= 40) {
+                $attribs['class'] = (!empty($attribs['class']) ? $attribs['class'] . ' ' : '') . 'maxsize';
+            }
+
             $content = kolab_html::input($attribs);
             break;
 
