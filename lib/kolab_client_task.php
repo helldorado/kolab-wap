@@ -646,7 +646,7 @@ class kolab_client_task
     {
         $types        = (array) $this->{$name . '_types'}();
         $form_id      = $attribs['id'];
-        $add_mode     = empty($data[$name]);
+        $add_mode     = empty($data['dn']);
 
         $event_fields = array();
         $auto_fields  = array();
@@ -746,6 +746,7 @@ class kolab_client_task
         }
         else {
             // Add debug information
+            ksort($data);
             $debug = kolab_html::escape(print_r($data, true));
             $debug = preg_replace('/(^Array\n\(|\n*\)$|\t)/', '', $debug);
             $debug = str_replace("\n    ", "\n", $debug);
@@ -869,7 +870,7 @@ class kolab_client_task
             'onclick' => "kadm.{$name}_save()",
         ));
 
-        if ($data[$name]) {
+        if (!empty($data['dn'])) {
             $id = $data[$name];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),

@@ -169,7 +169,7 @@ class kolab_client_task_user extends kolab_client_task
         $id     = $this->get_input('id', 'POST');
         $result = $this->api->get('user.info', array('user' => $id));
         $user   = $result->get($id);
-        $user['user'] = $id;
+        $user['dn'] = $id;
         $output = $this->user_form(null, $user);
 
         $this->output->set_object('taskcontent', $output);
@@ -247,7 +247,7 @@ class kolab_client_task_user extends kolab_client_task
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2'));
 
-        $add_mode  = empty($data['user']);
+        $add_mode  = empty($data['dn']);
         $accttypes = array();
 
         foreach ($types as $idx => $elem) {
