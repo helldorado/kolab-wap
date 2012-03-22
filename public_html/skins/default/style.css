@@ -333,7 +333,7 @@ td.label {
 #searchinput {
   border: none;
   background-color: white;
-  margin-left: 2px;
+  margin-top: 2px;
 }
 
 #searchinput:focus {
@@ -434,7 +434,7 @@ div.vsplitter {
   height: 16px;
 }
 
-.inactive {
+input.inactive {
   color: #d0d0d0;
 }
 
