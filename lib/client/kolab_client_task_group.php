@@ -61,7 +61,6 @@ class kolab_client_task_group extends kolab_client_task
             'page'       => $page,
         );
 
-/*
         // search parameters
         if (!empty($_POST['search'])) {
             $search = self::get_input('search', 'POST', true);
@@ -84,7 +83,7 @@ class kolab_client_task_group extends kolab_client_task
             $post['search']          = $search_request;
             $post['search_operator'] = 'OR';
         }
-*/
+
         // get groups list
         $result = $this->api->post('groups.list', null, $post);
         $count  = (int) $result->get('count');
@@ -178,14 +177,6 @@ class kolab_client_task_group extends kolab_client_task
     }
 
     /**
-     * Group search action.
-     */
-    public function search_form()
-    {
-        return '';
-    }
-
-    /**
      * Groups adding (form) action.
      */
     public function action_add()
@@ -219,6 +210,7 @@ class kolab_client_task_group extends kolab_client_task
             'gidnumber'           => 'system',
             'mail'                => 'system',
             'uniquemember'        => 'system',
+            'memberurl'           => 'system',
         );
 
         // Prepare fields
@@ -323,4 +315,40 @@ $fields['debug'] = array(
 
         return $_SESSION['group_types'];
     }
+
+    /**
+     * Users search form.
+     *
+     * @return string HTML output of the form
+     */
+    public function search_form()
+    {
+        $form = new kolab_form(array('id' => 'search-form'));
+
+        $form->add_section('criteria', kolab_html::escape($this->translate('search.criteria')));
+        $form->add_element(array(
+            'section' => 'criteria',
+            'label'   => $this->translate('search.field'),
+            'name'    => 'field',
+            'type'    => kolab_form::INPUT_SELECT,
+            'options' => array(
+                'cn'   => kolab_html::escape($this->translate('search.name')),
+                'mail' => kolab_html::escape($this->translate('search.email')),
+            ),
+        ));
+        $form->add_element(array(
+            'section' => 'criteria',
+            'label'   => $this->translate('search.method'),
+            'name'    => 'method',
+            'type'    => kolab_form::INPUT_SELECT,
+            'options' => array(
+                'both'   => kolab_html::escape($this->translate('search.contains')),
+                'exact'  => kolab_html::escape($this->translate('search.is')),
+                'prefix' => kolab_html::escape($this->translate('search.prefix')),
+            ),
+        ));
+
+        return $form->output();
+    }
+
 }
