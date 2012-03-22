@@ -799,16 +799,18 @@ class kolab_client_task
             }
 
             // Add debug information
-            ksort($data);
-            $debug = kolab_html::escape(print_r($data, true));
-            $debug = preg_replace('/(^Array\n\(|\n*\)$|\t)/', '', $debug);
-            $debug = str_replace("\n    ", "\n", $debug);
-            $debug = '<pre class="debug">' . $debug . '</pre>';
-            $fields['debug'] = array(
-                'label'   => 'debug',
-                'section' => 'system',
-                'value'   => $debug,
-            );
+            if ($this->config_get('devel_mode')) {
+                ksort($data);
+                $debug = kolab_html::escape(print_r($data, true));
+                $debug = preg_replace('/(^Array\n\(|\n*\)$|\t)/', '', $debug);
+                $debug = str_replace("\n    ", "\n", $debug);
+                $debug = '<pre class="debug">' . $debug . '</pre>';
+                $fields['debug'] = array(
+                    'label'   => 'debug',
+                    'section' => 'system',
+                    'value'   => $debug,
+                );
+            }
         }
 
         return array($fields, $types, $type);
