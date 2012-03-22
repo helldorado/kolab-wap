@@ -9,6 +9,7 @@ $LANG['loginerror'] = 'Incorrect username or password!';
 $LANG['internalerror'] = 'Internal system error!';
 $LANG['welcome'] = 'Welcome to the Kolab Groupware Server Maintenance';
 $LANG['reqtime'] = 'Request time: $1 sec.';
+$LANG['debug'] = 'Debug info';
 
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';

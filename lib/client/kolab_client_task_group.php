@@ -268,12 +268,6 @@ class kolab_client_task_group extends kolab_client_task
             }
         }
 
-$fields['debug'] = array(
-    'label' => 'debug',
-    'section' => 'system',
-    'value' => '<pre>'.kolab_html::escape(print_r($data, true)).'</pre>',
-);
-
         // Create form object and populate with fields
         $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data);
 

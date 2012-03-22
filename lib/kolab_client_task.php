@@ -744,6 +744,18 @@ class kolab_client_task
                 $data = array_merge((array)$data, (array)$resp->get());
             }
         }
+        else {
+            // Add debug information
+            $debug = kolab_html::escape(print_r($data, true));
+            $debug = preg_replace('/(^Array\n\(|\n*\)$|\t)/', '', $debug);
+            $debug = str_replace("\n    ", "\n", $debug);
+            $debug = '<pre class="debug">' . $debug . '</pre>';
+            $fields['debug'] = array(
+                'label' => 'debug',
+                'section' => 'system',
+                'value' => $debug,
+            );
+        }
 
         return array($fields, $types, $type);
     }

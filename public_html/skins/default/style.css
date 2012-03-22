@@ -495,6 +495,19 @@ input.maxsize {
   width: 368px; /* span.listarea width - 2px */
 }
 
+pre.debug {
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  background-color: white;
+  padding: 2px;
+  width: 500px;
+  height: 200px;
+  margin: 0;
+  overflow: auto;
+}
+
 /********* Form smart inputs *********/
 
 span.listarea {
