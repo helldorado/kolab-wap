@@ -284,6 +284,10 @@ class kolab_form
             break;
 
         case self::INPUT_SELECT:
+            if (!empty($attribs['multiple']) && empty($attribs['size'])) {
+                $attribs['size'] = 5;
+            }
+
             $content = kolab_html::select($attribs, true);
             break;
 

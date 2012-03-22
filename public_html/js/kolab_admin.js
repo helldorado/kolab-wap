@@ -906,16 +906,17 @@ function kolab_admin()
       if (v = $('[name="'+extra[i]+'"]', form).val())
         json[extra[i]] = v;
 
-    this.form_serialize({id: id, json: json});
-/*
-    // convert values of list elements to array type
-    $('textarea[data-type="list"]', form).each(function() {
+    // serializeArray() doesn't work properly for multi-select
+    $('select[multiple="multiple"]', form).each(function() {
       var name = this.name;
-      // maybe already converted by skin engine
-      if (!json[name] || !$.isArray(json[name]))
-        json[name] = $(this).val().split("\n");
+      json[name] = [];
+      $(':selected', this).each(function() {
+        json[name].push(this.value);
+      });
     });
-*/
+
+    this.form_serialize({id: id, json: json});
+
     return json;
   };
 

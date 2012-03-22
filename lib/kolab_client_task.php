@@ -617,6 +617,7 @@ class kolab_client_task
 
         switch ($field['type']) {
         case 'select':
+        case 'multiselect':
             if (!isset($field['values'])) {
                 $data['attributes'] = array($field['name']);
                 $resp = $this->api->post('form_value.select_options', null, $data);
@@ -635,6 +636,11 @@ class kolab_client_task
             else {
                 $result['options'] = array('');
             }
+
+            if ($field['type'] == 'multiselect') {
+                $result['multiple'] = true;
+            }
+
             break;
 
         case 'list':
