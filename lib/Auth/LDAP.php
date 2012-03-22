@@ -455,6 +455,29 @@ class LDAP
         return $users;
     }
 
+    public function list_roles($attributes = array(), $search = array(), $params = array())
+    {
+        if (!empty($params['sort_by'])) {
+            if (!in_array($params['sort_by'], $attributes)) {
+                $attributes[] = $params['sort_by'];
+            }
+        }
+
+        $roles = $this->roles_list($attributes, $search);
+        $roles = $this->normalize_result($roles);
+
+        if (!empty($params['sort_by'])) {
+            $this->sort_result_key = $params['sort_by'];
+            uasort($roles, array($this, 'sort_result'));
+
+            if ($params['sort_order'] == 'DESC') {
+                $roles = array_reverse($roles, true);
+            }
+        }
+
+        return $roles;
+    }
+
     static function normalize_result($__result)
     {
         $conf = Conf::get_instance();
@@ -650,6 +673,27 @@ class LDAP
 
         $base_dn = $conf->get('ldap', 'user_base_dn');
         $filter  = $conf->get('ldap', 'user_filter');
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        if ($s_filter = $this->_search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
+        }
+
+        return $this->search($base_dn, $filter, $attributes);
+    }
+
+    public function roles_list($attributes = array(), $search = array())
+    {
+        $conf = Conf::get_instance();
+
+        // TODO: From config
+        $base_dn = "dc=klab,dc=cc";
+        // TODO: From config
+        $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');

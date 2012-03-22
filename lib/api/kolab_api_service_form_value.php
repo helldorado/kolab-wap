@@ -446,4 +446,30 @@ class kolab_api_service_form_value extends kolab_api_service
 
         return $list;
     }
+
+    private function list_options_nsrole($postdata, $attribs = array())
+    {
+        $service = $this->controller->get_service('roles');
+
+        $keyword = array('value' => $postdata['search']);
+        $data    = array(
+            'attributes' => array('displayname', 'mail'),
+            'page_size'  => 15,
+            'search'     => array(
+                'displayname' => $keyword,
+                'cn'          => $keyword,
+                'mail'        => $keyword,
+            ),
+        );
+
+        $result = $service->roles_list(null, $data);
+        $list   = $result['list'];
+
+        // convert to key=>value array
+        foreach ($list as $idx => $value) {
+            $list[$idx] = is_array($value['cn']) ? implode('/', $value['cn']) : $value['cn'];
+        }
+
+        return $list;
+    }
 }
