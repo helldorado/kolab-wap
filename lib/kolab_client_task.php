@@ -176,7 +176,7 @@ class kolab_client_task
                     $res = $this->api->get('user.info', array('user' => $login['username']));
                     $res = $res->get();
 
-                    if (is_array($res) && ($res = array_shift($res))) {
+                    if (is_array($res) && !empty($res)) {
                         $user['language'] = $res['preferredlanguage'];
                         $user['fullname'] = $res['cn'];
                     }
@@ -502,9 +502,9 @@ class kolab_client_task
         }
 
         $result   = $this->api->get('user.info', array('user' => $dn));
-        $user     = $result->get($dn);
+        $username = $result->get('displayname');
 
-        if (empty($user) || empty($user['displayname'])) {
+        if (empty($username)) {
             if (preg_match('/^cn=([a-zA=Z ]+)/', $dn, $m)) {
                 $username = ucwords($m[1]);
             }
@@ -672,7 +672,7 @@ class kolab_client_task
     {
         $types        = (array) $this->{$name . '_types'}();
         $form_id      = $attribs['id'];
-        $add_mode     = empty($data['dn']);
+        $add_mode     = empty($data['entrydn']);
 
         $event_fields = array();
         $auto_fields  = array();
@@ -917,7 +917,7 @@ class kolab_client_task
             'onclick' => "kadm.{$name}_save()",
         ));
 
-        if (!empty($data['dn'])) {
+        if (!empty($data['entrydn'])) {
             $id = $data[$name];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),

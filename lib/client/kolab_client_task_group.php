@@ -168,9 +168,7 @@ class kolab_client_task_group extends kolab_client_task
     {
         $id     = $this->get_input('id', 'POST');
         $result = $this->api->get('group.info', array('group' => $id));
-        $group  = $result->get($id);
-
-        $group['dn'] = $id;
+        $group  = $result->get();
         $output = $this->group_form(null, $group);
 
         $this->output->set_object('taskcontent', $output);
@@ -216,7 +214,7 @@ class kolab_client_task_group extends kolab_client_task
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('group', $data);
 
-        $add_mode  = empty($data['dn']);
+        $add_mode  = empty($data['entrydn']);
         $accttypes = array();
 
         foreach ($types as $idx => $elem) {
@@ -262,7 +260,7 @@ class kolab_client_task_group extends kolab_client_task
                 }
             }
             if (!empty($attr_name)) {
-                $result = $this->api->get('group.members_list', array('group' => $data['dn']));
+                $result = $this->api->get('group.members_list', array('group' => $data['entrydn']));
                 $list   = (array) $result->get('list');
                 $data[$attr_name] = $this->parse_members($list);
             }
