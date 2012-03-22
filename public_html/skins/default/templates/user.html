@@ -2,7 +2,7 @@
     <div id="search">
         <div class="searchinput">
             <input type="text" id="searchinput" name="search" value="{$engine->translate('search')}" />
-            <script type="text/javascript">search_init()</script>
+            <script type="text/javascript">search_init('user')</script>
             <span class="searchactions">
                 <span id="search-details" title="{$engine->translate('search.criteria')}" onclick="search_details()"></span>
                 <span id="search-reset" title="{$engine->translate('search.reset')}" onclick="search_reset()"></span>
