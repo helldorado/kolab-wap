@@ -39,6 +39,7 @@ class kolab_client_task
     protected $ajax_only = false;
     protected $page_title = 'Kolab Admin Panel';
     protected $menu = array();
+    protected $cache = array();
 
     protected static $translation = array();
 
@@ -488,6 +489,31 @@ class kolab_client_task
     }
 
     /**
+     * Returns user name.
+     *
+     * @param string $dn User DN attribute value
+     *
+     * @return string User name (displayname)
+     */
+    protected function user_name($dn)
+    {
+        if (!empty($this->cache['user_names']) && isset($this->cache['user_names'][$dn])) {
+            return $this->cache['user_names'][$dn];
+        }
+
+        if (preg_match('/^cn=([a-z ]+)$/i', $dn, $m)) {
+            $username = $m[1];
+        }
+        else {
+            $result   = $this->api->get('user.info', array('user' => $dn));
+            $user     = $result->get($dn);
+            $username = $user['displayname'];
+        }
+
+        return $this->cache['user_names'][$dn] = $username;
+    }
+
+    /**
      * Returns list of system capabilities.
      *
      * @return array List of system capabilities
@@ -745,6 +771,27 @@ class kolab_client_task
             }
         }
         else {
+            // Add common information fields
+            $add_fields = array(
+                'creatorsname'  => 'createtimestamp',
+                'modifiersname' => 'modifytimestamp',
+            );
+            foreach ($add_fields as $idx => $val) {
+                if (!empty($data[$idx])) {
+                    if ($value = $this->user_name($data[$idx])) {
+                        if ($data[$val]) {
+                            $value .= ' (' . strftime('%x %X', strtotime($data[$val])) . ')';
+                        }
+
+                        $fields[$idx] = array(
+                            'label'   => $idx,
+                            'section' => 'system',
+                            'value'   => $value,
+                        );
+                    }
+                }
+            }
+
             // Add debug information
             ksort($data);
             $debug = kolab_html::escape(print_r($data, true));
@@ -752,9 +799,9 @@ class kolab_client_task
             $debug = str_replace("\n    ", "\n", $debug);
             $debug = '<pre class="debug">' . $debug . '</pre>';
             $fields['debug'] = array(
-                'label' => 'debug',
+                'label'   => 'debug',
                 'section' => 'system',
-                'value' => $debug,
+                'value'   => $debug,
             );
         }
 
@@ -816,7 +863,7 @@ class kolab_client_task
                 $field['description'] = "$name.$idx.desc";
                 $field['section']     = $section_idx;
 
-                if (!empty($data[$idx])) {
+                if (empty($field['value']) && !empty($data[$idx])) {
                     $field['value'] = $data[$idx];
 
                     // Convert data for the list field with autocompletion

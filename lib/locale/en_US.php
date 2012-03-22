@@ -10,6 +10,9 @@ $LANG['internalerror'] = 'Internal system error!';
 $LANG['welcome'] = 'Welcome to the Kolab Groupware Server Maintenance';
 $LANG['reqtime'] = 'Request time: $1 sec.';
 $LANG['debug'] = 'Debug info';
+$LANG['info'] = 'Information';
+$LANG['creatorsname'] = 'Created by';
+$LANG['modifiersname'] = 'Modified by';
 
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
