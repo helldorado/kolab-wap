@@ -107,7 +107,10 @@ class LDAP
     public function authenticate($username, $password)
     {
         error_log("LDAP authentication request for $username");
-        $this->_connect();
+
+        if (!$this->_connect()) {
+            return false;
+        }
 
         // Attempt to explode the username to see if it is in fact a DN,
         // such as would be the case for 'cn=Directory Manager' or
@@ -146,12 +149,6 @@ class LDAP
         }
     }
 
-    public function connect()
-    {
-        // Apply some routines for access control to this function here.
-        return $this->_connect();
-    }
-
     public function domain_add($domain, $domain_alias = false, $prepopulate = true)
     {
         // Apply some routines for access control to this function here.
@@ -161,54 +158,6 @@ class LDAP
         else {
             return $this->_domain_add_new($domain, $prepopulate);
         }
-    }
-
-    /*
-        Translate a domain name into it's corresponding root dn.
-    */
-    public function domain_root_dn($domain = '')
-    {
-        $conf = Conf::get_instance();
-
-        if ($domain == '') {
-            return false;
-        }
-
-        error_log("Searching for domain $domain");
-
-        $this->_connect();
-
-        error_log("From domain to root dn");
-
-        if (($this->_bind($conf->get('ldap', 'bind_dn'), $conf->get('ldap', 'bind_pw'))) == false) {
-            error_log("WARNING: Invalid Service bind credentials supplied");
-            $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
-        }
-
-        // TODO: Get domain_attr from config
-        if (($results = ldap_search($this->conn, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')')) == false) {
-            error_log("No results?");
-            return false;
-        }
-
-        $domain = ldap_first_entry($this->conn, $results);
-        $domain_info = ldap_get_attributes($this->conn, $domain);
-
-//        echo "<pre>"; print_r($domain_info); echo "</pre>";
-
-        // TODO: Also very 389 specific
-        if (isset($domain_info['inetDomainBaseDN'][0])) {
-            $domain_rootdn = $domain_info['inetDomainBaseDN'][0];
-        }
-        else {
-            $domain_rootdn = $this->_standard_root_dn($domain_info['associatedDomain']);
-        }
-
-        $this->_unbind();
-
-        error_log("Using $domain_rootdn");
-
-        return $domain_rootdn;
     }
 
     public function effective_rights($subject_dn)
@@ -533,9 +482,57 @@ class LDAP
         return $this->_list_group_members($group_dn);
     }
 
+    /*
+        Translate a domain name into it's corresponding root dn.
+    */
+    private function domain_root_dn($domain = '')
+    {
+        $conf = Conf::get_instance();
+
+        if ($domain == '') {
+            return false;
+        }
+
+        if (!$this->_connect()) {
+            return false;
+        }
+
+        error_log("Searching for domain $domain");
+        error_log("From domain to root dn");
+
+        if (($this->_bind($conf->get('ldap', 'bind_dn'), $conf->get('ldap', 'bind_pw'))) == false) {
+            error_log("WARNING: Invalid Service bind credentials supplied");
+            $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
+        }
+
+        // TODO: Get domain_attr from config
+        if (($results = ldap_search($this->conn, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')')) == false) {
+            error_log("No results?");
+            return false;
+        }
+
+        $domain = ldap_first_entry($this->conn, $results);
+        $domain_info = ldap_get_attributes($this->conn, $domain);
+
+//        echo "<pre>"; print_r($domain_info); echo "</pre>";
+
+        // TODO: Also very 389 specific
+        if (isset($domain_info['inetDomainBaseDN'][0])) {
+            $domain_rootdn = $domain_info['inetDomainBaseDN'][0];
+        }
+        else {
+            $domain_rootdn = $this->_standard_root_dn($domain_info['associatedDomain']);
+        }
+
+        $this->_unbind();
+
+        error_log("Using $domain_rootdn");
+
+        return $domain_rootdn;
+    }
+
     private function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
-        error_log("Searching $base_dn with filter '$search_filter'");
         return $this->_search($base_dn, $search_filter, $attributes);
     }
 
@@ -613,10 +610,14 @@ class LDAP
 
     public static function normalize_result($__result)
     {
+        if (!is_array($__result)) {
+            return array();
+        }
+
         $conf = Conf::get_instance();
 
         $dn_attr = $conf->get($conf->get('kolab', 'auth_mechanism'), 'domain_name_attribute');
-        $result = array();
+        $result  = array();
 
         for ($x = 0; $x < $__result["count"]; $x++) {
             $dn = $__result[$x]['dn'];
@@ -764,20 +765,16 @@ class LDAP
         return $search_filter;
     }
 
-    /*
-
-        Shortcut functions
-
-    */
+    /***********************************************************
+     ************      Shortcut functions       ****************
+     ***********************************************************/
 
     /*
         Shortcut to ldap_add()
     */
-
     private function _add($entry_dn, $attributes)
     {
         // Always bind with the session credentials
-        $this->_connect();
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         if (($add_result = ldap_add($this->conn, $entry_dn, $attributes)) == false) {
@@ -823,23 +820,26 @@ class LDAP
      */
     private function _connect()
     {
-        if (!$this->conn) {
-            // TODO: Debug logging
-            error_log("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
-            $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
-
-            if ($connection == false) {
-                $this->conn = null;
-                // TODO: Debug logging
-                error_log("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
-            }
-            else {
-                $this->conn = $connection;
-            }
-
-            // TODO: Debug logging
-            error_log("Connected!");
+        if ($this->conn) {
+            return true;
         }
+
+        // TODO: Debug logging
+        error_log("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
+        $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
+
+        if ($connection == false) {
+            $this->conn = null;
+            // TODO: Debug logging
+            error_log("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
+            return false;
+        }
+
+        $this->conn = $connection;
+        // TODO: Debug logging
+        error_log("Connected!");
+
+        return true;
     }
 
     /**
@@ -847,7 +847,6 @@ class LDAP
      */
     private function _delete($entry_dn)
     {
-        $this->_connect();
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
@@ -903,6 +902,10 @@ class LDAP
      */
     private function _list($base_dn, $filter)
     {
+        if (!$this->conn) {
+            return null;
+        }
+
         $ldap_entries = array( "count" => 0 );
 
         if (($ldap_list = @ldap_list($this->conn, $base_dn, $filter)) == false) {
@@ -922,7 +925,13 @@ class LDAP
      */
     private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
-        error_log("Searching with user " . $_SESSION['user']->user_bind_dn);
+        if (!$this->_connect()) {
+            return false;
+        }
+
+        error_log("Searching $base_dn with filter: $search_filter");
+        error_log("Searching with user: " . $_SESSION['user']->user_bind_dn);
+
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         if (($search_results = @ldap_search($this->conn, $base_dn, $search_filter, $attributes)) == false) {
@@ -988,7 +997,9 @@ class LDAP
     private function _unbind($yes = false, $really = false)
     {
         if ($yes && $really) {
-            ldap_unbind($this->conn);
+            if ($this->conn) {
+                ldap_unbind($this->conn);
+            }
 
             $this->conn    = null;
             $this->bind_dn = null;
@@ -1080,13 +1091,11 @@ class LDAP
 
     private function _get_group_dn($root_dn, $search_filter)
     {
-        error_log("Searching for a group dn in $root_dn, with search filter: $search_filter");
-
-        $this->_connect();
-
         if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
+
+        error_log("Searching for a group dn in $root_dn, with search filter: $search_filter");
 
         $search_results = ldap_search($this->conn, $root_dn, $search_filter);
 
@@ -1104,14 +1113,12 @@ class LDAP
 
     private function _get_user_dn($root_dn, $search_filter)
     {
-        error_log("Searching for a user dn in $root_dn, with search filter: $search_filter");
-
-        $this->_connect();
-
         if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
             //message("WARNING: Invalid Service bind credentials supplied");
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
+
+        error_log("Searching for a user dn in $root_dn, with search filter: $search_filter");
 
         $search_results = ldap_search($this->conn, $root_dn, $search_filter);
 
