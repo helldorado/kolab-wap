@@ -268,9 +268,9 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($attribute);
     }
 
-    public function user_get_attribute($user, $attribute)
+    public function user_attributes($user, $attributes)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_get_attribute($user, $attribute);
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_attributes($user, $attributes);
     }
 
     public function user_info($userdata)

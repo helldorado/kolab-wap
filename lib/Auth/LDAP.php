@@ -437,16 +437,22 @@ class LDAP
         }
     }
 
-    public function user_get_attribute($user_dn, $attribute)
+    /**
+     * User attributes
+     *
+     *
+     */
+    public function user_attributes($user_dn, $attributes)
     {
-        $result = $this->search($user_dn, '(objectclass=*)', array($attribute));
+        $result = $this->search($user_dn, '(objectclass=*)', $attributes);
         $result = self::normalize_result($result);
 
-        if (!empty($result) && array_key_exists($attribute, $result[$user_dn])) {
-            return $result[$user_dn][$attribute];
-        } else {
-            return FALSE;
+        if (!empty($result)) {
+            $result = array_pop($result);
+            return $result;
         }
+
+        return false;
     }
 
     public function user_info($user)

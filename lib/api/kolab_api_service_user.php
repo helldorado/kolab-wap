@@ -159,16 +159,21 @@ class kolab_api_service_user extends kolab_api_service
         // Search for attributes associated with the type_id that are not part
         // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
         if ($result['user_type_id']) {
-            $uta = $this->user_type_attributes($result['user_type_id']);
+            $uta   = $this->user_type_attributes($result['user_type_id']);
+            $attrs = array();
 
             foreach ($uta as $field_type => $attributes) {
                 foreach ($attributes as $attribute => $data) {
                     if (!array_key_exists($attribute, $result)) {
-                        $attribute_value = $auth->user_get_attribute($result['entrydn'], $attribute);
-                        if ($attribute_value) {
-                            $result[$attribute] = $attribute_value;
-                        }
+                        $attrs[] = $attribute;
                     }
+                }
+            }
+
+            if (!empty($attrs)) {
+                $attrs = $auth->user_attributes($result['entrydn'], $attrs);
+                if (!empty($attrs)) {
+                    $result = array_merge($result, $attrs);
                 }
             }
         }
