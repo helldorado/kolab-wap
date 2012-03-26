@@ -155,10 +155,10 @@ class Auth {
             $auth_method = strtoupper($this->conf->get('kolab', 'auth_mechanism'));
         }
 
-	if (!$auth_method) {
-	    // Use LDAP by default
-	    $auth_method = 'LDAP';
-	}
+        if (!$auth_method) {
+            // Use LDAP by default
+            $auth_method = 'LDAP';
+        }
 
         if (!isset($this->_auth[$domain])) {
             require_once 'Auth/' . $auth_method . '.php';
