@@ -115,7 +115,7 @@ abstract class kolab_api_service
             return null;
         }
 
-        $object_class = array_map('strtolower', $object_class);                                                                                         
+        $object_class = array_map('strtolower', $object_class);
         $user_types   = $this->user_types();
         $type_score   = -1;
         $type_id      = null;
@@ -158,7 +158,7 @@ abstract class kolab_api_service
         if (!empty($this->cache['user_types'])) {
             return $this->cache['user_types'];
         }
-    
+
         $sql_result = $this->db->query("SELECT * FROM user_types");
         $user_types = array();
 
@@ -190,7 +190,7 @@ abstract class kolab_api_service
         if (!empty($this->cache['group_types'])) {
             return $this->cache['group_types'];
         }
-    
+
         $sql_result = $this->db->query("SELECT * FROM group_types");
         $group_types = array();
 

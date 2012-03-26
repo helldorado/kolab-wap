@@ -24,10 +24,17 @@
 */
 
 /**
- *
+ * Service providing group types listing
  */
 class kolab_api_service_group_types extends kolab_api_service
 {
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
@@ -35,6 +42,14 @@ class kolab_api_service_group_types extends kolab_api_service
         );
     }
 
+    /**
+     * Group types listing.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array List result with 'list' and 'count' items
+     */
     public function group_types_list($get, $post)
     {
         $group_types = $this->group_types();

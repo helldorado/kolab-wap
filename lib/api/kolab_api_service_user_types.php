@@ -28,6 +28,13 @@
  */
 class kolab_api_service_user_types extends kolab_api_service
 {
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
@@ -35,6 +42,14 @@ class kolab_api_service_user_types extends kolab_api_service
         );
     }
 
+    /**
+     * User types listing.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array List result with 'list' and 'count' items
+     */
     public function user_types_list($get, $post)
     {
         $user_types = $this->user_types();

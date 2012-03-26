@@ -22,7 +22,9 @@
  +--------------------------------------------------------------------------+
 */
 
-
+/**
+ * HTML Form generator
+ */
 class kolab_form
 {
     const INPUT_TEXT = 1;
@@ -207,6 +209,9 @@ class kolab_form
         return $content;
     }
 
+    /**
+     * Builds a row of the form table.
+     */
     private function form_row($element)
     {
         $cells = array(
@@ -229,6 +234,9 @@ class kolab_form
         return $attrib;
     }
 
+    /**
+     * Builds an element of the form.
+     */
     private function get_element($attribs)
     {
         $type = isset($attribs['type']) ? $attribs['type'] : 0;

@@ -24,10 +24,17 @@
 */
 
 /**
- *
+ * Service providing user data management
  */
 class kolab_api_service_user extends kolab_api_service
 {
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
@@ -42,6 +49,14 @@ class kolab_api_service_user extends kolab_api_service
         );
     }
 
+    /**
+     * Create user.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool User attributes or False on error.
+     */
     public function user_add($getdata, $postdata)
     {
         $uta             = $this->user_type_attributes($postdata['user_type_id']);
@@ -87,13 +102,21 @@ class kolab_api_service_user extends kolab_api_service
             return $user_attributes;
         }
 
-        return FALSE;
+        return false;
     }
 
+    /**
+     * Detete user.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return bool True on success, False on failure
+     */
     public function user_delete($getdata, $postdata)
     {
         if (!isset($postdata['user'])) {
-            return FALSE;
+            return false;
         }
 
         // TODO: Input validation
@@ -104,13 +127,21 @@ class kolab_api_service_user extends kolab_api_service
             return $result;
         }
 
-        return FALSE;
+        return false;
     }
 
+    /**
+     * User information.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool User attributes, False on error
+     */
     public function user_info($getdata, $postdata)
     {
         if (!isset($getdata['user'])) {
-            return FALSE;
+            return false;
         }
 
         $auth   = Auth::get_instance();
@@ -146,6 +177,6 @@ class kolab_api_service_user extends kolab_api_service
             return $result;
         }
 
-        return FALSE;
+        return false;
     }
 }

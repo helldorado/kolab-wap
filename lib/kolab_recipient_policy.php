@@ -211,4 +211,3 @@ class kolab_recipient_policy {
 
     }
 }
-?>

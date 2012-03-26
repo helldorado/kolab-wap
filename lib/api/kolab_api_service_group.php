@@ -28,6 +28,13 @@
  */
 class kolab_api_service_group extends kolab_api_service
 {
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
@@ -38,6 +45,14 @@ class kolab_api_service_group extends kolab_api_service
         );
     }
 
+    /**
+     * Group create.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool Group attributes or False on failure
+     */
     public function group_add($getdata, $postdata)
     {
         $gta = $this->group_type_attributes($postdata['group_type_id']);
@@ -87,6 +102,14 @@ class kolab_api_service_group extends kolab_api_service
         return FALSE;
     }
 
+    /**
+     * Group delete.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return bool True on success, False on failure
+     */
     public function group_delete($getdata, $postdata)
     {
         if (empty($postdata['group'])) {
@@ -104,6 +127,14 @@ class kolab_api_service_group extends kolab_api_service
         return FALSE;
     }
 
+    /**
+     * Group information.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool Group attributes or False on failure
+     */
     public function group_info($getdata, $postdata)
     {
         if (empty($getdata['group'])) {
@@ -125,6 +156,14 @@ class kolab_api_service_group extends kolab_api_service
         return FALSE;
     }
 
+    /**
+     * Group members listing.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array List of group members ('list' and 'count' items)
+     */
     public function group_members_list($getdata, $postdata)
     {
         $auth = Auth::get_instance();

@@ -29,6 +29,13 @@
 class kolab_api_service_form_value extends kolab_api_service
 {
 
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(

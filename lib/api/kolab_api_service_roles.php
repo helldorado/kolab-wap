@@ -24,7 +24,7 @@
 */
 
 /**
- *
+ * Service providing roles listing
  */
 class kolab_api_service_roles extends kolab_api_service
 {
@@ -35,7 +35,13 @@ class kolab_api_service_roles extends kolab_api_service
         'description',
     );
 
-
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
@@ -43,6 +49,14 @@ class kolab_api_service_roles extends kolab_api_service
         );
     }
 
+    /**
+     * Roles listing (with searching).
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array List result with 'list' and 'count' items
+     */
     public function roles_list($get, $post)
     {
         $auth = Auth::get_instance();

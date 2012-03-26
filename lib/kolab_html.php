@@ -22,7 +22,9 @@
  +--------------------------------------------------------------------------+
 */
 
-
+/**
+ * HTML output generation
+ */
 class kolab_html
 {
     public static $common_attribs = array('id', 'class', 'style', 'title', 'align', 'dir');
@@ -43,6 +45,15 @@ class kolab_html
     public static $label_attribs  = array('for');
 
 
+    /**
+     * Table element (TABLE).
+     *
+     * @param array  $attribs  Table attributes
+     * @param string $content  Optional table content. If empty
+     *                         head, body, foot attributes will be used.
+     *
+     * @return string HTML output of the table
+     */
     public static function table($attribs = array(), $content = null)
     {
         $table_attribs = array_merge(self::$table_attribs, self::$common_attribs, self::$event_attribs);
@@ -80,6 +91,14 @@ class kolab_html
         return $table;
     }
 
+    /**
+     * Table row (TR).
+     *
+     * @param array  $attribs  Row attributes
+     * @param string $is_head  Set to true if it is a part of table head.
+     *
+     * @return string HTML output of the row
+     */
     public static function tr($attribs = array(), $is_head = false)
     {
         $row_attribs = array_merge(self::$tr_attribs, self::$common_attribs, self::$event_attribs);
@@ -96,6 +115,14 @@ class kolab_html
         return $row;
     }
 
+    /**
+     * Table cell (TD or TH).
+     *
+     * @param array  $attribs  Cell attributes
+     * @param string $is_head  Set to true if it is a part of table head.
+     *
+     * @return string HTML output of the cell
+     */
     public static function td($attribs = array(), $is_head = false)
     {
         $cell_attribs = array_merge(self::$td_attribs, self::$common_attribs, self::$event_attribs);
@@ -111,6 +138,13 @@ class kolab_html
         return $cell;
     }
 
+    /**
+     * Input element.
+     *
+     * @param array  $attribs  Element attributes
+     *
+     * @return string HTML output of the input
+     */
     public static function input($attribs = array())
     {
         $elem_attribs = array_merge(self::$input_attribs, self::$input_event_attribs,
@@ -119,6 +153,14 @@ class kolab_html
         return sprintf('<input%s />', self::attrib_string($attribs, $elem_attribs));
     }
 
+    /**
+     * Textarea element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the textarea
+     */
     public static function textarea($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$textarea_attribs, self::$input_event_attribs,
@@ -134,6 +176,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Select element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the select tag
+     */
     public static function select($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$select_attribs, self::$input_event_attribs,
@@ -159,6 +209,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), implode("\n", $content));
     }
 
+    /**
+     * Option element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the option tag
+     */
     public static function option($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$option_attribs, self::$common_attribs);
@@ -173,6 +231,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Fieldset element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the fieldset tag
+     */
     public static function fieldset($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$common_attribs);
@@ -188,6 +254,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $legend, $content);
     }
 
+    /**
+     * Link element (A).
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the link
+     */
     public static function a($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$a_attribs, self::$common_attribs, self::$event_attribs);
@@ -202,6 +276,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Label element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the label tag
+     */
     public static function label($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$label_attribs, self::$common_attribs);
@@ -216,6 +298,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Division element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the div tag
+     */
     public static function div($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$common_attribs, self::$event_attribs);
@@ -230,6 +320,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Span element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the span tag
+     */
     public static function span($attribs = array(), $escape = false)
     {
         $elem_attribs = array_merge(self::$common_attribs, self::$event_attribs);
@@ -244,6 +342,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Form element.
+     *
+     * @param array  $attribs  Element attributes
+     * @param string $escape   Content of the form
+     *
+     * @return string HTML output of the form tag
+     */
     public static function form($attribs = array(), $content = null)
     {
         $elem_attribs = array_merge(self::$form_attribs, self::$common_attribs, self::$event_attribs);
@@ -252,6 +358,14 @@ class kolab_html
             self::attrib_string($attribs, $elem_attribs), $content);
     }
 
+    /**
+     * Script element.
+     *
+     * @param array $attribs  Element attributes
+     * @param bool  $escape   Enables escaping of the content
+     *
+     * @return string HTML output of the script tag
+     */
     public static function script($content = null, $escape = false)
     {
         if ($escape) {
@@ -314,6 +428,13 @@ class kolab_html
         return count($attrib_arr) ? ' '.implode(' ', $attrib_arr) : '';
     }
 
+    /**
+     * Escape special characters into HTML entities.
+     *
+     * @param string|array $value  Value to escape
+     *
+     * @return string|array Escaped value
+     */
     public static function escape($value)
     {
         if (is_array($value)) {

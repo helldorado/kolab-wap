@@ -24,19 +24,35 @@
 */
 
 /**
- *
+ * Service providing domains listing
  */
 class kolab_api_service_domains extends kolab_api_service
 {
+
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
             'list' => 'r',
-//             'search' => 'r',
         );
     }
 
-    public function domains_list($get, $post) {
+    /**
+     * Users listing (with searching).
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array List result with 'list' and 'count' items
+     */
+    public function domains_list($get, $post)
+    {
         $auth = Auth::get_instance();
 
         $domains = $auth->list_domains();

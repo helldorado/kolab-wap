@@ -24,7 +24,7 @@
 */
 
 /**
- *
+ * Service providing groups listing
  */
 class kolab_api_service_groups extends kolab_api_service
 {
@@ -35,6 +35,13 @@ class kolab_api_service_groups extends kolab_api_service
         'mail',
     );
 
+    /**
+     * Returns service capabilities.
+     *
+     * @param string $domain Domain name
+     *
+     * @return array Capabilities list
+     */
     public function capabilities($domain)
     {
         return array(
@@ -42,6 +49,14 @@ class kolab_api_service_groups extends kolab_api_service
         );
     }
 
+    /**
+     * Groups listing (with searching).
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array List result with 'list' and 'count' items
+     */
     public function groups_list($get, $post)
     {
         $auth = Auth::get_instance();
