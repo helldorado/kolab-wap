@@ -164,7 +164,7 @@ class kolab_api_service_user extends kolab_api_service
             foreach ($uta as $field_type => $attributes) {
                 foreach ($attributes as $attribute => $data) {
                     if (!array_key_exists($attribute, $result)) {
-                        $attribute_value = $auth->user_get_attribute($user, $attribute);
+                        $attribute_value = $auth->user_get_attribute($result['entrydn'], $attribute);
                         if ($attribute_value) {
                             $result[$attribute] = $attribute_value;
                         }
