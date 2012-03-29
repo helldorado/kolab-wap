@@ -30,6 +30,14 @@ sql_uri = mysql://kolab_wap:*****@mysql.klab.cc/kolab_wap
 ;api_url = http://admin.klab.cc/~vanmeeuwen/kolab-wap/public_html/api/
 skin = default
 
+  NOTE: You need to create the user and database on the MySQL server, perhaps
+  like so:
+
+  # mysql -e "CREATE DATABASE kolab_wap;"
+  # mysql -e "GRANT ALL PRIVILEGES on kolab_wap.* to 'kolab_wap'@'admin.klab.cc'
+  > IDENTIFIED BY '*****';"
+  # mysql -e "FLUSH PRIVILEGES;"
+
 - Make /etc/kolab/kolab.conf readable for the apache group, for example:
 
 # chown kolab-n kolab-n /etc/kolab/kolab.conf
@@ -48,4 +56,19 @@ skin = default
   http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-preferredlanguages.phps
 
   Save these to the kolab-wap root directory (next to the lib/ and public_html/
-  directories), and execute them from the command-line.
+  directories) as the *.php equivalent of these *.phps counterparts, and execute
+  them from the command-line.
+
+- You *should* now be ready to login. Please note that;
+
+  - The login dialog currently allows only a full DN, or a value of the mail
+    attribute of any LDAP object in the tree under the domain root dn.
+
+    See: https://issues.kolab.org/show_bug.cgi?id=594
+
+  - No effective rights to LDAP in general or LDAP objects in particular
+    currently propagate to the client UI properly. I.e., a regular user will be
+    presented with the opportunity to "Add a user", but can't. The Web Admin and
+    API are designed to always use the user's bind credentials.
+
+    See: https://issues.kolab.org/show_bug.cgi?id=661
