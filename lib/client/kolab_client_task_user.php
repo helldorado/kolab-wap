@@ -232,6 +232,7 @@ class kolab_client_task_user extends kolab_client_task
             'uidnumber'                 => 'system',
             'gidnumber'                 => 'system',
             'homedirectory'             => 'system',
+            'nsrole'                    => 'system',
 
             'mailquota'                 => 'config',
             'cyrususerquota'            => 'config',
@@ -292,6 +293,17 @@ class kolab_client_task_user extends kolab_client_task
                 'section'  => 'personal',
                 'value'    => $accttypes[$type]['content'],
             );
+
+            // Roles (extract role names)
+            if (!empty($fields['nsrole']) && !empty($data['nsrole'])) {
+                $data['nsrole'] = array_combine($data['nsrole'], $data['nsrole']);
+                foreach ($data['nsrole'] as $dn => $val) {
+                    // @TODO: maybe ldap_explode_dn() would be better?
+                    if (preg_match('/^cn=([^,]+)/i', $val, $m)) {
+                        $data['nsrole'][$dn] = $m[1];
+                    }
+                }
+            }
         }
 
         // Create form object and populate with fields

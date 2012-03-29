@@ -460,7 +460,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
         $keyword = array('value' => $postdata['search']);
         $data    = array(
-            'attributes' => array('displayname', 'mail'),
+            'attributes' => array('cn'),
             'page_size'  => 15,
             'search'     => array(
                 'displayname' => $keyword,
@@ -474,7 +474,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
         // convert to key=>value array
         foreach ($list as $idx => $value) {
-            $list[$idx] = is_array($value['cn']) ? implode('/', $value['cn']) : $value['cn'];
+            $list[$idx] = $value['cn'];
         }
 
         return $list;
