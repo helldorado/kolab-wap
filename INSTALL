@@ -1,0 +1,51 @@
+= Kolab WAP Installation Instructions =
+
+- Put the contents of this directory somewhere you can visit with a browser.
+
+- Edit public_html/.htaccess to your needs. An example (for
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/public_html/.htaccess) is as
+  follows:
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    # NOTE: This needs to point to the base uri of your installation.
+    RewriteBase /~vanmeeuwen/kolab-wap/public_html
+
+    # Rewrite URLs of the form 'x' to the form 'index.php?q=x'.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !=/favicon.ico
+    RewriteRule ^api/(.*)\.(.*)$ api/index.php?service=$1&method=$2 [L,QSA]
+
+</IfModule>
+AddDefaultCharset   UTF-8
+php_value error_reporting      6135
+
+- Include in /etc/kolab/kolab.conf:
+
+[kolab_wap]
+; Database URI
+sql_uri = mysql://kolab_wap:*****@mysql.klab.cc/kolab_wap
+; URI to the API location, if not default. Example URI included
+;api_url = http://admin.klab.cc/~vanmeeuwen/kolab-wap/public_html/api/
+skin = default
+
+- Make /etc/kolab/kolab.conf readable for the apache group, for example:
+
+# chown kolab-n kolab-n /etc/kolab/kolab.conf
+# gpasswd -a apache kolab-n
+
+- Initialize the kolab_wap database. For an example SQL file, please see:
+
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/kolab_wap.sql
+
+  If you wanted to play with alternate types / attribute settings, please see
+  the following locations for sample PHP code you could use to insert your own
+  user_types, group_types and options;
+
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-user_types.phps
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-group_type-kolab.phps
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-preferredlanguages.phps
+
+  Save these to the kolab-wap root directory (next to the lib/ and public_html/
+  directories), and execute them from the command-line.
