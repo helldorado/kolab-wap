@@ -460,6 +460,36 @@ class LDAP
         return $groups;
     }
 
+    public function group_add($attrs, $type = null)
+    {
+        if ($type == null) {
+            $type_str = 'group';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $type));
+            $type_str = $_key['key'];
+        }
+
+        // Check if the user_type has a specific base DN specified.
+        $base_dn = $this->conf->get($this->domain, $type_str . "_group_base_dn");
+        // If not, take the regular user_base_dn
+        if (!$base_dn)
+            $base_dn = $this->conf->get($this->domain, "group_base_dn");
+
+        // If no user_base_dn either, take the user type specific from the parent
+        // configuration
+        if (!$base_dn)
+            $base_dn = $this->conf->get('ldap', $type_str . "_group_base_dn");
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->_add($dn, $attrs);
+    }
+
+
     public function group_info($group)
     {
         $is_dn = ldap_explode_dn($group, 1);
@@ -794,6 +824,15 @@ class LDAP
     {
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+//        console("Entry DN", $entry_dn);
+//        console("Attributes", $attributes);
+
+        foreach ($attributes as $attr_name => $attr_value) {
+            if (empty($attr_value)) {
+                unset($attributes[$attr_name]);
+            }
+        }
 
         if (($add_result = ldap_add($this->conn, $entry_dn, $attributes)) == false) {
             // Issue warning

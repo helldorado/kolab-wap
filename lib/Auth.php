@@ -171,6 +171,11 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
     }
 
+    public function group_add($attributes, $type=NULL)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $type);
+    }
+
     public function group_info($groupdata)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata);
