@@ -131,7 +131,7 @@ class Conf {
                 " with \$key2: " . $key2
             );
 
-        return null;
+        return false;
     }
 
     public function expand($str, $custom = FALSE)
