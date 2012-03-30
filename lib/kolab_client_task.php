@@ -783,7 +783,7 @@ class kolab_client_task
             if (!empty($auto_attribs)) {
                 $data = array_merge((array)$data, array(
                     'attributes'  => $auto_attribs,
-                    'object_name' => $name,
+                    'object_type' => $name,
                 ));
                 $resp = $this->api->post('form_value.generate', null, $data);
                 $data = array_merge((array)$data, (array)$resp->get());
