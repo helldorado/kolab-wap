@@ -38,6 +38,26 @@ class kolab_recipient_policy {
         return $args;
     }
 
+    static function normalize_groupdata($groupdata)
+    {
+        //console("IN", $groupdata);
+        foreach ($groupdata as $key => $value) {
+            if (isset($groupdata['preferredlanguage'])) {
+                setlocale(LC_ALL, $groupdata['preferredlanguage']);
+            }
+
+            if (!is_array($groupdata[$key])) {
+                $orig_value = $groupdata[$key];
+
+                $groupdata[$key] = iconv('UTF-8', 'ASCII//TRANSLIT', $groupdata[$key]);
+                $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $groupdata[$key]);
+            }
+        }
+
+        //console("OUT", $groupdata);
+        return $groupdata;
+    }
+
     static function normalize_userdata($userdata)
     {
         $keymap = Array(
@@ -64,6 +84,14 @@ class kolab_recipient_policy {
         }
 
         return $userdata;
+    }
+
+    static function primary_mail_group($groupdata)
+    {
+        // Expect only a cn@domain.tld, really
+        $groupdata = self::normalize_groupdata($groupdata);
+
+        return $groupdata['cn'] . '@' . $_SESSION['user']->get_domain();
     }
 
     static function primary_mail($userdata)

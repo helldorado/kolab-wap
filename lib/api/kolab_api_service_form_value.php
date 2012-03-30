@@ -60,6 +60,7 @@ class kolab_api_service_form_value extends kolab_api_service
     public function generate($getdata, $postdata)
     {
         $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+
         $attributes = (array) $postdata['attributes'];
         $result     = array();
 
@@ -68,10 +69,16 @@ class kolab_api_service_form_value extends kolab_api_service
                 continue;
             }
 
-            $method_name = 'generate_' . strtolower($attr_name);
+            $method_name = 'generate_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
 
             if (!method_exists($this, $method_name)) {
-                continue;
+                console("Method $method_name doesn't exist");
+
+                $method_name = 'generate_' . strtolower($attr_name);
+
+                if (!method_exists($this, $method_name)) {
+                    continue;
+                }
             }
 
             $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
@@ -269,6 +276,11 @@ class kolab_api_service_form_value extends kolab_api_service
         return $this->generate_primary_mail($postdata, $attribs);
     }
 
+    private function generate_mail_group($postdata, $attribs = array())
+    {
+        return $this->generate_primary_mail_group($postdata, $attribs);
+    }
+
     private function generate_mailalternateaddress($postdata, $attribs = array())
     {
         return $this->generate_secondary_mail($postdata, $attribs);
@@ -305,6 +317,22 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             $primary_mail = kolab_recipient_policy::primary_mail($postdata);
+
+            return $primary_mail;
+        }
+    }
+
+    private function generate_primary_mail_group($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            $primary_mail = kolab_recipient_policy::primary_mail_group($postdata);
 
             return $primary_mail;
         }
