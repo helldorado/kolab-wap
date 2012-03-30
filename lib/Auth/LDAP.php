@@ -1171,22 +1171,24 @@ class LDAP
 
         $entries = self::normalize_result($this->search($dn));
 
+        //console("ENTRIES for \$dn $dn", $entries);
+
         foreach ($entries as $entry_dn => $entry) {
             if (!isset($entry['objectclass'])) {
                 continue;
             }
 
             foreach ($entry['objectclass'] as $objectclass) {
-                switch ($objectclass) {
-                case "groupofnames":
-                    $group_members = array_merge($group_members, $this->_list_group_member($entry_dn, $entry));
-                    break;
-                case "groupofuniquenames":
-                    $group_members = array_merge($group_members, $this->_list_group_uniquemember($entry_dn, $entry));
-                    break;
-                case "groupofurls":
-                    $group_members = array_merge($group_members, $this->_list_group_memberurl($entry_dn, $entry));
-                    break;
+                switch (strtolower($objectclass)) {
+                    case "groupofnames":
+                        $group_members = array_merge($group_members, $this->_list_group_member($entry_dn, $entry));
+                        break;
+                    case "groupofuniquenames":
+                        $group_members = array_merge($group_members, $this->_list_group_uniquemember($entry_dn, $entry));
+                        break;
+                    case "groupofurls":
+                        $group_members = array_merge($group_members, $this->_list_group_memberurl($entry_dn, $entry));
+                        break;
                 }
             }
         }
@@ -1227,13 +1229,18 @@ class LDAP
 
     private function _list_group_uniquemember($dn, $entry)
     {
-        error_log("Called _list_group_uniquemember(" . $dn . ")");
+        //console("Called _list_group_uniquemember(" . $dn . ")", $entry);
 
         // Use the member attributes to return an array of member ldap objects
         // NOTE that the member attribute is supposed to contain a DN
         $group_members = array();
         if (empty($entry['uniquemember'])) {
             return $group_members;
+        }
+
+        if (is_string($entry['uniquemember'])) {
+            //console("uniquemember for entry is not an array");
+            $entry['uniquemember'] = Array( $entry['uniquemember'] );
         }
 
         foreach ($entry['uniquemember'] as $member) {
@@ -1247,10 +1254,10 @@ class LDAP
             $group_members[$member] = array_pop($member_entry);
 
             // Nested groups
-//            $group_group_members = $this->_list_group_members($member, $member_entry);
-//            if ($group_group_members) {
-//                $group_members = array_merge($group_group_members, $group_members);
-//            }
+            $group_group_members = $this->_list_group_members($member, $member_entry);
+            if ($group_group_members) {
+                $group_members = array_merge($group_group_members, $group_members);
+            }
         }
 
         return array_filter($group_members);
