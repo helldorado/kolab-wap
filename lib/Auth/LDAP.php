@@ -64,8 +64,19 @@ class LDAP
     {
         $this->conf = Conf::get_instance();
 
+        // See if we are to connect to any domain explicitly defined.
+        if (!isset($domain) || empty($domain)) {
+            // If not, attempt to get the domain from the session.
+            if (isset($_SESSION['user'])) {
+                $domain = $_SESSION['user']->get_domain();
+            }
+        }
+
+        // Continue and default to the primary domain.
         $this->domain       = $domain ? $domain : $this->conf->get('primary_domain');
-        $this->_ldap_uri    = $this->conf->get('uri');
+
+        $this->_ldap_uri    = $this->conf->get('ldap_uri');
+
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
         $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
         $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
@@ -955,7 +966,7 @@ class LDAP
         if (empty($search) || !is_array($search) || empty($search['params'])) {
             return null;
         }
-    
+
         $filter = '';
         foreach ((array) $search['params'] as $field => $param) {
             $value = self::_quote_string($param['value']);
