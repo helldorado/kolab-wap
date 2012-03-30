@@ -171,9 +171,19 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
     }
 
+    public function get_attribute($subject, $attribute)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->get_attribute($subject, $attribute);
+    }
+
     public function group_add($attributes, $type=NULL)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $type);
+    }
+
+    public function group_find_by_attribute($attribute)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_find_by_attribute($attribute);
     }
 
     public function group_info($groupdata)
@@ -234,6 +244,11 @@ class Auth {
         $roles = $this->_auth[$domain]->list_roles($attributes, $search, $params);
 
         return $roles;
+    }
+
+    public function modify_entry_attributes($subject, $mod_array)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->modify_entry_attributes($subject, $mod_array);
     }
 
     public function primary_for_valid_domain($domain)

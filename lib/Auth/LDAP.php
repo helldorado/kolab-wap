@@ -243,6 +243,44 @@ class LDAP
         return $attributes;
     }
 
+    public function get_attribute($subject_dn, $attribute)
+    {
+        $result = ldap_read($this->conn, $subject_dn, '(objectclass=*)', (array)($attribute));
+        console($result);
+    }
+
+    public function group_find_by_attribute($attribute)
+    {
+        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
+            return false;
+        }
+
+        if (empty($attribute[key($attribute)])) {
+            return false;
+        }
+
+        $filter = "(&";
+
+        foreach ($attribute as $key => $value) {
+            $filter .= "(" . $key . "=" . $value . ")";
+        }
+
+        $filter .= ")";
+
+        $base_dn = $this->domain_root_dn($this->domain);
+
+        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
+
+        if (count($result) > 0) {
+            error_log("Results found: " . implode(', ', array_keys($result)));
+            return $result;
+        }
+        else {
+            error_log("No result");
+            return false;
+        }
+    }
+
     public function list_domains()
     {
         $domains = $this->domains_list();
@@ -318,6 +356,18 @@ class LDAP
         }
 
         return $roles;
+    }
+
+    public function modify_entry_attributes($subject_dn, $attributes)
+    {
+        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
+
+        if ($result)
+            return true;
+        else
+            return false;
     }
 
     public function user_add($attrs, $type = null)

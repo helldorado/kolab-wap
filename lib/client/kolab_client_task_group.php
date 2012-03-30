@@ -267,7 +267,7 @@ class kolab_client_task_group extends kolab_client_task
         }
 
         // Create form object and populate with fields
-        $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data);
+        $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
 
         $form->set_title(kolab_html::escape($title));
 

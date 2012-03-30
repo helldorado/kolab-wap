@@ -378,6 +378,9 @@ class kolab_client_task
      */
     public function config_get($name, $fallback = null)
     {
+        if ($name == "devel_mode")
+            return TRUE;
+
         $value = $this->config->get('kolab_wap', $name);
         return $value !== null ? $value : $fallback;
     }
@@ -819,19 +822,32 @@ class kolab_client_task
                 $debug = str_replace("\n    ", "\n", $debug);
                 $debug = '<pre class="debug">' . $debug . '</pre>';
                 $fields['debug'] = array(
-                    'label'   => 'debug',
-                    'section' => 'system',
-                    'value'   => $debug,
-                );
+                        'label'   => 'debug',
+                        'section' => 'system',
+                        'value'   => $debug,
+                    );
             }
         }
 
         // Add object type hidden field
         $fields['object_type'] = array(
-            'section'  => 'system',
-            'type'     => kolab_form::INPUT_HIDDEN,
-            'value'    => $name,
-        );
+                'section'  => 'system',
+                'type'     => kolab_form::INPUT_HIDDEN,
+                'value'    => $name,
+            );
+
+        if (!$add_mode) {
+            $unique_attr = $this->config->get('unique_attr');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            $fields[$unique_attr] = Array(
+                    'section'   => 'system',
+                    'type'      => kolab_form::INPUT_HIDDEN,
+                    'value'     => $data[$unique_attr]
+                );
+        }
 
         return array($fields, $types, $type);
     }
@@ -848,7 +864,7 @@ class kolab_client_task
      *
      * @return kolab_form HTML Form object
      */
-    protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data)
+    protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data, $add_mode)
     {
         // Assign sections to fields
         foreach ($fields as $idx => $field) {
@@ -942,7 +958,7 @@ class kolab_client_task
 
         $form->add_button(array(
             'value'   => kolab_html::escape($this->translate('submit.button')),
-            'onclick' => "kadm.{$name}_save()",
+            'onclick' => $add_mode ? "kadm.{$name}_add()" : "kadm.{$name}_edit()",
         ));
 
         if (!empty($data['entrydn'])) {

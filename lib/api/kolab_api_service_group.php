@@ -127,6 +127,109 @@ class kolab_api_service_group extends kolab_api_service
         return FALSE;
     }
 
+    public function group_edit($getdata, $postdata)
+    {
+        $gta             = $this->object_type_attributes('group', $postdata['type_id']);
+        $form_service    = $this->controller->get_service('form_value');
+        $group_attributes = array();
+    
+        $conf = Conf::get_instance();
+
+        $unique_attr = $conf->get('unique_attr');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        if (isset($gta['form_fields'])) {
+            foreach ($gta['form_fields'] as $key => $value) {
+                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                    throw new Exception("Missing input value for $key", 345);
+                }
+                else {
+                    $group_attributes[$key] = $postdata[$key];
+                } 
+            }
+        }
+
+        if (isset($gta['auto_form_fields'])) {
+            foreach ($gta['auto_form_fields'] as $key => $value) {
+                if (empty($postdata[$key])) {
+                    $postdata['attributes'] = array($key);
+                    $res                    = $form_service->generate($getdata, $postdata);
+                    $postdata[$key]         = $res[$key];
+                }
+                $group_attributes[$key] = $postdata[$key];
+            }
+        }
+
+        if (isset($gta['fields'])) {
+            foreach ($gta['fields'] as $key => $value) {
+                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                    $group_attributes[$key] = $gta['fields'][$key];
+                } else {
+                    $group_attributes[$key] = $postdata[$key];
+                }
+            }
+
+            $group_attributes[$unique_attr] = $postdata[$unique_attr];
+        }
+
+        $auth = Auth::get_instance();
+        $auth->connect();
+
+        // Now that values have been re-generated where necessary, compare
+        // the new group attributes to the original group attributes.
+        $_group = $auth->group_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
+
+        if (!$_group) {
+            console("Could not find group");
+            return false;
+        }
+
+        $_group_dn = key($_group);
+        $_group = $this->group_info(Array('group' => $_group_dn), Array());
+
+        $mod_array = Array(
+                "add" => Array(),
+                "del" => Array(),
+                "replace" => Array(),
+            );
+
+        foreach ($_group as $_group_attr => $_group_value) {
+            if (array_key_exists($_group_attr, $group_attributes)) {
+                if (!($group_attributes[$_group_attr] === $_group_value)) {
+                    console("Attribute $_group_attr changed from", $_group_value, "to", $group_attributes[$_group_attr]);
+                    $mod_array['replace'][$_group_attr] = $_group_value;
+                }
+            } else {
+                // TODO: Since we're not shipping the entire object back and forth, and only post
+                // part of the data... we don't know what is actually removed (think modifiedtimestamp, etc.)
+                console("Group attribute not mentioned, but not explicitly removed... by assumption");
+            }
+        }
+
+        foreach ($group_attributes as $attr => $value) {
+            if (array_key_exists($attr, $_group)) {
+                if (!($_group[$attr] === $value)) {
+                    $mod_array['replace'][$attr] = $value;
+                }
+            } else {
+                $mod_array['add'][$attr] = $value;
+            }
+        }
+
+        console($mod_array);
+
+        $result = $auth->modify_entry_attributes($_group_dn, $mod_array);
+
+        if ($result) {
+            return $mod_array;
+        }
+
+        return false;
+
+    }
+
     /**
      * Group information.
      *
@@ -142,6 +245,7 @@ class kolab_api_service_group extends kolab_api_service
         }
 
         $auth   = Auth::get_instance();
+        $conf   = Conf::get_instance();
         $result = $auth->group_info($getdata['group']);
 
         // normalize result
@@ -151,6 +255,38 @@ class kolab_api_service_group extends kolab_api_service
 
         // add group type id to the result                                                                                                                       
         $result['type_id'] = $this->object_type_id('group', $result['objectclass']);
+
+        // Search for attributes associated with the type_id that are not part
+        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
+        if ($result['type_id']) {
+            $uta   = $this->object_type_attributes('group', $result['type_id']);
+            $attrs = array();
+
+            foreach ($uta as $field_type => $attributes) {
+                foreach ($attributes as $attribute => $data) {
+                    if (!array_key_exists($attribute, $result)) {
+                        $attrs[] = $attribute;
+                    }
+                }
+            }
+
+            // Insert the persistent, unique attribute
+            $unique_attr = $conf->get('unique_attr');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            if (!array_key_exists($unique_attr, $attrs)) {
+                $attrs[] = 'nsuniqueid';
+            }
+
+            if (!empty($attrs)) {
+                $attrs = $auth->user_attributes($result['entrydn'], $attrs);
+                if (!empty($attrs)) {
+                    $result = array_merge($result, $attrs);
+                }
+            }
+        }
 
         //console($result);
 

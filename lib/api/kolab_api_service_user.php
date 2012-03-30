@@ -145,6 +145,7 @@ class kolab_api_service_user extends kolab_api_service
         }
 
         $auth   = Auth::get_instance();
+        $conf   = Conf::get_instance();
         $user   = $getdata['user'];
         $result = $auth->user_info($user);
 
@@ -168,6 +169,16 @@ class kolab_api_service_user extends kolab_api_service
                         $attrs[] = $attribute;
                     }
                 }
+            }
+
+            // Insert the persistent, unique attribute
+            $unique_attr = $conf->get('unique_attr');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            if (!array_key_exists($unique_attr, $attrs)) {
+                $attrs[] = 'nsuniqueid';
             }
 
             if (!empty($attrs)) {

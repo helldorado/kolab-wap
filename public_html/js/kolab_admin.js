@@ -1093,6 +1093,56 @@ function kolab_admin()
     this.command('group.list', {page: page});
   };
 
+  this.group_add = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id);
+
+    if (reload) {
+      data.section = section;
+      this.http_post('group.add', {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    this.set_busy(true, 'saving');
+    this.api_post('group.add', data, 'group_add_response');
+  };
+
+  this.group_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('group.add.success');
+    this.command('group.list', {page: this.env.list_page});
+  };
+
+  this.group_edit = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id);
+
+    if (reload) {
+      data.section = section;
+      this.http_post('group.edit', {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    this.set_busy(true, 'saving');
+    this.api_post('group.edit', data, 'group_edit_response');
+  };
+
+  this.group_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('group.edit.success');
+    this.command('group.list', {page: this.env.list_page});
+  };
+
   this.group_save = function(reload, section)
   {
     var data = this.serialize_form('#'+this.env.form_id);
