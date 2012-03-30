@@ -52,7 +52,7 @@ class kolab_api_service_group_types extends kolab_api_service
      */
     public function group_types_list($get, $post)
     {
-        $group_types = $this->group_types();
+        $group_types = $this->object_types('group');
 
         return array(
             'list'  => $group_types,

@@ -52,7 +52,7 @@ class kolab_api_service_user_types extends kolab_api_service
      */
     public function user_types_list($get, $post)
     {
-        $user_types = $this->user_types();
+        $user_types = $this->object_types('user');
 
         return array(
             'list'  => $user_types,

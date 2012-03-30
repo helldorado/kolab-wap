@@ -59,7 +59,7 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_add($getdata, $postdata)
     {
-        $uta             = $this->user_type_attributes($postdata['user_type_id']);
+        $uta             = $this->object_type_attributes('user', $postdata['type_id']);
         $form_service    = $this->controller->get_service('form_value');
         $user_attributes = array();
 
@@ -96,7 +96,7 @@ class kolab_api_service_user extends kolab_api_service
         }
 
         $auth = Auth::get_instance();
-        $result = $auth->user_add($user_attributes, $postdata['user_type_id']);
+        $result = $auth->user_add($user_attributes, $postdata['type_id']);
 
         if ($result) {
             return $user_attributes;
@@ -154,12 +154,12 @@ class kolab_api_service_user extends kolab_api_service
         $result['entrydn'] = $dn;
 
         // add user type id to the result
-        $result['user_type_id'] = $this->object_type_id('user', $result['objectclass']);
+        $result['type_id'] = $this->object_type_id('user', $result['objectclass']);
 
         // Search for attributes associated with the type_id that are not part
         // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
-        if ($result['user_type_id']) {
-            $uta   = $this->user_type_attributes($result['user_type_id']);
+        if ($result['type_id']) {
+            $uta   = $this->object_type_attributes('user', $result['type_id']);
             $attrs = array();
 
             foreach ($uta as $field_type => $attributes) {

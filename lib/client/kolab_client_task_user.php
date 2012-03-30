@@ -201,8 +201,8 @@ class kolab_client_task_user extends kolab_client_task
 
         // field-to-section map and fields order
         $fields_map = array(
-            'user_type_id'              => 'personal',
-            'user_type_id_name'         => 'personal',
+            'type_id'                   => 'personal',
+            'type_id_name'              => 'personal',
             'givenname'                 => 'personal',
             'sn'                        => 'personal',
             'displayname'               => 'personal',
@@ -255,7 +255,7 @@ class kolab_client_task_user extends kolab_client_task
         }
 
         // Add user type id selector
-        $fields['user_type_id'] = array(
+        $fields['type_id'] = array(
             'section'  => 'personal',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
@@ -269,7 +269,7 @@ class kolab_client_task_user extends kolab_client_task
 
         // Hide account type selector if there's only one type
         if (count($accttypes) < 2 || !$add_mode) {
-            $fields['user_type_id']['type'] = kolab_form::INPUT_HIDDEN;
+            $fields['type_id']['type'] = kolab_form::INPUT_HIDDEN;
         }
 
         // Create mode
@@ -288,8 +288,8 @@ class kolab_client_task_user extends kolab_client_task
             $data['userpassword'] = '';
 
             // Add user type name
-            $fields['user_type_id_name'] = array(
-                'label'    => 'user.user_type_id',
+            $fields['type_id_name'] = array(
+                'label'    => 'user.type_id',
                 'section'  => 'personal',
                 'value'    => $accttypes[$type]['content'],
             );

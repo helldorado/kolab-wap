@@ -52,22 +52,14 @@ class kolab_api_service_form_value extends kolab_api_service
      * @param array $getdata   GET parameters
      * @param array $postdata  POST parameters. Required parameters:
      *                         - attributes: list of attribute names
-     *                         - user_type_id or group_type_id: Type identifier
+     *                         - type_id: Type identifier
+     *                         - object_type: Object type (user, group, etc.)
      *
      * @return array Response with attribute name as a key
      */
     public function generate($getdata, $postdata)
     {
-        if (isset($postdata['user_type_id'])) {
-            $attribs = $this->user_type_attributes($postdata['user_type_id']);
-        }
-        else if (isset($postdata['group_type_id'])) {
-            $attribs = $this->group_type_attributes($postdata['group_type_id']);
-        }
-        else {
-            $attribs = array();
-        }
-
+        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $attributes = (array) $postdata['attributes'];
         $result     = array();
 
@@ -93,29 +85,18 @@ class kolab_api_service_form_value extends kolab_api_service
      *
      * @param array $getdata   GET parameters
      * @param array $postdata  POST parameters. Required parameters:
-     *                         - user_type_id or group_type_id: Type identifier
+     *                         - type_id: Type identifier
+     *                         - object_type: Object type (user, group, etc.)
      *
      * @return array Response with attribute name as a key
      */
     public function validate($getdata, $postdata)
     {
-        if (isset($postdata['user_type_id'])) {
-            $attribs = $this->user_type_attributes($postdata['user_type_id']);
-        }
-        else if (isset($postdata['group_type_id'])) {
-            $attribs = $this->group_type_attributes($postdata['group_type_id']);
-        }
-        else {
-            $attribs = array();
-        }
-
-        $result = array();
+        $attribs = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+        $result  = array();
 
         foreach ((array)$postdata as $attr_name => $attr_value) {
-            if (empty($attr_name)) {
-                continue;
-            }
-            if (preg_match('/^[a-z]+_type_id$/i', $attr_name)) {
+            if (empty($attr_name) || $attr_name == 'type_id' || $attr_name == 'object_type') {
                 continue;
             }
 
@@ -138,22 +119,14 @@ class kolab_api_service_form_value extends kolab_api_service
      * @param array $getdata   GET parameters
      * @param array $postdata  POST parameters. Required parameters:
      *                         - attributes: list of attribute names
-     *                         - user_type_id or group_type_id: Type identifier
+     *                         - type_id: Type identifier
+     *                         - object_type: Object type (user, group, etc.)
      *
      * @return array Response with attribute name as a key
      */
     public function select_options($getdata, $postdata)
     {
-        if (isset($postdata['user_type_id'])) {
-            $attribs = $this->user_type_attributes($postdata['user_type_id']);
-        }
-        else if (isset($postdata['group_type_id'])) {
-            $attribs = $this->group_type_attributes($postdata['group_type_id']);
-        }
-        else {
-            $attribs = array();
-        }
-
+        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $attributes = (array) $postdata['attributes'];
         $result     = array();
 
@@ -181,22 +154,14 @@ class kolab_api_service_form_value extends kolab_api_service
      * @param array $getdata   GET parameters
      * @param array $postdata  POST parameters. Required parameters:
      *                         - attribute: attribute name
-     *                         - user_type_id or group_type_id: Type identifier
+     *                         - type_id: Type identifier
+     *                         - object_type: Object type (user, group, etc.)
      *
      * @return array Response with attribute name as a key
      */
     public function list_options($getdata, $postdata)
     {
-        if (isset($postdata['user_type_id'])) {
-            $attribs = $this->user_type_attributes($postdata['user_type_id']);
-        }
-        else if (isset($postdata['group_type_id'])) {
-            $attribs = $this->group_type_attributes($postdata['group_type_id']);
-        }
-        else {
-            $attribs = array();
-        }
-
+        $attribs   = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $attr_name = $postdata['attribute'];
         $result    = array(
             // return search value, so client can match response to request

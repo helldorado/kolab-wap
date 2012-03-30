@@ -202,13 +202,13 @@ class kolab_client_task_group extends kolab_client_task
 
         // field-to-section map and fields order
         $fields_map = array(
-            'group_type_id'       => 'system',
-            'group_type_id_name'  => 'system',
-            'cn'                  => 'system',
-            'gidnumber'           => 'system',
-            'mail'                => 'system',
-            'uniquemember'        => 'system',
-            'memberurl'           => 'system',
+            'type_id'       => 'system',
+            'type_id_name'  => 'system',
+            'cn'            => 'system',
+            'gidnumber'     => 'system',
+            'mail'          => 'system',
+            'uniquemember'  => 'system',
+            'memberurl'     => 'system',
         );
 
         // Prepare fields
@@ -222,7 +222,7 @@ class kolab_client_task_group extends kolab_client_task
         }
 
         // Add user type id selector
-        $fields['group_type_id'] = array(
+        $fields['type_id'] = array(
             'section'  => 'system',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
@@ -231,7 +231,7 @@ class kolab_client_task_group extends kolab_client_task
 
         // Hide account type selector if there's only one type
         if (count($accttypes) < 2 || !$add_mode) {
-            $fields['group_type_id']['type'] = kolab_form::INPUT_HIDDEN;
+            $fields['type_id']['type'] = kolab_form::INPUT_HIDDEN;
         }
 
         // Create mode
@@ -244,8 +244,8 @@ class kolab_client_task_group extends kolab_client_task
             $title = $data['cn'];
 
             // Add user type name
-            $fields['group_type_id_name'] = array(
-                'label'    => 'group.group_type_id',
+            $fields['type_id_name'] = array(
+                'label'    => 'group.type_id',
                 'section'  => 'system',
                 'value'    => $accttypes[$type]['content'],
             );

@@ -55,7 +55,7 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function group_add($getdata, $postdata)
     {
-        $gta = $this->group_type_attributes($postdata['group_type_id']);
+        $gta = $this->object_type_attributes('group', $postdata['type_id']);
         $group_attributes = array();
 
         if (isset($gta['form_fields'])) {
@@ -93,7 +93,7 @@ class kolab_api_service_group extends kolab_api_service
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->group_add($group_attributes, $postdata['group_type_id']);
+        $result = $auth->group_add($group_attributes, $postdata['type_id']);
 
         if ($result) {
             return $group_attributes;
@@ -150,7 +150,7 @@ class kolab_api_service_group extends kolab_api_service
         $result['entrydn'] = $dn;
 
         // add group type id to the result                                                                                                                       
-        $result['group_type_id'] = $this->object_type_id('group', $result['objectclass']);
+        $result['type_id'] = $this->object_type_id('group', $result['objectclass']);
 
         if ($result) {
             return $result;

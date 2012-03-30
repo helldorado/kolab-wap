@@ -691,11 +691,11 @@ class kolab_client_task
         $extra_fields = array_flip($extra_fields);
 
         // Selected account type
-        if (!empty($data[$name . '_type_id'])) {
-            $type = $data[$name . '_type_id'];
+        if (!empty($data['type_id'])) {
+            $type = $data['type_id'];
         }
         else {
-            $data[$name . '_type_id'] = $type = key($types);
+            $data['type_id'] = $type = key($types);
         }
 
         if ($type) {
@@ -814,6 +814,13 @@ class kolab_client_task
                 );
             }
         }
+
+        // Add object type hidden field
+        $fields['object_type'] = array(
+            'section'  => 'system',
+            'type'     => kolab_form::INPUT_HIDDEN,
+            'value'    => $name,
+        );
 
         return array($fields, $types, $type);
     }
