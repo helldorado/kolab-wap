@@ -104,7 +104,10 @@ class kolab_client_task
      */
     private function api_init()
     {
-       $url = $this->config_get('api_url', '');
+        $url = $this->config_get('api_url', '');
+
+        // TODO: Debug logging
+        console($url);
 
         if (!$url) {
             $url = kolab_utils::https_check() ? 'https://' : 'http://';
@@ -112,6 +115,9 @@ class kolab_client_task
             $url .= preg_replace('/\/?\?.*$/', '', $_SERVER['REQUEST_URI']);
             $url .= '/api';
         }
+
+        // TODO: Debug logging
+        console($url);
 
         $this->api = new kolab_client_api($url);
     }
