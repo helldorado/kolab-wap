@@ -107,7 +107,7 @@ class kolab_client_task
         $url = $this->config_get('api_url', '');
 
         // TODO: Debug logging
-        console($url);
+        //console($url);
 
         if (!$url) {
             $url = kolab_utils::https_check() ? 'https://' : 'http://';
@@ -117,7 +117,7 @@ class kolab_client_task
         }
 
         // TODO: Debug logging
-        console($url);
+        //console($url);
 
         $this->api = new kolab_client_api($url);
     }
@@ -172,6 +172,8 @@ class kolab_client_task
 
             if ($login['username']) {
                 $result = $this->api->login($login['username'], $login['password']);
+
+                //console($result);
 
                 if ($token = $result->get('session_token')) {
                     $user = array('token' => $token, 'domain' => $result->get('domain'));

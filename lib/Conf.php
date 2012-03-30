@@ -106,10 +106,17 @@ class Conf {
         // and we can try and iterate over it.
 
         // First, try the most exotic.
-        if (isset($_SESSION['user'])) {
-            $domain_section_name = $_SESSION['user']->get_domain();
-            if (isset($this->_conf[$domain_section_name][$key1])) {
-                return $this->_conf[$domain_section_name][$key1];
+        if (isset($_SESSION['user']) && method_exists($_SESSION['user'], 'get_domain')) {
+            try {
+                $domain_section_name = $_SESSION['user']->get_domain();
+                if (isset($this->_conf[$domain_section_name][$key1])) {
+                    return $this->_conf[$domain_section_name][$key1];
+                }
+            } catch (Exception $e) {
+                $domain_section_name = $this->get('kolab', 'primary_domain');
+                if (isset($this->_conf[$domain_section_name][$key1])) {
+                    return $this->_conf[$domain_section_name][$key1];
+                }
             }
         }
 
