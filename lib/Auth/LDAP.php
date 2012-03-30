@@ -64,6 +64,20 @@ class LDAP
     {
         $this->conf = Conf::get_instance();
 
+        // See if we are to connect to any domain explicitly defined.
+        if (!isset($domain) || empty($domain)) {
+            // If not, attempt to get the domain from the session.
+            if (isset($_SESSION['user'])) {
+                try {
+                    $domain = $_SESSION['user']->get_domain();
+                } catch (Exception $e) {
+                    // TODO: Debug logging
+                    error_log("Warning, user not authenticated yet");
+                }
+            }
+        }
+
+        // Continue and default to the primary domain.
         $this->domain       = $domain ? $domain : $this->conf->get('primary_domain');
         $this->_ldap_uri    = $this->conf->get('ldap_uri');
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
@@ -172,11 +186,11 @@ class LDAP
                 '/usr/lib64/mozldap/ldapsearch',
                 '-x',
                 '-h',
-                // TODO: Get from conf
-                'ldap.klab.cc',
+                $this->_ldap_server,
+                '-p',
+                $this->_ldap_port,
                 '-b',
-                // TODO: Get from conf
-                'dc=klab,dc=cc',
+                $conf->get('base_dn'),
                 '-D',
                 '"' . $_SESSION['user']->user_bind_dn . '"',
                 '-w',
@@ -549,8 +563,12 @@ class LDAP
     {
         $conf = Conf::get_instance();
 
-        $base_dn = $conf->get('ldap', 'user_base_dn');
-        $filter  = $conf->get('ldap', 'user_filter');
+        $base_dn = $conf->get('user_base_dn');
+
+        if (!$base_dn)
+            $base_dn = $conf->get('base_dn');
+
+        $filter  = $conf->get('user_filter');
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
@@ -568,8 +586,7 @@ class LDAP
     {
         $conf = Conf::get_instance();
 
-        // TODO: From config
-        $base_dn = "dc=klab,dc=cc";
+        $base_dn = $conf->get('base_dn');
         // TODO: From config
         $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
 
@@ -587,14 +604,12 @@ class LDAP
 
     private function groups_list($attributes = array(), $search = array())
     {
-        // TODO: From config
-        $base_dn = "ou=Groups,dc=klab,dc=cc";
-        // TODO: From config
-        $filter  = "(|"
-            ."(objectClass=kolabgroupofnames)"
-            ."(objectclass=kolabgroupofuniquenames)"
-            ."(objectclass=kolabgroupofurls)"
-            .")";
+        $base_dn = $conf->get('group_base_dn');
+
+        if (!$base_dn)
+            $base_dn = $conf->get('base_dn');
+
+        $filter  = $conf->get('group_filter');
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
@@ -630,6 +645,7 @@ class LDAP
                 else {
                     $result[$dn][$attr] = array();
                     for ($z = 0; $z < $__result[$x][$attr]["count"]; $z++) {
+                        // The first result in the array is the primary domain.
                         if ($z == 0 && $attr == $dn_attr) {
                             $result[$dn]['primary_domain'] = $__result[$x][$attr][$z];
                         }
@@ -955,7 +971,7 @@ class LDAP
         if (empty($search) || !is_array($search) || empty($search['params'])) {
             return null;
         }
-    
+
         $filter = '';
         foreach ((array) $search['params'] as $field => $param) {
             $value = self::_quote_string($param['value']);
@@ -1091,6 +1107,7 @@ class LDAP
 
     private function _get_group_dn($root_dn, $search_filter)
     {
+        // TODO: Why does this use privileged credentials?
         if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
@@ -1113,6 +1130,7 @@ class LDAP
 
     private function _get_user_dn($root_dn, $search_filter)
     {
+        // TODO: Why does this use privileged credentials?
         if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
             //message("WARNING: Invalid Service bind credentials supplied");
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));

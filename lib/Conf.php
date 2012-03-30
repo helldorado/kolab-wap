@@ -99,19 +99,46 @@ class Conf {
             }
         }
 
-        // Simple (global) settings may be obtained by calling the key and omitting
-        // the section. This goes for sections 'kolab', and whatever is the equivalent
-        // of 'kolab', 'auth_mechanism'.
-//        echo "<pre>";
-//        print_r($this->_conf);
-//        echo "</pre>";
+        // Simple (global) settings may be obtained by calling the key and
+        // omitting the section. This goes for sections 'kolab', and whatever
+        // is the equivalent of 'kolab', 'auth_mechanism', such as getting
+        // 'ldap_uri', which is in the [$domain] section, or in section 'ldap',
+        // and we can try and iterate over it.
 
+        // First, try the most exotic.
+        if (isset($_SESSION['user']) && method_exists($_SESSION['user'], 'get_domain')) {
+            try {
+                $domain_section_name = $_SESSION['user']->get_domain();
+                if (isset($this->_conf[$domain_section_name][$key1])) {
+                    return $this->_conf[$domain_section_name][$key1];
+                }
+            } catch (Exception $e) {
+                $domain_section_name = $this->get('kolab', 'primary_domain');
+                if (isset($this->_conf[$domain_section_name][$key1])) {
+                    return $this->_conf[$domain_section_name][$key1];
+                }
+            }
+        }
+
+        // Fall back to whatever is the equivalent of auth_mechanism as the
+        // section (i.e. 'ldap', or 'sql')
+        $auth_mech = $this->_conf['kolab']['auth_mechanism'];
+        if (isset($this->_conf[$auth_mech])) {
+            if (isset($this->_conf[$auth_mech][$key1])) {
+                return $this->_conf[$auth_mech][$key1];
+            }
+        }
+
+        // Fall back to global settings in the 'kolab' section.
         if (isset($this->_conf['kolab'][$key1])) {
             return $this->_conf['kolab'][$key1];
         }
-        else if (isset($this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1])) {
-            return $this->_conf[$this->_conf['kolab']['auth_mechanism']][$key1];
-        }
+
+        error_log("Could not find setting for \$key1: " . $key1 .
+                " with \$key2: " . $key2
+            );
+
+        return false;
     }
 
     public function expand($str, $custom = FALSE)
