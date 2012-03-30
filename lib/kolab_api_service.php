@@ -103,27 +103,38 @@ abstract class kolab_api_service
     }
 
     /**
-     * Detects user type ID for specified objectClass attribute value
+     * Detects object type ID for specified objectClass attribute value
      *
-     * @param array $object_class Value of objectClass attribute
+     * @param string $object_name   Name of the object (user, group, etc.)
+     * @param array  $object_class  Value of objectClass attribute
      *
-     * @return int User type identifier
+     * @return int Object type identifier
      */
-    protected function user_type_id($object_class)
+    protected function object_type_id($object_name, $object_class)
     {
         if (empty($object_class)) {
             return null;
         }
 
+        $method = $object_name . '_types';
+
+        if (!method_exists($this, $method)) {
+            return null;
+        }
+
         $object_class = array_map('strtolower', $object_class);
-        $user_types   = $this->user_types();
+        $object_types = $this->$method();
         $type_score   = -1;
         $type_id      = null;
 
         console("Data objectClasses: " . implode(", ", $object_class));
 
-        foreach ($user_types as $idx => $elem) {
+        foreach ($object_types as $idx => $elem) {
             $ref_class = $elem['attributes']['fields']['objectclass'];
+
+            if (empty($ref_class)) {
+                continue;
+            }
 
             console("Reference objectclasses for " . $elem['key'] . ": " . implode(", ", $ref_class));
 
@@ -137,7 +148,7 @@ abstract class kolab_api_service
 
 //            console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
 //            console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
-            console("Score for user type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
+            console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
 
             if ($elem_score > $type_score) {
                 $type_id    = $idx;

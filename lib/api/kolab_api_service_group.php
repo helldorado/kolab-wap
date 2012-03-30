@@ -149,6 +149,9 @@ class kolab_api_service_group extends kolab_api_service
         $result            = $result[$dn];
         $result['entrydn'] = $dn;
 
+        // add group type id to the result                                                                                                                       
+        $result['group_type_id'] = $this->object_type_id('group', $result['objectclass']);
+
         if ($result) {
             return $result;
         }

@@ -154,7 +154,7 @@ class kolab_api_service_user extends kolab_api_service
         $result['entrydn'] = $dn;
 
         // add user type id to the result
-        $result['user_type_id'] = $this->user_type_id($result['objectclass']);
+        $result['user_type_id'] = $this->object_type_id('user', $result['objectclass']);
 
         // Search for attributes associated with the type_id that are not part
         // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
