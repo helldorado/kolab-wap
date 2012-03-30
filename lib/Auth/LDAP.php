@@ -604,6 +604,8 @@ class LDAP
 
     private function groups_list($attributes = array(), $search = array())
     {
+        $conf = Conf::get_instance();
+
         $base_dn = $conf->get('group_base_dn');
 
         if (!$base_dn)
