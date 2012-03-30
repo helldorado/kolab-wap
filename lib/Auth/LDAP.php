@@ -65,7 +65,7 @@ class LDAP
         $this->conf = Conf::get_instance();
 
         $this->domain       = $domain ? $domain : $this->conf->get('primary_domain');
-        $this->_ldap_uri    = $this->conf->get('uri');
+        $this->_ldap_uri    = $this->conf->get('ldap_uri');
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
         $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
         $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);

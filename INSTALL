@@ -1,0 +1,74 @@
+= Kolab WAP Installation Instructions =
+
+- Put the contents of this directory somewhere you can visit with a browser.
+
+- Edit public_html/.htaccess to your needs. An example (for
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/public_html/.htaccess) is as
+  follows:
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    # NOTE: This needs to point to the base uri of your installation.
+    RewriteBase /~vanmeeuwen/kolab-wap/public_html
+
+    # Rewrite URLs of the form 'x' to the form 'index.php?q=x'.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !=/favicon.ico
+    RewriteRule ^api/(.*)\.(.*)$ api/index.php?service=$1&method=$2 [L,QSA]
+
+</IfModule>
+AddDefaultCharset   UTF-8
+php_value error_reporting      6135
+
+- Include in /etc/kolab/kolab.conf:
+
+[kolab_wap]
+; Database URI
+sql_uri = mysql://kolab_wap:*****@mysql.klab.cc/kolab_wap
+; URI to the API location, if not default. Example URI included
+;api_url = http://admin.klab.cc/~vanmeeuwen/kolab-wap/public_html/api/
+skin = default
+
+  NOTE: You need to create the user and database on the MySQL server, perhaps
+  like so:
+
+  # mysql -e "CREATE DATABASE kolab_wap;"
+  # mysql -e "GRANT ALL PRIVILEGES on kolab_wap.* to 'kolab_wap'@'admin.klab.cc'
+  > IDENTIFIED BY '*****';"
+  # mysql -e "FLUSH PRIVILEGES;"
+
+- Make /etc/kolab/kolab.conf readable for the apache group, for example:
+
+# chown kolab-n kolab-n /etc/kolab/kolab.conf
+# gpasswd -a apache kolab-n
+
+- Initialize the kolab_wap database. For an example SQL file, please see:
+
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/kolab_wap.sql
+
+  If you wanted to play with alternate types / attribute settings, please see
+  the following locations for sample PHP code you could use to insert your own
+  user_types, group_types and options;
+
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-user_types.phps
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-group_type-kolab.phps
+  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-preferredlanguages.phps
+
+  Save these to the kolab-wap root directory (next to the lib/ and public_html/
+  directories) as the *.php equivalent of these *.phps counterparts, and execute
+  them from the command-line.
+
+- You *should* now be ready to login. Please note that;
+
+  - The login dialog currently allows only a full DN, or a value of the mail
+    attribute of any LDAP object in the tree under the domain root dn.
+
+    See: https://issues.kolab.org/show_bug.cgi?id=594
+
+  - No effective rights to LDAP in general or LDAP objects in particular
+    currently propagate to the client UI properly. I.e., a regular user will be
+    presented with the opportunity to "Add a user", but can't. The Web Admin and
+    API are designed to always use the user's bind credentials.
+
+    See: https://issues.kolab.org/show_bug.cgi?id=661
