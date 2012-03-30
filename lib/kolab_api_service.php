@@ -60,8 +60,8 @@ abstract class kolab_api_service
     protected function object_type_attributes($object_name, $type_id, $required = true)
     {
         $supported = array('group', 'user');
-        if (!in_array($object_name, $supported)) {
-        
+        if (!$object_name || !in_array($object_name, $supported)) {
+            return array();
         }
     
         if (empty($type_id)) {
@@ -141,13 +141,13 @@ abstract class kolab_api_service
      */
     protected function object_types($object_name)
     {
-        if (!empty($this->cache['object_types']) && !empty($this->cache['object_types'][$object_name])) {
-            return $this->cache['object_types'][$object_name];
+        $supported = array('group', 'user');
+        if (!$object_name || !in_array($object_name, $supported)) {
+            return array();
         }
 
-        $supported = array('group', 'user');
-        if (!in_array($object_name, $supported)) {
-            return array();
+        if (!empty($this->cache['object_types']) && !empty($this->cache['object_types'][$object_name])) {
+            return $this->cache['object_types'][$object_name];
         }
 
         $sql_result   = $this->db->query("SELECT * FROM {$object_name}_types");

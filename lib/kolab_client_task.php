@@ -781,7 +781,10 @@ class kolab_client_task
         // (Re-|Pre-)populate auto_form_fields
         if ($add_mode) {
             if (!empty($auto_attribs)) {
-                $data = array_merge((array)$data, array('attributes' => $auto_attribs));
+                $data = array_merge((array)$data, array(
+                    'attributes'  => $auto_attribs,
+                    'object_name' => $name,
+                ));
                 $resp = $this->api->post('form_value.generate', null, $data);
                 $data = array_merge((array)$data, (array)$resp->get());
             }
