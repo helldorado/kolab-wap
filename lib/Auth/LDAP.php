@@ -1122,7 +1122,7 @@ class LDAP
 
         $search_results = ldap_search($this->conn, $root_dn, $search_filter);
 
-        if (ldap_count_entries($this->conn, $search_results) == 0) {
+        if (!$search_result || ldap_count_entries($this->conn, $search_results) == 0) {
             //message("No entries found for the user dn in " . __METHOD__);
             return false;
         }
