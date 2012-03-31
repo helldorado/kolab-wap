@@ -62,7 +62,10 @@ class kolab_api_service_group extends kolab_api_service
         if (isset($gta['form_fields'])) {
             foreach ($gta['form_fields'] as $key => $value) {
                 error_log("form field $key");
-                if (!isset($postdata[$key]) || $postdata[$key] === '') {
+                if (
+                        (!isset($postdata[$key]) || empty($postdata[$key]) &&
+                        !(array_key_exists('optional', $value) || $value['optional'])
+                    ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
@@ -73,10 +76,14 @@ class kolab_api_service_group extends kolab_api_service
 
         if (isset($gta['auto_form_fields'])) {
             foreach ($gta['auto_form_fields'] as $key => $value) {
-                if (!isset($postdata[$key])) {
-                    throw new Exception("Key not set: " . $key, 12356);
-                }
-                else {
+                if (empty($postdata[$key])) {
+                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                        $postdata['attributes'] = array($key);
+                        $res                    = $form_service->generate($getdata, $postdata);
+                        $postdata[$key]         = $res[$key];
+                        $group_attributes[$key]  = $postdata[$key];
+                    }
+                } else {
                     $group_attributes[$key] = $postdata[$key];
                 }
             }
@@ -84,12 +91,7 @@ class kolab_api_service_group extends kolab_api_service
 
         if (isset($gta['fields'])) {
             foreach ($gta['fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
-                    $group_attributes[$key] = $gta['fields'][$key];
-                }
-                else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
+                $group_attributes[$key] = $gta['fields'][$key];
             }
         }
 
@@ -162,7 +164,10 @@ class kolab_api_service_group extends kolab_api_service
 
         if (isset($gta['form_fields'])) {
             foreach ($gta['form_fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                if (
+                        (!isset($postdata[$key]) || empty($postdata[$key])) &&
+                        !(array_key_exists('optional', $value) && $value['optional'])
+                    ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
@@ -174,21 +179,21 @@ class kolab_api_service_group extends kolab_api_service
         if (isset($gta['auto_form_fields'])) {
             foreach ($gta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    $postdata['attributes'] = array($key);
-                    $res                    = $form_service->generate($getdata, $postdata);
-                    $postdata[$key]         = $res[$key];
+                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                        $postdata['attributes'] = array($key);
+                        $res                    = $form_service->generate($getdata, $postdata);
+                        $postdata[$key]         = $res[$key];
+                        $group_attributes[$key]  = $postdata[$key];
+                    }
+                } else {
+                    $group_attributes[$key] = $postdata[$key];
                 }
-                $group_attributes[$key] = $postdata[$key];
             }
         }
 
         if (isset($gta['fields'])) {
             foreach ($gta['fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
-                    $group_attributes[$key] = $gta['fields'][$key];
-                } else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
+                $group_attributes[$key] = $gta['fields'][$key];
             }
 
             $group_attributes[$unique_attr] = $postdata[$unique_attr];

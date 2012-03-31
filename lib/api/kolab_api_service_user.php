@@ -65,7 +65,10 @@ class kolab_api_service_user extends kolab_api_service
 
         if (isset($uta['form_fields'])) {
             foreach ($uta['form_fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                if (
+                        (!isset($postdata[$key]) || empty($postdata[$key])) &&
+                        !(array_key_exists('optional', $value) && $value['optional'])
+                    ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
@@ -77,11 +80,13 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    $postdata['attributes'] = array($key);
-                    $res                    = $form_service->generate($getdata, $postdata);
-                    $postdata[$key]         = $res[$key];
+                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                        $postdata['attributes'] = array($key);
+                        $res                    = $form_service->generate($getdata, $postdata);
+                        $postdata[$key]         = $res[$key];
+                        $user_attributes[$key] = $postdata[$key];
+                    }
                 }
-                $user_attributes[$key] = $postdata[$key];
             }
         }
 
@@ -164,7 +169,10 @@ class kolab_api_service_user extends kolab_api_service
 
         if (isset($uta['form_fields'])) {
             foreach ($uta['form_fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                if (
+                        (!isset($postdata[$key]) || empty($postdata[$key])) &&
+                        !(array_key_exists('optional', $value) && $value['optional']) 
+                    ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
@@ -176,21 +184,21 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    $postdata['attributes'] = array($key);
-                    $res                    = $form_service->generate($getdata, $postdata);
-                    $postdata[$key]         = $res[$key];
+                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                        $postdata['attributes'] = array($key);
+                        $res                    = $form_service->generate($getdata, $postdata);
+                        $postdata[$key]         = $res[$key];
+                        $user_attributes[$key]  = $postdata[$key];
+                    }
+                } else {
+                    $user_attributes[$key] = $postdata[$key];
                 }
-                $user_attributes[$key] = $postdata[$key];
             }
         }
 
         if (isset($uta['fields'])) {
             foreach ($uta['fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
-                    $user_attributes[$key] = $uta['fields'][$key];
-                } else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
+                $user_attributes[$key] = $uta['fields'][$key];
             }
 
             $user_attributes[$unique_attr] = $postdata[$unique_attr];
