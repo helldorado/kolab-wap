@@ -64,7 +64,7 @@ class kolab_api_service_group extends kolab_api_service
                 error_log("form field $key");
                 if (
                         (!isset($postdata[$key]) || empty($postdata[$key]) &&
-                        !(array_key_exists('optional', $value) || $value['optional'])
+                        (!array_key_exists('optional', $value) || !$value['optional'])
                     ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
@@ -77,7 +77,7 @@ class kolab_api_service_group extends kolab_api_service
         if (isset($gta['auto_form_fields'])) {
             foreach ($gta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                    if (!array_key_exists('optional', $value) || !$value['optional']) {
                         $postdata['attributes'] = array($key);
                         $res                    = $form_service->generate($getdata, $postdata);
                         $postdata[$key]         = $res[$key];
@@ -166,7 +166,7 @@ class kolab_api_service_group extends kolab_api_service
             foreach ($gta['form_fields'] as $key => $value) {
                 if (
                         (!isset($postdata[$key]) || empty($postdata[$key])) &&
-                        !(array_key_exists('optional', $value) && $value['optional'])
+                        (!array_key_exists('optional', $value) || !$value['optional'])
                     ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
@@ -179,7 +179,7 @@ class kolab_api_service_group extends kolab_api_service
         if (isset($gta['auto_form_fields'])) {
             foreach ($gta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                    if (!array_key_exists('optional', $value) || !$value['optional']) {
                         $postdata['attributes'] = array($key);
                         $res                    = $form_service->generate($getdata, $postdata);
                         $postdata[$key]         = $res[$key];

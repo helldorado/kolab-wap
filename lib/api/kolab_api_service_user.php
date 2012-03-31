@@ -59,6 +59,8 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_add($getdata, $postdata)
     {
+        console("user_add()", $postdata);
+
         $uta             = $this->object_type_attributes('user', $postdata['type_id']);
         $form_service    = $this->controller->get_service('form_value');
         $user_attributes = array();
@@ -67,7 +69,7 @@ class kolab_api_service_user extends kolab_api_service
             foreach ($uta['form_fields'] as $key => $value) {
                 if (
                         (!isset($postdata[$key]) || empty($postdata[$key])) &&
-                        !(array_key_exists('optional', $value) && $value['optional'])
+                        (!array_key_exists('optional', $value) || !$value['optional'])
                     ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
@@ -80,25 +82,27 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                    console("Key $key empty in \$postdata");
+                    // If the attribute is marked as optional, however...
+                    if (!array_key_exists('optional', $value) || !$value['optional']) {
                         $postdata['attributes'] = array($key);
                         $res                    = $form_service->generate($getdata, $postdata);
                         $postdata[$key]         = $res[$key];
                         $user_attributes[$key] = $postdata[$key];
                     }
+                } else {
+                    $user_attributes[$key] = $postdata[$key];
                 }
             }
         }
 
         if (isset($uta['fields'])) {
             foreach ($uta['fields'] as $key => $value) {
-                if (!isset($postdata[$key]) || empty($postdata[$key])) {
-                    $user_attributes[$key] = $uta['fields'][$key];
-                } else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
+                $user_attributes[$key] = $uta['fields'][$key];
             }
         }
+
+        console("user_add()", $user_attributes);
 
         $auth = Auth::get_instance();
         $result = $auth->user_add($user_attributes, $postdata['type_id']);
@@ -137,6 +141,8 @@ class kolab_api_service_user extends kolab_api_service
 
     public function user_edit($getdata, $postdata)
     {
+        console("\$postdata to user_edit()", $postdata);
+
         $uta             = $this->object_type_attributes('user', $postdata['type_id']);
         $form_service    = $this->controller->get_service('form_value');
         $user_attributes = array();
@@ -171,7 +177,7 @@ class kolab_api_service_user extends kolab_api_service
             foreach ($uta['form_fields'] as $key => $value) {
                 if (
                         (!isset($postdata[$key]) || empty($postdata[$key])) &&
-                        !(array_key_exists('optional', $value) && $value['optional']) 
+                        (!array_key_exists('optional', $value) || !$value['optional']) 
                     ) {
                     throw new Exception("Missing input value for $key", 345);
                 }
@@ -184,7 +190,7 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    if (!array_key_exists('optional', $value) || $value['optional']) {
+                    if (!array_key_exists('optional', $value) || !$value['optional']) {
                         $postdata['attributes'] = array($key);
                         $res                    = $form_service->generate($getdata, $postdata);
                         $postdata[$key]         = $res[$key];
