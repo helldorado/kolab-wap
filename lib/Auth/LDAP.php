@@ -373,8 +373,17 @@ class LDAP
 
     public function modify_entry($subject_dn, $old_attrs, $new_attrs)
     {
+        console($old_attrs);
+
         // TODO: Get $rdn_attr - we have type_id in $new_attrs
-        $rdn_attr = 'cn';
+        $dn_components = ldap_explode_dn($subject_dn, 0);
+        $rdn_components = explode('=', $dn_components[0]);
+
+        $rdn_attr = $rdn_components[0];
+
+        console($rdn_attr);
+
+//        return;
 
         $mod_array = Array(
                 "add"       => Array(), // For use with ldap_mod_add()
@@ -439,15 +448,19 @@ class LDAP
             $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
         }
 
-        if (!$result)
+        if (!$result) {
+            console("Failed to replace the following attributes", $attributes['replace']);
             return false;
+        }
 
         if (is_array($attributes['add']) && !empty($attributes['add'])) {
             $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
         }
 
-        if (!$result)
+        if (!$result) {
+            console("Failed to add the following attributes", $attributes['add']);
             return false;
+        }
 
         if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
             $olddn = key($attributes['rename']);
@@ -455,13 +468,15 @@ class LDAP
             $result = ldap_rename($this->conn, $olddn, $newrdn, NULL, true);
         }
 
-        if (!$result)
+        if (!$result) {
             return false;
+        }
 
-        if ($result)
+        if ($result) {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
     public function user_add($attrs, $type = null)
