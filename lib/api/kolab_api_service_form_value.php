@@ -346,6 +346,12 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
+            if (array_key_exists('uid', $attribs['auto_form_fields'])) {
+                if (!array_key_exists('uid', $postdata)) {
+                    $postdata['uid'] = $this->generate_uid($postdata, $attribs);
+                }
+            }
+
             $primary_mail = kolab_recipient_policy::primary_mail($postdata);
 
             return $primary_mail;
@@ -384,6 +390,12 @@ class kolab_api_service_form_value extends kolab_api_service
             foreach ($attribs['auto_form_fields'][$secondary_mail_key]['data'] as $key) {
                 if (!isset($postdata[$key])) {
                     throw new Exception("Key not set: " . $key, 456789);
+                }
+            }
+
+            if (array_key_exists('uid', $attribs['auto_form_fields'])) {
+                if (!array_key_exists('uid', $postdata)) {
+                    $postdata['uid'] = $this->generate_uid($postdata, $attribs);
                 }
             }
 
