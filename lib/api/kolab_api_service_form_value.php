@@ -539,4 +539,9 @@ class kolab_api_service_form_value extends kolab_api_service
 
         return $list;
     }
+
+    private function list_options_nsroledn($postdata, $attribs = Array())
+    {
+        return $this->list_options_nsrole($postdata, $attribs);
+    }
 }
