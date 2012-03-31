@@ -249,6 +249,19 @@ class LDAP
         console($result);
     }
 
+    public function get_attributes($subject_dn, $attributes)
+    {
+        $result = $this->search($subject_dn, '(objectclass=*)', $attributes);
+        $result = self::normalize_result($result);
+
+        if (!empty($result)) {
+            $result = array_pop($result);
+            return $result;
+        }
+
+        return false;
+    }
+
     public function group_find_by_attribute($attribute)
     {
         if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
@@ -455,19 +468,6 @@ class LDAP
      *
      *
      */
-    public function user_attributes($user_dn, $attributes)
-    {
-        $result = $this->search($user_dn, '(objectclass=*)', $attributes);
-        $result = self::normalize_result($result);
-
-        if (!empty($result)) {
-            $result = array_pop($result);
-            return $result;
-        }
-
-        return false;
-    }
-
     public function user_info($user)
     {
         $is_dn = ldap_explode_dn($user, 1);

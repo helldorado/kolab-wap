@@ -199,7 +199,7 @@ class kolab_api_service_group extends kolab_api_service
             if (array_key_exists($_group_attr, $group_attributes)) {
                 if (!($group_attributes[$_group_attr] === $_group_value)) {
                     console("Attribute $_group_attr changed from", $_group_value, "to", $group_attributes[$_group_attr]);
-                    $mod_array['replace'][$_group_attr] = $_group_value;
+                    $mod_array['replace'][$_group_attr] = (array)($_group_value);
                 }
             } else {
                 // TODO: Since we're not shipping the entire object back and forth, and only post
@@ -281,7 +281,7 @@ class kolab_api_service_group extends kolab_api_service
             }
 
             if (!empty($attrs)) {
-                $attrs = $auth->user_attributes($result['entrydn'], $attrs);
+                $attrs = $auth->get_attributes($result['entrydn'], $attrs);
                 if (!empty($attrs)) {
                     $result = array_merge($result, $attrs);
                 }

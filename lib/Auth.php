@@ -176,6 +176,11 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->get_attribute($subject, $attribute);
     }
 
+    public function get_attributes($subject, $attributes)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->get_attributes($subject, $attributes);
+    }
+
     public function group_add($attributes, $type=NULL)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $type);
@@ -286,11 +291,6 @@ class Auth {
     public function user_find_by_attribute($attribute)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($attribute);
-    }
-
-    public function user_attributes($user, $attributes)
-    {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_attributes($user, $attributes);
     }
 
     public function user_info($userdata)

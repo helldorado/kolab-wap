@@ -182,7 +182,7 @@ class kolab_api_service_user extends kolab_api_service
             }
 
             if (!empty($attrs)) {
-                $attrs = $auth->user_attributes($result['entrydn'], $attrs);
+                $attrs = $auth->get_attributes($result['entrydn'], $attrs);
                 if (!empty($attrs)) {
                     $result = array_merge($result, $attrs);
                 }
