@@ -401,8 +401,13 @@ class LDAP
                     if ($attr === $rdn_attr) {
                         $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
                     } else {
-                        console("Adding to replace: $attr");
-                        $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
+                        if (empty($new_attrs[$attr])) {
+                            console("Adding to del: $attr");
+                            $mod_array['del'][$attr] = (array)($old_attr_value);
+                        } else {
+                            console("Adding to replace: $attr");
+                            $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
+                        }
                     }
                 } else {
                     console("Attribute $attr unchanged");
@@ -416,14 +421,23 @@ class LDAP
 
         foreach ($new_attrs as $attr => $value) {
             if (array_key_exists($attr, $old_attrs)) {
-                if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
-                    if (!array_key_exists($attr, $mod_array['replace'])) {
-                        console("Adding to replace(2): $attr");
-                        $mod_array['replace'][$attr] = $value;
+                if (empty($value)) {
+                    if (!array_key_exists($attr, $mod_array['del'])) {
+                        console("Adding to del(2): $attr");
+                        $mod_array['del'][$attr] = (array)($old_attrs[$attr]);
+                    }
+                } else {
+                    if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
+                        if (!array_key_exists($attr, $mod_array['replace'])) {
+                            console("Adding to replace(2): $attr");
+                            $mod_array['replace'][$attr] = $value;
+                        }
                     }
                 }
             } else {
-                $mod_array['add'][$attr] = $value;
+                if (!empty($value)) {
+                    $mod_array['add'][$attr] = $value;
+                }
             }
         }
 
@@ -452,6 +466,16 @@ class LDAP
             console("Failed to replace the following attributes", $attributes['replace']);
             return false;
         }
+
+        if (is_array($attributes['del']) && !empty($attributes['del'])) {
+            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
+        }
+
+        if (!$result) {
+            console("Failed to delete the following attributes", $attributes['del']);
+            return false;
+        }
+
 
         if (is_array($attributes['add']) && !empty($attributes['add'])) {
             $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
