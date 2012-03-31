@@ -516,6 +516,12 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function list_options_nsrole($postdata, $attribs = array())
     {
+        error_log("Listing options for attribute 'nsrole', while the expected attribute to use is 'nsroledn'");
+        return $this->list_options_nsroledn($postdata, $attribs);
+    }
+
+    private function list_options_nsroledn($postdata, $attribs = Array())
+    {
         $service = $this->controller->get_service('roles');
 
         $keyword = array('value' => $postdata['search']);
@@ -540,8 +546,4 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
-    private function list_options_nsroledn($postdata, $attribs = Array())
-    {
-        return $this->list_options_nsrole($postdata, $attribs);
-    }
 }
