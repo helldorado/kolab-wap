@@ -251,6 +251,11 @@ class Auth {
         return $roles;
     }
 
+    public function modify_entry($subject, $attrs, $_attrs)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->modify_entry($subject, $attrs, $_attrs);
+    }
+
     public function modify_entry_attributes($subject, $mod_array)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->modify_entry_attributes($subject, $mod_array);
