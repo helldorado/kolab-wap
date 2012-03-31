@@ -40,7 +40,7 @@ class kolab_api_service_user extends kolab_api_service
         return array(
             'add' => 'w',
             'delete' => 'w',
-//            'edit' => 'w',
+            'edit' => 'w',
 //            'find' => 'r',
 //            'find_by_any_attribute' => 'r',
 //            'find_by_attribute' => 'r',
@@ -130,6 +130,99 @@ class kolab_api_service_user extends kolab_api_service
         return false;
     }
 
+    public function user_edit($getdata, $postdata)
+    {
+        $uta             = $this->object_type_attributes('user', $postdata['type_id']);
+        $form_service    = $this->controller->get_service('form_value');
+        $user_attributes = array();
+
+        // Get the type "key" string for the next few settings.
+        if ($postdata['type_id'] == null) {
+            $type_str = 'user';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $postdata['type_id']));
+            $type_str = $_key['key'];
+        }
+
+        $conf = Conf::get_instance();
+
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+        // TODO: "rdn" is somewhat LDAP specific, but not used as something
+        // LDAP specific...?
+        $rdn_attr = $conf->get($type_str . '_user_name_attribute');
+        if (!$rdn_attr) {
+            $rdn_attr = $conf->get('user_name_attribute');
+        }
+        if (!$rdn_attr) {
+            $rdn_attr = 'uid';
+        }
+
+        if (isset($uta['form_fields'])) {
+            foreach ($uta['form_fields'] as $key => $value) {
+                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                    throw new Exception("Missing input value for $key", 345);
+                }
+                else {
+                    $user_attributes[$key] = $postdata[$key];
+                }
+            }
+        }
+
+        if (isset($uta['auto_form_fields'])) {
+            foreach ($uta['auto_form_fields'] as $key => $value) {
+                if (empty($postdata[$key])) {
+                    $postdata['attributes'] = array($key);
+                    $res                    = $form_service->generate($getdata, $postdata);
+                    $postdata[$key]         = $res[$key];
+                }
+                $user_attributes[$key] = $postdata[$key];
+            }
+        }
+
+        if (isset($uta['fields'])) {
+            foreach ($uta['fields'] as $key => $value) {
+                if (!isset($postdata[$key]) || empty($postdata[$key])) {
+                    $user_attributes[$key] = $uta['fields'][$key];
+                } else {
+                    $user_attributes[$key] = $postdata[$key];
+                }
+            }
+
+            $user_attributes[$unique_attr] = $postdata[$unique_attr];
+        }
+
+        $auth = Auth::get_instance();
+        $auth->connect();
+
+        // Now that values have been re-generated where necessary, compare
+        // the new group attributes to the original group attributes.
+        $_user = $auth->user_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
+
+        if (!$_user) {
+            console("Could not find user");
+            return false;
+        }
+
+        $_user_dn = key($_user);
+        $_user = $this->user_info(Array('user' => $_user_dn), Array());
+
+        
+
+        // We should start throwing stuff over the fence here.
+        $result = $auth->modify_entry($_user_dn, $_user, $user_attributes);
+
+        if ($result) {
+            return true;
+        }
+
+        return false;
+
+    }
     /**
      * User information.
      *
@@ -188,6 +281,8 @@ class kolab_api_service_user extends kolab_api_service
                 }
             }
         }
+
+        console($result);
 
         if ($result) {
             return $result;
