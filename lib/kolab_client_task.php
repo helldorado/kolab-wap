@@ -837,7 +837,7 @@ class kolab_client_task
             );
 
         if (!$add_mode) {
-            $unique_attr = $this->config->get('unique_attr');
+            $unique_attr = $this->config->get('unique_attribute');
             if (!$unique_attr) {
                 $unique_attr = 'nsuniqueid';
             }

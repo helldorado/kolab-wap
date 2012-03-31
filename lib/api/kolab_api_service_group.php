@@ -132,12 +132,31 @@ class kolab_api_service_group extends kolab_api_service
         $gta             = $this->object_type_attributes('group', $postdata['type_id']);
         $form_service    = $this->controller->get_service('form_value');
         $group_attributes = array();
-    
+
+        // Get the type "key" string for the next few settings.
+        if ($postdata['type_id'] == null) {
+            $type_str = 'group';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $postdata['type_id']));
+            $type_str = $_key['key'];
+        }
+
         $conf = Conf::get_instance();
 
-        $unique_attr = $conf->get('unique_attr');
+        $unique_attr = $conf->get('unique_attribute');
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
+        }
+        // TODO: "rdn" is somewhat LDAP specific, but not used as something
+        // LDAP specific...?
+        $rdn_attr = $conf->get($type_str . '_group_name_attribute');
+        if (!$rdn_attr) {
+            $rdn_attr = $conf->get('group_name_attribute');
+        }
+        if (!$rdn_attr) {
+            $rdn_attr = 'cn';
         }
 
         if (isset($gta['form_fields'])) {
@@ -189,41 +208,11 @@ class kolab_api_service_group extends kolab_api_service
         $_group_dn = key($_group);
         $_group = $this->group_info(Array('group' => $_group_dn), Array());
 
-        $mod_array = Array(
-                "add" => Array(),
-                "del" => Array(),
-                "replace" => Array(),
-            );
-
-        foreach ($_group as $_group_attr => $_group_value) {
-            if (array_key_exists($_group_attr, $group_attributes)) {
-                if (!($group_attributes[$_group_attr] === $_group_value)) {
-                    console("Attribute $_group_attr changed from", $_group_value, "to", $group_attributes[$_group_attr]);
-                    $mod_array['replace'][$_group_attr] = (array)($_group_value);
-                }
-            } else {
-                // TODO: Since we're not shipping the entire object back and forth, and only post
-                // part of the data... we don't know what is actually removed (think modifiedtimestamp, etc.)
-                console("Group attribute not mentioned, but not explicitly removed... by assumption");
-            }
-        }
-
-        foreach ($group_attributes as $attr => $value) {
-            if (array_key_exists($attr, $_group)) {
-                if (!($_group[$attr] === $value)) {
-                    $mod_array['replace'][$attr] = $value;
-                }
-            } else {
-                $mod_array['add'][$attr] = $value;
-            }
-        }
-
-        console($mod_array);
-
-        $result = $auth->modify_entry_attributes($_group_dn, $mod_array);
+        // We should start throwing stuff over the fence here.
+        $result = $auth->modify_entry($_group_dn, $_group, $group_attributes);
 
         if ($result) {
-            return $mod_array;
+            return true;
         }
 
         return false;
@@ -271,7 +260,7 @@ class kolab_api_service_group extends kolab_api_service
             }
 
             // Insert the persistent, unique attribute
-            $unique_attr = $conf->get('unique_attr');
+            $unique_attr = $conf->get('unique_attribute');
             if (!$unique_attr) {
                 $unique_attr = 'nsuniqueid';
             }

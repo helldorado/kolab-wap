@@ -371,11 +371,92 @@ class LDAP
         return $roles;
     }
 
+    public function modify_entry($subject_dn, $old_attrs, $new_attrs)
+    {
+        // TODO: Get $rdn_attr - we have type_id in $new_attrs
+        $rdn_attr = 'cn';
+
+        $mod_array = Array(
+                "add"       => Array(), // For use with ldap_mod_add()
+                "del"       => Array(), // For use with ldap_mod_del()
+                "replace"   => Array(), // For use with ldap_mod_replace()
+                "rename"    => Array(), // For use with ldap_rename()
+            );
+
+        // Compare each attribute value of the old attrs with the corresponding value
+        // in the new attrs, if any.
+        foreach ($old_attrs as $attr => $old_attr_value) {
+            if (array_key_exists($attr, $new_attrs)) {
+                if (!($new_attrs[$attr] === $old_attr_value)) {
+                    console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
+                    if ($attr === $rdn_attr) {
+                        $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
+                    } else {
+                        console("Adding to replace: $attr");
+                        $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
+                    }
+                } else {
+                    console("Attribute $attr unchanged");
+                }
+            } else {
+                // TODO: Since we're not shipping the entire object back and forth, and only post
+                // part of the data... we don't know what is actually removed (think modifiedtimestamp, etc.)
+                console("Group attribute $attr not mentioned in \$new_attrs..., but not explicitly removed... by assumption");
+            }
+        }
+
+        foreach ($new_attrs as $attr => $value) {
+            if (array_key_exists($attr, $old_attrs)) {
+                if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
+                    if (!array_key_exists($attr, $mod_array['replace'])) {
+                        console("Adding to replace(2): $attr");
+                        $mod_array['replace'][$attr] = $value;
+                    }
+                }
+            } else {
+                $mod_array['add'][$attr] = $value;
+            }
+        }
+
+        console($mod_array);
+
+        $result = $this->modify_entry_attributes($subject_dn, $mod_array);
+
+        if ($result) {
+            return $mod_array;
+        }
+
+    }
+
     public function modify_entry_attributes($subject_dn, $attributes)
     {
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
+        // Opportunities to set false include failed ldap commands.
+        $result = true;
+
+        if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
+            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
+        }
+
+        if (!$result)
+            return false;
+
+        if (is_array($attributes['add']) && !empty($attributes['add'])) {
+            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
+        }
+
+        if (!$result)
+            return false;
+
+        if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
+            $olddn = key($attributes['rename']);
+            $newrdn = $attributes['rename'][$olddn];
+            $result = ldap_rename($this->conn, $olddn, $newrdn, NULL, true);
+        }
+
+        if (!$result)
+            return false;
 
         if ($result)
             return true;

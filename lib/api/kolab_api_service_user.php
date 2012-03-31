@@ -172,7 +172,7 @@ class kolab_api_service_user extends kolab_api_service
             }
 
             // Insert the persistent, unique attribute
-            $unique_attr = $conf->get('unique_attr');
+            $unique_attr = $conf->get('unique_attribute');
             if (!$unique_attr) {
                 $unique_attr = 'nsuniqueid';
             }
