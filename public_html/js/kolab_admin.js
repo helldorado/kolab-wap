@@ -1024,6 +1024,72 @@ function kolab_admin()
     this.command('user.list', {page: page});
   };
 
+  this.user_add = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id);
+
+    if (reload || reload == '') {
+      // TODO: Not needed?
+      data.section = section;
+
+      this.http_post('user.add');
+      return;
+    }
+
+    this.form_error_clear();
+
+    // check password
+    if (data.userpassword != data.userpassword2) {
+      this.display_message('user.password.mismatch', 'error');
+      this.form_value_error('userpassword2');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('user.add', data, 'user_add_response');
+  };
+
+  this.user_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('user.add.success');
+    this.command('user.list', {page: this.env.list_page});
+  };
+
+  this.user_edit = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id);
+
+    if (reload) {
+      data.section = section;
+      this.http_post('user.edit', {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    // check password
+    if (data.userpassword != data.userpassword2) {
+      this.display_message('user.password.mismatch', 'error');
+      this.form_value_error('userpassword2');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('user.edit', data, 'user_edit_response');
+  };
+
+  this.user_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('user.edit.success');
+    this.command('user.list', {page: this.env.list_page});
+  };
+
   this.user_save = function(reload, section)
   {
     var data = this.serialize_form('#'+this.env.form_id);
@@ -1097,9 +1163,9 @@ function kolab_admin()
   {
     var data = this.serialize_form('#'+this.env.form_id);
 
-    if (reload) {
+    if (reload || reload == '') {
       data.section = section;
-      this.http_post('group.add', {data: data});
+      this.http_post('group.add');
       return;
     }
 
