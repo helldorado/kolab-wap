@@ -233,6 +233,7 @@ class kolab_client_task_user extends kolab_client_task
             'gidnumber'                 => 'system',
             'homedirectory'             => 'system',
             'nsrole'                    => 'system',
+            'nsroledn'                  => 'system',
 
             'mailquota'                 => 'config',
             'cyrususerquota'            => 'config',
