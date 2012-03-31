@@ -40,6 +40,7 @@ class kolab_api_service_group extends kolab_api_service
         return array(
             'add'          => 'w',
             'delete'       => 'w',
+            'edit'         => 'w',
             'info'         => 'r',
             'members_list' => 'r',
         );
