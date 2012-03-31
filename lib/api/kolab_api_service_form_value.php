@@ -243,12 +243,42 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_gidnumber($postdata, $attribs = array())
     {
-        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['gidnumber'])) {
             $auth = Auth::get_instance($_SESSION['user']->get_domain());
+            $conf = Conf::get_instance();
 
             // TODO: Take a policy to use a known group ID, a known group (by name?)
             // and/or create user private groups.
-            return 500;
+
+            $search = Array(
+                    'params' => Array(
+                            'objectclass' => Array(
+                                    'type' => 'exact',
+                                    'value' => 'posixgroup',
+                                ),
+                        ),
+                );
+
+            $groups = $auth->list_groups(NULL, Array('gidnumber'), $search);
+
+            $highest_gidnumber = $conf->get('gidnumber_lower_barrier');
+            if (!$highest_gidnumber) {
+                $highest_gidnumber = 1000;
+            }
+
+            foreach ($groups as $dn => $attributes) {
+                if (!array_key_exists('gidnumber', $attributes)) {
+                    continue;
+                }
+
+                if ($attributes['gidnumber'] > $highest_gidnumber) {
+                    $highest_gidnumber = $attributes['gidnumber'];
+                }
+            }
+
+            //$users = $auth->list_users();
+            //console($groups);
+            return ($highest_gidnumber + 1);
         }
     }
 
@@ -403,9 +433,34 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
             $auth = Auth::get_instance($_SESSION['user']->get_domain());
+            $conf = Conf::get_instance();
 
-            // TODO: Actually poll $auth for users with a uidNumber set, and take the next one.
-            return 500;
+            $search = Array(
+                    'params' => Array(
+                            'objectclass' => Array(
+                                    'type' => 'exact',
+                                    'value' => 'posixaccount',
+                                ),
+                        ),
+                );
+
+            $users = $auth->list_users(NULL, Array('uidnumber'), $search);
+
+            $highest_uidnumber = $conf->get('uidnumber_lower_barrier');
+            if (!$highest_uidnumber) {
+                $highest_uidnumber = 1000;
+            }
+
+            foreach ($users as $dn => $attributes) {
+                if (!array_key_exists('uidnumber', $attributes)) {
+                    continue;
+                }
+
+                if ($attributes['uidnumber'] > $highest_uidnumber) {
+                    $highest_uidnumber = $attributes['uidnumber'];
+                }
+            }
+            return ($highest_uidnumber + 1);
         }
     }
 
