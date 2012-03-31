@@ -271,7 +271,7 @@ class kolab_client_task_group extends kolab_client_task
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('group.add.success', 'group.delete.success');
+        $this->output->add_translation('group.add.success', 'group.edit.success', 'group.delete.success');
 
         return $form->output();
     }

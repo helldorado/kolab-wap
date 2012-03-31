@@ -312,7 +312,7 @@ class kolab_client_task_user extends kolab_client_task
         $form->set_title(kolab_html::escape($title));
 
         $this->output->add_translation('user.password.mismatch',
-            'user.add.success', 'user.delete.success');
+            'user.add.success', 'user.edit.success', 'user.delete.success');
 
         return $form->output();
     }
