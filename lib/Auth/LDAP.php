@@ -522,15 +522,10 @@ class LDAP
         }
 
         // Check if the user_type has a specific base DN specified.
-        $base_dn = $this->conf->get($this->domain, $type_str . "_group_base_dn");
+        $base_dn = $this->conf->get($type_str . "_group_base_dn");
         // If not, take the regular user_base_dn
         if (!$base_dn)
-            $base_dn = $this->conf->get($this->domain, "group_base_dn");
-
-        // If no user_base_dn either, take the user type specific from the parent
-        // configuration
-        if (!$base_dn)
-            $base_dn = $this->conf->get('ldap', $type_str . "_group_base_dn");
+            $base_dn = $this->conf->get("group_base_dn");
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -722,7 +717,14 @@ class LDAP
             for ($y = 0; $y < $__result[$x]["count"]; $y++) {
                 $attr = $__result[$x][$y];
                 if ($__result[$x][$attr]["count"] == 1) {
-                    $result[$dn][$attr] = $__result[$x][$attr][0];
+                    switch ($attr) {
+                        case "objectclass":
+                            $result[$dn][$attr] = strtolower($__result[$x][$attr][0]);
+                            break;
+                        default:
+                            $result[$dn][$attr] = $__result[$x][$attr][0];
+                            break;
+                    }
                 }
                 else {
                     $result[$dn][$attr] = array();
@@ -732,7 +734,14 @@ class LDAP
                             $result[$dn]['primary_domain'] = $__result[$x][$attr][$z];
                         }
 
-                        $result[$dn][$attr][] = $__result[$x][$attr][$z];
+                        switch ($attr) {
+                            case "objectclass":
+                                $result[$dn][$attr][] = strtolower($__result[$x][$attr][$z]);
+                                break;
+                            default:
+                                $result[$dn][$attr][] = $__result[$x][$attr][$z];
+                                break;
+                        }
                     }
                 }
             }
@@ -875,8 +884,8 @@ class LDAP
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-//        console("Entry DN", $entry_dn);
-//        console("Attributes", $attributes);
+        //console("Entry DN", $entry_dn);
+        //console("Attributes", $attributes);
 
         foreach ($attributes as $attr_name => $attr_value) {
             if (empty($attr_value)) {
