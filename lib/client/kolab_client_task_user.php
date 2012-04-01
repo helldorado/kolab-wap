@@ -54,9 +54,9 @@ class kolab_client_task_user extends kolab_client_task
 
         // request parameters
         $post = array(
-            'attributes' => array('displayname'),
+            'attributes' => array('displayname', 'cn'),
 //            'sort_order' => 'ASC',
-            'sort_by'    => 'displayname',
+            'sort_by'    => array('displayname', 'cn'),
             'page_size'  => $page_size,
             'page'       => $page,
         );
@@ -128,13 +128,13 @@ class kolab_client_task_user extends kolab_client_task
         // table body
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
-                if (!is_array($item) || empty($item['displayname'])) {
+                if (!is_array($item) || (empty($item['displayname']) && empty($item['cn']))) {
                     continue;
                 }
 
                 $i++;
                 $cells = array();
-                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['displayname']),
+                $cells[] = array('class' => 'name', 'body' => kolab_html::escape(empty($item['displayname']) ? $item['cn'] : $item['displayname']),
                     'onclick' => "kadm.command('user.info', '$idx')");
                 $rows[] = array('id' => $i, 'class' => 'selectable', 'cells' => $cells);
             }
