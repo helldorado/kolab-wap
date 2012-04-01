@@ -284,6 +284,9 @@ class kolab_client_task_user extends kolab_client_task
         // Edit mode
         else {
             $title = $data['displayname'];
+            if (empty($title)) {
+                $title = $data['cn'];
+            }
 
             // remove password
             $data['userpassword'] = '';
