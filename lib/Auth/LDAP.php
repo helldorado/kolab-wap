@@ -331,8 +331,16 @@ class LDAP
     public function list_users($attributes = array(), $search = array(), $params = array())
     {
         if (!empty($params['sort_by'])) {
-            if (!in_array($params['sort_by'], $attributes)) {
-                $attributes[] = $params['sort_by'];
+            if (is_array($params['sort_by'])) {
+                foreach ($params['sort_by'] as $attrib) {
+                    if (!in_array($attrib, $attributes)) {
+                        $attributes[] = $attrib;
+                    }
+                }
+            } else {
+                if (!in_array($params['sort_by'], $attributes)) {
+                    $attributes[] = $params['sort_by'];
+                }
             }
         }
 
@@ -919,8 +927,19 @@ class LDAP
      */
     public function sort_result($a, $b)
     {
-        $str1 = $a[$this->sort_result_key];
-        $str2 = $b[$this->sort_result_key];
+        if (is_array($this->sort_result_key)) {
+            foreach ($this->sort_result_key as $attrib) {
+                if (array_key_exists($attrib, $a)) {
+                    $str1 = $a[$attrib];
+                }
+                if (array_key_exists($attrib, $b)) {
+                    $str2 = $b[$attrib];
+                }
+            }
+        } else {
+            $str1 = $a[$this->sort_result_key];
+            $str2 = $b[$this->sort_result_key];
+        }
 
         return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
     }
