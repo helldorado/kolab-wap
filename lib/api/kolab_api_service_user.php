@@ -177,6 +177,22 @@ class kolab_api_service_user extends kolab_api_service
             $rdn_attr = 'uid';
         }
 
+        // Obtain the original user's information.
+        $auth = Auth::get_instance();
+        $auth->connect();
+
+        // Now that values have been re-generated where necessary, compare
+        // the new group attributes to the original group attributes.
+        $_user = $auth->user_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
+
+        if (!$_user) {
+            console("Could not find user");
+            return false;
+        }
+
+        $_user_dn = key($_user);
+        $_user = $this->user_info(Array('user' => $_user_dn), Array());
+
         if (isset($uta['form_fields'])) {
             foreach ($uta['form_fields'] as $key => $value) {
                 if (
@@ -194,11 +210,26 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    if (!array_key_exists('optional', $value) || !$value['optional']) {
-                        $postdata['attributes'] = array($key);
-                        $res                    = $form_service->generate($getdata, $postdata);
-                        $postdata[$key]         = $res[$key];
-                        $user_attributes[$key]  = $postdata[$key];
+                    switch ($key) {
+                        case "userpassword":
+                            if (!empty($postdata['userpassword']) && !empty($postdata['userpassword2'])) {
+                                if ($postdata['userpassword'] === $postdata['userpassword2']) {
+                                    $user_password = $postdata['userpassword'];
+                                } else {
+                                    throw new Exception("Password mismatch");
+                                }
+                            } else {
+                                $user_attributes[$key] = $_user[$key];
+                            }
+                            break;
+                        default:
+                            if (!array_key_exists('optional', $value) || !$value['optional']) {
+                                $postdata['attributes'] = array($key);
+                                $res                    = $form_service->generate($getdata, $postdata);
+                                $postdata[$key]         = $res[$key];
+                                $user_attributes[$key]  = $postdata[$key];
+                            }
+                            break;
                     }
                 } else {
                     $user_attributes[$key] = $postdata[$key];
@@ -206,34 +237,17 @@ class kolab_api_service_user extends kolab_api_service
             }
         }
 
+        // The user did not edit these.
+        // They're not in $postdata.
+        // Only the original user object has the right ones
         if (isset($uta['fields'])) {
             foreach ($uta['fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    $user_attributes[$key] = $uta['fields'][$key];
-                } else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
+                console("Setting $key from original user's value", $_user[$key]);
+                $user_attributes[$key] = $_user[$key];
             }
 
             $user_attributes[$unique_attr] = $postdata[$unique_attr];
-        }
-
-        $auth = Auth::get_instance();
-        $auth->connect();
-
-        // Now that values have been re-generated where necessary, compare
-        // the new group attributes to the original group attributes.
-        $_user = $auth->user_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
-
-        if (!$_user) {
-            console("Could not find user");
-            return false;
-        }
-
-        $_user_dn = key($_user);
-        $_user = $this->user_info(Array('user' => $_user_dn), Array());
-
-        
+        }     
 
         // We should start throwing stuff over the fence here.
         $result = $auth->modify_entry($_user_dn, $_user, $user_attributes);
