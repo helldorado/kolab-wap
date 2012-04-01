@@ -107,9 +107,18 @@ class kolab_api_service_users extends kolab_api_service
         }
 
         if (!empty($post['sort_by'])) {
-            // check if sort attribute is supported
-            if (in_array($post['sort_by'], $this->list_attribs)) {
-                $params['sort_by'] = $post['sort_by'];
+            if (is_array($post['sort_by'])) {
+                $params['sort_by'] = Array();
+                foreach ($post['sort_by'] as $attrib) {
+                    if (in_array($attrib, $this->list_attribs)) {
+                        $params['sort_by'][] = $attrib;
+                    }
+                }
+            } else {
+                // check if sort attribute is supported
+                if (in_array($post['sort_by'], $this->list_attribs)) {
+                    $params['sort_by'] = $post['sort_by'];
+                }
             }
         }
 
