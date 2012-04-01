@@ -91,7 +91,11 @@ class kolab_api_service_group extends kolab_api_service
 
         if (isset($gta['fields'])) {
             foreach ($gta['fields'] as $key => $value) {
-                $group_attributes[$key] = $gta['fields'][$key];
+                if (empty($postdata[$key])) {
+                    $group_attributes[$key] = $gta['fields'][$key];
+                } else {
+                    $group_attributes[$key] = $postdata[$key];
+                }
             }
         }
 
@@ -193,7 +197,11 @@ class kolab_api_service_group extends kolab_api_service
 
         if (isset($gta['fields'])) {
             foreach ($gta['fields'] as $key => $value) {
-                $group_attributes[$key] = $gta['fields'][$key];
+                if (empty($postdata[$key])) {
+                    $group_attributes[$key] = $gta['fields'][$key];
+                } else {
+                    $group_attributes[$key] = $postdata[$key];
+                }
             }
 
             $group_attributes[$unique_attr] = $postdata[$unique_attr];

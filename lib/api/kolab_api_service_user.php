@@ -98,7 +98,11 @@ class kolab_api_service_user extends kolab_api_service
 
         if (isset($uta['fields'])) {
             foreach ($uta['fields'] as $key => $value) {
-                $user_attributes[$key] = $uta['fields'][$key];
+                if (empty($postdata[$key])) {
+                    $user_attributes[$key] = $uta['fields'][$key];
+                } else {
+                    $user_attributes[$key] = $uta['fields'][$key];
+                }
             }
         }
 
@@ -204,7 +208,11 @@ class kolab_api_service_user extends kolab_api_service
 
         if (isset($uta['fields'])) {
             foreach ($uta['fields'] as $key => $value) {
-                $user_attributes[$key] = $uta['fields'][$key];
+                if (empty($postdata[$key])) {
+                    $user_attributes[$key] = $uta['fields'][$key];
+                } else {
+                    $user_attributes[$key] = $postdata[$key];
+                }
             }
 
             $user_attributes[$unique_attr] = $postdata[$unique_attr];
