@@ -516,6 +516,9 @@ class kolab_client_task
 
         $result   = $this->api->get('user.info', array('user' => $dn));
         $username = $result->get('displayname');
+        if (empty($username)) {
+            $username = $result->get('cn');
+        }
 
         if (empty($username)) {
             if (preg_match('/^cn=([a-zA=Z ]+)/', $dn, $m)) {
