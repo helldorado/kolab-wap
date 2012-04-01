@@ -245,8 +245,11 @@ class LDAP
 
     public function get_attribute($subject_dn, $attribute)
     {
-        $result = ldap_read($this->conn, $subject_dn, '(objectclass=*)', (array)($attribute));
-        console($result);
+        $result = $this->search($subject_dn, '(objectclass=*)', (array)($attribute));
+        $result = self::normalize_result($result);
+        $dn = key($result);
+        $attr = key($result[$dn]);
+        return $result[$dn][$attr];
     }
 
     public function get_attributes($subject_dn, $attributes)

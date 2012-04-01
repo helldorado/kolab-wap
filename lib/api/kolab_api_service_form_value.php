@@ -198,10 +198,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_cn($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['cn'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['cn']['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
             }
@@ -215,10 +221,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_displayname($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['displayname'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['displayname']['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
             }
@@ -284,10 +296,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_homedirectory($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['homedirectory'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['homedirectory']['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
             }
@@ -338,10 +356,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_primary_mail($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
             }
@@ -360,10 +384,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_primary_mail_group($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
             }
@@ -376,6 +406,12 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_secondary_mail($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         $secondary_mail_address = Array();
 
         if (isset($attribs['auto_form_fields'])) {
@@ -388,7 +424,7 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             foreach ($attribs['auto_form_fields'][$secondary_mail_key]['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 456789);
                 }
             }
@@ -407,10 +443,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_uid($postdata, $attribs = array())
     {
+        $conf = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uid'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['uid']['data'] as $key) {
-                if (!isset($postdata[$key])) {
+                if (!isset($postdata[$key]) && !($key == $unique_attr)) {
                     throw new Exception("Key not set: " . $key, 12356);
                 }
             }
@@ -432,7 +474,14 @@ class kolab_api_service_form_value extends kolab_api_service
             $auth = Auth::get_instance($_SESSION['user']->get_domain());
 
             $x = 2;
-            while ($auth->user_find_by_attribute(array('uid' => $uid))) {
+            while (($user_found = $auth->user_find_by_attribute(array('uid' => $uid)))) {
+                $user_found_dn = key($user_found);
+                $user_found_unique_attr = $auth->get_attribute($user_found_dn, $unique_attr);
+                console("user that i found info", $user_found_unique_attr);
+                if ($user_found_unique_attr == $postdata[$unique_attr]) {
+                    break;
+                }
+
                 $uid = $orig_uid . $x;
                 $x++;
             }
