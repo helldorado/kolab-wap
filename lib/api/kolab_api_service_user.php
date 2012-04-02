@@ -186,7 +186,10 @@ class kolab_api_service_user extends kolab_api_service
         $_user = $auth->user_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
 
         if (!$_user) {
-            console("Could not find user");
+            $_user = $auth->user_find_by_attribute(Array('entrydn' => $postdata['entrydn']));
+        }
+
+        if (!$_user) {
             return false;
         }
 
@@ -307,7 +310,7 @@ class kolab_api_service_user extends kolab_api_service
             }
 
             if (!array_key_exists($unique_attr, $attrs)) {
-                $attrs[] = 'nsuniqueid';
+                $attrs[] = $unique_attr;
             }
 
             if (!empty($attrs)) {
