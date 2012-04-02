@@ -1112,7 +1112,7 @@ function kolab_admin()
   this.group_delete = function(groupid)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('group.delete', {group: userid}, 'group_delete_response');
+    this.api_post('group.delete', {group: groupid}, 'group_delete_response');
   };
 
   this.group_delete_response = function(response)

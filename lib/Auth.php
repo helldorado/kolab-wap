@@ -218,6 +218,11 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $type);
     }
 
+    public function group_delete($subject)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_delete($subject);
+    }
+
     public function group_find_by_attribute($attribute)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->group_find_by_attribute($attribute);
