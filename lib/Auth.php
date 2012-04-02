@@ -166,6 +166,38 @@ class Auth {
         }
     }
 
+    // Dummy function to be removed
+    public function attr_details($attribute)
+    {
+        $conf = Conf::get_instance();
+        return $this->_auth[$conf->get('kolab', 'primary_domain']->attr_details($attribute);
+    }
+
+    // Dummy function to be removed
+    public function attrs_allowed($objectclasses = array())
+    {
+        $conf = Conf::get_instance();
+        return $this->_auth[$conf->get('kolab', 'primary_domain']->attrs_allowed($objectclasses);
+    }
+
+    public function allowed_attributes($objectclasses = array())
+    {
+        if (!is_array($objectclasses)) {
+            $objectclasses = (array)($objectclasses);
+        }
+
+        return $this->_auth[$_SESSION['user']->get_domain()]->allowed_attributes($objectclasses);
+    }
+
+    public function attribute_details($attributes = array())
+    {
+        if (!is_array($attributes)) {
+            $attributes = (array)($attributes);
+        }
+
+        return $this->_auth[$_SESSION['user']->get_domain()]->attribute_details($attributes);
+    }
+
     public function find_user_groups($member_dn)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
