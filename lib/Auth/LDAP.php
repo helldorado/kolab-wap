@@ -726,9 +726,12 @@ class LDAP
         }
 
         // TODO: Get domain_attr from config
-        if (($results = ldap_search($this->conn, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')')) == false) {
-            error_log("No results?");
-            return false;
+        $results = ldap_search($this->conn, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')');
+
+        if (!$result) {
+            // Not a multi-domain setup
+            $domain_name = $conf->get('kolab', 'primary_domain');
+            return $this->_standard_root_dn($domain_name);
         }
 
         $domain = ldap_first_entry($this->conn, $results);
