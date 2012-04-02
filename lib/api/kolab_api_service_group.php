@@ -56,44 +56,7 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function group_add($getdata, $postdata)
     {
-        $gta = $this->object_type_attributes('group', $postdata['type_id']);
-        $group_attributes = array();
-
-        if (isset($gta['form_fields'])) {
-            foreach ($gta['form_fields'] as $key => $value) {
-                if (empty($postdata[$key]) && empty($value['optional'])) {
-                    throw new Exception("Missing input value for $key", 345);
-                }
-                else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        if (isset($gta['auto_form_fields'])) {
-            foreach ($gta['auto_form_fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    if (empty($value['optional'])) {
-                        $postdata['attributes'] = array($key);
-                        $res                    = $form_service->generate($getdata, $postdata);
-                        $postdata[$key]         = $res[$key];
-                        $group_attributes[$key]  = $postdata[$key];
-                    }
-                } else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        if (isset($gta['fields'])) {
-            foreach ($gta['fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    $group_attributes[$key] = $gta['fields'][$key];
-                } else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
+        $group_attributes = $this->parse_input_attributes('group', $postdata);
 
         $auth   = Auth::get_instance();
         $result = $auth->group_add($group_attributes, $postdata['type_id']);
@@ -132,9 +95,7 @@ class kolab_api_service_group extends kolab_api_service
 
     public function group_edit($getdata, $postdata)
     {
-        $gta             = $this->object_type_attributes('group', $postdata['type_id']);
-        $form_service    = $this->controller->get_service('form_value');
-        $group_attributes = array();
+        $group_attributes = $this->parse_input_attributes('group', $postdata);
 
         // Get the type "key" string for the next few settings.
         if ($postdata['type_id'] == null) {
@@ -166,48 +127,12 @@ class kolab_api_service_group extends kolab_api_service
             $rdn_attr = 'cn';
         }
 
-        if (isset($gta['form_fields'])) {
-            foreach ($gta['form_fields'] as $key => $value) {
-                if (empty($postdata[$key]) && empty($value['optional'])) {
-                    throw new Exception("Missing input value for $key", 345);
-                }
-                else {
-                    $group_attributes[$key] = $postdata[$key];
-                } 
-            }
-        }
-
-        if (isset($gta['auto_form_fields'])) {
-            foreach ($gta['auto_form_fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    if (empty($value['optional'])) {
-                        $postdata['attributes'] = array($key);
-                        $res                    = $form_service->generate($getdata, $postdata);
-                        $postdata[$key]         = $res[$key];
-                        $group_attributes[$key] = $postdata[$key];
-                    }
-                } else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        if (isset($gta['fields'])) {
-            foreach ($gta['fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    $group_attributes[$key] = $gta['fields'][$key];
-                } else {
-                    $group_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
         $auth = Auth::get_instance();
         $auth->connect();
 
         // Now that values have been re-generated where necessary, compare
         // the new group attributes to the original group attributes.
-        $_group = $auth->group_find_by_attribute(array($unique_attr => $postdata['id']));
+        $_group = $auth->group_find_by_attribute(array($unique_attr => $group_attributes[$unique_attr]));
 
         if (!$_group) {
             console("Could not find group");

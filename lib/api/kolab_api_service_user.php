@@ -60,48 +60,7 @@ class kolab_api_service_user extends kolab_api_service
     public function user_add($getdata, $postdata)
     {
         console("user_add()", $postdata);
-
-        $uta             = $this->object_type_attributes('user', $postdata['type_id']);
-        $form_service    = $this->controller->get_service('form_value');
-        $user_attributes = array();
-
-        if (isset($uta['form_fields'])) {
-            foreach ($uta['form_fields'] as $key => $value) {
-                if (empty($postdata[$key]) && empty($value['optional'])) {
-                    throw new Exception("Missing input value for $key", 345);
-                }
-                else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        if (isset($uta['auto_form_fields'])) {
-            foreach ($uta['auto_form_fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    // If the attribute is marked as optional, however...
-                    if (empty($value['optional'])) {
-                        $postdata['attributes'] = array($key);
-                        $res                    = $form_service->generate($getdata, $postdata);
-                        $postdata[$key]         = $res[$key];
-                        $user_attributes[$key] = $postdata[$key];
-                    }
-                } else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        if (isset($uta['fields'])) {
-            foreach ($uta['fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    $user_attributes[$key] = $uta['fields'][$key];
-                } else {
-                    $user_attributes[$key] = $uta['fields'][$key];
-                }
-            }
-        }
-
+        $user_attributes = $this->parse_input_attributes('user', $postdata); 
         console("user_add()", $user_attributes);
 
         $auth = Auth::get_instance();
@@ -143,9 +102,7 @@ class kolab_api_service_user extends kolab_api_service
     {
         console("\$postdata to user_edit()", $postdata);
 
-        $uta             = $this->object_type_attributes('user', $postdata['type_id']);
-        $form_service    = $this->controller->get_service('form_value');
-        $user_attributes = array();
+        $user_attributes = $this->parse_input_attributes('user', $postdata); 
 
         // Get the type "key" string for the next few settings.
         if ($postdata['type_id'] == null) {
@@ -163,6 +120,9 @@ class kolab_api_service_user extends kolab_api_service
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
         }
+        $user_attributes[$unique_attr] = $postdata['id'];                                                                                                      
+        unset($postdata['id']);
+
         // TODO: "rdn" is somewhat LDAP specific, but not used as something
         // LDAP specific...?
         $rdn_attr = $conf->get($type_str . '_user_name_attribute');
@@ -179,7 +139,7 @@ class kolab_api_service_user extends kolab_api_service
 
         // Now that values have been re-generated where necessary, compare
         // the new group attributes to the original group attributes.
-        $_user = $auth->user_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
+        $_user = $auth->user_find_by_attribute(array($unique_attr => $user_attributes[$unique_attr]));
 
         if (!$_user) {
             console("Could not find user");
@@ -187,45 +147,7 @@ class kolab_api_service_user extends kolab_api_service
         }
 
         $_user_dn = key($_user);
-        $_user = $this->user_info(Array('user' => $_user_dn), Array());
-
-        if (isset($uta['form_fields'])) {
-            foreach ($uta['form_fields'] as $key => $value) {
-                if (empty($postdata[$key]) && empty($value['optional'])) {
-                    throw new Exception("Missing input value for $key", 345);
-                }
-                else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        if (isset($uta['auto_form_fields'])) {
-            foreach ($uta['auto_form_fields'] as $key => $value) {
-                if (empty($postdata[$key])) {
-                    if (empty($value['optional'])) {
-                        $postdata['attributes'] = array($key);
-                        $res                    = $form_service->generate($getdata, $postdata);
-                        $postdata[$key]         = $res[$key];
-                        $user_attributes[$key]  = $postdata[$key];
-                    }
-                } else {
-                    $user_attributes[$key] = $postdata[$key];
-                }
-            }
-        }
-
-        // The user did not edit these.
-        // They're not in $postdata.
-        // Only the original user object has the right ones
-        if (isset($uta['fields'])) {
-            foreach ($uta['fields'] as $key => $value) {
-                console("Setting $key from original user's value", $_user[$key]);
-                $user_attributes[$key] = $_user[$key];
-            }
-
-            $user_attributes[$unique_attr] = $postdata[$unique_attr];
-        }     
+        $_user = $this->user_info(array('user' => $_user_dn), array());
 
         // We should start throwing stuff over the fence here.
         $result = $auth->modify_entry($_user_dn, $_user, $user_attributes);

@@ -186,7 +186,7 @@ abstract class kolab_api_service
     }
 
     /**
-     * Detects object type ID for specified objectClass attribute value
+     * Parses result attributes
      *
      * @param string $object_name  Name of the object (user, group, etc.)
      * @param array  $attrs        Entry attributes
@@ -236,4 +236,58 @@ abstract class kolab_api_service
 
         return $attrs;
     }
+
+    /**
+     * Parses input (for add/edit) attributes
+     *
+     * @param string $object_name  Name of the object (user, group, etc.)
+     * @param array  $attrs        Entry attributes
+     *
+     * @return array Entry attributes
+     */
+    protected function parse_input_attributes($object_name, $attribs)
+    {
+        $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
+        $form_service = $this->controller->get_service('form_value');
+        $result       = array();
+
+        if (isset($type_attrs['form_fields'])) {
+            foreach ($type_attrs['form_fields'] as $key => $value) {
+                if (empty($attribs[$key]) && empty($value['optional'])) {
+                    throw new Exception("Missing input value for $key", 345);
+                }
+                else {
+                    $result[$key] = $attribs[$key];
+                }
+            }
+        }
+
+        if (isset($type_attrs['auto_form_fields'])) {
+            foreach ($type_attrs['auto_form_fields'] as $key => $value) {
+                if (empty($attribs[$key])) {
+                    if (empty($value['optional'])) {
+                        $attribs['attributes'] = array($key);
+                        $res                   = $form_service->generate(null, $attribs);
+                        $attribs[$key]         = $res[$key];
+                        $result[$key]          = $attribs[$key];
+                    }
+                } else {
+                    $result[$key] = $attribs[$key];
+                }
+            }
+        }
+
+        if (isset($type_attrs['fields'])) {
+            foreach ($type_attrs['fields'] as $key => $value) {
+                if (empty($attribs[$key])) {
+                    $result[$key] = $gta['fields'][$key];
+                } else {
+                    $result[$key] = $attribs[$key];
+                }
+            }
+        }
+
+        return $result;
+    }
+
 }
