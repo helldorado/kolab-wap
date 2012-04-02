@@ -28,10 +28,10 @@ class kolab_recipient_policy {
     static function format() {
         $_args = func_get_args();
 
-        $args = Array();
+        $args = array();
 
         for ($i = 0; $i < func_num_args(); $i++) {
-            #$args[$i] = preg_replace('/\./', '\.', $_args[$i]);
+            //$args[$i] = preg_replace('/\./', '\.', $_args[$i]);
             $args[$i] = $_args[$i];
         }
 
@@ -60,7 +60,7 @@ class kolab_recipient_policy {
 
     static function normalize_userdata($userdata)
     {
-        $keymap = Array(
+        $keymap = array(
                 'sn' => 'surname',
             );
 
@@ -90,8 +90,13 @@ class kolab_recipient_policy {
     {
         // Expect only a cn@domain.tld, really
         $groupdata = self::normalize_groupdata($groupdata);
+        $email     = '';
 
-        return $groupdata['cn'] . '@' . $_SESSION['user']->get_domain();
+        if (!empty($groupdata['cn'])) {
+            $email = $groupdata['cn'] . '@' . $_SESSION['user']->get_domain();
+        }
+
+        return self::parse_email($email);
     }
 
     static function primary_mail($userdata)
@@ -156,15 +161,14 @@ class kolab_recipient_policy {
             }
         }
 
-        return $primary_mail;
-
+        return self::parse_email($primary_mail);
     }
 
     static function secondary_mail($userdata)
     {
-        $secondary_mail_addresses = Array();
+        $secondary_mail_addresses = array();
 
-        $functions = Array(
+        $functions = array(
                 '\'%\((\w+)\)s\'\.capitalize\(\)' => 'strtoupper(substr("%(${1})s", 0, 1)) . strtolower(substr("%(${1})s", 1))',
                 '\'%\((\w+)\)s\'\.lower\(\)'      => 'strtolower("%(${1})s")',
                 '\'%\((\w+)\)s\'\.upper\(\)'      => 'strtoupper("%(${1})s")',
@@ -229,13 +233,45 @@ class kolab_recipient_policy {
 
                 eval("\$result = sprintf('" . $format . "', '" . implode("', '", array_values($result)) . "');");
 
-                $secondary_mail_addresses[] = $result;
-
+                if ($result = self::parse_email($result)) {
+                    $secondary_mail_addresses[] = $result;
+                }
             }
 
         }
 
         return $secondary_mail_addresses;
-
     }
+
+    /**
+     * Make sure email address is valid, if not return empty string
+     */
+    static private function parse_email($email)
+    {
+        $email = strtolower($email);
+
+        $email_parts = explode('@', $email);
+        $email_parts = array_filter($email_parts);
+
+        // do some simple checks here
+        if (count($email_parts) < 2) {
+            return '';
+        }
+
+        // trim dots, it's most likely case
+        $email_parts[0] = trim($email_parts[0], '.');
+
+        // from PEAR::Validate
+        $regexp = '&^(?:
+            ("\s*(?:[^"\f\n\r\t\v\b\s]+\s*)+")|                             #1 quoted name
+            ([-\w!\#\$%\&\'*+~/^`|{}=]+(?:\.[-\w!\#\$%\&\'*+~/^`|{}=]+)*))  #2 OR dot-atom (RFC5322)
+            $&xi';
+
+        if (!preg_match($regexp, $email_parts[0])) {
+            return '';
+        }
+
+        return $email_parts[0] . '@' . $email_parts[1];
+    }
+
 }
