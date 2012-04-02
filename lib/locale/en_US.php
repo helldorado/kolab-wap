@@ -18,6 +18,8 @@ $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
 $LANG['login.login'] = 'Login';
 
+$LANG['form.required.empty'] = 'Some of the required fields are empty!';
+
 $LANG['search'] = 'Search';
 $LANG['search.criteria'] = 'Search criteria';
 $LANG['search.reset'] = 'Reset';
