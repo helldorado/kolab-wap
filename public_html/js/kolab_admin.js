@@ -1024,15 +1024,14 @@ function kolab_admin()
     this.command('user.list', {page: page});
   };
 
-  this.user_add = function(reload, section)
+  this.user_save = function(reload, section)
   {
-    var data = this.serialize_form('#'+this.env.form_id);
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
 
-    if (reload || reload == '') {
-      // TODO: Not needed?
+    if (reload) {
       data.section = section;
-
-      this.http_post('user.add');
+      this.http_post('user.' + action, {data: data});
       return;
     }
 
@@ -1046,7 +1045,7 @@ function kolab_admin()
     }
 
     this.set_busy(true, 'saving');
-    this.api_post('user.add', data, 'user_add_response');
+    this.api_post('user.' + action, data, 'user_' + action + '_response');
   };
 
   this.user_add_response = function(response)
@@ -1058,67 +1057,12 @@ function kolab_admin()
     this.command('user.list', {page: this.env.list_page});
   };
 
-  this.user_edit = function(reload, section)
-  {
-    var data = this.serialize_form('#'+this.env.form_id);
-
-    if (reload) {
-      data.section = section;
-      this.http_post('user.edit', {data: data});
-      return;
-    }
-
-    this.form_error_clear();
-
-    // check password
-    if (data.userpassword != data.userpassword2) {
-      this.display_message('user.password.mismatch', 'error');
-      this.form_value_error('userpassword2');
-      return;
-    }
-
-    this.set_busy(true, 'saving');
-    this.api_post('user.edit', data, 'user_edit_response');
-  };
-
   this.user_edit_response = function(response)
   {
     if (!this.api_response(response))
       return;
 
     this.display_message('user.edit.success');
-    this.command('user.list', {page: this.env.list_page});
-  };
-
-  this.user_save = function(reload, section)
-  {
-    var data = this.serialize_form('#'+this.env.form_id);
-
-    if (reload) {
-      data.section = section;
-      this.http_post('user.add', {data: data});
-      return;
-    }
-
-    this.form_error_clear();
-
-    // check password
-    if (data.userpassword != data.userpassword2) {
-      this.display_message('user.password.mismatch', 'error');
-      this.form_value_error('userpassword2');
-      return;
-    }
-
-    this.set_busy(true, 'saving');
-    this.api_post('user.add', data, 'user_save_response');
-  };
-
-  this.user_save_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('user.add.success');
     this.command('user.list', {page: this.env.list_page});
   };
 
@@ -1159,20 +1103,21 @@ function kolab_admin()
     this.command('group.list', {page: page});
   };
 
-  this.group_add = function(reload, section)
+  this.group_save = function(reload, section)
   {
-    var data = this.serialize_form('#'+this.env.form_id);
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
 
-    if (reload || reload == '') {
+    if (reload) {
       data.section = section;
-      this.http_post('group.add');
+      this.http_post('group.' + action, {data: data});
       return;
     }
 
     this.form_error_clear();
 
     this.set_busy(true, 'saving');
-    this.api_post('group.add', data, 'group_add_response');
+    this.api_post('group.' + action, data, 'group_' + action + '_response');
   };
 
   this.group_add_response = function(response)
@@ -1184,53 +1129,12 @@ function kolab_admin()
     this.command('group.list', {page: this.env.list_page});
   };
 
-  this.group_edit = function(reload, section)
-  {
-    var data = this.serialize_form('#'+this.env.form_id);
-
-    if (reload) {
-      data.section = section;
-      this.http_post('group.edit', {data: data});
-      return;
-    }
-
-    this.form_error_clear();
-
-    this.set_busy(true, 'saving');
-    this.api_post('group.edit', data, 'group_edit_response');
-  };
-
   this.group_edit_response = function(response)
   {
     if (!this.api_response(response))
       return;
 
     this.display_message('group.edit.success');
-    this.command('group.list', {page: this.env.list_page});
-  };
-
-  this.group_save = function(reload, section)
-  {
-    var data = this.serialize_form('#'+this.env.form_id);
-
-    if (reload) {
-      data.section = section;
-      this.http_post('group.add', {data: data});
-      return;
-    }
-
-    this.form_error_clear();
-
-    this.set_busy(true, 'saving');
-    this.api_post('group.add', data, 'group_save_response');
-  };
-
-  this.group_save_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('group.add.success');
     this.command('group.list', {page: this.env.list_page});
   };
 

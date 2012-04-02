@@ -958,7 +958,7 @@ class kolab_client_task
         ));
 
         if (!empty($data['id'])) {
-            $id = $data[$name];
+            $id = $data['id'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
                 'onclick' => "kadm.{$name}_delete('{$id}')",
