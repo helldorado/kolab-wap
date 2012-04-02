@@ -974,8 +974,30 @@ function kolab_admin()
   this.form_error_clear = function()
   {
     $('input,textarea', $('#'+this.env.form_id)).removeClass('error');
-
   }
+
+  this.check_required_fields = function(data)
+  {
+    var i, n, is_empty, ret = true,
+      req_fields = this.env.required_fields;
+
+    for (i=0; i<req_fields.length; i++) {
+      n = req_fields[i];
+      is_empty = 0;
+
+      if ($.isArray(data[n]))
+        is_empty = data[n].length;
+      else
+        is_empty = !data[n];
+
+      if (is_empty) {
+        this.form_value_error(n);
+        ret = false;
+      }
+    }
+
+    return ret;
+  };
 
   /*********************************************************/
   /*********          Client commands              *********/
@@ -1041,6 +1063,11 @@ function kolab_admin()
     if (data.userpassword != data.userpassword2) {
       this.display_message('user.password.mismatch', 'error');
       this.form_value_error('userpassword2');
+      return;
+    }
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
       return;
     }
 
@@ -1115,6 +1142,11 @@ function kolab_admin()
     }
 
     this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
 
     this.set_busy(true, 'saving');
     this.api_post('group.' + action, data, 'group_' + action + '_response');
