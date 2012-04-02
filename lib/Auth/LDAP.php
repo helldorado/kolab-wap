@@ -163,6 +163,92 @@ class LDAP
         }
     }
 
+    public function attribute_details($attributes = array())
+    {
+        $_schema = $this->init_schema();
+
+        $attribs = $_schema->getAll('attributes');
+
+        $attributes_details = array();
+
+        foreach ($attributes as $attribute) {
+            if (array_key_exists($attribute, $attribs)) {
+                $attrib_details = $attribs[$attribute];
+
+                if (!empty($attrib_details['sup'])) {
+                    foreach ($attrib_details['sup'] as $super_attrib) {
+                        $_attrib_details = $attribs[$super_attrib];
+                        if (is_array($_attrib_details)) {
+                            $attrib_details = array_merge($_attrib_details, $attrib_details);
+                        }
+                    }
+                }
+            } elseif (array_key_exists(strtolower($attribute), $attribs)) {
+                $attrib_details = $attribs[strtolower($attribute)];
+
+                if (!empty($attrib_details['sup'])) {
+                    foreach ($attrib_details['sup'] as $super_attrib) {
+                        $_attrib_details = $attribs[$super_attrib];
+                        if (is_array($_attrib_details)) {
+                            $attrib_details = array_merge($_attrib_details, $attrib_details);
+                        }
+                    }
+                }
+            } else {
+                error_log("No schema details exist for attribute $attribute (which is strange)");
+            }
+
+            // The relevant parts only, please
+            $attributes_details[$attribute] = Array(
+                    'type' => (array_key_exists('single-value', $attrib_details) && $attrib_details['single-value']) ? "text" : "list",
+                    'description' => $attrib_details['desc'],
+                    'syntax' => $attrib_details['syntax'],
+                    'max-length' => (array_key_exists('max_length', $attrib_details)) ? $attrib_details['max-length'] : false,
+                );
+        }
+
+        return $attributes_details;
+    }
+
+    public function allowed_attributes($objectclasses = Array())
+    {
+        $_schema = $this->init_schema();
+
+        if (!is_array($objectclasses)) {
+            return false;
+        }
+
+        if (empty($objectclasses)) {
+            return false;
+        }
+
+        $may = Array();
+        $must = Array();
+        $superclasses = Array();
+
+        foreach ($objectclasses as $objectclass) {
+            $superclass = $_schema->superclass($objectclass);
+            if (!empty($superclass)) {
+                $superclasses = array_merge($superclass, $superclasses);
+            }
+
+            $_may = $_schema->may($objectclass);
+            if (is_array($_may)) {
+                $may = array_merge($may, $_may);
+            } /* else {
+            } */
+            $_must = $_schema->must($objectclass);
+            if (is_array($_must)) {
+                $must = array_merge($must, $_must);
+            } /* else {
+                var_dump($_must);
+            } */
+        }
+
+        return Array('may' => $may, 'must' => $must, 'super' => $superclasses);
+
+    }
+
     public function domain_add($domain, $domain_alias = false, $prepopulate = true)
     {
         // Apply some routines for access control to this function here.
@@ -535,23 +621,24 @@ class LDAP
         return $this->_add($dn, $attrs);
     }
 
-    public function user_delete($user)
+    public function user_delete($subject)
     {
-        $is_dn = ldap_explode_dn($user, 1);
+        $is_dn = ldap_explode_dn($subject, 1);
         if (!$is_dn) {
-            list($this->userid, $this->domain) = $this->_qualify_id($user);
-            $root_dn = $this->domain_root_dn($this->domain);
-            $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
-        }
-        else {
-            $user_dn = $user;
+            $conf = Conf::get_instance();
+            $unique_attr = $conf->get('unique_attr');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            $user = $this->user_find_by_attribute(Array($unique_attr => $subject));
+            $user_dn = key($user);
+            $result = $this->_delete($user_dn);
+        } else {
+            $result = $this->_delete($subject);
         }
 
-        if (!$user_dn) {
-            return false;
-        }
-
-        return $this->_delete($user_dn);
+        return $result;
     }
 
     public function user_find_by_attribute($attribute)
@@ -657,6 +744,25 @@ class LDAP
         return $this->_add($dn, $attrs);
     }
 
+    public function group_delete($subject)
+    {
+        $is_dn = ldap_explode_dn($subject, 1);
+        if (!$is_dn) {
+            $conf = Conf::get_instance();
+            $unique_attr = $conf->get('unique_attr');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            $group = $this->group_find_by_attribute(Array($unique_attr => $subject));
+            $group_dn = key($group);
+            $result = $this->_delete($group_dn);
+        } else {
+            $result = $this->_delete($subject);
+        }
+
+        return $result;
+    }
 
     public function group_info($group)
     {
@@ -741,6 +847,42 @@ class LDAP
         error_log("Using $domain_rootdn");
 
         return $domain_rootdn;
+    }
+
+    private function init_schema()
+    {
+        $conf = Conf::get_instance();
+
+        $this->_ldap_uri    = $this->conf->get('ldap_uri');
+        $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
+        $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
+        $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
+
+        require_once("Net/LDAP2.php");
+
+        $_ldap_cfg = Array(
+                'host' => $this->_ldap_server,
+                'port' => $this->_ldap_port,
+                'tls' => false,
+                'version' => 3,
+                'binddn' => $conf->get('bind_dn'),
+                'bindpw' => $conf->get('bind_pw')
+            );
+
+        $_ldap_schema_cache_cfg = Array(
+                'path' => "/tmp/Net_LDAP2_Schema.cache",
+                'max_age' => 86400,
+            );
+
+        $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
+
+        $_ldap = Net_LDAP2::connect($_ldap_cfg);
+
+        $result = $_ldap->registerSchemaCache($_ldap_schema_cache);
+
+        $_schema = $_ldap->schema('cn=schema');
+
+        return $_schema;
     }
 
     private function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))

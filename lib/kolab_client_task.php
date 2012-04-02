@@ -961,8 +961,13 @@ class kolab_client_task
             'onclick' => $add_mode ? "kadm.{$name}_add()" : "kadm.{$name}_edit()",
         ));
 
-        if (!empty($data['entrydn'])) {
-            $id = $data[$name];
+        $unique_attr = $this->config->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        if (!empty($data[$unique_attr])) {
+            $id = $data[$unique_attr];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
                 'onclick' => "kadm.{$name}_delete('{$id}')",

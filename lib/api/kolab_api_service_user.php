@@ -128,6 +128,7 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_delete($getdata, $postdata)
     {
+        console("user_delete()", $getdata, $postdata);
         if (!isset($postdata['user'])) {
             return false;
         }
