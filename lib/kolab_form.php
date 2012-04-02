@@ -227,7 +227,7 @@ class kolab_form
 
         $attrib = array('cells' => $cells);
 
-        if ($element['required']) {
+        if (!empty($element['required']) && empty($element['readonly']) && empty($element['disabled'])) {
             $attrib['class'] = 'required';
         }
 

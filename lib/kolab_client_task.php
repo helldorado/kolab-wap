@@ -675,6 +675,8 @@ class kolab_client_task
             }
         }
 
+        $result['required'] = empty($field['optional']);
+
         return $result;
     }
 
