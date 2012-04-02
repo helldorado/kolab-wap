@@ -170,14 +170,14 @@ class Auth {
     public function attr_details($attribute)
     {
         $conf = Conf::get_instance();
-        return $this->_auth[$conf->get('kolab', 'primary_domain']->attribute_details((array)($attribute));
+        return $this->_auth[$conf->get('kolab', 'primary_domain')]->attribute_details((array)($attribute));
     }
 
     // TODO: Dummy function to be removed
     public function attrs_allowed($objectclasses = array())
     {
         $conf = Conf::get_instance();
-        return $this->_auth[$conf->get('kolab', 'primary_domain']->allowed_attributes($objectclasses);
+        return $this->_auth[$conf->get('kolab', 'primary_domain')]->allowed_attributes($objectclasses);
     }
 
     public function allowed_attributes($objectclasses = array())
