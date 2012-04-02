@@ -67,10 +67,7 @@ class kolab_api_service_user extends kolab_api_service
 
         if (isset($uta['form_fields'])) {
             foreach ($uta['form_fields'] as $key => $value) {
-                if (
-                        (!isset($postdata[$key]) || empty($postdata[$key])) &&
-                        (!array_key_exists('optional', $value) || !$value['optional'])
-                    ) {
+                if (empty($postdata[$key]) && empty($value['optional'])) {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
@@ -82,9 +79,8 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    console("Key $key empty in \$postdata");
                     // If the attribute is marked as optional, however...
-                    if (!array_key_exists('optional', $value) || !$value['optional']) {
+                    if (empty($value['optional'])) {
                         $postdata['attributes'] = array($key);
                         $res                    = $form_service->generate($getdata, $postdata);
                         $postdata[$key]         = $res[$key];
@@ -195,10 +191,7 @@ class kolab_api_service_user extends kolab_api_service
 
         if (isset($uta['form_fields'])) {
             foreach ($uta['form_fields'] as $key => $value) {
-                if (
-                        (!isset($postdata[$key]) || empty($postdata[$key])) &&
-                        (!array_key_exists('optional', $value) || !$value['optional']) 
-                    ) {
+                if (empty($postdata[$key]) && empty($value['optional'])) {
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
@@ -210,26 +203,11 @@ class kolab_api_service_user extends kolab_api_service
         if (isset($uta['auto_form_fields'])) {
             foreach ($uta['auto_form_fields'] as $key => $value) {
                 if (empty($postdata[$key])) {
-                    switch ($key) {
-                        case "userpassword":
-                            if (!empty($postdata['userpassword']) && !empty($postdata['userpassword2'])) {
-                                if ($postdata['userpassword'] === $postdata['userpassword2']) {
-                                    $user_password = $postdata['userpassword'];
-                                } else {
-                                    throw new Exception("Password mismatch");
-                                }
-                            } else {
-                                $user_attributes[$key] = $_user[$key];
-                            }
-                            break;
-                        default:
-                            if (!array_key_exists('optional', $value) || !$value['optional']) {
-                                $postdata['attributes'] = array($key);
-                                $res                    = $form_service->generate($getdata, $postdata);
-                                $postdata[$key]         = $res[$key];
-                                $user_attributes[$key]  = $postdata[$key];
-                            }
-                            break;
+                    if (empty($value['optional'])) {
+                        $postdata['attributes'] = array($key);
+                        $res                    = $form_service->generate($getdata, $postdata);
+                        $postdata[$key]         = $res[$key];
+                        $user_attributes[$key]  = $postdata[$key];
                     }
                 } else {
                     $user_attributes[$key] = $postdata[$key];
