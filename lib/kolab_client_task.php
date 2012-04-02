@@ -691,7 +691,7 @@ class kolab_client_task
     {
         $types        = (array) $this->{$name . '_types'}();
         $form_id      = $attribs['id'];
-        $add_mode     = empty($data['entrydn']);
+        $add_mode     = empty($data['id']);
 
         $event_fields = array();
         $auto_fields  = array();
@@ -836,16 +836,12 @@ class kolab_client_task
                 'value'    => $name,
             );
 
+        // Add entry identifier
         if (!$add_mode) {
-            $unique_attr = $this->config->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            $fields[$unique_attr] = Array(
+            $fields['id'] = array(
                     'section'   => 'system',
                     'type'      => kolab_form::INPUT_HIDDEN,
-                    'value'     => $data[$unique_attr]
+                    'value'     => $data['id']
                 );
         }
 
@@ -961,7 +957,7 @@ class kolab_client_task
             'onclick' => $add_mode ? "kadm.{$name}_add()" : "kadm.{$name}_edit()",
         ));
 
-        if (!empty($data['entrydn'])) {
+        if (!empty($data['id'])) {
             $id = $data[$name];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),

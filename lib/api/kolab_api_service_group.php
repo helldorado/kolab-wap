@@ -63,7 +63,7 @@ class kolab_api_service_group extends kolab_api_service
             foreach ($gta['form_fields'] as $key => $value) {
                 error_log("form field $key");
                 if (
-                        (!isset($postdata[$key]) || empty($postdata[$key]) &&
+                        (!isset($postdata[$key]) || empty($postdata[$key])) &&
                         (!array_key_exists('optional', $value) || !$value['optional'])
                     ) {
                     throw new Exception("Missing input value for $key", 345);
@@ -152,10 +152,14 @@ class kolab_api_service_group extends kolab_api_service
 
         $conf = Conf::get_instance();
 
+        // Group identifier
         $unique_attr = $conf->get('unique_attribute');
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
         }
+        $group_attributes[$unique_attr] = $postdata['id'];
+        unset($postdata['id']);
+
         // TODO: "rdn" is somewhat LDAP specific, but not used as something
         // LDAP specific...?
         $rdn_attr = $conf->get($type_str . '_group_name_attribute');
@@ -203,8 +207,6 @@ class kolab_api_service_group extends kolab_api_service
                     $group_attributes[$key] = $postdata[$key];
                 }
             }
-
-            $group_attributes[$unique_attr] = $postdata[$unique_attr];
         }
 
         $auth = Auth::get_instance();
@@ -212,7 +214,7 @@ class kolab_api_service_group extends kolab_api_service
 
         // Now that values have been re-generated where necessary, compare
         // the new group attributes to the original group attributes.
-        $_group = $auth->group_find_by_attribute(Array($unique_attr => $postdata[$unique_attr]));
+        $_group = $auth->group_find_by_attribute(array($unique_attr => $postdata['id']));
 
         if (!$_group) {
             console("Could not find group");
@@ -230,7 +232,6 @@ class kolab_api_service_group extends kolab_api_service
         }
 
         return false;
-
     }
 
     /**
@@ -244,60 +245,20 @@ class kolab_api_service_group extends kolab_api_service
     public function group_info($getdata, $postdata)
     {
         if (empty($getdata['group'])) {
-            return FALSE;
+            return false;
         }
 
         $auth   = Auth::get_instance();
-        $conf   = Conf::get_instance();
         $result = $auth->group_info($getdata['group']);
 
         // normalize result
-        $dn                = key($result);
-        $result            = $result[$dn];
-        $result['entrydn'] = $dn;
-
-        // add group type id to the result                                                                                                                       
-        $result['type_id'] = $this->object_type_id('group', $result['objectclass']);
-
-        // Search for attributes associated with the type_id that are not part
-        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
-        if ($result['type_id']) {
-            $uta   = $this->object_type_attributes('group', $result['type_id']);
-            $attrs = array();
-
-            foreach ($uta as $field_type => $attributes) {
-                foreach ($attributes as $attribute => $data) {
-                    if (!array_key_exists($attribute, $result)) {
-                        $attrs[] = $attribute;
-                    }
-                }
-            }
-
-            // Insert the persistent, unique attribute
-            $unique_attr = $conf->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            if (!array_key_exists($unique_attr, $attrs)) {
-                $attrs[] = 'nsuniqueid';
-            }
-
-            if (!empty($attrs)) {
-                $attrs = $auth->get_attributes($result['entrydn'], $attrs);
-                if (!empty($attrs)) {
-                    $result = array_merge($result, $attrs);
-                }
-            }
-        }
-
-        //console($result);
+        $result = $this->parse_result_attributes('group', $result);
 
         if ($result) {
             return $result;
         }
 
-        return FALSE;
+        return false;
     }
 
     /**

@@ -274,51 +274,10 @@ class kolab_api_service_user extends kolab_api_service
         }
 
         $auth   = Auth::get_instance();
-        $conf   = Conf::get_instance();
-        $user   = $getdata['user'];
-        $result = $auth->user_info($user);
+        $result = $auth->user_info($getdata['user']);
 
         // normalize result
-        $dn                = key($result);
-        $result            = $result[$dn];
-        $result['entrydn'] = $dn;
-
-        // add user type id to the result
-        $result['type_id'] = $this->object_type_id('user', $result['objectclass']);
-
-        // Search for attributes associated with the type_id that are not part
-        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
-        if ($result['type_id']) {
-            $uta   = $this->object_type_attributes('user', $result['type_id']);
-            $attrs = array();
-
-            foreach ($uta as $field_type => $attributes) {
-                foreach ($attributes as $attribute => $data) {
-                    if (!array_key_exists($attribute, $result)) {
-                        $attrs[] = $attribute;
-                    }
-                }
-            }
-
-            // Insert the persistent, unique attribute
-            $unique_attr = $conf->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            if (!array_key_exists($unique_attr, $attrs)) {
-                $attrs[] = 'nsuniqueid';
-            }
-
-            if (!empty($attrs)) {
-                $attrs = $auth->get_attributes($result['entrydn'], $attrs);
-                if (!empty($attrs)) {
-                    $result = array_merge($result, $attrs);
-                }
-            }
-        }
-
-        console($result);
+        $result = $this->parse_result_attributes('group', $result); 
 
         if ($result) {
             return $result;

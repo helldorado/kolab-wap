@@ -185,4 +185,55 @@ abstract class kolab_api_service
         return $this->cache['object_types'][$object_name] = $object_types;
     }
 
+    /**
+     * Detects object type ID for specified objectClass attribute value
+     *
+     * @param string $object_name  Name of the object (user, group, etc.)
+     * @param array  $attrs        Entry attributes
+     *
+     * @return array Entry attributes
+     */
+    protected function parse_result_attributes($object_name, $attrs = array())
+    {
+        if (empty($attrs) || !is_array($attrs)) {
+            return $attrs;
+        }
+
+        $conf  = Conf::get_instance();
+        $auth  = Auth::get_instance();
+        $dn    = key($attrs);                                                                                                                                 
+        $attrs = $attrs[$dn];
+
+        // Insert the persistent, unique attribute
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        if (!array_key_exists($unique_attr, $attrs)) {
+            $u_attrs = $auth->get_attributes($dn, array($unique_attr));
+            if (!empty($u_attrs)) {
+                $attrs['id'] = $u_attrs[$unique_attr];
+            }
+        }
+
+        // add group type id to the result                                                                                                                       
+        $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
+
+        // Search for attributes associated with the type_id that are not part
+        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
+        if ($attrs['type_id']) {
+            $uta = $this->object_type_attributes($object_name, $attrs['type_id']);
+
+            foreach ((array)$uta as $field_type => $attributes) {
+                foreach ($attributes as $attribute => $data) {
+                    if (!array_key_exists($attribute, $attrs)) {
+                        $attrs[$attribute] = $data;
+                    }
+                }
+            }
+        }
+
+        return $attrs;
+    }
 }
