@@ -135,7 +135,7 @@ class kolab_api_service_user extends kolab_api_service
         $result = $auth->user_info($getdata['user']);
 
         // normalize result
-        $result = $this->parse_result_attributes('group', $result); 
+        $result = $this->parse_result_attributes('user', $result); 
 
         if ($result) {
             return $result;
