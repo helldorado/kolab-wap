@@ -260,12 +260,22 @@ class LDAP
         }
     }
 
-    public function effective_rights($subject_dn)
+    public function effective_rights($subject)
     {
         $attributes = array();
         $output = array();
 
         $conf = Conf::get_instance();
+
+        $entry_dn = $this->entry_dn($subject);
+        if (!$entry_dn) {
+            $entry_dn = $conf->get($subject . "_base_dn");
+        }
+        if (!$entry_dn) {
+            $entry_dn = $conf->get("base_dn");
+        }
+
+        //console("effective_rights for $subject resolves to $entry_dn");
 
         $command = array(
                 // TODO: Very 64-bit specific
@@ -290,11 +300,15 @@ class LDAP
                                 'dn:' . $_SESSION['user']->user_bind_dn // User DN
                             )
                     ) . '"',
-                '"(entrydn=' . $subject_dn . ')"'
+                '"(entrydn=' . $entry_dn . ')"'
 
             );
 
+        //console("Executing command " . implode(' ', $command));
+
         exec(implode(' ', $command), $output);
+
+        //console("Output", $output);
 
         $lines = array();
         foreach ($output as $line_num => $line) {
@@ -922,7 +936,7 @@ class LDAP
 
         foreach ($attribute_values as $access_right) {
             $access_right_components = explode(":", $access_right);
-            $access_attribute = array_shift($access_right_components);
+            $access_attribute = strtolower(array_shift($access_right_components));
             $access_value = array_shift($access_right_components);
 
             $attribute_value[$access_attribute] = array();
@@ -1093,10 +1107,10 @@ class LDAP
     {
         if (is_array($this->sort_result_key)) {
             foreach ($this->sort_result_key as $attrib) {
-                if (array_key_exists($attrib, $a)) {
+                if (array_key_exists($attrib, $a) && !$str1) {
                     $str1 = $a[$attrib];
                 }
-                if (array_key_exists($attrib, $b)) {
+                if (array_key_exists($attrib, $b) && !$str2) {
                     $str2 = $b[$attrib];
                 }
             }
