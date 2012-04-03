@@ -518,7 +518,7 @@ class LDAP
         $_user = $this->user_info($_user_dn, array());
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_user_dn, $_user, $attributes);
+        return $this->modify_entry($_user_dn, $_user[$_user_dn], $attributes);
     }
 
     public function user_delete($user)
@@ -979,7 +979,8 @@ class LDAP
 
     private function modify_entry($subject_dn, $old_attrs, $new_attrs)
     {
-        console($old_attrs);
+        //console("OLD ATTRIBUTES", $old_attrs);
+        //console("NEW ATTRIBUTES", $new_attrs);
 
         // TODO: Get $rdn_attr - we have type_id in $new_attrs
         $dn_components = ldap_explode_dn($subject_dn, 0);
@@ -987,9 +988,7 @@ class LDAP
 
         $rdn_attr = $rdn_components[0];
 
-        console($rdn_attr);
-
-//        return;
+        //console($rdn_attr);
 
         $mod_array = Array(
                 "add"       => Array(), // For use with ldap_mod_add()
@@ -1008,8 +1007,14 @@ class LDAP
                         $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
                     } else {
                         if (empty($new_attrs[$attr])) {
-                            console("Adding to del: $attr");
-                            $mod_array['del'][$attr] = (array)($old_attr_value);
+                            switch ($attr) {
+                                case "userpassword":
+                                    break;
+                                default:
+                                    console("Adding to del: $attr");
+                                    $mod_array['del'][$attr] = (array)($old_attr_value);
+                                    break;
+                            }
                         } else {
                             console("Adding to replace: $attr");
                             $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
@@ -1029,8 +1034,14 @@ class LDAP
             if (array_key_exists($attr, $old_attrs)) {
                 if (empty($value)) {
                     if (!array_key_exists($attr, $mod_array['del'])) {
-                        console("Adding to del(2): $attr");
-                        $mod_array['del'][$attr] = (array)($old_attrs[$attr]);
+                        switch ($attr) {
+                            case "userpassword":
+                                break;
+                            default:
+                                console("Adding to del(2): $attr");
+                                $mod_array['del'][$attr] = (array)($old_attrs[$attr]);
+                                break;
+                        }
                     }
                 } else {
                     if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
@@ -1378,6 +1389,10 @@ class LDAP
 //        error_log("Searching with user: " . $_SESSION['user']->user_bind_dn);
 
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        if (!in_array($this->unique_attribute(), $attributes)) {
+            $attributes[] = $this->unique_attribute();
+        }
 
         if (($search_results = @ldap_search($this->conn, $base_dn, $search_filter, $attributes)) == false) {
             //message("Could not search in " . __METHOD__ . " in " . __FILE__ . " on line " . __LINE__ . ": " . $this->_errstr());
