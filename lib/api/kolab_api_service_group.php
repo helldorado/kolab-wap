@@ -96,55 +96,12 @@ class kolab_api_service_group extends kolab_api_service
     public function group_edit($getdata, $postdata)
     {
         $group_attributes = $this->parse_input_attributes('group', $postdata);
+        $group            = $postdata['id'];
 
-        // Get the type "key" string for the next few settings.
-        if ($postdata['type_id'] == null) {
-            $type_str = 'group';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $postdata['type_id']));
-            $type_str = $_key['key'];
-        }
+        $auth   = Auth::get_instance();
+        $result = $auth->group_edit($postdata['id'], $group_attributes, $postdata['type_id']);
 
-        $conf = Conf::get_instance();
-
-        // Group identifier
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-        $group_attributes[$unique_attr] = $postdata['id'];
-        unset($postdata['id']);
-
-        // TODO: "rdn" is somewhat LDAP specific, but not used as something
-        // LDAP specific...?
-        $rdn_attr = $conf->get($type_str . '_group_name_attribute');
-        if (!$rdn_attr) {
-            $rdn_attr = $conf->get('group_name_attribute');
-        }
-        if (!$rdn_attr) {
-            $rdn_attr = 'cn';
-        }
-
-        $auth = Auth::get_instance();
-        $auth->connect();
-
-        // Now that values have been re-generated where necessary, compare
-        // the new group attributes to the original group attributes.
-        $_group = $auth->group_find_by_attribute(array($unique_attr => $group_attributes[$unique_attr]));
-
-        if (!$_group) {
-            console("Could not find group");
-            return false;
-        }
-
-        $_group_dn = key($_group);
-        $_group = $this->group_info(Array('group' => $_group_dn), Array());
-
-        // We should start throwing stuff over the fence here.
-        $result = $auth->modify_entry($_group_dn, $_group, $group_attributes);
-
+        // @TODO: return unique attribute or all attributes as group_add()
         if ($result) {
             return true;
         }

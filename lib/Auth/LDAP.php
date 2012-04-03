@@ -560,14 +560,14 @@ class LDAP
         }
     }
 
-    public function user_add($attrs, $type = null)
+    public function user_add($attrs, $typeid = null)
     {
-        if ($type == null) {
+        if ($typeid == null) {
             $type_str = 'user';
         }
         else {
             $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $type));
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $typeid));
             $type_str = $_key['key'];
         }
 
@@ -587,6 +587,43 @@ class LDAP
         $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
 
         return $this->_add($dn, $attrs);
+    }
+
+    public function user_edit($user, $attributes, $typeid = null)
+    {
+/*
+        // Get the type "key" string for the next few settings.
+        if ($typeid == null) {
+            $type_str = 'user';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+*/
+        $conf = Conf::get_instance();
+
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+        $attributes[$unique_attr] = $user;                                                                                                      
+
+        // Now that values have been re-generated where necessary, compare
+        // the new group attributes to the original group attributes.
+        $_user = $this->user_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+
+        if (!$_user) {
+            console("Could not find user");
+            return false;
+        }
+
+        $_user_dn = key($_user);
+        $_user = $this->user_info(array('user' => $_user_dn), array());
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($_user_dn, $_user, $attributes);
     }
 
     public function user_delete($user)
@@ -703,18 +740,18 @@ class LDAP
         return $groups;
     }
 
-    public function group_add($attrs, $type = null)
+    public function group_add($attrs, $typeid = null)
     {
-        if ($type == null) {
+        if ($typeid == null) {
             $type_str = 'group';
         }
         else {
             $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $type));
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
             $type_str = $_key['key'];
         }
 
-        // Check if the user_type has a specific base DN specified.
+        // Check if the group_type has a specific base DN specified.
         $base_dn = $this->conf->get($type_str . "_group_base_dn");
         // If not, take the regular user_base_dn
         if (!$base_dn)
@@ -725,6 +762,44 @@ class LDAP
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
         return $this->_add($dn, $attrs);
+    }
+
+    public function group_edit($group, $attributes, $typeid = null)
+    {
+/*
+        // Get the type "key" string for the next few settings.
+        if ($typeid == null) {
+            $type_str = 'group';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+*/
+        $conf = Conf::get_instance();
+
+        // Group identifier
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+        $attributes[$unique_attr] = $group;
+
+        // Now that values have been re-generated where necessary, compare
+        // the new group attributes to the original group attributes.
+        $_group = $this->group_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+
+        if (!$_group) {
+            console("Could not find group");
+            return false;
+        }
+
+        $_group_dn = key($_group);
+        $_group = $this->group_info(array('group' => $_group_dn), array());
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($_group_dn, $_group, $attributes);
     }
 
     public function group_delete($group)

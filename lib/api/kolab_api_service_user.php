@@ -103,56 +103,13 @@ class kolab_api_service_user extends kolab_api_service
     {
         console("\$postdata to user_edit()", $postdata);
 
-        $user_attributes = $this->parse_input_attributes('user', $postdata); 
+        $user_attributes = $this->parse_input_attributes('user', $postdata);
+        $user            = $postdata['id'];
 
-        // Get the type "key" string for the next few settings.
-        if ($postdata['type_id'] == null) {
-            $type_str = 'user';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $postdata['type_id']));
-            $type_str = $_key['key'];
-        }
+        $auth   = Auth::get_instance();
+        $result = $auth->user_edit($user, $user_attributes, $postdata['type_id']);
 
-        $conf = Conf::get_instance();
-
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-        $user_attributes[$unique_attr] = $postdata['id'];                                                                                                      
-        unset($postdata['id']);
-
-        // TODO: "rdn" is somewhat LDAP specific, but not used as something
-        // LDAP specific...?
-        $rdn_attr = $conf->get($type_str . '_user_name_attribute');
-        if (!$rdn_attr) {
-            $rdn_attr = $conf->get('user_name_attribute');
-        }
-        if (!$rdn_attr) {
-            $rdn_attr = 'uid';
-        }
-
-        // Obtain the original user's information.
-        $auth = Auth::get_instance();
-        $auth->connect();
-
-        // Now that values have been re-generated where necessary, compare
-        // the new group attributes to the original group attributes.
-        $_user = $auth->user_find_by_attribute(array($unique_attr => $user_attributes[$unique_attr]));
-
-        if (!$_user) {
-            console("Could not find user");
-            return false;
-        }
-
-        $_user_dn = key($_user);
-        $_user = $this->user_info(array('user' => $_user_dn), array());
-
-        // We should start throwing stuff over the fence here.
-        $result = $auth->modify_entry($_user_dn, $_user, $user_attributes);
-
+        // @TODO: return unique attribute (?), it can change on edit
         if ($result) {
             return true;
         }

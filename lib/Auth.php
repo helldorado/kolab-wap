@@ -213,9 +213,14 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->get_attributes($subject, $attributes);
     }
 
-    public function group_add($attributes, $type=NULL)
+    public function group_add($attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $type);
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $typeid);
+    }
+
+    public function group_edit($group, $attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_edit($group, $attributes, $typeid);
     }
 
     public function group_delete($subject)
@@ -288,11 +293,6 @@ class Auth {
         return $roles;
     }
 
-    public function modify_entry($subject, $attrs, $_attrs)
-    {
-        return $this->_auth[$_SESSION['user']->get_domain()]->modify_entry($subject, $attrs, $_attrs);
-    }
-
     public function primary_for_valid_domain($domain)
     {
         $this->domains = $this->list_domains();
@@ -315,9 +315,14 @@ class Auth {
         }
     }
 
-    public function user_add($attributes, $type=NULL)
+    public function user_add($attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $type);
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $typeid);
+    }
+
+    public function user_edit($user, $attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_edit($user, $attributes, $typeid);
     }
 
     public function user_delete($userdata)
