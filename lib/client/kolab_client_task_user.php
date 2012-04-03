@@ -193,10 +193,11 @@ class kolab_client_task_user extends kolab_client_task
 
         // Form sections
         $sections = array(
-            'personal' => 'user.personal',
-            'system'   => 'user.system',
-            'config'   => 'user.config',
-            'other'    => 'user.other',
+            'personal'      => 'user.personal',
+            'contact_info'  => 'user.contact_info',
+            'system'        => 'user.system',
+            'config'        => 'user.config',
+            'other'         => 'user.other',
         );
 
         // field-to-section map and fields order
@@ -209,23 +210,27 @@ class kolab_client_task_user extends kolab_client_task
             'cn'                        => 'personal',
             'initials'                  => 'personal',
             'title'                     => 'personal',
-            'telephonenumber'           => 'personal',
-            'facsimiletelephonenumber'  => 'personal',
             'o'                         => 'personal',
             'ou'                        => 'personal',
-            'roomnumber'                => 'personal',
-            'street'                    => 'personal',
-            'l'                         => 'personal',
-            'postofficebox'             => 'personal',
-            'postalcode'                => 'personal',
-            'c'                         => 'personal',
             'preferredlanguage'         => 'personal',
+
+            'c'                         => 'contact_info',
+            'facsimiletelephonenumber'  => 'contact_info',
+            'homephone'                 => 'contact_info',
+            'l'                         => 'contact_info',
+            'mail'                      => 'contact_info',
+            'mailalternateaddress'      => 'contact_info',
+            'mobile'                    => 'contact_info',
+            'pager'                     => 'contact_info',
+            'postalcode'                => 'contact_info',
+            'postofficebox'             => 'contact_info',
+            'roomnumber'                => 'contact_info',
+            'street'                    => 'contact_info',
+            'telephonenumber'           => 'contact_info',
 
             'uid'                       => 'system',
             'userpassword'              => 'system',
             'userpassword2'             => 'system',
-            'mail'                      => 'system',
-            'mailalternateaddress'      => 'system',
             'alias'                     => 'system',
             'mailhost'                  => 'system',
             'kolabhomeserver'           => 'system',

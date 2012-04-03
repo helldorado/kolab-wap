@@ -46,6 +46,7 @@ $LANG['user.c'] = 'Country';
 $LANG['user.cn'] = 'Common name';
 $LANG['user.config'] = 'Configuration';
 $LANG['user.contact'] = 'Contact';
+$LANG['user.contact_info'] = 'Contact Information';
 $LANG['user.homephone'] = 'Home Phone Number';
 $LANG['user.kolabinvitationpolicy'] = 'Invitation Handling Policy';
 $LANG['user.l'] = 'City, Region';
