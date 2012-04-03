@@ -63,7 +63,7 @@ abstract class kolab_api_service
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
-    
+
         if (empty($type_id)) {
             if ($required) {
                 throw new Exception($this->controller->translate($object_name . '.notypeid'), 34);
@@ -199,10 +199,29 @@ abstract class kolab_api_service
             return $attrs;
         }
 
-        $conf  = Conf::get_instance();
-        $auth  = Auth::get_instance();
-        $dn    = key($attrs);                                                                                                                                 
-        $attrs = $attrs[$dn];
+        $conf        = Conf::get_instance();
+        $auth        = Auth::get_instance();
+        $dn          = key($attrs);
+        $attrs       = $attrs[$dn];
+        $extra_attrs = array();
+
+        // add group type id to the result
+        $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
+
+        // Search for attributes associated with the type_id that are not part
+        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
+        // @TODO: this should go to LDAP class
+        if ($attrs['type_id']) {
+            $uta = $this->object_type_attributes($object_name, $attrs['type_id']);
+
+            foreach ((array)$uta as $field_type => $attributes) {
+                foreach ($attributes as $attribute => $data) {
+                    if (!array_key_exists($attribute, $attrs)) {
+                        $extra_attrs[] = $attribute;
+                    }
+                }
+            }
+        }
 
         // Insert the persistent, unique attribute
         $unique_attr = $conf->get('unique_attribute');
@@ -211,28 +230,20 @@ abstract class kolab_api_service
         }
 
         if (!array_key_exists($unique_attr, $attrs)) {
-            $u_attrs = $auth->get_attributes($dn, array($unique_attr));
-            if (!empty($u_attrs)) {
-                $attrs['id'] = $u_attrs[$unique_attr];
+            $extra_attrs[] = $unique_attr;
+        }
+
+        // Get extra attributes
+        if (!empty($extra_attrs)) {
+            $extra_attrs = $auth->get_attributes($dn, $extra_attrs);
+            if (!empty($extra_attrs)) {
+                $attrs = array_merge($attrs, $extra_attrs);
             }
         }
 
-        // add group type id to the result                                                                                                                       
-        $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
-
-        // Search for attributes associated with the type_id that are not part
-        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
-        if ($attrs['type_id']) {
-            $uta = $this->object_type_attributes($object_name, $attrs['type_id']);
-
-            foreach ((array)$uta as $field_type => $attributes) {
-                foreach ($attributes as $attribute => $data) {
-                    if (!array_key_exists($attribute, $attrs)) {
-                        $attrs[$attribute] = $data;
-                    }
-                }
-            }
-        }
+        // Replace unique attribute with 'id' key
+        $attrs['id'] = $attrs[$unique_attr];
+        unset($attrs[$unique_attr]);
 
         return $attrs;
     }
