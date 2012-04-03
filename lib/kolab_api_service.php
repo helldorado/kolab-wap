@@ -280,7 +280,7 @@ abstract class kolab_api_service
         if (isset($type_attrs['fields'])) {
             foreach ($type_attrs['fields'] as $key => $value) {
                 if (empty($attribs[$key])) {
-                    $result[$key] = $gta['fields'][$key];
+                    $result[$key] = $type_attrs['fields'][$key];
                 } else {
                     $result[$key] = $attribs[$key];
                 }
