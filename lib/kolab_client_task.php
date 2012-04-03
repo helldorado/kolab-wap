@@ -875,6 +875,7 @@ class kolab_client_task
                     'type'      => kolab_form::INPUT_HIDDEN,
                     'value'     => $data['entrydn']
                 );
+
         }
 
         return array($fields, $types, $type);
@@ -982,44 +983,97 @@ class kolab_client_task
                     $field['name'] = $idx;
                 }
 
-                if (empty($field['disabled'])) {
+                //console("before authz: " . $field['name'], $field);
+
+                // Only edit those fields that actually have merit
+                if (array_key_exists('disabled', $field) || array_key_exists('readonly', $field)) {
                     if (!array_key_exists($field['name'], $effective_rights['attributeLevelRights'])) {
+                        //console("No explicit rights on attribute " . $field['name']);
                         // If the entry level rights contain 'add' and 'delete', well, you're an admin
                         if (
                                 in_array('add', $effective_rights['entryLevelRights']) &&
                                 in_array('delete', $effective_rights['entryLevelRights'])
                             ) {
-                            $field['disabled'] = false;
+
+                            //console("Overriding any permissions for field " . $field['name'] . ", simply because we have the access to delete and add back the entry.");
+                            if (array_key_exists('disabled', $field) && $field['disabled']) {
+                                //console("overriding disabled state on " . $field['name']);
+                                $field['disabled'] = false;
+                            }
+                            if (array_key_exists('readonly', $field) && $field['readonly']) {
+                                //console("overriding readonly state on " . $field['name']);
+                                $field['readonly'] = false;
+                            }
+
                         } else {
-                            $field['disabled'] = true;
+                            //console("no explicit write permissions on " . $field['name'] . ", disabling");
+                            if (array_key_exists('disabled', $field) && $field['disabled']) {
+                                //console("overriding disabled state on " . $field['name']);
+                                $field['disabled'] = false;
+                            }
+                            if (array_key_exists('readonly', $field) && !$field['readonly']) {
+                                //console("overriding readonly state on " . $field['name']);
+                                $field['readonly'] = true;
+                            }
                         }
                     } else {
+                        //console("Explicit rights on attribute " . $field['name'] . " found");
                         if (!in_array('write', $effective_rights['attributeLevelRights'][$field['name']])) {
-                            //console("no write on " . $field['name']);
-                            $field['disabled'] = true;
-                        } /* else {
-                            console("write on " . $field['name']);
-                        } */
+                            //console("no write permissions on " . $field['name'] . ", marking read-only");
+/*                            if (array_key_exists('disabled', $field) && !$field['disabled']) {
+                                console("overriding disabled state on " . $field['name']);
+                                $field['disabled'] = true;
+                            }
+*/
+                            if (array_key_exists('readonly', $field) && !$field['readonly']) {
+                                //console("overriding readonly state on " . $field['name']);
+                                $field['readonly'] = true;
+                            }
+                        } else {
+                            //console("explicit write permissions on " . $field['name']);
+
+                            if (array_key_exists('disabled', $field) && $field['disabled']) {
+                                //console("overriding disabled state on " . $field['name']);
+                                $field['disabled'] = false;
+                            }
+                            if (array_key_exists('readonly', $field) && $field['readonly']) {
+                                //console("overriding readonly state on " . $field['name']);
+                                $field['readonly'] = false;
+                            }
+                        }
 
                     }
 
                     // Some fields are special, such as the 'userpassword2' field
                     switch ($field['name']) {
+                        case "type_id":
+                            $field['disabled'] = false;
+                            break;
                         case "userpassword2":
-                            if (!array_key_exists('userpassword', $effective_rights['attributeLevelRights'])) {
+                            if (
+                                    in_array('add', $effective_rights['entryLevelRights']) &&
+                                    in_array('delete', $effective_rights['entryLevelRights'])
+                                ) {
+                                $field['disabled'] = false;
+                                $field['readonly'] = false;
+                            } elseif (!array_key_exists('userpassword', $effective_rights['attributeLevelRights'])) {
                                 $field['disabled'] = true;
+                                $field['readonly'] = true;
                             } elseif (!in_array('write', $effective_rights['attributeLevelRights']['userpassword'])) {
                                 $field['disabled'] = true;
+                                $field['readonly'] = true;
                             } else {
                                 $field['disabled'] = false;
+                                $field['readonly'] = false;
                             }
 
                             break;
                         default:
                             break;
                     }
-
                 }
+
+                //console("after authz " . $field['name'], $field);
 
                 if (!empty($field['required']) && empty($field['readonly']) && empty($field['disabled'])) {
                     $req_fields[] = $idx;
