@@ -37,16 +37,39 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function capabilities($domain)
     {
-        return array(
-            'add' => 'w',
-            'delete' => 'w',
-            'edit' => 'w',
-//            'find' => 'r',
-//            'find_by_any_attribute' => 'r',
-//            'find_by_attribute' => 'r',
-//            'find_by_attributes' => 'r',
-            'info' => 'r',
-        );
+        //console("kolab_api_service_group::capabilities");
+
+        $auth = Auth::get_instance();
+
+        $effective_rights = $auth->list_rights('group');
+
+        //console("effective_rights", $effective_rights);
+
+        $rights = array();
+
+        if (in_array('add', $effective_rights['entryLevelRights'])) {
+            $rights['add'] = "w";
+        }
+
+        if (in_array('delete', $effective_rights['entryLevelRights'])) {
+            $rights['delete'] = "w";
+        }
+
+        if (in_array('modrdn', $effective_rights['entryLevelRights'])) {
+            $rights['edit'] = "w";
+        }
+
+        if (in_array('read', $effective_rights['entryLevelRights'])) {
+            $rights['find'] = "r";
+            $rights['find_by_any_attribute'] = "r";
+            $rights['find_by_attribute'] = "r";
+            $rights['find_by_attributes'] = "r";
+            $rights['info'] = "r";
+        }
+
+        $rights['effective_rights'] = "r";
+
+        return $rights;
     }
 
     /**
@@ -59,9 +82,11 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_add($getdata, $postdata)
     {
-        console("user_add()", $postdata);
+        //console("user_add()", $postdata);
+
         $user_attributes = $this->parse_input_attributes('user', $postdata); 
-        console("user_add()", $user_attributes);
+
+        //console("user_add()", $user_attributes);
 
         $auth = Auth::get_instance();
         $result = $auth->user_add($user_attributes, $postdata['type_id']);
@@ -117,6 +142,14 @@ class kolab_api_service_user extends kolab_api_service
         return false;
 
     }
+
+    public function user_effective_rights($getdata, $postdata)
+    {
+        $auth = Auth::get_instance();
+        $effective_rights = $auth->list_rights($getdata['user']);
+        return $effective_rights;
+    }
+
     /**
      * User information.
      *
