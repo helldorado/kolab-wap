@@ -42,7 +42,7 @@ $LANG['menu.kolabsys'] = 'Kolab Systems';
 $LANG['menu.technology'] = 'Technology';
 
 $LANG['user.add'] = 'Add User';
-$LANG['user.c'] = "Country';
+$LANG['user.c'] = 'Country';
 $LANG['user.cn'] = 'Common name';
 $LANG['user.config'] = 'Configuration';
 $LANG['user.contact'] = 'Contact';
