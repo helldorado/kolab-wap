@@ -36,6 +36,11 @@ class kolab_client_task
      */
     protected $api;
 
+    /**
+     * @var Conf
+     */
+    protected $config;
+
     protected $ajax_only = false;
     protected $page_title = 'Kolab Admin Panel';
     protected $menu = array();
@@ -378,6 +383,7 @@ class kolab_client_task
      */
     public function config_get($name, $fallback = null)
     {
+        // @TODO: remove this check
         if ($name == "devel_mode")
             return TRUE;
 

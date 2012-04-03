@@ -471,13 +471,8 @@ class LDAP
             $type_str = $_key['key'];
         }
 */
-        $conf = Conf::get_instance();
-
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-        $attributes[$unique_attr] = $user;                                                                                                      
+        $unique_attr = $this->unique_attribute();
+        $attributes[$unique_attr] = $user;
 
         // Now that values have been re-generated where necessary, compare
         // the new group attributes to the original group attributes.
@@ -586,13 +581,8 @@ class LDAP
             $type_str = $_key['key'];
         }
 */
-        $conf = Conf::get_instance();
-
         // Group identifier
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
+        $unique_attr = $this->unique_attribute();
         $attributes[$unique_attr] = $group;
 
         // Now that values have been re-generated where necessary, compare
@@ -904,14 +894,9 @@ class LDAP
             return $subject;
         }
 
-        $conf = Conf::get_instance();
+        $unique_attr = $this->unique_attribute();
+        $subject     = $this->entry_find_by_attribute(array($unique_attr => $subject));
 
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-
-        $subject = $this->entry_find_by_attribute(array($unique_attr => $subject));
         if (!empty($subject)) {
             return key($subject);
         }
