@@ -26,7 +26,7 @@
 class Conf {
     static private $instance;
 
-    const CONFIG_FILE = '/etc/kolab/kolab.conf';
+    const CONFIG_FILE = '/home/vanmeeuwen/kolab-k.ks.c.conf';
 
     /**
      * This implements the 'singleton' design pattern

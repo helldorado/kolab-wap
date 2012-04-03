@@ -36,6 +36,11 @@ class kolab_client_task
      */
     protected $api;
 
+    /**
+     * @var Conf
+     */
+    protected $config;
+
     protected $ajax_only = false;
     protected $page_title = 'Kolab Admin Panel';
     protected $menu = array();
@@ -378,6 +383,7 @@ class kolab_client_task
      */
     public function config_get($name, $fallback = null)
     {
+        // @TODO: remove this check
         if ($name == "devel_mode")
             return TRUE;
 
@@ -678,6 +684,8 @@ class kolab_client_task
             }
         }
 
+        $result['required'] = empty($field['optional']);
+
         return $result;
     }
 
@@ -694,7 +702,7 @@ class kolab_client_task
     {
         $types        = (array) $this->{$name . '_types'}();
         $form_id      = $attribs['id'];
-        $add_mode     = empty($data['entrydn']);
+        $add_mode     = empty($data['id']);
 
         $event_fields = array();
         $auto_fields  = array();
@@ -839,16 +847,12 @@ class kolab_client_task
                 'value'    => $name,
             );
 
+        // Add entry identifier
         if (!$add_mode) {
-            $unique_attr = $this->config->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            $fields[$unique_attr] = Array(
+            $fields['id'] = array(
                     'section'   => 'system',
                     'type'      => kolab_form::INPUT_HIDDEN,
-                    'value'     => $data[$unique_attr]
+                    'value'     => $data['id']
                 );
 
             $fields['entrydn'] = Array(
@@ -898,6 +902,7 @@ class kolab_client_task
 
         $form = new kolab_form($attribs);
         $assoc_fields = array();
+        $req_fields   = array();
 
         // Parse elements and add them to the form object
         foreach ($sections as $section_idx => $section) {
@@ -957,6 +962,10 @@ class kolab_client_task
                     $field['name'] = $idx;
                 }
 
+                if (!empty($field['required']) && empty($field['readonly']) && empty($field['disabled'])) {
+                    $req_fields[] = $idx;
+                }
+
                 $form->add_element($field);
             }
         }
@@ -967,11 +976,11 @@ class kolab_client_task
 
         $form->add_button(array(
             'value'   => kolab_html::escape($this->translate('submit.button')),
-            'onclick' => $add_mode ? "kadm.{$name}_add()" : "kadm.{$name}_edit()",
+            'onclick' => "kadm.{$name}_save()",
         ));
 
-        if (!empty($data['entrydn'])) {
-            $id = $data[$name];
+        if (!empty($data['id'])) {
+            $id = $data['id'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
                 'onclick' => "kadm.{$name}_delete('{$id}')",
@@ -980,6 +989,8 @@ class kolab_client_task
 
         $this->output->set_env('form_id', $attribs['id']);
         $this->output->set_env('assoc_fields', $assoc_fields);
+        $this->output->set_env('required_fields', $req_fields);
+        $this->output->add_translation('form.required.empty');
 
         return $form;
     }

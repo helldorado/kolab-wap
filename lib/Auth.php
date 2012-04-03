@@ -166,6 +166,38 @@ class Auth {
         }
     }
 
+    // TODO: Dummy function to be removed
+    public function attr_details($attribute)
+    {
+        $conf = Conf::get_instance();
+        return $this->_auth[$conf->get('kolab', 'primary_domain')]->attribute_details((array)($attribute));
+    }
+
+    // TODO: Dummy function to be removed
+    public function attrs_allowed($objectclasses = array())
+    {
+        $conf = Conf::get_instance();
+        return $this->_auth[$conf->get('kolab', 'primary_domain')]->allowed_attributes($objectclasses);
+    }
+
+    public function allowed_attributes($objectclasses = array())
+    {
+        if (!is_array($objectclasses)) {
+            $objectclasses = (array)($objectclasses);
+        }
+
+        return $this->_auth[$_SESSION['user']->get_domain()]->allowed_attributes($objectclasses);
+    }
+
+    public function attribute_details($attributes = array())
+    {
+        if (!is_array($attributes)) {
+            $attributes = (array)($attributes);
+        }
+
+        return $this->_auth[$_SESSION['user']->get_domain()]->attribute_details($attributes);
+    }
+
     public function find_user_groups($member_dn)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
@@ -181,9 +213,19 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->get_attributes($subject, $attributes);
     }
 
-    public function group_add($attributes, $type=NULL)
+    public function group_add($attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $type);
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $typeid);
+    }
+
+    public function group_edit($group, $attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_edit($group, $attributes, $typeid);
+    }
+
+    public function group_delete($subject)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_delete($subject);
     }
 
     public function group_find_by_attribute($attribute)
@@ -205,13 +247,11 @@ class Auth {
     {
         // TODO: Consider a normal user does not have privileges on
         // the base_dn where domain names and configuration is stored.
-        $this->connect();
         return $this->_auth[$this->domain]->list_domains();
     }
 
     public function list_rights($subject)
     {
-        $this->connect();
         return $this->_auth[$this->domain]->effective_rights($subject);
     }
 
@@ -251,11 +291,6 @@ class Auth {
         return $roles;
     }
 
-    public function modify_entry($subject, $attrs, $_attrs)
-    {
-        return $this->_auth[$_SESSION['user']->get_domain()]->modify_entry($subject, $attrs, $_attrs);
-    }
-
     public function primary_for_valid_domain($domain)
     {
         $this->domains = $this->list_domains();
@@ -278,9 +313,14 @@ class Auth {
         }
     }
 
-    public function user_add($attributes, $type=NULL)
+    public function user_add($attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $type);
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $typeid);
+    }
+
+    public function user_edit($user, $attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->user_edit($user, $attributes, $typeid);
     }
 
     public function user_delete($userdata)
