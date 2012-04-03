@@ -329,6 +329,7 @@ class LDAP
         return $attributes;
     }
 
+
     public function get_attribute($subject_dn, $attribute)
     {
         $result = $this->search($subject_dn, '(objectclass=*)', (array)($attribute));
@@ -428,138 +429,6 @@ class LDAP
         return $roles;
     }
 
-    public function modify_entry($subject_dn, $old_attrs, $new_attrs)
-    {
-        console($old_attrs);
-
-        // TODO: Get $rdn_attr - we have type_id in $new_attrs
-        $dn_components = ldap_explode_dn($subject_dn, 0);
-        $rdn_components = explode('=', $dn_components[0]);
-
-        $rdn_attr = $rdn_components[0];
-
-        console($rdn_attr);
-
-//        return;
-
-        $mod_array = Array(
-                "add"       => Array(), // For use with ldap_mod_add()
-                "del"       => Array(), // For use with ldap_mod_del()
-                "replace"   => Array(), // For use with ldap_mod_replace()
-                "rename"    => Array(), // For use with ldap_rename()
-            );
-
-        // Compare each attribute value of the old attrs with the corresponding value
-        // in the new attrs, if any.
-        foreach ($old_attrs as $attr => $old_attr_value) {
-            if (array_key_exists($attr, $new_attrs)) {
-                if (!($new_attrs[$attr] === $old_attr_value)) {
-                    console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
-                    if ($attr === $rdn_attr) {
-                        $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
-                    } else {
-                        if (empty($new_attrs[$attr])) {
-                            console("Adding to del: $attr");
-                            $mod_array['del'][$attr] = (array)($old_attr_value);
-                        } else {
-                            console("Adding to replace: $attr");
-                            $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
-                        }
-                    }
-                } else {
-                    console("Attribute $attr unchanged");
-                }
-            } else {
-                // TODO: Since we're not shipping the entire object back and forth, and only post
-                // part of the data... we don't know what is actually removed (think modifiedtimestamp, etc.)
-                console("Group attribute $attr not mentioned in \$new_attrs..., but not explicitly removed... by assumption");
-            }
-        }
-
-        foreach ($new_attrs as $attr => $value) {
-            if (array_key_exists($attr, $old_attrs)) {
-                if (empty($value)) {
-                    if (!array_key_exists($attr, $mod_array['del'])) {
-                        console("Adding to del(2): $attr");
-                        $mod_array['del'][$attr] = (array)($old_attrs[$attr]);
-                    }
-                } else {
-                    if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
-                        if (!array_key_exists($attr, $mod_array['replace'])) {
-                            console("Adding to replace(2): $attr");
-                            $mod_array['replace'][$attr] = $value;
-                        }
-                    }
-                }
-            } else {
-                if (!empty($value)) {
-                    $mod_array['add'][$attr] = $value;
-                }
-            }
-        }
-
-        console($mod_array);
-
-        $result = $this->modify_entry_attributes($subject_dn, $mod_array);
-
-        if ($result) {
-            return $mod_array;
-        }
-
-    }
-
-    public function modify_entry_attributes($subject_dn, $attributes)
-    {
-        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
-        // Opportunities to set false include failed ldap commands.
-        $result = true;
-
-        if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
-            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
-        }
-
-        if (!$result) {
-            console("Failed to replace the following attributes", $attributes['replace']);
-            return false;
-        }
-
-        if (is_array($attributes['del']) && !empty($attributes['del'])) {
-            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
-        }
-
-        if (!$result) {
-            console("Failed to delete the following attributes", $attributes['del']);
-            return false;
-        }
-
-
-        if (is_array($attributes['add']) && !empty($attributes['add'])) {
-            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
-        }
-
-        if (!$result) {
-            console("Failed to add the following attributes", $attributes['add']);
-            return false;
-        }
-
-        if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
-            $olddn = key($attributes['rename']);
-            $newrdn = $attributes['rename'][$olddn];
-            $result = ldap_rename($this->conn, $olddn, $newrdn, NULL, true);
-        }
-
-        if (!$result) {
-            return false;
-        }
-
-        if ($result) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public function user_add($attrs, $typeid = null)
     {
         if ($typeid == null) {
@@ -612,7 +481,7 @@ class LDAP
 
         // Now that values have been re-generated where necessary, compare
         // the new group attributes to the original group attributes.
-        $_user = $this->user_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+        $_user = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
 
         if (!$_user) {
             console("Could not find user");
@@ -628,77 +497,13 @@ class LDAP
 
     public function user_delete($user)
     {
-        $user_dn = $this->user_dn($user);
+        $user_dn = $this->entry_dn($user);
 
         if (!$user_dn) {
             return false;
         }
 
         return $this->_delete($user_dn);
-    }
-
-    public function user_find_by_attribute($attribute)
-    {
-        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
-            return false;
-        }
-
-        if (empty($attribute[key($attribute)])) {
-            return false;
-        }
-
-        $filter = "(&";
-
-        foreach ($attribute as $key => $value) {
-            $filter .= "(" . $key . "=" . $value . ")";
-        }
-
-        $filter .= ")";
-
-        $base_dn = $this->domain_root_dn($this->domain);
-
-        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
-
-        if (count($result) > 0) {
-            error_log("Results found: " . implode(', ', array_keys($result)));
-            return $result;
-        }
-        else {
-            error_log("No result");
-            return false;
-        }
-    }
-
-    public function group_find_by_attribute($attribute)
-    {
-        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
-            return false;
-        }
-
-        if (empty($attribute[key($attribute)])) {
-            return false;
-        }
-
-        $filter = "(&";
-
-        foreach ($attribute as $key => $value) {
-            $filter .= "(" . $key . "=" . $value . ")";
-        }
-
-        $filter .= ")";
-
-        $base_dn = $this->domain_root_dn($this->domain);
-
-        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
-
-        if (count($result) > 0) {
-            error_log("Results found: " . implode(', ', array_keys($result)));
-            return $result;
-        }
-        else {
-            error_log("No result");
-            return false;
-        }
     }
 
     /**
@@ -708,13 +513,17 @@ class LDAP
      */
     public function user_info($user)
     {
-        $user_dn = $this->user_dn($user);
+        $user_dn = $this->entry_dn($user);
 
-        if (!$user_dn) {
+        if (!$user_dn)
             return false;
-        }
 
         return self::normalize_result($this->search($user_dn));
+    }
+
+    public function user_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
     }
 
     public function find_user_groups($member_dn)
@@ -788,7 +597,7 @@ class LDAP
 
         // Now that values have been re-generated where necessary, compare
         // the new group attributes to the original group attributes.
-        $_group = $this->group_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+        $_group = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
 
         if (!$_group) {
             console("Could not find group");
@@ -804,7 +613,7 @@ class LDAP
 
     public function group_delete($group)
     {
-        $group_dn = $this->group_dn($group);
+        $group_dn = $this->entry_dn($group);
 
         if (!$group_dn) {
             return false;
@@ -815,7 +624,7 @@ class LDAP
 
     public function group_info($group)
     {
-        $group_dn = $this->group_dn($group);
+        $group_dn = $this->entry_dn($group);
 
         if (!$group_dn) {
             return false;
@@ -824,15 +633,20 @@ class LDAP
         return self::normalize_result($this->search($group_dn));
     }
 
-    public function group_members_list($group)
+    public function group_members_list($subject)
     {
-        $group_dn = $this->group_dn($group);
+        $group_dn = $this->entry_dn($group);
 
         if (!$group_dn) {
             return false;
         }
 
         return $this->_list_group_members($group_dn);
+    }
+
+    public function group_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
     }
 
     /*
@@ -1050,6 +864,59 @@ class LDAP
         return $result;
     }
 
+    private function entry_find_by_attribute($attribute)
+    {
+        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
+            return false;
+        }
+
+        if (empty($attribute[key($attribute)])) {
+            return false;
+        }
+
+        $filter = "(&";
+
+        foreach ($attribute as $key => $value) {
+            $filter .= "(" . $key . "=" . $value . ")";
+        }
+
+        $filter .= ")";
+
+        $base_dn = $this->domain_root_dn($this->domain);
+
+        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
+
+        if (count($result) > 0) {
+            error_log("Results found: " . implode(', ', array_keys($result)));
+            return $result;
+        }
+        else {
+            error_log("No result");
+            return false;
+        }
+    }
+
+    private function entry_dn($subject)
+    {
+        $is_dn = ldap_explode_dn($subject, 1);
+
+        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 1) {
+            return $subject;
+        }
+
+        $conf = Conf::get_instance();
+
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        $subject = $this->entry_find_by_attribute(array($unique_attr => $subject));
+        if (!empty($subject)) {
+            return key($subject);
+        }
+    }
+
     private function parse_attribute_level_rights($attribute_value)
     {
         $attribute_value = str_replace(", ", ",", $attribute_value);
@@ -1091,6 +958,138 @@ class LDAP
         return $_attribute_value;
     }
 
+    private function modify_entry($subject_dn, $old_attrs, $new_attrs)
+    {
+        console($old_attrs);
+
+        // TODO: Get $rdn_attr - we have type_id in $new_attrs
+        $dn_components = ldap_explode_dn($subject_dn, 0);
+        $rdn_components = explode('=', $dn_components[0]);
+
+        $rdn_attr = $rdn_components[0];
+
+        console($rdn_attr);
+
+//        return;
+
+        $mod_array = Array(
+                "add"       => Array(), // For use with ldap_mod_add()
+                "del"       => Array(), // For use with ldap_mod_del()
+                "replace"   => Array(), // For use with ldap_mod_replace()
+                "rename"    => Array(), // For use with ldap_rename()
+            );
+
+        // Compare each attribute value of the old attrs with the corresponding value
+        // in the new attrs, if any.
+        foreach ($old_attrs as $attr => $old_attr_value) {
+            if (array_key_exists($attr, $new_attrs)) {
+                if (!($new_attrs[$attr] === $old_attr_value)) {
+                    console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
+                    if ($attr === $rdn_attr) {
+                        $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
+                    } else {
+                        if (empty($new_attrs[$attr])) {
+                            console("Adding to del: $attr");
+                            $mod_array['del'][$attr] = (array)($old_attr_value);
+                        } else {
+                            console("Adding to replace: $attr");
+                            $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
+                        }
+                    }
+                } else {
+                    console("Attribute $attr unchanged");
+                }
+            } else {
+                // TODO: Since we're not shipping the entire object back and forth, and only post
+                // part of the data... we don't know what is actually removed (think modifiedtimestamp, etc.)
+                console("Group attribute $attr not mentioned in \$new_attrs..., but not explicitly removed... by assumption");
+            }
+        }
+
+        foreach ($new_attrs as $attr => $value) {
+            if (array_key_exists($attr, $old_attrs)) {
+                if (empty($value)) {
+                    if (!array_key_exists($attr, $mod_array['del'])) {
+                        console("Adding to del(2): $attr");
+                        $mod_array['del'][$attr] = (array)($old_attrs[$attr]);
+                    }
+                } else {
+                    if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
+                        if (!array_key_exists($attr, $mod_array['replace'])) {
+                            console("Adding to replace(2): $attr");
+                            $mod_array['replace'][$attr] = $value;
+                        }
+                    }
+                }
+            } else {
+                if (!empty($value)) {
+                    $mod_array['add'][$attr] = $value;
+                }
+            }
+        }
+
+        console($mod_array);
+
+        $result = $this->modify_entry_attributes($subject_dn, $mod_array);
+
+        if ($result) {
+            return $mod_array;
+        }
+
+    }
+
+    private function modify_entry_attributes($subject_dn, $attributes)
+    {
+        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        // Opportunities to set false include failed ldap commands.
+        $result = true;
+
+        if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
+            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
+        }
+
+        if (!$result) {
+            console("Failed to replace the following attributes", $attributes['replace']);
+            return false;
+        }
+
+        if (is_array($attributes['del']) && !empty($attributes['del'])) {
+            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
+        }
+
+        if (!$result) {
+            console("Failed to delete the following attributes", $attributes['del']);
+            return false;
+        }
+
+
+        if (is_array($attributes['add']) && !empty($attributes['add'])) {
+            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
+        }
+
+        if (!$result) {
+            console("Failed to add the following attributes", $attributes['add']);
+            return false;
+        }
+
+        if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
+            $olddn = key($attributes['rename']);
+            $newrdn = $attributes['rename'][$olddn];
+            $result = ldap_rename($this->conn, $olddn, $newrdn, NULL, true);
+        }
+
+        if (!$result) {
+            return false;
+        }
+
+        if ($result) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Result sorting callback for uasort()
      */
@@ -1100,44 +1099,6 @@ class LDAP
         $str2 = $b[$this->sort_result_key];
 
         return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
-    }
-
-    /**
-     * Parses input value to find group DN.
-     */
-    private function group_dn($value)
-    {
-        $is_dn = ldap_explode_dn($value, 1);
-
-        if ($is_dn) {
-            return $value;
-        }
-
-        $unique_attr = $this->unique_attribute();
-        $group       = $this->group_find_by_attribute(array($unique_attr => $value));
-
-        if (!empty($group)) {
-            return key($group);
-        }
-    }
-
-    /**
-     * Parses input value to find user DN.
-     */
-    private function user_dn($value)
-    {
-        $is_dn = ldap_explode_dn($value, 1);
-
-        if ($is_dn) {
-            return $value;
-        }
-
-        $unique_attr = $this->unique_attribute();
-        $user        = $this->user_find_by_attribute(array($unique_attr => $value));
-
-        if (!empty($user)) {
-            return key($user);
-        }
     }
 
     /**
@@ -1222,8 +1183,8 @@ class LDAP
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        //console("Entry DN", $entry_dn);
-        //console("Attributes", $attributes);
+        console("Entry DN", $entry_dn);
+        console("Attributes", $attributes);
 
         foreach ($attributes as $attr_name => $attr_value) {
             if (empty($attr_value)) {
