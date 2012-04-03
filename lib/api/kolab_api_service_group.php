@@ -37,13 +37,34 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function capabilities($domain)
     {
-        return array(
-            'add'          => 'w',
-            'delete'       => 'w',
-            'edit'         => 'w',
-            'info'         => 'r',
-            'members_list' => 'r',
-        );
+        //console("kolab_api_service_group::capabilities");
+
+        $auth = Auth::get_instance();
+
+        $effective_rights = $auth->list_rights('group');
+
+        //console("effective_rights", $effective_rights);
+
+        $rights = array();
+
+        if (in_array('add', $effective_rights['entryLevelRights'])) {
+            $rights['add'] = "w";
+        }
+
+        if (in_array('delete', $effective_rights['entryLevelRights'])) {
+            $rights['delete'] = "w";
+        }
+
+        if (in_array('modrdn', $effective_rights['entryLevelRights'])) {
+            $rights['edit'] = "w";
+        }
+
+        if (in_array('read', $effective_rights['entryLevelRights'])) {
+            $rights['info'] = "r";
+            $rights['members_list'] = "r";
+        }
+
+        return $rights;
     }
 
     /**
