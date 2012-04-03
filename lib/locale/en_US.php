@@ -105,7 +105,7 @@ $LANG['user.edit.success'] = 'User edited successfully.';
 $LANG['user.preferredlanguage'] = 'Native tongue';
 $LANG['user.gidnumber'] = 'Primary group number';
 $LANG['user.homedirectory'] = 'Home directory';
-$LANG['user.shell'] = 'Shell';
+$LANG['user.loginshell'] = 'Shell';
 $LANG['user.uidnumber'] = 'User ID number';
 
 $LANG['group.add'] = 'Add Group';
