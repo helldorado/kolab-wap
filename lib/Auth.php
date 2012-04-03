@@ -247,13 +247,11 @@ class Auth {
     {
         // TODO: Consider a normal user does not have privileges on
         // the base_dn where domain names and configuration is stored.
-        $this->connect();
         return $this->_auth[$this->domain]->list_domains();
     }
 
     public function list_rights($subject)
     {
-        $this->connect();
         return $this->_auth[$this->domain]->effective_rights($subject);
     }
 
