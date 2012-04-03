@@ -735,7 +735,8 @@ function kolab_admin()
   {
     var i, j = 0, len, elem, e = $(form_element),
       list = this.env.assoc_fields[form_element.name],
-      disabled = e.attr('disabled') || e.attr('readonly'),
+      disabled = e.attr('disabled'),
+      readonly = e.attr('readonly'),
       autocomplete = e.attr('data-autocomplete'),
       maxlength = e.attr('data-maxlength'),
       area = $('<span class="listarea"></span>');
@@ -743,7 +744,7 @@ function kolab_admin()
     e.hide();
 
     // add autocompletion input
-    if (!disabled && autocomplete) {
+    if (!disabled && !readonly && autocomplete) {
       elem = this.form_list_element(form_element.form, {
         maxlength: maxlength,
         autocomplete: autocomplete,
@@ -767,6 +768,7 @@ function kolab_admin()
         value: list[i],
         key: i,
         disabled: disabled,
+        readonly: readonly,
         maxlength: maxlength,
         autocomplete: autocomplete,
         element: e
