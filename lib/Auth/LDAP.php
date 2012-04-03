@@ -329,29 +329,7 @@ class LDAP
         return $attributes;
     }
 
-    public function get_attribute($subject_dn, $attribute)
-    {
-        $result = $this->search($subject_dn, '(objectclass=*)', (array)($attribute));
-        $result = self::normalize_result($result);
-        $dn = key($result);
-        $attr = key($result[$dn]);
-        return $result[$dn][$attr];
-    }
-
-    public function get_attributes($subject_dn, $attributes)
-    {
-        $result = $this->search($subject_dn, '(objectclass=*)', $attributes);
-        $result = self::normalize_result($result);
-
-        if (!empty($result)) {
-            $result = array_pop($result);
-            return $result;
-        }
-
-        return false;
-    }
-
-    public function group_find_by_attribute($attribute)
+    public function entry_find_by_attribute($attribute)
     {
         if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
             return false;
@@ -381,6 +359,33 @@ class LDAP
             error_log("No result");
             return false;
         }
+    }
+
+    public function get_attribute($subject_dn, $attribute)
+    {
+        $result = $this->search($subject_dn, '(objectclass=*)', (array)($attribute));
+        $result = self::normalize_result($result);
+        $dn = key($result);
+        $attr = key($result[$dn]);
+        return $result[$dn][$attr];
+    }
+
+    public function get_attributes($subject_dn, $attributes)
+    {
+        $result = $this->search($subject_dn, '(objectclass=*)', $attributes);
+        $result = self::normalize_result($result);
+
+        if (!empty($result)) {
+            $result = array_pop($result);
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function group_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
     }
 
     public function list_domains()
@@ -623,54 +628,16 @@ class LDAP
 
     public function user_delete($subject)
     {
-        $is_dn = ldap_explode_dn($subject, 1);
-        if (!$is_dn) {
-            $conf = Conf::get_instance();
-            $unique_attr = $conf->get('unique_attr');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            $user = $this->user_find_by_attribute(Array($unique_attr => $subject));
-            $user_dn = key($user);
-            $result = $this->_delete($user_dn);
-        } else {
-            $result = $this->_delete($subject);
-        }
-
-        return $result;
+        $subject_dn = $this->resolve_subject($subject);
+        if (!$subject_dn)
+            return false;
+        else
+            return $this->_delete($subject_dn);
     }
 
     public function user_find_by_attribute($attribute)
     {
-        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
-            return false;
-        }
-
-        if (empty($attribute[key($attribute)])) {
-            return false;
-        }
-
-        $filter = "(&";
-
-        foreach ($attribute as $key => $value) {
-            $filter .= "(" . $key . "=" . $value . ")";
-        }
-
-        $filter .= ")";
-
-        $base_dn = $this->domain_root_dn($this->domain);
-
-        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
-
-        if (count($result) > 0) {
-            error_log("Results found: " . implode(', ', array_keys($result)));
-            return $result;
-        }
-        else {
-            error_log("No result");
-            return false;
-        }
+        return $this->entry_find_by_attribute($attribute);
     }
 
     /**
@@ -678,23 +645,14 @@ class LDAP
      *
      *
      */
-    public function user_info($user)
+    public function user_info($subject)
     {
-        $is_dn = ldap_explode_dn($user, 1);
-        if (!$is_dn) {
-            list($this->userid, $this->domain) = $this->_qualify_id($user);
-            $root_dn = $this->domain_root_dn($this->domain);
-            $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
-        }
-        else {
-            $user_dn = $user;
-        }
+        $subject_dn = $this->resolve_subject($subject);
 
-        if (!$user_dn) {
+        if (!$subject_dn)
             return false;
-        }
 
-        return self::normalize_result($this->search($user_dn));
+        return self::normalize_result($this->search($subject_dn));
     }
 
     public function find_user_groups($member_dn)
@@ -746,58 +704,29 @@ class LDAP
 
     public function group_delete($subject)
     {
-        $is_dn = ldap_explode_dn($subject, 1);
-        if (!$is_dn) {
-            $conf = Conf::get_instance();
-            $unique_attr = $conf->get('unique_attr');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
+        $subject_dn = $this->resolve_subject($subject);
+        if (!$subject_dn)
+            return false;
 
-            $group = $this->group_find_by_attribute(Array($unique_attr => $subject));
-            $group_dn = key($group);
-            $result = $this->_delete($group_dn);
-        } else {
-            $result = $this->_delete($subject);
-        }
-
-        return $result;
+        return $this->_delete($subject_dn);
     }
 
-    public function group_info($group)
+    public function group_info($subject)
     {
-        $is_dn = ldap_explode_dn($group, 1);
-        if (!$is_dn) {
-            $root_dn = $this->domain_root_dn($this->domain);
-            $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
-        }
-        else {
-            $group_dn = $group;
-        }
-
-        if (!$group_dn) {
+        $subject_dn = $this->resolve_subject($subject);
+        if (!$subject_dn)
             return false;
-        }
 
-        return self::normalize_result($this->search($group_dn));
+        return self::normalize_result($this->search($subject_dn));
     }
 
-    public function group_members_list($group)
+    public function group_members_list($subject)
     {
-        $is_dn = ldap_explode_dn($group, 1);
-        if (!$is_dn) {
-            $root_dn = $this->domain_root_dn($this->domain);
-            $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
-        }
-        else {
-            $group_dn = $group;
-        }
-
-        if (!$group_dn) {
+        $subject_dn = $this->resolve_subject($subject);
+        if (!$subject_dn)
             return false;
-        }
 
-        return $this->_list_group_members($group_dn);
+        return $this->_list_group_members($subject_dn);
     }
 
     /*
@@ -1015,6 +944,29 @@ class LDAP
         return $result;
     }
 
+    private function resolve_subject($subject)
+    {
+        $is_dn = ldap_explode_dn($subject, 1);
+
+        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 1) {
+            return $subject;
+        } else {
+            $conf = Conf::get_instance();
+
+            $unique_attr = $conf->get('unique_attribute');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            $subject = $this->entry_find_by_attribute(array($unique_attr => $subject));
+            if (!$subject) {
+                return false;
+            } else {
+                return key($subject);
+            }
+        }
+    }
+
     private function parse_attribute_level_rights($attribute_value)
     {
         $attribute_value = str_replace(", ", ",", $attribute_value);
@@ -1149,8 +1101,8 @@ class LDAP
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        //console("Entry DN", $entry_dn);
-        //console("Attributes", $attributes);
+        console("Entry DN", $entry_dn);
+        console("Attributes", $attributes);
 
         foreach ($attributes as $attr_name => $attr_value) {
             if (empty($attr_value)) {
