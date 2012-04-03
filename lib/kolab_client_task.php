@@ -457,10 +457,18 @@ class kolab_client_task
         }
 
         $task = $this->get_task();
-// @TODO: hide menu items according to capabilities
-//        $caps = (array) $this->capabilities();
+
+        $capabilities = $this->capabilities();
 
         foreach ($this->menu as $idx => $label) {
+            console("$task: $task, idx: $idx, label: $label");
+
+            if (in_array($task, array('user', 'group'))) {
+                if (!in_array($task . "." . $idx, $capabilities['actions'])) {
+                    continue;
+                }
+            }
+
             if (strpos($idx, '.')) {
                 $action = $idx;
                 $class  = preg_replace('/\.[a-z_-]+$/', '', $idx);
@@ -475,7 +483,10 @@ class kolab_client_task
                 $class, $idx, $action, $this->translate($label));
         }
 
-        return '<ul>' . implode("\n", $menu) . '</ul>';
+        if (is_array($menu))
+            return '<ul>' . implode("\n", $menu) . '</ul>';
+        else
+            return '<ul>' . $menu . '</ul>';
     }
 
     /**
@@ -879,6 +890,10 @@ class kolab_client_task
      */
     protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data, $add_mode)
     {
+        // Get the rights on the entry and attribute level
+        $effective_rights = $this->api->get("user.effective_rights", array($name => $data['id']))->get();
+        //console($effective_rights);
+
         // Assign sections to fields
         foreach ($fields as $idx => $field) {
             if (!$field['section']) {
@@ -934,6 +949,7 @@ class kolab_client_task
                         $field['value'] = implode("\n", $field['value']);
                     }
                 }
+
 /*
                 if (!empty($field['suffix'])) {
                     $field['suffix'] = kolab_html::escape($this->translate($field['suffix']));
@@ -962,6 +978,45 @@ class kolab_client_task
                     $field['name'] = $idx;
                 }
 
+                if (empty($field['disabled'])) {
+                    if (!array_key_exists($field['name'], $effective_rights['attributeLevelRights'])) {
+                        // If the entry level rights contain 'add' and 'delete', well, you're an admin
+                        if (
+                                in_array('add', $effective_rights['entryLevelRights']) &&
+                                in_array('delete', $effective_rights['entryLevelRights'])
+                            ) {
+                            $field['disabled'] = false;
+                        } else {
+                            $field['disabled'] = true;
+                        }
+                    } else {
+                        if (!in_array('write', $effective_rights['attributeLevelRights'][$field['name']])) {
+                            //console("no write on " . $field['name']);
+                            $field['disabled'] = true;
+                        } /* else {
+                            console("write on " . $field['name']);
+                        } */
+
+                    }
+
+                    // Some fields are special, such as the 'userpassword2' field
+                    switch ($field['name']) {
+                        case "userpassword2":
+                            if (!array_key_exists('userpassword', $effective_rights['attributeLevelRights'])) {
+                                $field['disabled'] = true;
+                            } elseif (!in_array('write', $effective_rights['attributeLevelRights']['userpassword'])) {
+                                $field['disabled'] = true;
+                            } else {
+                                $field['disabled'] = false;
+                            }
+
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+
                 if (!empty($field['required']) && empty($field['readonly']) && empty($field['disabled'])) {
                     $req_fields[] = $idx;
                 }
@@ -979,7 +1034,7 @@ class kolab_client_task
             'onclick' => "kadm.{$name}_save()",
         ));
 
-        if (!empty($data['id'])) {
+        if (!empty($data['id']) && in_array('delete', $effective_rights['entryLevelRights'])) {
             $id = $data['id'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
