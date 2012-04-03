@@ -351,38 +351,6 @@ class LDAP
         return false;
     }
 
-    public function group_find_by_attribute($attribute)
-    {
-        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
-            return false;
-        }
-
-        if (empty($attribute[key($attribute)])) {
-            return false;
-        }
-
-        $filter = "(&";
-
-        foreach ($attribute as $key => $value) {
-            $filter .= "(" . $key . "=" . $value . ")";
-        }
-
-        $filter .= ")";
-
-        $base_dn = $this->domain_root_dn($this->domain);
-
-        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
-
-        if (count($result) > 0) {
-            error_log("Results found: " . implode(', ', array_keys($result)));
-            return $result;
-        }
-        else {
-            error_log("No result");
-            return false;
-        }
-    }
-
     public function list_domains()
     {
         $domains = $this->domains_list();
@@ -621,27 +589,50 @@ class LDAP
         return $this->_add($dn, $attrs);
     }
 
-    public function user_delete($subject)
+    public function user_delete($user)
     {
-        $is_dn = ldap_explode_dn($subject, 1);
-        if (!$is_dn) {
-            $conf = Conf::get_instance();
-            $unique_attr = $conf->get('unique_attr');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
+        $user_dn = $this->user_dn($user);
 
-            $user = $this->user_find_by_attribute(Array($unique_attr => $subject));
-            $user_dn = key($user);
-            $result = $this->_delete($user_dn);
-        } else {
-            $result = $this->_delete($subject);
+        if (!$user_dn) {
+            return false;
         }
 
-        return $result;
+        return $this->_delete($user_dn);
     }
 
     public function user_find_by_attribute($attribute)
+    {
+        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
+            return false;
+        }
+
+        if (empty($attribute[key($attribute)])) {
+            return false;
+        }
+
+        $filter = "(&";
+
+        foreach ($attribute as $key => $value) {
+            $filter .= "(" . $key . "=" . $value . ")";
+        }
+
+        $filter .= ")";
+
+        $base_dn = $this->domain_root_dn($this->domain);
+
+        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
+
+        if (count($result) > 0) {
+            error_log("Results found: " . implode(', ', array_keys($result)));
+            return $result;
+        }
+        else {
+            error_log("No result");
+            return false;
+        }
+    }
+
+    public function group_find_by_attribute($attribute)
     {
         if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
             return false;
@@ -680,15 +671,7 @@ class LDAP
      */
     public function user_info($user)
     {
-        $is_dn = ldap_explode_dn($user, 1);
-        if (!$is_dn) {
-            list($this->userid, $this->domain) = $this->_qualify_id($user);
-            $root_dn = $this->domain_root_dn($this->domain);
-            $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $user . ')');
-        }
-        else {
-            $user_dn = $user;
-        }
+        $user_dn = $this->user_dn($user);
 
         if (!$user_dn) {
             return false;
@@ -744,36 +727,20 @@ class LDAP
         return $this->_add($dn, $attrs);
     }
 
-    public function group_delete($subject)
+    public function group_delete($group)
     {
-        $is_dn = ldap_explode_dn($subject, 1);
-        if (!$is_dn) {
-            $conf = Conf::get_instance();
-            $unique_attr = $conf->get('unique_attr');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
+        $group_dn = $this->group_dn($group);
 
-            $group = $this->group_find_by_attribute(Array($unique_attr => $subject));
-            $group_dn = key($group);
-            $result = $this->_delete($group_dn);
-        } else {
-            $result = $this->_delete($subject);
+        if (!$group_dn) {
+            return false;
         }
 
-        return $result;
+        return $this->_delete($group_dn);
     }
 
     public function group_info($group)
     {
-        $is_dn = ldap_explode_dn($group, 1);
-        if (!$is_dn) {
-            $root_dn = $this->domain_root_dn($this->domain);
-            $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
-        }
-        else {
-            $group_dn = $group;
-        }
+        $group_dn = $this->group_dn($group);
 
         if (!$group_dn) {
             return false;
@@ -784,14 +751,7 @@ class LDAP
 
     public function group_members_list($group)
     {
-        $is_dn = ldap_explode_dn($group, 1);
-        if (!$is_dn) {
-            $root_dn = $this->domain_root_dn($this->domain);
-            $group_dn = $this->_get_group_dn($root_dn, '(mail=' . $group . ')');
-        }
-        else {
-            $group_dn = $group;
-        }
+        $group_dn = $this->group_dn($group);
 
         if (!$group_dn) {
             return false;
@@ -1065,6 +1025,44 @@ class LDAP
         $str2 = $b[$this->sort_result_key];
 
         return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
+    }
+
+    /**
+     * Parses input value to find group DN.
+     */
+    private function group_dn($value)
+    {
+        $is_dn = ldap_explode_dn($value, 1);
+
+        if ($is_dn) {
+            return $value;
+        }
+
+        $unique_attr = $this->unique_attribute();
+        $group       = $this->group_find_by_attribute(array($unique_attr => $value));
+
+        if (!empty($group)) {
+            return key($group);
+        }
+    }
+
+    /**
+     * Parses input value to find user DN.
+     */
+    private function user_dn($value)
+    {
+        $is_dn = ldap_explode_dn($value, 1);
+
+        if ($is_dn) {
+            return $value;
+        }
+
+        $unique_attr = $this->unique_attribute();
+        $user        = $this->user_find_by_attribute(array($unique_attr => $value));
+
+        if (!empty($user)) {
+            return key($user);
+        }
     }
 
     /**
@@ -1470,6 +1468,7 @@ class LDAP
         return "dc=" . implode(',dc=', explode('.', $relevant_associatedDomain));
     }
 
+    // @TODO: this function isn't used anymore
     private function _get_group_dn($root_dn, $search_filter)
     {
         // TODO: Why does this use privileged credentials?
@@ -1664,6 +1663,21 @@ class LDAP
         error_log("Parsing URL: " . $url);
         preg_match('/(.*):\/\/(.*)\/(.*)\?(.*)\?(.*)\?(.*)/', $url, $matches);
         return $matches;
+    }
+
+    /**
+     * Returns name of the unique attribute
+     */
+    private function unique_attribute()
+    {
+        $conf        = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attr');
+
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        return $unique_attr;
     }
 
     /**
