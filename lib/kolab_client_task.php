@@ -181,12 +181,16 @@ class kolab_client_task
                 //console($result);
 
                 if ($token = $result->get('session_token')) {
-                    $user = array('token' => $token, 'domain' => $result->get('domain'));
+                    $user = array(
+                        'token'  => $token,
+                        'id'     => $result->get('userid'),
+                        'domain' => $result->get('domain')
+                    );
 
                     $this->api->set_session_token($user['token']);
 
                     // find user settings
-                    $res = $this->api->get('user.info', array('user' => $login['username']));
+                    $res = $this->api->get('user.info', array('user' => $user['id']));
                     $res = $res->get();
 
                     if (is_array($res) && !empty($res)) {

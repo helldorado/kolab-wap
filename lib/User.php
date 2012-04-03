@@ -28,19 +28,15 @@ class User
     private $_authenticated = FALSE;
     private $auth;
 
-    private $username = NULL;
-    private $password = NULL;
+    private $userid;
+    private $username;
+    private $password;
 
     private $_groups = FALSE;
 
     private $domain;
     private $working_domain;
 
-    public function get_username()
-    {
-        // Who's asking?
-        return $this->username;
-    }
 
     public function _get_information()
     {
@@ -62,7 +58,8 @@ class User
             $this->_authenticated = TRUE;
             $this->username = $username;
             $this->password = $password;
-            $this->domain = $this->auth->domain;
+            $this->userid   = $result;
+            $this->domain   = $this->auth->domain;
 //            $this->_groups = $this->groups();
         }
 
@@ -72,6 +69,17 @@ class User
     public function authenticated()
     {
         return $this->_authenticated;
+    }
+
+    public function get_username()
+    {
+        // Who's asking?
+        return $this->username;
+    }
+
+    public function get_userid()
+    {
+        return $this->userid;
     }
 
     public function get_domain()

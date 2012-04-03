@@ -118,6 +118,14 @@ class LDAP
      ***********          Public methods           ************
      **********************************************************/
 
+    /**
+     * Authentication
+     *
+     * @param string $username User name (DN or mail)
+     * @param string $password User password
+     *
+     * @return bool|string User ID or False on failure
+     */
     public function authenticate($username, $password)
     {
         error_log("LDAP authentication request for $username");
@@ -143,7 +151,7 @@ class LDAP
         }
 
         if (($bind_ok = $this->_bind($user_dn, $password)) == true) {
-            $this->_unbind();
+//            $this->_unbind();
 
             if (isset($_SESSION['user'])) {
                 $_SESSION['user']->user_root_dn = $root_dn;
@@ -155,7 +163,8 @@ class LDAP
                 error_log("Successfully bound with User DN: " . $user_dn . " but not saving it to the session");
             }
 
-            return true;
+            // @TODO: return unique attribute
+            return $user_dn;
         }
         else {
             error_log("LDAP Error: " . $this->_errstr());
@@ -645,7 +654,7 @@ class LDAP
         return self::normalize_result($this->search($group_dn));
     }
 
-    public function group_members_list($subject)
+    public function group_members_list($group)
     {
         $group_dn = $this->entry_dn($group);
 
@@ -1366,7 +1375,7 @@ class LDAP
         }
 
         error_log("Searching $base_dn with filter: $search_filter");
-        error_log("Searching with user: " . $_SESSION['user']->user_bind_dn);
+//        error_log("Searching with user: " . $_SESSION['user']->user_bind_dn);
 
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 

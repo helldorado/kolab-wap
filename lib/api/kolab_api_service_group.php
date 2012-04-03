@@ -173,7 +173,6 @@ class kolab_api_service_group extends kolab_api_service
             //error_log("Empty \$getdata['group']");
             return FALSE;
         }
-
         $result = $auth->group_members_list($getdata['group']);
 
         return array(

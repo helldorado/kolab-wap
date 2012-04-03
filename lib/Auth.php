@@ -94,6 +94,11 @@ class Auth {
      *
      *      This user is to be authenticated against the 'kolab'
      *      'primary_domain'.
+     *
+     * @param string $username User name (DN or mail)
+     * @param string $password User password
+     *
+     * @return bool|string User ID or False on failure
      */
     public function authenticate($username, $password)
     {
