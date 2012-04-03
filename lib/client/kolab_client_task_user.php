@@ -214,6 +214,7 @@ class kolab_client_task_user extends kolab_client_task
             'ou'                        => 'personal',
             'preferredlanguage'         => 'personal',
 
+            'alias'                     => 'contact_info',
             'c'                         => 'contact_info',
             'facsimiletelephonenumber'  => 'contact_info',
             'homephone'                 => 'contact_info',
@@ -228,17 +229,17 @@ class kolab_client_task_user extends kolab_client_task
             'street'                    => 'contact_info',
             'telephonenumber'           => 'contact_info',
 
-            'uid'                       => 'system',
             'userpassword'              => 'system',
             'userpassword2'             => 'system',
-            'alias'                     => 'system',
-            'mailhost'                  => 'system',
-            'kolabhomeserver'           => 'system',
-            'uidnumber'                 => 'system',
             'gidnumber'                 => 'system',
             'homedirectory'             => 'system',
+            'kolabhomeserver'           => 'system',
+            'loginshell'                => 'system',
+            'mailhost'                  => 'system',
             'nsrole'                    => 'system',
             'nsroledn'                  => 'system',
+            'uid'                       => 'system',
+            'uidnumber'                 => 'system',
 
             'mailquota'                 => 'config',
             'cyrususerquota'            => 'config',
@@ -247,7 +248,6 @@ class kolab_client_task_user extends kolab_client_task
             'kolabdelegate'             => 'config',
             'kolaballowsmtprecipient'   => 'config',
             'kolaballowsmtpsender'      => 'config',
-            'shell'                     => 'config',
         );
 
         // Prepare fields
