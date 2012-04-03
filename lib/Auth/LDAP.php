@@ -1714,7 +1714,7 @@ class LDAP
     private function unique_attribute()
     {
         $conf        = Conf::get_instance();
-        $unique_attr = $conf->get('unique_attr');
+        $unique_attr = $conf->get('unique_attribute');
 
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
