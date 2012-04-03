@@ -281,8 +281,9 @@ class kolab_api_controller
             $_SESSION['start'] = time();
             return array(
                 'user'          => $_SESSION['user']->get_username(),
+                'userid'        => $_SESSION['user']->get_userid(),
                 'domain'        => $_SESSION['user']->get_domain(),
-                'session_token' => session_id()
+                'session_token' => session_id(),
             );
         }
 
