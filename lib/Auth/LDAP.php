@@ -501,7 +501,7 @@ class LDAP
         }
 
         $_user_dn = key($_user);
-        $_user = $this->user_info(array('user' => $_user_dn), array());
+        $_user = $this->user_info($_user_dn, array());
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($_user_dn, $_user, $attributes);
@@ -612,7 +612,7 @@ class LDAP
         }
 
         $_group_dn = key($_group);
-        $_group = $this->group_info(array('group' => $_group_dn), array());
+        $_group = $this->group_info($_group_dn, array());
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($_group_dn, $_group, $attributes);
@@ -1723,7 +1723,7 @@ class LDAP
     private function unique_attribute()
     {
         $conf        = Conf::get_instance();
-        $unique_attr = $conf->get('unique_attr');
+        $unique_attr = $conf->get('unique_attribute');
 
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
