@@ -754,7 +754,7 @@ function kolab_admin()
     }
 
     // add autocompletion input
-    if (autocomplete && ((!disabled && !readonly) || (!len && (disabled || readonly)))) {
+    if (!disabled && !readonly && autocomplete) {
       elem = this.form_list_element(form_element.form, {
         maxlength: maxlength,
         autocomplete: autocomplete,
