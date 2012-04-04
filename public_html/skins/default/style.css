@@ -482,11 +482,14 @@ input.inactive {
   padding: 1px 5px;
 }
 
+.disabled,
 .readonly {
   color: #a0a0a0;
 }
 
+input.disabled,
 input.readonly,
+textarea.disabled,
 textarea.readonly {
   background-color: #f5f5f5;
   color: #a0a0a0;
@@ -590,11 +593,14 @@ span.listelement span.actions span.search {
   cursor: default;
 }
 
+span.listarea.disabled,
 span.listarea.readonly {
   background-color: #f5f5f5;
 }
 
+input.disabled,
 input.readonly,
+span.listarea.disabled span.listelement input,
 span.listarea.readonly span.listelement input {
   color: #a0a0a0;
   cursor: default;
@@ -608,6 +614,7 @@ span.listarea.autocomplete span.listelement input.autocomplete {
   color: black;
 }
 
+span.listarea.disabled span.listelement span.actions,
 span.listarea.readonly span.listelement span.actions {
   opacity: .5;
 }
