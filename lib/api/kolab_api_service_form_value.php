@@ -525,6 +525,11 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function list_options_c($postdata, $attribs = array())
+    {
+        return $this->_list_options_db($postdata);
+    }
+
     private function select_options_preferredlanguage($postdata, $attribs = array())
     {
         $db        = SQL::get_instance();
@@ -566,6 +571,11 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
+    private function list_options_preferredlanguage($postdata, $attribs = array())
+    {
+        return $this->_list_options_db($postdata);
+    }
+
     private function list_options_uniquemember($postdata, $attribs = array())
     {
         $service = $this->controller->get_service('users');
@@ -595,4 +605,19 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
+    private function _list_options_from_db($postdata)
+    {
+        if (empty($postdata['attribute'])) {
+            return false;
+        }
+
+        $db = SQL::get_instance();
+        $result = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = ?", $postdata['attribute']));
+
+        if (empty($result['option_values'])) {
+            return false;
+        } else {
+            return $result['option_values'];
+        }
+    }
 }
