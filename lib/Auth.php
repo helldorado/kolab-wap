@@ -153,9 +153,11 @@ class Auth {
             $domain = $this->conf->get('primary_domain');
         }
 
-        $auth_method = strtoupper($this->conf->get($domain, 'auth_mechanism'));
+        if ($domain) {
+            $auth_method = strtoupper($this->conf->get($domain, 'auth_mechanism'));
+        }
 
-        if (!$auth_method) {
+        if (empty($auth_method)) {
             // Use the default authentication technology
             $auth_method = strtoupper($this->conf->get('kolab', 'auth_mechanism'));
         }

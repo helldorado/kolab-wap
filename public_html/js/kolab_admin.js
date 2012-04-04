@@ -733,7 +733,7 @@ function kolab_admin()
   // Replaces form element with smart element
   this.form_element_wrapper = function(form_element)
   {
-    var i, j = 0, len, elem, e = $(form_element),
+    var i, j = 0, len = 0, elem, e = $(form_element),
       list = this.env.assoc_fields[form_element.name],
       disabled = e.attr('disabled'),
       readonly = e.attr('readonly'),
@@ -743,23 +743,27 @@ function kolab_admin()
 
     e.hide();
 
+    if (!list) {
+      if (form_element.value) {
+        list = form_element.value.split("\n");
+        len = list.length;
+        list = $.extend({}, list);
+      }
+      else if (!autocomplete)
+        list = {0: ''};
+    }
+
     // add autocompletion input
-    if (!disabled && !readonly && autocomplete) {
+    if (autocomplete && ((!disabled && !readonly) || (!len && (disabled || readonly)))) {
       elem = this.form_list_element(form_element.form, {
         maxlength: maxlength,
         autocomplete: autocomplete,
+        disabled: !len && (disabled || readonly),
         element: e
       }, -1);
 
       elem.appendTo(area);
       this.ac_init(elem, {attribute: form_element.name, oninsert: this.form_element_oninsert});
-    }
-
-    if (!list) {
-      if (form_element.value)
-        list = $.extend({}, form_element.value.split("\n"));
-      else if (!autocomplete)
-        list = {0: ''};
     }
 
     // add input rows
