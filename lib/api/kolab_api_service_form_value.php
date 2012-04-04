@@ -72,7 +72,7 @@ class kolab_api_service_form_value extends kolab_api_service
             $method_name = 'generate_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
 
             if (!method_exists($this, $method_name)) {
-                console("Method $method_name doesn't exist");
+                //console("Method $method_name doesn't exist");
 
                 $method_name = 'generate_' . strtolower($attr_name);
 
@@ -168,6 +168,8 @@ class kolab_api_service_form_value extends kolab_api_service
      */
     public function list_options($getdata, $postdata)
     {
+        //console($postdata);
+
         $attribs   = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $attr_name = $postdata['attribute'];
         $result    = array(
@@ -182,9 +184,13 @@ class kolab_api_service_form_value extends kolab_api_service
 
         $method_name = 'list_options_' . strtolower($attr_name);
 
+        //console($method_name);
+
         if (!method_exists($this, $method_name)) {
             return $result;
         }
+
+        //console("Still here");
 
         $result['list'] = $this->{$method_name}($postdata, $attribs);
 
@@ -459,11 +465,13 @@ class kolab_api_service_form_value extends kolab_api_service
 
             // TODO: Use preferredlanguage
             if (isset($postdata['preferredlanguage'])) {
-                console("Using locale for " . $postdata['preferredlanguage']);
+                //console("Using locale for " . $postdata['preferredlanguage']);
                 setlocale(LC_ALL, $postdata['preferredlanguage']);
-            } else {
+            }
+/*            else {
                 console("No locale specified...!");
             }
+*/
 
             $uid = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
             $uid = strtolower($uid);
@@ -477,7 +485,7 @@ class kolab_api_service_form_value extends kolab_api_service
             while (($user_found = $auth->user_find_by_attribute(array('uid' => $uid)))) {
                 $user_found_dn = key($user_found);
                 $user_found_unique_attr = $auth->get_attribute($user_found_dn, $unique_attr);
-                console("user that i found info", $user_found_unique_attr);
+                //console("user that i found info", $user_found_unique_attr);
                 if ($user_found_unique_attr == $postdata[$unique_attr]) {
                     break;
                 }
@@ -525,18 +533,35 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
-    private function list_options_c($postdata, $attribs = array())
+    private function list_options_kolabdelegate($postdata, $attribs = array())
     {
-        return $this->_list_options_db($postdata);
-    }
+        $service = $this->controller->get_service('users');
 
-    private function select_options_preferredlanguage($postdata, $attribs = array())
-    {
-        $db        = SQL::get_instance();
-        $query     = $db->query("SELECT option_values FROM options WHERE attribute = 'preferredlanguage'");
-        $attribute = $db->fetch_assoc($query);
+        $keyword = array('value' => $postdata['search']);
+        $data    = array(
+            'attributes' => array('displayname', 'mail'),
+            'page_size'  => 15,
+            'search'     => array(
+                'displayname' => $keyword,
+                'cn'          => $keyword,
+                'mail'        => $keyword,
+            ),
+        );
 
-        return json_decode($attribute['option_values']);
+        $result = $service->users_list(null, $data);
+        $list   = $result['list'];
+
+        // convert to key=>value array
+        foreach ($list as $idx => $value) {
+            $list[$idx] = $value['displayname'];
+            if (!empty($value['mail'])) {
+                $list[$idx] .= ' <' . $value['mail'] . '>';
+            }
+        }
+
+        return $list;
+
+
     }
 
     private function list_options_nsrole($postdata, $attribs = array())
@@ -571,10 +596,6 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
-    private function list_options_preferredlanguage($postdata, $attribs = array())
-    {
-        return $this->_list_options_db($postdata);
-    }
 
     private function list_options_uniquemember($postdata, $attribs = array())
     {
@@ -605,19 +626,32 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
-    private function _list_options_from_db($postdata)
+    private function select_options_c($postdata, $attribs = array())
     {
-        if (empty($postdata['attribute'])) {
+        return $this->_select_options_from_db('c');
+    }
+
+    private function select_options_preferredlanguage($postdata, $attribs = array())
+    {
+        return $this->_select_options_from_db('preferredlanguage');
+    }
+
+    private function _select_options_from_db($attribute)
+    {
+
+        if (empty($attribute)) {
             return false;
         }
 
         $db = SQL::get_instance();
-        $result = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = ?", $postdata['attribute']));
+        $result = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = ?", $attribute));
 
-        if (empty($result['option_values'])) {
+        $result = json_decode($result['option_values']);
+
+        if (empty($result)) {
             return false;
         } else {
-            return $result['option_values'];
+            return $result;
         }
     }
 }
