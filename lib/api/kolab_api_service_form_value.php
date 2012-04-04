@@ -534,35 +534,6 @@ class kolab_api_service_form_value extends kolab_api_service
         return json_decode($attribute['option_values']);
     }
 
-    private function list_options_uniquemember($postdata, $attribs = array())
-    {
-        $service = $this->controller->get_service('users');
-
-        $keyword = array('value' => $postdata['search']);
-        $data    = array(
-            'attributes' => array('displayname', 'mail'),
-            'page_size'  => 15,
-            'search'     => array(
-                'displayname' => $keyword,
-                'cn'          => $keyword,
-                'mail'        => $keyword,
-            ),
-        );
-
-        $result = $service->users_list(null, $data);
-        $list   = $result['list'];
-
-        // convert to key=>value array
-        foreach ($list as $idx => $value) {
-            $list[$idx] = $value['displayname'];
-            if (!empty($value['mail'])) {
-                $list[$idx] .= ' <' . $value['mail'] . '>';
-            }
-        }
-
-        return $list;
-    }
-
     private function list_options_nsrole($postdata, $attribs = array())
     {
         error_log("Listing options for attribute 'nsrole', while the expected attribute to use is 'nsroledn'");
@@ -590,6 +561,35 @@ class kolab_api_service_form_value extends kolab_api_service
         // convert to key=>value array
         foreach ($list as $idx => $value) {
             $list[$idx] = $value['cn'];
+        }
+
+        return $list;
+    }
+
+    private function list_options_uniquemember($postdata, $attribs = array())
+    {
+        $service = $this->controller->get_service('users');
+
+        $keyword = array('value' => $postdata['search']);
+        $data    = array(
+            'attributes' => array('displayname', 'mail'),
+            'page_size'  => 15,
+            'search'     => array(
+                'displayname' => $keyword,
+                'cn'          => $keyword,
+                'mail'        => $keyword,
+            ),
+        );
+
+        $result = $service->users_list(null, $data);
+        $list   = $result['list'];
+
+        // convert to key=>value array
+        foreach ($list as $idx => $value) {
+            $list[$idx] = $value['displayname'];
+            if (!empty($value['mail'])) {
+                $list[$idx] .= ' <' . $value['mail'] . '>';
+            }
         }
 
         return $list;
