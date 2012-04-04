@@ -67,6 +67,7 @@ $LANG['user.personal'] = 'Personal';
 $LANG['user.postalcode'] = 'Postal Code';
 $LANG['user.sn'] = 'Surname';
 $LANG['user.system'] = 'System';
+$LANG['user.telephonenumber'] = 'Phone Number';
 $LANG['user.givenname'] = 'Given name';
 $LANG['user.displayname'] = 'Display name';
 $LANG['user.mail'] = 'Primary Email Address';
