@@ -188,6 +188,21 @@ class kolab_client_output
     }
 
     /**
+     * Get the value from the environment to be sent to the browser.
+     *
+     * @param string $name  Variable name
+     *
+     */
+    public function get_env($name)
+    {
+        if (empty($this->env[$name])) {
+            return null;
+        } else {
+            return $this->env[$name];
+        }
+    }
+
+    /**
      * Assigns value to browser environment.
      *
      * @param string $name  Variable name
