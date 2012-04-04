@@ -309,8 +309,8 @@ class LDAP
                                 'dn:' . $_SESSION['user']->user_bind_dn // User DN
                             )
                     ) . '"',
-                '"(entrydn=' . $entry_dn . ')"'
-
+                '"(entrydn=' . $entry_dn . ')"',
+                '"*"',
             );
 
         //console("Executing command " . implode(' ', $command));
@@ -1001,7 +1001,18 @@ class LDAP
         // in the new attrs, if any.
         foreach ($old_attrs as $attr => $old_attr_value) {
             if (array_key_exists($attr, $new_attrs)) {
-                if (!($new_attrs[$attr] === $old_attr_value)) {
+                $_sort1 = false;
+                $_sort2 = false;
+                if (is_array($new_attrs[$attr])) {
+                    $_sort1 = $new_attrs[$attr];
+                    sort($_sort1);
+                }
+                if (is_array($old_attr_value)) {
+                    $_sort2 = $old_attr_value;
+                    sort($_sort2);
+                }
+
+                if (!($new_attrs[$attr] === $old_attr_value) && !($_sort1 === $_sort2)) {
                     console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
                     if ($attr === $rdn_attr) {
                         $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
