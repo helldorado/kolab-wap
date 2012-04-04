@@ -204,43 +204,53 @@ class kolab_client_task_user extends kolab_client_task
         $fields_map = array(
             'type_id'                   => 'personal',
             'type_id_name'              => 'personal',
+
+            /* Sensibly first */
+            'title'                     => 'personal',
+            /* Probably input */
             'givenname'                 => 'personal',
             'sn'                        => 'personal',
-            'displayname'               => 'personal',
-            'cn'                        => 'personal',
+            /* Possibly input */
             'initials'                  => 'personal',
-            'title'                     => 'personal',
             'o'                         => 'personal',
+            /* Probably generated */
+            'cn'                        => 'personal',
+            'displayname'               => 'personal',
             'ou'                        => 'personal',
             'preferredlanguage'         => 'personal',
 
-            'alias'                     => 'contact_info',
-            'c'                         => 'contact_info',
-            'facsimiletelephonenumber'  => 'contact_info',
-            'homephone'                 => 'contact_info',
-            'l'                         => 'contact_info',
-            'mail'                      => 'contact_info',
-            'mailalternateaddress'      => 'contact_info',
-            'mobile'                    => 'contact_info',
-            'pager'                     => 'contact_info',
-            'postalcode'                => 'contact_info',
+            /* Address lines together */
+            'street'                    => 'contact_info',
             'postofficebox'             => 'contact_info',
             'roomnumber'                => 'contact_info',
-            'street'                    => 'contact_info',
+            'postalcode'                => 'contact_info',
+            'l'                         => 'contact_info',
+            'c'                         => 'contact_info',
+            /* Probably input */
+            'mobile'                    => 'contact_info',
+            'facsimiletelephonenumber'  => 'contact_info',
             'telephonenumber'           => 'contact_info',
+            'homephone'                 => 'contact_info',
+            'pager'                     => 'contact_info',
+            'mail'                      => 'contact_info',
+            'alias'                     => 'contact_info',
+            'mailalternateaddress'      => 'contact_info',
 
+            /* POSIX Attributes first */
+            'uid'                       => 'system',
             'userpassword'              => 'system',
             'userpassword2'             => 'system',
+            'uidnumber'                 => 'system',
             'gidnumber'                 => 'system',
             'homedirectory'             => 'system',
-            'kolabhomeserver'           => 'system',
             'loginshell'                => 'system',
-            'mailhost'                  => 'system',
+
             'nsrole'                    => 'system',
             'nsroledn'                  => 'system',
-            'uid'                       => 'system',
-            'uidnumber'                 => 'system',
 
+            /* Kolab Settings */
+            'kolabhomeserver'           => 'config',
+            'mailhost'                  => 'config',
             'mailquota'                 => 'config',
             'cyrususerquota'            => 'config',
             'kolabfreebusyfuture'       => 'config',
