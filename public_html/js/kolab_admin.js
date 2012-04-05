@@ -763,7 +763,7 @@ function kolab_admin()
       for (i in list) {
         elem = $('<input>');
         elem.attr({
-          value: list[i],
+          value: list[i] ? list[i] : i,
           disabled: disabled,
           readonly: readonly,
           name: form_element.name + '[' + (j++) + ']'
@@ -792,7 +792,7 @@ function kolab_admin()
       ac_value = []
       for (i in list) {
         elem = this.form_list_element(form_element.form, {
-          value: list[i],
+          value: list[i] ? list[i] : i,
           key: i,
           maxlength: maxlength,
           autocomplete: autocomplete,
@@ -800,7 +800,7 @@ function kolab_admin()
         }, j++);
 
         if (autocomplete)
-            ac_value.push(list[i]);
+            ac_value.push(list[i] ? list[i] : i);
 
         elem.appendTo(area);
       }
