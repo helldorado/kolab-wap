@@ -617,9 +617,20 @@ class kolab_api_service_form_value extends kolab_api_service
         $result = $service->users_list(null, $data);
         $list   = $result['list'];
 
+        $service = $this->controller->get_service('groups');
+        $data['attributes'] = array('cn', 'mail');
+
+        $result = $service->groups_list(null, $data);
+        $list = array_merge($list, $result['list']);
+
         // convert to key=>value array
         foreach ($list as $idx => $value) {
             $list[$idx] = $value['displayname'];
+
+            if (empty($list[$idx])) {
+                $list[$idx] = $value['cn'];
+            }
+
             if (!empty($value['mail'])) {
                 $list[$idx] .= ' <' . $value['mail'] . '>';
             }
