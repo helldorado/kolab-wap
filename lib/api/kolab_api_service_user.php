@@ -108,7 +108,7 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_delete($getdata, $postdata)
     {
-        console("user_delete()", $getdata, $postdata);
+        //console("user_delete()", $getdata, $postdata);
         if (!isset($postdata['user'])) {
             return false;
         }
@@ -126,9 +126,12 @@ class kolab_api_service_user extends kolab_api_service
 
     public function user_edit($getdata, $postdata)
     {
-        console("\$postdata to user_edit()", $postdata);
+        //console("\$postdata to user_edit()", $postdata);
 
         $user_attributes = $this->parse_input_attributes('user', $postdata);
+
+        //console("\$user_attributes as result from parse_input_attributes", $user_attributes);
+
         $user            = $postdata['id'];
 
         $auth   = Auth::get_instance();
