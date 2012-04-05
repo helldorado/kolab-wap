@@ -690,22 +690,27 @@ function kolab_admin()
 
     // replace some textarea fields with pretty/smart input lists
     $('textarea[data-type="list"]', form).not('disabled').each(function() {
-      var i, v, value = [],
+      var i, k, v, value = [],
         re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9-]+\]$');
 
       for (i in data.json) {
         if (i.match(re)) {
-          if (v = $('input[name="'+i+'"]', form).val())
-            value.push(v);
+          if (v = $('input[name="'+i+'"]', form).val()) {
+            pushed = 0;
+            if (kadm.env.assoc_fields[this.name]) {
+              for (k in kadm.env.assoc_fields[this.name]) {
+                if (kadm.env.assoc_fields[this.name][k] == v) {
+                  value.push(k);
+                  pushed = 1;
+                }
+              }
+            }
+            if (!pushed) {
+              value.push(v);
+            }
+          }
           delete data.json[i];
         }
-      }
-
-      // autocompletion lists data is stored in env variable
-      if (kadm.env.assoc_fields[this.name]) {
-        value = [];
-        for (i in kadm.env.assoc_fields[this.name])
-          value.push(i);
       }
 
       data.json[this.name] = value;
@@ -779,11 +784,12 @@ function kolab_admin()
 
         elem.appendTo(area);
         this.ac_init(elem, {attribute: form_element.name, oninsert: this.form_element_oninsert});
-
+        
         area.addClass('autocomplete');
       }
 
       // add input rows
+      ac_value = []
       for (i in list) {
         elem = this.form_list_element(form_element.form, {
           value: list[i],
@@ -793,8 +799,14 @@ function kolab_admin()
           element: e
         }, j++);
 
+        if (autocomplete)
+            ac_value.push(list[i]);
+
         elem.appendTo(area);
       }
+
+      if (autocomplete)
+        e.val(ac_value.join("\n"));
     }
 
     area.appendTo(form_element.parentNode);
