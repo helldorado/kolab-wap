@@ -245,9 +245,9 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata);
     }
 
-    public function group_members_list($groupdata)
+    public function group_members_list($groupdata, $recurse = true)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_members_list($groupdata);
+        return $this->_auth[$_SESSION['user']->get_domain()]->group_members_list($groupdata, $recurse);
     }
 
     public function list_domains()
