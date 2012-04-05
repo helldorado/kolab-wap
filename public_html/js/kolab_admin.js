@@ -830,7 +830,7 @@ function kolab_admin()
 
     if (data.readonly)
       input.addClass('readonly');
-    else if (ac)
+    if (ac)
       input.addClass('autocomplete');
 
     // attach element creation event
@@ -854,7 +854,7 @@ function kolab_admin()
           l = $('input[name^="' + name + '"]', form),
           key = $(this).data('key');
 
-        if (ac || l.length > 1)
+        if (l.length > 1 || $('input[name="' + name + '"]', form).attr('data-autocomplete'))
           span.remove();
         else
           $('input', span).val('').focus();
