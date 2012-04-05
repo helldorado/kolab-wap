@@ -133,6 +133,8 @@ class kolab_api_service_form_value extends kolab_api_service
      */
     public function select_options($getdata, $postdata)
     {
+        //console("form_value.select_options postdata", $postdata);
+
         $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $attributes = (array) $postdata['attributes'];
         $result     = array();
@@ -629,6 +631,44 @@ class kolab_api_service_form_value extends kolab_api_service
     private function select_options_c($postdata, $attribs = array())
     {
         return $this->_select_options_from_db('c');
+    }
+
+    private function select_options_ou($postdata, $attribs = array())
+    {
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+
+        $unique_attr = $conf->get('unique_attribute');
+
+        $base_dn = $conf->get('user_base_dn');
+        if (!$base_dn) {
+            $base_dn = $conf->get('base_dn');
+        }
+
+        $subject = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')');
+
+        $subject_dn = $subject[0];
+
+        $subject_dn_components = ldap_explode_dn($subject_dn, 0);
+        unset($subject_dn_components['count']);
+
+        array_shift($subject_dn_components);
+
+        $subject_parent_ou = strtolower(implode(',', $subject_dn_components));
+
+        $ous = $auth->search($base_dn, '(objectclass=organizationalunit)');
+
+        $_ous = array();
+
+        foreach ($ous as $ou) {
+            $_ous[] = strtolower($ou);
+        }
+
+        sort($_ous);
+
+        $_ous['default'] = $subject_parent_ou;
+
+        return $_ous;
     }
 
     private function select_options_preferredlanguage($postdata, $attribs = array())
