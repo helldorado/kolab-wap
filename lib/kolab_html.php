@@ -38,8 +38,8 @@ class kolab_html
     public static $textarea_attribs = array('cols', 'rows', 'disabled', 'name', 'readonly', 'tabindex');
     public static $input_attribs  = array('checked', 'disabled', 'name', 'readonly', 'tabindex',
         'type', 'size', 'maxlength', 'value', 'autofocus');
-    public static $select_attribs = array('multiple', 'name', 'size', 'disabled', 'autofocus');
-    public static $option_attribs = array('selected', 'value', 'disabled');
+    public static $select_attribs = array('multiple', 'name', 'size', 'disabled', 'readonly', 'autofocus');
+    public static $option_attribs = array('selected', 'value', 'disabled', 'readonly');
     public static $a_attribs      = array('href', 'name', 'rel', 'tabindex', 'target');
     public static $form_attribs   = array('action', 'enctype', 'method', 'name', 'target');
     public static $label_attribs  = array('for');

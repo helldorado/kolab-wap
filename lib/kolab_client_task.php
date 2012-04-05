@@ -764,7 +764,6 @@ class kolab_client_task
             $field['name'] = $idx;
             $fields[$idx] = $this->form_element_type($field);
             $fields[$idx]['readonly'] = true;
-            $fields[$idx]['disabled'] = true;
 
             $extra_fields[$idx] = true;
 
@@ -799,15 +798,42 @@ class kolab_client_task
             else {
                 unset($extra_fields[$idx]);
             }
-//            $fields[$idx]['required'] = true;
+
             $fields[$idx]['readonly'] = false;
-            $fields[$idx]['disabled'] = false;
 
             // Attach on-change events to some fields, to update
             // auto-generated field values
             if (!empty($event_fields[$idx])) {
                 $event = json_encode(array_unique($event_fields[$idx]));
                 $fields[$idx]['onchange'] = "kadm.form_value_change($event)";
+            }
+        }
+
+        // Get the rights on the entry and attribute level
+        $result = $this->api->get("user.effective_rights", array($name => $data['id']));
+        $attribute_rights = $result->get('attributeLevelRights');
+        $entry_rights     = $result->get('entryLevelRights');
+
+        $data['effective_rights'] = array(
+            'attribute' => $attribute_rights,
+            'entry'     => $entry_rights,
+        );
+
+        foreach ($fields as $idx => $field) {
+            if (!array_key_exists($idx, $attribute_rights)) {
+                // If the entry level rights contain 'add' and 'delete', well, you're an admin
+                if (in_array('add', $entry_rights) && in_array('delete', $entry_rights)) {
+                    $fields[$idx]['readonly'] = false;
+                }
+                else {
+                    $fields[$idx]['readonly'] = true;
+                }
+            }
+            else {
+                // No entry level rights, check on attribute level
+                if (!in_array('write', $attribute_rights[$idx])) {
+                    $fields[$idx]['readonly'] = true;
+                }
             }
         }
 
@@ -898,16 +924,12 @@ class kolab_client_task
      * @param array  $sections   List of form sections
      * @param array  $fields     Fields list (from self::form_prepare())
      * @param array  $fields_map Fields map (used for sorting and sections assignment)
-     * @param array  $data       Object data
+     * @param array  $data       Object data (with effective rights, see form_prepare())
      *
      * @return kolab_form HTML Form object
      */
     protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data, $add_mode)
     {
-        // Get the rights on the entry and attribute level
-        $effective_rights = $this->api->get("user.effective_rights", array($name => $data['id']))->get();
-        //console($effective_rights);
-
         // Assign sections to fields
         foreach ($fields as $idx => $field) {
             if (!$field['section']) {
@@ -932,6 +954,7 @@ class kolab_client_task
         $form = new kolab_form($attribs);
         $assoc_fields = array();
         $req_fields   = array();
+        $writeable    = 0;
 
         $auto_fields = $this->output->get_env('auto_fields');
         //console("\$auto_fields", $auto_fields);
@@ -966,7 +989,6 @@ class kolab_client_task
                         $field['value'] = implode("\n", $field['value']);
                     }
                 }
-
 /*
                 if (!empty($field['suffix'])) {
                     $field['suffix'] = kolab_html::escape($this->translate($field['suffix']));
@@ -995,117 +1017,14 @@ class kolab_client_task
                     $field['name'] = $idx;
                 }
 
-                //console("before authz: " . $field['name'], $field);
-
-                // Only edit those fields that actually have merit
-                if (array_key_exists('disabled', $field) || array_key_exists('readonly', $field)) {
-                    if (!array_key_exists($field['name'], $effective_rights['attributeLevelRights'])) {
-                        //console("No explicit rights on attribute " . $field['name']);
-                        // If the entry level rights contain 'add' and 'delete', well, you're an admin
-                        if (
-                                in_array('add', $effective_rights['entryLevelRights']) &&
-                                in_array('delete', $effective_rights['entryLevelRights'])
-                            ) {
-
-                            //console("Overriding any permissions for field " . $field['name'] . ", simply because we have the access to delete and add back the entry.");
-                            if (array_key_exists('disabled', $field) && $field['disabled']) {
-                                //console("overriding disabled state on " . $field['name']);
-                                $field['disabled'] = false;
-                            }
-
-                            if (array_key_exists('readonly', $field) && $field['readonly']) {
-                                //console("overriding readonly state on " . $field['name']);
-                                $field['readonly'] = false;
-                            }
-
-                        } else {
-                            //console("no explicit write permissions on " . $field['name'] . ", disabling");
-                            if (array_key_exists('disabled', $field) && $field['disabled']) {
-                                //console("overriding disabled state on " . $field['name']);
-                                $field['disabled'] = false;
-                            }
-                            if (array_key_exists('readonly', $field) && !$field['readonly']) {
-                                //console("overriding readonly state on " . $field['name']);
-                                $field['readonly'] = true;
-                            }
-                        }
-                    } else {
-                        //console("Explicit rights on attribute " . $field['name'] . " found");
-                        if (!in_array('write', $effective_rights['attributeLevelRights'][$field['name']])) {
-                            //console("no write permissions on " . $field['name'] . ", marking read-only");
-/*                            if (array_key_exists('disabled', $field) && !$field['disabled']) {
-                                //console("overriding disabled state on " . $field['name']);
-                                $field['disabled'] = true;
-                            }
-*/
-                            if (array_key_exists('readonly', $field) && !$field['readonly']) {
-                                //console("overriding readonly state on " . $field['name']);
-                                $field['readonly'] = true;
-                            }
-                        } else {
-                            //console("explicit write permissions on " . $field['name']);
-
-                            if (array_key_exists('disabled', $field) && $field['disabled']) {
-                                //console("overriding disabled state on " . $field['name']);
-                                $field['disabled'] = false;
-                            }
-                            if (array_key_exists('readonly', $field) && $field['readonly']) {
-                                //console("overriding readonly state on " . $field['name']);
-                                $field['readonly'] = false;
-                            }
-                        }
-
+                if (empty($field['readonly']) && empty($field['disabled'])) {
+                    // count writeable fields
+                    if ($field['type'] && $field['type'] != kolab_form::INPUT_HIDDEN) {
+                        $writeable++;
                     }
-
-                    // Some fields are special, such as the 'userpassword2' field.
-                    switch ($field['name']) {
-                        case "type_id":
-                            $field['disabled'] = false;
-                            break;
-                        case "userpassword2":
-                            if (
-                                    in_array('add', $effective_rights['entryLevelRights']) &&
-                                    in_array('delete', $effective_rights['entryLevelRights'])
-                                ) {
-                                $field['disabled'] = false;
-                                $field['readonly'] = false;
-                            } elseif (!array_key_exists('userpassword', $effective_rights['attributeLevelRights'])) {
-                                $field['disabled'] = true;
-                                $field['readonly'] = true;
-                            } elseif (!in_array('write', $effective_rights['attributeLevelRights']['userpassword'])) {
-                                $field['disabled'] = true;
-                                $field['readonly'] = true;
-                            } else {
-                                $field['disabled'] = false;
-                                $field['readonly'] = false;
-                            }
-
-                            break;
-                        default:
-                            break;
+                    if (!empty($field['required'])) {
+                        $req_fields[] = $idx;
                     }
-
-                    // Other fields are generated by policy, and should therefore not be editable.
-                    if (array_key_exists($field['name'], $auto_fields)) {
-/*
-                        // Not sure what to do here - if it's not disabled but an auto-generated
-                        // field... perhaps we need to mark it as read-only or optional
-                        if (array_key_exists('disabled', $field) && !$field['disabled']) {
-                            console("overriding disabled state on " . $field['name'] . ", as the field contains an automatically generated value");
-                            $field['disabled'] = true;
-                        }
-*/
-                        if (array_key_exists('readonly', $field) && !$field['readonly']) {
-                            //console("overriding readonly state on " . $field['name'] . ", as the field contains an automatically generated value");
-                            $field['readonly'] = true;
-                        }
-                    }
-                }
-
-                //console("after authz " . $field['name'], $field);
-
-                if (!empty($field['required']) && empty($field['readonly']) && empty($field['disabled'])) {
-                    $req_fields[] = $idx;
                 }
 
                 $form->add_element($field);
@@ -1116,12 +1035,14 @@ class kolab_client_task
             $form->activate_section($data['section']);
         }
 
-        $form->add_button(array(
-            'value'   => kolab_html::escape($this->translate('submit.button')),
-            'onclick' => "kadm.{$name}_save()",
-        ));
+        if ($writeable) {
+            $form->add_button(array(
+                'value'   => kolab_html::escape($this->translate('submit.button')),
+                'onclick' => "kadm.{$name}_save()",
+            ));
+        }
 
-        if (!empty($data['id']) && in_array('delete', $effective_rights['entryLevelRights'])) {
+        if (!empty($data['id']) && in_array('delete', $data['effective_rights']['entry'])) {
             $id = $data['id'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('delete.button')),
