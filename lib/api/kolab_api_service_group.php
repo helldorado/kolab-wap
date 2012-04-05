@@ -116,6 +116,8 @@ class kolab_api_service_group extends kolab_api_service
 
     public function group_edit($getdata, $postdata)
     {
+        //console("group_edit \$postdata", $postdata);
+
         $group_attributes = $this->parse_input_attributes('group', $postdata);
         $group            = $postdata['id'];
 
@@ -150,6 +152,8 @@ class kolab_api_service_group extends kolab_api_service
         // normalize result
         $result = $this->parse_result_attributes('group', $result);
 
+        //console("group_info() \$result", $result);
+
         if ($result) {
             return $result;
         }
@@ -173,7 +177,7 @@ class kolab_api_service_group extends kolab_api_service
             //error_log("Empty \$getdata['group']");
             return FALSE;
         }
-        $result = $auth->group_members_list($getdata['group']);
+        $result = $auth->group_members_list($getdata['group'], false);
 
         return array(
             'list'  => $result,
