@@ -733,7 +733,7 @@ function kolab_admin()
   // Replaces form element with smart element
   this.form_element_wrapper = function(form_element)
   {
-    var i, j = 0, len = 0, elem, e = $(form_element),
+    var i, j = 0, elem, e = $(form_element),
       list = this.env.assoc_fields[form_element.name],
       disabled = e.attr('disabled'),
       readonly = e.attr('readonly'),
@@ -744,47 +744,58 @@ function kolab_admin()
     e.hide();
 
     if (!list) {
-      if (form_element.value) {
-        list = form_element.value.split("\n");
-        len = list.length;
-        list = $.extend({}, list);
-      }
-      else if (!autocomplete)
+      if (form_element.value)
+        list = $.extend({}, form_element.value.split("\n"));
+      else if (!autocomplete || disabled || readonly)
         list = {0: ''};
     }
 
-    // add autocompletion input
-    if (!disabled && !readonly && autocomplete) {
-      elem = this.form_list_element(form_element.form, {
-        maxlength: maxlength,
-        autocomplete: autocomplete,
-        disabled: !len && (disabled || readonly),
-        element: e
-      }, -1);
-
-      elem.appendTo(area);
-      this.ac_init(elem, {attribute: form_element.name, oninsert: this.form_element_oninsert});
-    }
-
-    // add input rows
-    for (i in list) {
-      elem = this.form_list_element(form_element.form, {
-        value: list[i],
-        key: i,
-        disabled: disabled,
-        readonly: readonly,
-        maxlength: maxlength,
-        autocomplete: autocomplete,
-        element: e
-      }, j++);
-
-      elem.appendTo(area);
-    }
-
-    if (disabled)
+    // Create simple list for readonly/disabled
+    if (disabled || readonly) {
       area.addClass('readonly');
-    if (autocomplete)
-      area.addClass('autocomplete');
+
+      // add simple input rows
+      for (i in list) {
+        elem = $('<input>');
+        elem.attr({
+          value: list[i],
+          disabled: disabled,
+          readonly: readonly,
+          name: form_element.name + '[' + (j++) + ']'
+          })
+        elem = $('<span class="listelement">').append(elem);
+        elem.appendTo(area);
+      }
+    }
+    // extended widget with add/remove buttons and/or autocompletion
+    else {
+      // add autocompletion input
+      if (autocomplete) {
+        elem = this.form_list_element(form_element.form, {
+          maxlength: maxlength,
+          autocomplete: autocomplete,
+          element: e
+        }, -1);
+
+        elem.appendTo(area);
+        this.ac_init(elem, {attribute: form_element.name, oninsert: this.form_element_oninsert});
+
+        area.addClass('autocomplete');
+      }
+
+      // add input rows
+      for (i in list) {
+        elem = this.form_list_element(form_element.form, {
+          value: list[i],
+          key: i,
+          maxlength: maxlength,
+          autocomplete: autocomplete,
+          element: e
+        }, j++);
+
+        elem.appendTo(area);
+      }
+    }
 
     area.appendTo(form_element.parentNode);
   };
@@ -797,9 +808,8 @@ function kolab_admin()
       orig = data.element
       ac = data.autocomplete;
 
-    data.name = data.name || orig.attr('name') + '[' + idx + ']';
-    data.disabled = data.disabled || (ac && idx >= 0);
-    data.readonly = data.readonly || (ac && idx >= 0);
+    data.name = (orig ? orig.attr('name') : data.name) + '[' + idx + ']';
+    data.readonly = (ac && idx >= 0);
 
     // remove internal attributes
     delete data['element'];
@@ -820,12 +830,8 @@ function kolab_admin()
 
     if (data.readonly)
       input.addClass('readonly');
-
-    if (ac && idx == -1)
+    else if (ac)
       input.addClass('autocomplete');
-
-    if (data.disabled && !ac)
-      return elem;
 
     // attach element creation event
     if (!ac)
@@ -1071,6 +1077,7 @@ function kolab_admin()
       this.form_value_error('userpassword2');
       return;
     }
+    delete data['userpassword2'];
 
     if (!this.check_required_fields(data)) {
       this.display_message('form.required.empty', 'error');

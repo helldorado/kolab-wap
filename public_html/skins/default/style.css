@@ -551,6 +551,11 @@ span.listelement input {
   height: 19px;
 }
 
+span.listarea.disabled span.listelement input,
+span.listarea.readonly span.listelement input {
+  width: 370px;  
+}
+
 span.listelement input:focus {
   outline: none;
 }
@@ -612,11 +617,6 @@ span.listarea.autocomplete span.listelement input {
 
 span.listarea.autocomplete span.listelement input.autocomplete {
   color: black;
-}
-
-span.listarea.disabled span.listelement span.actions,
-span.listarea.readonly span.listelement span.actions {
-  opacity: .5;
 }
 
 .autocomplete > span.listelement input {
