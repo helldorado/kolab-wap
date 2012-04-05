@@ -205,14 +205,13 @@ class kolab_client_task_user extends kolab_client_task
             'type_id'                   => 'personal',
             'type_id_name'              => 'personal',
 
-            /* Sensibly first */
-            'title'                     => 'personal',
             /* Probably input */
             'givenname'                 => 'personal',
             'sn'                        => 'personal',
             /* Possibly input */
             'initials'                  => 'personal',
             'o'                         => 'personal',
+            'title'                     => 'personal',
             /* Probably generated */
             'cn'                        => 'personal',
             'displayname'               => 'personal',

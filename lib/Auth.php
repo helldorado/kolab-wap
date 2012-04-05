@@ -320,6 +320,18 @@ class Auth {
         }
     }
 
+    public function search()
+    {
+        $this->connect($domain);
+        if ($domain === NULL) {
+            $domain = $this->conf->get('primary_domain');
+        }
+
+        $result = $this->_auth[$domain]->search(func_get_args());
+
+        return $result;
+    }
+
     public function user_add($attributes, $typeid = null)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $typeid);

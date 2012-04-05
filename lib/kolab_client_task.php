@@ -762,7 +762,7 @@ class kolab_client_task
             }
 
             $field['name'] = $idx;
-            $fields[$idx] = $this->form_element_type($field);
+            $fields[$idx] = $this->form_element_type($field, $data);
             $fields[$idx]['readonly'] = true;
 
             $extra_fields[$idx] = true;
@@ -793,7 +793,7 @@ class kolab_client_task
         foreach ($form_fields as $idx => $field) {
             if (!isset($fields[$idx])) {
                 $field['name'] = $idx;
-                $fields[$idx] = $this->form_element_type($field);
+                $fields[$idx] = $this->form_element_type($field, $data);
             }
             else {
                 unset($extra_fields[$idx]);
