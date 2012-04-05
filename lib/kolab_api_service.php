@@ -100,7 +100,7 @@ abstract class kolab_api_service
         $type_score   = -1;
         $type_id      = null;
 
-        console("Data objectClasses: " . implode(", ", $object_class));
+        //console("Data objectClasses: " . implode(", ", $object_class));
 
         foreach ($object_types as $idx => $elem) {
             $ref_class = $elem['attributes']['fields']['objectclass'];
@@ -109,7 +109,7 @@ abstract class kolab_api_service
                 continue;
             }
 
-            console("Reference objectclasses for " . $elem['key'] . ": " . implode(", ", $ref_class));
+            //console("Reference objectclasses for " . $elem['key'] . ": " . implode(", ", $ref_class));
 
             // Eliminate the duplicates between the $data_ocs and $ref_ocs
             $_object_class = array_diff($object_class, $ref_class);
@@ -121,7 +121,7 @@ abstract class kolab_api_service
 
 //            console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
 //            console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
-            console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
+            //console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
 
             if ($elem_score > $type_score) {
                 $type_id    = $idx;
@@ -259,15 +259,22 @@ abstract class kolab_api_service
     protected function parse_input_attributes($object_name, $attribs)
     {
         $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
+
+        //console("parse_input_attributes", $type_attrs);
+
         $form_service = $this->controller->get_service('form_value');
         $result       = array();
 
         if (isset($type_attrs['form_fields'])) {
             foreach ($type_attrs['form_fields'] as $key => $value) {
+                //console("Running parse input attributes for key $key");
+
                 if (empty($attribs[$key]) && empty($value['optional'])) {
+                    //console("\$attribs['" . $key . "'] is empty, and the field is not optional");
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
+                    //console("Either \$attribs['" . $key . "'] is empty or the field is optional");
                     $result[$key] = $attribs[$key];
                 }
             }
@@ -297,6 +304,8 @@ abstract class kolab_api_service
                 }
             }
         }
+
+        //console("parse_input_attributes result", $result);
 
         return $result;
     }
