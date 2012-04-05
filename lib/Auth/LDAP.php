@@ -355,7 +355,7 @@ class LDAP
 
     public function get_attribute($subject_dn, $attribute)
     {
-        $result = $this->search($subject_dn, '(objectclass=*)', (array)($attribute));
+        $result = $this->_search($subject_dn, '(objectclass=*)', (array)($attribute));
         $result = self::normalize_result($result);
         $dn = key($result);
         $attr = key($result[$dn]);
@@ -364,7 +364,7 @@ class LDAP
 
     public function get_attributes($subject_dn, $attributes)
     {
-        $result = $this->search($subject_dn, '(objectclass=*)', $attributes);
+        $result = $this->_search($subject_dn, '(objectclass=*)', $attributes);
         $result = self::normalize_result($result);
 
         if (!empty($result)) {
@@ -482,6 +482,10 @@ class LDAP
         if (!$base_dn)
             $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
 
+        if (!empty($attrs['ou'])) {
+            $base_dn = $attrs['ou'];
+        }
+
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
@@ -544,7 +548,7 @@ class LDAP
         if (!$user_dn)
             return false;
 
-        return self::normalize_result($this->search($user_dn));
+        return self::normalize_result($this->_search($user_dn));
     }
 
     public function user_find_by_attribute($attribute)
@@ -561,7 +565,7 @@ class LDAP
         $root_dn = $this->domain_root_dn($this->domain);
 
         // TODO: Do not query for both, it's either one or the other
-        $entries = $this->search($root_dn, "(|" .
+        $entries = $this->_search($root_dn, "(|" .
                 "(&(objectclass=groupofnames)(member=$member_dn))" .
                 "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
             ")");
@@ -651,7 +655,7 @@ class LDAP
             return false;
         }
 
-        return self::normalize_result($this->search($group_dn));
+        return self::normalize_result($this->_search($group_dn));
     }
 
     public function group_members_list($group)
@@ -758,9 +762,39 @@ class LDAP
         return $_schema;
     }
 
-    private function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
+    public function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
-        return $this->_search($base_dn, $search_filter, $attributes);
+        //console("Auth::LDAP::search", $base_dn);
+
+        // We may have been passed on func_get_arg()
+        if (is_array($base_dn)) {
+            $_base_dn = array_shift($base_dn);
+
+            if (count($base_dn) > 0) {
+                $search_filter = array_shift($base_dn);
+            } else {
+                $search_filter = '(objectclass=*)';
+            }
+
+            if (count($base_dn) > 0) {
+                $attributes = array_shift($base_dn);
+            } else {
+                $attributes = array('*');
+            }
+        } else {
+            $_base_dn = $base_dn;
+        }
+
+        $result = self::normalize_result($this->__search($_base_dn, $search_filter, $attributes));
+        $result = array_keys($result);
+        //console($result);
+
+        return $result;
+    }
+
+    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
+    {
+        return $this->__search($base_dn, $search_filter, $attributes);
     }
 
     private function domains_list()
@@ -769,7 +803,7 @@ class LDAP
         $base_dn = $this->conf->get($section, 'domain_base_dn');
         $filter  = $this->conf->get($section, 'kolab_domain_filter');
 
-        return $this->search($base_dn, $filter);
+        return $this->_search($base_dn, $filter);
     }
 
     private function users_list($attributes = array(), $search = array())
@@ -792,7 +826,7 @@ class LDAP
             $filter = '(&' . $filter . $s_filter . ')';
         }
 
-        return $this->search($base_dn, $filter, $attributes);
+        return $this->_search($base_dn, $filter, $attributes);
     }
 
     private function roles_list($attributes = array(), $search = array())
@@ -812,7 +846,7 @@ class LDAP
             $filter = '(&' . $filter . $s_filter . ')';
         }
 
-        return $this->search($base_dn, $filter, $attributes);
+        return $this->_search($base_dn, $filter, $attributes);
     }
 
     private function groups_list($attributes = array(), $search = array())
@@ -835,7 +869,7 @@ class LDAP
             $filter = '(&' . $filter . $s_filter . ')';
         }
 
-        return $this->search($base_dn, $filter, $attributes);
+        return $this->_search($base_dn, $filter, $attributes);
     }
 
     public static function normalize_result($__result)
@@ -908,7 +942,7 @@ class LDAP
 
         $base_dn = $this->domain_root_dn($this->domain);
 
-        $result = self::normalize_result($this->search($base_dn, $filter, array_keys($attribute)));
+        $result = self::normalize_result($this->_search($base_dn, $filter, array_keys($attribute)));
 
         if (count($result) > 0) {
             error_log("Results found: " . implode(', ', array_keys($result)));
@@ -997,9 +1031,16 @@ class LDAP
                 "rename"    => Array(), // For use with ldap_rename()
             );
 
+        // This is me cheating. Remove this special attribute.
+        $old_ou = $old_attrs['ou'];
+        $new_ou = $new_attrs['ou'];
+        unset($old_attrs['ou']);
+        unset($new_attrs['ou']);
+
         // Compare each attribute value of the old attrs with the corresponding value
         // in the new attrs, if any.
         foreach ($old_attrs as $attr => $old_attr_value) {
+
             if (array_key_exists($attr, $new_attrs)) {
                 $_sort1 = false;
                 $_sort2 = false;
@@ -1015,7 +1056,8 @@ class LDAP
                 if (!($new_attrs[$attr] === $old_attr_value) && !($_sort1 === $_sort2)) {
                     console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
                     if ($attr === $rdn_attr) {
-                        $mod_array['rename'][$subject_dn] = $rdn_attr . '=' . $new_attrs[$attr];
+                        $mod_array['rename']['dn'] = $subject_dn;
+                        $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
                     } else {
                         if (empty($new_attrs[$attr])) {
                             switch ($attr) {
@@ -1069,7 +1111,15 @@ class LDAP
             }
         }
 
-        console($mod_array);
+        if (!($old_ou === $new_ou)) {
+            $mod_array['rename']['new_parent'] = $new_ou;
+            if (empty($mod_array['rename']['dn']) || empty($mod_array['rename']['new_rdn'])) {
+                $mod_array['rename']['dn'] = $subject_dn;
+                $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$rdn_attr];
+            }
+        }
+
+        //console($mod_array);
 
         $result = $this->modify_entry_attributes($subject_dn, $mod_array);
 
@@ -1115,12 +1165,21 @@ class LDAP
         }
 
         if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
-            $olddn = key($attributes['rename']);
-            $newrdn = $attributes['rename'][$olddn];
-            $result = ldap_rename($this->conn, $olddn, $newrdn, NULL, true);
+            $olddn = $attributes['rename']['dn'];
+            $newrdn = $attributes['rename']['new_rdn'];
+            if (!empty($attributes['rename']['new_parent'])) {
+                $new_parent = $attributes['rename']['new_parent'];
+            } else {
+                $new_parent = null;
+            }
+
+            console("Attempt to rename $olddn to $newrdn,$new_parent");
+
+            $result = ldap_rename($this->conn, $olddn, $newrdn, $new_parent, true);
         }
 
         if (!$result) {
+            error_log("LDAP Error: " . $this->_errstr());
             return false;
         }
 
@@ -1235,8 +1294,8 @@ class LDAP
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        console("Entry DN", $entry_dn);
-        console("Attributes", $attributes);
+        //console("Entry DN", $entry_dn);
+        //console("Attributes", $attributes);
 
         foreach ($attributes as $attr_name => $attr_value) {
             if (empty($attr_value)) {
@@ -1303,6 +1362,9 @@ class LDAP
         }
 
         $this->conn = $connection;
+
+        ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
+
         // TODO: Debug logging
         error_log("Connected!");
 
@@ -1390,11 +1452,13 @@ class LDAP
     /**
      * Shortcut to ldap_search()
      */
-    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
+    private function __search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
         if (!$this->_connect()) {
             return false;
         }
+
+        $attributes = (array)($attributes);
 
         error_log("Searching $base_dn with filter: $search_filter");
 //        error_log("Searching with user: " . $_SESSION['user']->user_bind_dn);
@@ -1623,7 +1687,7 @@ class LDAP
             }
         }
 
-        $entries = self::normalize_result($this->search($dn));
+        $entries = self::normalize_result($this->_search($dn));
 
         //console("ENTRIES for \$dn $dn", $entries);
 
@@ -1728,7 +1792,7 @@ class LDAP
 
         foreach ((array)$entry['memberurl'] as $url) {
             $ldap_uri_components = $this->_parse_memberurl($url);
-            $entries = self::normalize_result($this->search($ldap_uri_components[3], $ldap_uri_components[6]));
+            $entries = self::normalize_result($this->_search($ldap_uri_components[3], $ldap_uri_components[6]));
             foreach ($entries as $entry_dn => $_entry) {
                 $group_members[$entry_dn] = $_entry;
                 error_log("Found " . $entry_dn);
