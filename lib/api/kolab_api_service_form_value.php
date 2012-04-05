@@ -673,7 +673,17 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function select_options_preferredlanguage($postdata, $attribs = array())
     {
-        return $this->_select_options_from_db('preferredlanguage');
+        $options = $this->_select_options_from_db('preferredlanguage');
+
+        $conf = Conf::get_instance();
+        $default = $conf->get('default_locale');
+        if (!$default) {
+            $default = 'en_US';
+        }
+
+        $options['default'] = $default;
+
+        return $options;
     }
 
     private function _select_options_from_db($attribute)
