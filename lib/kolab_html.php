@@ -201,6 +201,11 @@ class kolab_html
                 if (!empty($attribs['value']) && $attribs['value'] == $option['value']) {
                     $option['selected'] = true;
                 }
+                // make a select really readonly by disabling options
+                else if (!empty($attribs['disabled']) || !empty($attribs['readonly'])) {
+                    $option['disabled'] = true;
+                }
+
                 $content[] = self::option($option, $escape);
             }
         }
