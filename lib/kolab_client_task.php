@@ -654,24 +654,11 @@ class kolab_client_task
         switch ($field['type']) {
         case 'select':
         case 'multiselect':
-            if (!isset($field['values'])) {
-                $data['attributes'] = array($field['name']);
-                $resp = $this->api->post('form_value.select_options', null, $data);
-                $field['values'] = $resp->get($field['name']);
-            }
+            $opts = $this->form_element_select_data($field, $data);
 
-            if (!empty($field['values']['default'])) {
-                $result['value'] = $field['values']['default'];
-                unset($field['values']['default']);
-            }
-
-            $result['type'] = kolab_form::INPUT_SELECT;
-            if (!empty($field['values'])) {
-                $result['options'] = array_combine($field['values'], $field['values']);
-            }
-            else {
-                $result['options'] = array('');
-            }
+            $result['type']    = kolab_form::INPUT_SELECT;
+            $result['options'] = $opts['options'];
+            $result['value']   = $opts['default'];
 
             if ($field['type'] == 'multiselect') {
                 $result['multiple'] = true;
@@ -701,6 +688,64 @@ class kolab_client_task
         $result['required'] = empty($field['optional']);
 
         return $result;
+    }
+
+    /**
+     * Prepares options/value of select element
+     *
+     * @param array $field Field attributes
+     * @param array $data  Attribute values
+     *
+     * @return array Options/Default definition
+     */
+    protected function form_element_select_data($field, $data = array())
+    {
+        $options = array();
+        $default = null;
+
+        if (!isset($field['values'])) {
+            $data['attributes'] = array($field['name']);
+            $resp = $this->api->post('form_value.select_options', null, $data);
+            unset($data['attributes']);
+            $field['values'] = $resp->get($field['name']);
+        }
+
+        if (!empty($field['values']['default'])) {
+            $default = $field['values']['default'];
+            unset($field['values']['default']);
+        }
+
+        if (!empty($field['values'])) {
+            $options = array_combine($field['values'], $field['values']);
+
+            // Exceptions
+            if ($field['name'] == 'ou') {
+                foreach ($options as $idx => $ou) {
+                    $dn = ldap_explode_dn($ou, 0);
+                    if (!empty($dn)) {
+                        unset($dn['count']);
+                        $ous = array();
+                        $dcs = array();
+                        foreach ($dn as $dn_item) {
+                            if (preg_match('/^ou=/', $dn_item)) {
+                                $ous[] = substr($dn_item, 3);      
+                            }
+                            else {
+                                $dcs[] = substr($dn_item, 3);
+                            }
+                        }
+                        $ou = implode(', ', $ous) . ' (' . implode('.', $dcs) . ')';
+                    }
+                    $options[$idx] = $ou;
+                
+                }
+            }
+        }
+
+        return array(
+            'options' => $options,
+            'default' => $default,
+        );
     }
 
     /**
