@@ -137,34 +137,63 @@ class LDAP
         // Attempt to explode the username to see if it is in fact a DN,
         // such as would be the case for 'cn=Directory Manager' or
         // 'uid=admin'.
-        $is_dn = ldap_explode_dn($username, 1);
-        if (!$is_dn) {
-            error_log("Username is not a DN");
+        $subject = $this->entry_dn($username);
+        if (!$subject) {
             list($this->userid, $this->domain) = $this->_qualify_id($username);
             $root_dn = $this->domain_root_dn($this->domain);
-            $user_dn = $this->_get_user_dn($root_dn, '(mail=' . $username . ')');
-            error_log("Found user DN: $user_dn for user: $username");
-        }
-        else {
-            $user_dn = $username;
-            $root_dn = "";
+
+            // Compose a filter to find the subject dn.
+            // Use the kolab_user_filter first, if configured, and the user_filter
+            // as a fallback.
+            // Use the auth_attrs configured.
+            $filter = '(&';
+
+            $user_filter = $this->conf->get('kolab_user_filter');
+
+            if (!$user_filter) {
+                $user_filter = $this->conf->get('user_filter');
+            }
+
+            $filter .= $user_filter;
+
+            $auth_attrs = $conf->get_list('auth_attrs');
+
+            if (count($auth_attrs) > 0) {
+                $filter .= '(|';
+
+                foreach ($auth_attrs as $attr) {
+                    $filter .= '(' . $attr . '=' . $this->userid . ')';
+                    $filter .= '(' . $attr . '=' . $this->userid . '@' . $this->domain . ')';
+                }
+
+                $filter .= ')';
+            } else {
+                // Default to uid.
+                $filter .= '(|(uid=' . $this->userid . '))';
+            }
+
+            $filter .= ')';
+
+            $subject_dn = $this->_get_user_dn($root_dn, $filter);
+        } else {
+            $subject_dn = key($subject);
         }
 
-        if (($bind_ok = $this->_bind($user_dn, $password)) == true) {
+        if (($bind_ok = $this->_bind($subject_dn, $password)) == true) {
 //            $this->_unbind();
 
             if (isset($_SESSION['user'])) {
                 $_SESSION['user']->user_root_dn = $root_dn;
-                $_SESSION['user']->user_bind_dn = $user_dn;
+                $_SESSION['user']->user_bind_dn = $subject_dn;
                 $_SESSION['user']->user_bind_pw = $password;
                 error_log("Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
             }
             else {
-                error_log("Successfully bound with User DN: " . $user_dn . " but not saving it to the session");
+                error_log("Successfully bound with User DN: " . $subject_dn . " but not saving it to the session");
             }
 
             // @TODO: return unique attribute
-            return $user_dn;
+            return $subject_dn;
         }
         else {
             error_log("LDAP Error: " . $this->_errstr());
