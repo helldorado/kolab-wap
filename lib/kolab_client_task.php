@@ -900,13 +900,6 @@ class kolab_client_task
                     'type'      => kolab_form::INPUT_HIDDEN,
                     'value'     => $data['id']
                 );
-
-            $fields['entrydn'] = Array(
-                    'section'   => 'system',
-                    'type'      => kolab_form::INPUT_HIDDEN,
-                    'value'     => $data['entrydn']
-                );
-
         }
 
         return array($fields, $types, $type);
