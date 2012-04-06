@@ -138,6 +138,9 @@ class LDAP
         // such as would be the case for 'cn=Directory Manager' or
         // 'uid=admin'.
         $subject = $this->entry_dn($username);
+
+        console($subject);
+
         if (!$subject) {
             list($this->userid, $this->domain) = $this->_qualify_id($username);
             $root_dn = $this->domain_root_dn($this->domain);
@@ -176,7 +179,7 @@ class LDAP
 
             $subject_dn = $this->_get_user_dn($root_dn, $filter);
         } else {
-            $subject_dn = key($subject);
+            $subject_dn = $subject;
         }
 
         if (($bind_ok = $this->_bind($subject_dn, $password)) == true) {
@@ -987,9 +990,11 @@ class LDAP
 
     private function entry_dn($subject)
     {
+        console("entry_dn on subject $subject");
         $is_dn = ldap_explode_dn($subject, 1);
+        console($is_dn);
 
-        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 1) {
+        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 0) {
             return $subject;
         }
 
