@@ -1015,6 +1015,15 @@ class kolab_client_task
 
                     // Convert data for the list field with autocompletion
                     if ($field['data-type'] == kolab_form::TYPE_LIST) {
+                        if (!is_array($data[$idx])) {
+                            if (!empty($field['data-autocomplete'])) {
+                                $data[$idx] = array($data[$idx] => $data[$idx]);
+                            }
+                            else {
+                                $data[$idx] = (array) $data[$idx];
+                            }
+                        }
+
                         $field['value'] = !empty($field['data-autocomplete']) ? array_keys($data[$idx]) : array_values($data[$idx]);
                     }
 

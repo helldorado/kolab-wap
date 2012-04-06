@@ -313,12 +313,18 @@ class kolab_client_task_user extends kolab_client_task
             );
 
             // Roles (extract role names)
-            if (!empty($fields['nsrole']) && !empty($data['nsrole'])) {
-                $data['nsrole'] = array_combine($data['nsrole'], $data['nsrole']);
-                foreach ($data['nsrole'] as $dn => $val) {
-                    // @TODO: maybe ldap_explode_dn() would be better?
-                    if (preg_match('/^cn=([^,]+)/i', $val, $m)) {
-                        $data['nsrole'][$dn] = $m[1];
+            $role_attrs = array('nsrole', 'nsroledn');
+            foreach ($role_attrs as $ra) {
+                if (!empty($fields[$ra]) && !empty($data[$ra])) {
+                    if (!is_array($data[$ra])) {
+                        $data[$ra] = (array) $data[$ra];
+                    }
+                    $data[$ra] = array_combine($data[$ra], $data[$ra]);
+                    foreach ($data[$ra] as $dn => $val) {
+                        // @TODO: maybe ldap_explode_dn() would be better?
+                        if (preg_match('/^cn=([^,]+)/i', $val, $m)) {
+                            $data[$ra][$dn] = $m[1];
+                        }
                     }
                 }
             }
