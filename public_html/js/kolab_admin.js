@@ -750,10 +750,11 @@ function kolab_admin()
 
     if (!list) {
       if (form_element.value)
-        list = $.extend({}, form_element.value.split("\n"));
+        list = form_element.value.split("\n");
       else if (!autocomplete || disabled || readonly)
         list = {0: ''};
     }
+    list = $.extend({}, list);
 
     // Create simple list for readonly/disabled
     if (disabled || readonly) {
@@ -763,7 +764,7 @@ function kolab_admin()
       for (i in list) {
         elem = $('<input>');
         elem.attr({
-          value: list[i] ? list[i] : i,
+          value: list[i],
           disabled: disabled,
           readonly: readonly,
           name: form_element.name + '[' + (j++) + ']'
@@ -792,7 +793,7 @@ function kolab_admin()
       ac_value = []
       for (i in list) {
         elem = this.form_list_element(form_element.form, {
-          value: list[i] ? list[i] : i,
+          value: list[i],
           key: i,
           maxlength: maxlength,
           autocomplete: autocomplete,
@@ -800,7 +801,7 @@ function kolab_admin()
         }, j++);
 
         if (autocomplete)
-            ac_value.push(list[i] ? list[i] : i);
+            ac_value.push(list[i]);
 
         elem.appendTo(area);
       }
