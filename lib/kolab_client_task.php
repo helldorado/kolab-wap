@@ -1014,14 +1014,19 @@ class kolab_client_task
                     $field['value'] = $data[$idx];
 
                     // Convert data for the list field with autocompletion
-                    if ($field['data-type'] == kolab_form::TYPE_LIST && kolab_utils::is_assoc($data[$idx])) {
-                        $assoc_fields[$idx] = $data[$idx];
-                        $field['value'] = array_keys($data[$idx]);
+                    if ($field['data-type'] == kolab_form::TYPE_LIST) {
+                        $field['value'] = !empty($field['data-autocomplete']) ? array_keys($data[$idx]) : array_values($data[$idx]);
                     }
 
                     if (is_array($field['value'])) {
                         $field['value'] = implode("\n", $field['value']);
                     }
+                }
+
+                // @TODO: We assume here that all autocompletion lists are associative
+                // It's likely that we'll need autocompletion on ordinary lists
+                if (!empty($field['data-autocomplete'])) {
+                    $assoc_fields[$idx] = !empty($data[$idx]) ? $data[$idx] : array();
                 }
 /*
                 if (!empty($field['suffix'])) {
