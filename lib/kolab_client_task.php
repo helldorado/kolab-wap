@@ -387,10 +387,6 @@ class kolab_client_task
      */
     public function config_get($name, $fallback = null)
     {
-        // @TODO: remove this check
-        if ($name == "devel_mode")
-            return TRUE;
-
         $value = $this->config->get('kolab_wap', $name);
         return $value !== null ? $value : $fallback;
     }
