@@ -62,6 +62,7 @@ $LANG['user.name'] = 'Name';
 $LANG['user.norecords'] = 'No user records found!';
 $LANG['user.other'] = 'Other';
 $LANG['user.o'] = 'Organization';
+$LANG['user.ou'] = 'Organizational Unit';
 $LANG['user.pager'] = 'Pager Number';
 $LANG['user.personal'] = 'Personal';
 $LANG['user.postalcode'] = 'Postal Code';
