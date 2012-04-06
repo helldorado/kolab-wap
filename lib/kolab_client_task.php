@@ -1026,7 +1026,7 @@ class kolab_client_task
                 // @TODO: We assume here that all autocompletion lists are associative
                 // It's likely that we'll need autocompletion on ordinary lists
                 if (!empty($field['data-autocomplete'])) {
-                    $assoc_fields[$idx] = !empty($data[$idx]) ? (array)($data[$idx]) : array();
+                    $assoc_fields[$idx] = !empty($data[$idx]) ? $data[$idx] : array();
                 }
 /*
                 if (!empty($field['suffix'])) {
