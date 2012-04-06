@@ -38,6 +38,19 @@ skin = default
   > IDENTIFIED BY '*****';"
   # mysql -e "FLUSH PRIVILEGES;"
 
+- Also include in /etc/kolab/kolab.conf the following settings:
+
+[ldap]
+auth_attrs = uid, mail, [mailalternateaddress|alias]
+; For 389 Directory Server
+unique_attribute = nsuniqueid
+; For OpenLDAP
+unique_attribute = entrydn
+
+  For a complete sample configuration file, please see:
+
+    doc/sample-kolab.conf
+
 - Make /etc/kolab/kolab.conf readable for the apache group, for example:
 
 # chown kolab-n kolab-n /etc/kolab/kolab.conf
@@ -45,15 +58,15 @@ skin = default
 
 - Initialize the kolab_wap database. For an example SQL file, please see:
 
-  http://admin.klab.cc/~vanmeeuwen/kolab-wap/kolab_wap.sql
+    doc/kolab_wap-*.sql
 
   If you wanted to play with alternate types / attribute settings, please see
   the following locations for sample PHP code you could use to insert your own
   user_types, group_types and options;
 
-  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-user_types.phps
-  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-group_type-kolab.phps
-  http://admin.klab.cc/~vanmeeuwen/kolab-wap/insert-preferredlanguages.phps
+    doc/sample-insert-group_types.php
+    doc/sample-insert-options.php
+    doc/sample-insert-user_types.php
 
   Save these to the kolab-wap root directory (next to the lib/ and public_html/
   directories) as the *.php equivalent of these *.phps counterparts, and execute
