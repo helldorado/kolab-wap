@@ -156,7 +156,7 @@ class LDAP
 
             $filter .= $user_filter;
 
-            $auth_attrs = $conf->get_list('auth_attrs');
+            $auth_attrs = $this->conf->get_list('auth_attrs');
 
             if (count($auth_attrs) > 0) {
                 $filter .= '(|';
