@@ -83,6 +83,23 @@ class Conf {
         return $this->expand($this->get_raw($key1, $key2));
     }
 
+    public function get_list($key1, $key2 = NULL)
+    {
+        $list = array();
+
+        $value = $this->get($key1, $key2);
+        $value_components = explode(',', $value);
+
+        foreach ($value_components as $component) {
+            $component = trim($component);
+            if (!empty($component)) {
+                $list[] = $component;
+            }
+        }
+
+        return $list;
+    }
+
     public function get_raw($key1, $key2 = NULL)
     {
         if (isset($this->_conf[$key1])) {
