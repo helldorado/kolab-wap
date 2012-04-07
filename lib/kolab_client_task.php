@@ -860,11 +860,17 @@ class kolab_client_task
             'entry'     => $entry_rights,
         );
 
+        // See if "administrators" (those who can delete and add back on the entry
+        // level) may override the automatically generated contents of auto_form_fields.
+        $admin_auto_fields_rw = $this->config_get('admin_auto_fields_rw', false);
+
         foreach ($fields as $idx => $field) {
             if (!array_key_exists($idx, $attribute_rights)) {
                 // If the entry level rights contain 'add' and 'delete', well, you're an admin
                 if (in_array('add', $entry_rights) && in_array('delete', $entry_rights)) {
-                    $fields[$idx]['readonly'] = false;
+                    if ($admin_auto_fields_rw) {
+                        $fields[$idx]['readonly'] = false;
+                    }
                 }
                 else {
                     $fields[$idx]['readonly'] = true;
