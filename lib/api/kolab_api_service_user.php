@@ -137,9 +137,9 @@ class kolab_api_service_user extends kolab_api_service
         $auth   = Auth::get_instance();
         $result = $auth->user_edit($user, $user_attributes, $postdata['type_id']);
 
-        // @TODO: return unique attribute (?), it can change on edit
+        // Return the $mod_array
         if ($result) {
-            return true;
+            return $result;
         }
 
         return false;
