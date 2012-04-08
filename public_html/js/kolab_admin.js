@@ -1070,6 +1070,11 @@ function kolab_admin()
     if (reload) {
       data.section = section;
       this.http_post('user.' + action, {data: data});
+      a_fields = [];
+      for (i in this.env.auto_fields) {
+        a_fields.push(i);
+      }
+      this.form_value_change(a_fields)
       return;
     }
 
