@@ -207,6 +207,7 @@ class kolab_client_task_group extends kolab_client_task
             'cn'            => 'system',
             'gidnumber'     => 'system',
             'mail'          => 'system',
+            'member'        => 'system',
             'uniquemember'  => 'system',
             'memberurl'     => 'system',
         );
@@ -280,7 +281,14 @@ class kolab_client_task_group extends kolab_client_task
     {
         // convert to key=>value array, see kolab_api_service_form_value::list_options_uniquemember()
         foreach ($list as $idx => $value) {
-            $list[$idx] = $value['displayname'];
+            if (!empty($value['displayname'])) {
+                $list[$idx] = $value['displayname'];
+            } elseif (!empty($value['cn'])) {
+                $list[$idx] = $value['cn'];
+            } else {
+                console("No display name or cn for $idx");
+            }
+
             if (!empty($value['mail'])) {
                 $list[$idx] .= ' <' . $value['mail'] . '>';
             }
