@@ -659,6 +659,10 @@ class kolab_api_service_form_value extends kolab_api_service
             $default = 'en_US';
         }
 
+        if (!empty($postdata['preferredlanguage'])) {
+            $default = $postdata['preferredlanguage'];
+        }
+
         $options['default'] = $default;
 
         return $options;
