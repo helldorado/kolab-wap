@@ -851,7 +851,7 @@ class kolab_client_task
         }
 
         // Get the rights on the entry and attribute level
-        $result = $this->api->get("user.effective_rights", array($name => $data['id']));
+        $result = $this->api->get($name . ".effective_rights", array($name => $data['id']));
         $attribute_rights = $result->get('attributeLevelRights');
         $entry_rights     = $result->get('entryLevelRights');
 

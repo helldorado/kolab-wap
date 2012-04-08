@@ -41,7 +41,7 @@ class kolab_api_service_user extends kolab_api_service
 
         $auth = Auth::get_instance();
 
-        $effective_rights = $auth->list_rights('group');
+        $effective_rights = $auth->list_rights('user');
 
         //console("effective_rights", $effective_rights);
 

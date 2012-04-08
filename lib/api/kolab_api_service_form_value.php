@@ -562,8 +562,11 @@ class kolab_api_service_form_value extends kolab_api_service
         }
 
         return $list;
+    }
 
-
+    private function list_options_member($postdata, $attribs = array())
+    {
+        return $this->_list_options_members($postdata, $attribs);
     }
 
     private function list_options_nsrole($postdata, $attribs = array())
@@ -598,45 +601,9 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
-
     private function list_options_uniquemember($postdata, $attribs = array())
     {
-        $service = $this->controller->get_service('users');
-
-        $keyword = array('value' => $postdata['search']);
-        $data    = array(
-            'attributes' => array('displayname', 'mail'),
-            'page_size'  => 15,
-            'search'     => array(
-                'displayname' => $keyword,
-                'cn'          => $keyword,
-                'mail'        => $keyword,
-            ),
-        );
-
-        $result = $service->users_list(null, $data);
-        $list   = $result['list'];
-
-        $service = $this->controller->get_service('groups');
-        $data['attributes'] = array('cn', 'mail');
-
-        $result = $service->groups_list(null, $data);
-        $list = array_merge($list, $result['list']);
-
-        // convert to key=>value array
-        foreach ($list as $idx => $value) {
-            $list[$idx] = $value['displayname'];
-
-            if (empty($list[$idx])) {
-                $list[$idx] = $value['cn'];
-            }
-
-            if (!empty($value['mail'])) {
-                $list[$idx] .= ' <' . $value['mail'] . '>';
-            }
-        }
-
-        return $list;
+        return $this->_list_options_members($postdata, $attribs);
     }
 
     private function select_options_c($postdata, $attribs = array())
@@ -715,4 +682,48 @@ class kolab_api_service_form_value extends kolab_api_service
             return $result;
         }
     }
+
+    private function _list_options_members($postdata, $attribs = array())
+    {
+        $service = $this->controller->get_service('users');
+
+        $keyword = array('value' => $postdata['search']);
+        $data    = array(
+            'attributes' => array('displayname', 'cn', 'mail'),
+            'page_size'  => 15,
+            'search'     => array(
+                'displayname' => $keyword,
+                'cn'          => $keyword,
+                'mail'        => $keyword,
+            ),
+        );
+
+        $result = $service->users_list(null, $data);
+
+        $list   = $result['list'];
+
+        $service = $this->controller->get_service('groups');
+        $data['attributes'] = array('cn', 'mail');
+
+        $result = $service->groups_list(null, $data);
+        $list = array_merge($list, $result['list']);
+
+        // convert to key=>value array
+        foreach ($list as $idx => $value) {
+            if (!empty($value['displayname'])) {
+                $list[$idx] = $value['displayname'];
+            } elseif (!empty($value['cn'])) {
+                $list[$idx] = $value['cn'];
+            } else {
+                console("No display name or cn for $idx");
+            }
+
+            if (!empty($value['mail'])) {
+                $list[$idx] .= ' <' . $value['mail'] . '>';
+            }
+        }
+
+        return $list;
+    }
+
 }

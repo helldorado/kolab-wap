@@ -139,7 +139,7 @@ class LDAP
         // 'uid=admin'.
         $subject = $this->entry_dn($username);
 
-        console($subject);
+        //console($subject);
 
         if (!$subject) {
             list($this->userid, $this->domain) = $this->_qualify_id($username);
@@ -253,6 +253,8 @@ class LDAP
 
     public function allowed_attributes($objectclasses = Array())
     {
+        //console("Listing allowed_attributes for objectclasses", $objectclasses);
+
         $_schema = $this->init_schema();
 
         if (!is_array($objectclasses)) {
@@ -303,7 +305,20 @@ class LDAP
 
     public function effective_rights($subject)
     {
-        $attributes = array();
+        $effective_rights_control_oid = "1.3.6.1.4.1.42.2.27.9.5.2";
+
+        $supported_controls = $this->supported_controls();
+
+        if (!in_array($effective_rights_control_oid, $supported_controls)) {
+            error_log("No getEffectiveRights control in supportedControls");
+            return $this->legacy_rights($subject);
+        }
+
+        $attributes = array(
+                'attributeLevelRights' => array(),
+                'entryLevelRights' => array(),
+            );
+
         $output = array();
 
         $conf = Conf::get_instance();
@@ -347,9 +362,9 @@ class LDAP
 
         //console("Executing command " . implode(' ', $command));
 
-        exec(implode(' ', $command), $output);
+        exec(implode(' ', $command), $output, $return_code);
 
-        //console("Output", $output);
+        //console("Output", $output, "Return code: " . $return_code);
 
         $lines = array();
         foreach ($output as $line_num => $line) {
@@ -760,42 +775,6 @@ class LDAP
         return $domain_rootdn;
     }
 
-    private function init_schema()
-    {
-        $conf = Conf::get_instance();
-
-        $this->_ldap_uri    = $this->conf->get('ldap_uri');
-        $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
-        $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
-        $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
-
-        require_once("Net/LDAP2.php");
-
-        $_ldap_cfg = Array(
-                'host' => $this->_ldap_server,
-                'port' => $this->_ldap_port,
-                'tls' => false,
-                'version' => 3,
-                'binddn' => $conf->get('bind_dn'),
-                'bindpw' => $conf->get('bind_pw')
-            );
-
-        $_ldap_schema_cache_cfg = Array(
-                'path' => "/tmp/Net_LDAP2_Schema.cache",
-                'max_age' => 86400,
-            );
-
-        $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
-
-        $_ldap = Net_LDAP2::connect($_ldap_cfg);
-
-        $result = $_ldap->registerSchemaCache($_ldap_schema_cache);
-
-        $_schema = $_ldap->schema('cn=schema');
-
-        return $_schema;
-    }
-
     public function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
         //console("Auth::LDAP::search", $base_dn);
@@ -840,120 +819,22 @@ class LDAP
         return $this->_search($base_dn, $filter);
     }
 
-    private function users_list($attributes = array(), $search = array())
+    private function entry_dn($subject)
     {
-        $conf = Conf::get_instance();
+        //console("entry_dn on subject $subject");
+        $is_dn = ldap_explode_dn($subject, 1);
+        //console($is_dn);
 
-        $base_dn = $conf->get('user_base_dn');
-
-        if (!$base_dn)
-            $base_dn = $conf->get('base_dn');
-
-        $filter  = $conf->get('user_filter');
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
+        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 0) {
+            return $subject;
         }
 
-        if ($s_filter = $this->_search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
+        $unique_attr = $this->unique_attribute();
+        $subject     = $this->entry_find_by_attribute(array($unique_attr => $subject));
+
+        if (!empty($subject)) {
+            return key($subject);
         }
-
-        return $this->_search($base_dn, $filter, $attributes);
-    }
-
-    private function roles_list($attributes = array(), $search = array())
-    {
-        $conf = Conf::get_instance();
-
-        $base_dn = $conf->get('base_dn');
-        // TODO: From config
-        $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        if ($s_filter = $this->_search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
-        }
-
-        return $this->_search($base_dn, $filter, $attributes);
-    }
-
-    private function groups_list($attributes = array(), $search = array())
-    {
-        $conf = Conf::get_instance();
-
-        $base_dn = $conf->get('group_base_dn');
-
-        if (!$base_dn)
-            $base_dn = $conf->get('base_dn');
-
-        $filter  = $conf->get('group_filter');
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        if ($s_filter = $this->_search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
-        }
-
-        return $this->_search($base_dn, $filter, $attributes);
-    }
-
-    public static function normalize_result($__result)
-    {
-        if (!is_array($__result)) {
-            return array();
-        }
-
-        $conf = Conf::get_instance();
-
-        $dn_attr = $conf->get($conf->get('kolab', 'auth_mechanism'), 'domain_name_attribute');
-        $result  = array();
-
-        for ($x = 0; $x < $__result["count"]; $x++) {
-            $dn = $__result[$x]['dn'];
-            $result[$dn] = array();
-            for ($y = 0; $y < $__result[$x]["count"]; $y++) {
-                $attr = $__result[$x][$y];
-                if ($__result[$x][$attr]["count"] == 1) {
-                    switch ($attr) {
-                        case "objectclass":
-                            $result[$dn][$attr] = strtolower($__result[$x][$attr][0]);
-                            break;
-                        default:
-                            $result[$dn][$attr] = $__result[$x][$attr][0];
-                            break;
-                    }
-                }
-                else {
-                    $result[$dn][$attr] = array();
-                    for ($z = 0; $z < $__result[$x][$attr]["count"]; $z++) {
-                        // The first result in the array is the primary domain.
-                        if ($z == 0 && $attr == $dn_attr) {
-                            $result[$dn]['primary_domain'] = $__result[$x][$attr][$z];
-                        }
-
-                        switch ($attr) {
-                            case "objectclass":
-                                $result[$dn][$attr][] = strtolower($__result[$x][$attr][$z]);
-                                break;
-                            default:
-                                $result[$dn][$attr][] = $__result[$x][$attr][$z];
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $result;
     }
 
     private function entry_find_by_attribute($attribute)
@@ -988,63 +869,123 @@ class LDAP
         }
     }
 
-    private function entry_dn($subject)
+    private function groups_list($attributes = array(), $search = array())
     {
-        console("entry_dn on subject $subject");
-        $is_dn = ldap_explode_dn($subject, 1);
-        console($is_dn);
+        $conf = Conf::get_instance();
 
-        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 0) {
-            return $subject;
+        $base_dn = $conf->get('group_base_dn');
+
+        if (!$base_dn)
+            $base_dn = $conf->get('base_dn');
+
+        $filter  = $conf->get('group_filter');
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
         }
 
-        $unique_attr = $this->unique_attribute();
-        $subject     = $this->entry_find_by_attribute(array($unique_attr => $subject));
-
-        if (!empty($subject)) {
-            return key($subject);
+        if ($s_filter = $this->_search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
         }
+
+        return $this->_search($base_dn, $filter, $attributes);
     }
 
-    private function parse_attribute_level_rights($attribute_value)
+    private function init_schema()
     {
-        $attribute_value = str_replace(", ", ",", $attribute_value);
-        $attribute_values = explode(",", $attribute_value);
+        $conf = Conf::get_instance();
 
-        $attribute_value = array();
+        $this->_ldap_uri    = $this->conf->get('ldap_uri');
+        $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
+        $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
+        $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
 
-        foreach ($attribute_values as $access_right) {
-            $access_right_components = explode(":", $access_right);
-            $access_attribute = strtolower(array_shift($access_right_components));
-            $access_value = array_shift($access_right_components);
+        require_once("Net/LDAP2.php");
 
-            $attribute_value[$access_attribute] = array();
+        $_ldap_cfg = Array(
+                'host' => $this->_ldap_server,
+                'port' => $this->_ldap_port,
+                'tls' => false,
+                'version' => 3,
+                'binddn' => $conf->get('bind_dn'),
+                'bindpw' => $conf->get('bind_pw')
+            );
 
-            for ($i = 0; $i < strlen($access_value); $i++) {
-                $method = $this->attribute_level_rights_map[substr($access_value, $i, 1)];
+        $_ldap_schema_cache_cfg = Array(
+                'path' => "/tmp/" . $this->_ldap_server . ":" . ($this->_ldap_port ? $this->_ldap_port : '389') . "-Net_LDAP2_Schema.cache",
+                'max_age' => 86400,
+            );
 
-                if (!in_array($method, $attribute_value[$access_attribute])) {
-                    $attribute_value[$access_attribute][] = $method;
+        $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
+
+        $_ldap = Net_LDAP2::connect($_ldap_cfg);
+
+        $result = $_ldap->registerSchemaCache($_ldap_schema_cache);
+
+        // TODO: We should learn what LDAP tech. we're running against.
+        // Perhaps with a scope base objectclass recognize rootdse entry
+        $schema_root_dn = $conf->get('schema_root_dn');
+        if (!$schema_root_dn) {
+            $_schema = $_ldap->schema();
+        }
+
+        return $_schema;
+    }
+
+    private function legacy_rights($subject)
+    {
+        $subject_dn = $this->entry_dn($subject);
+
+        $user_is_admin = false;
+        $user_is_self = false;
+
+        // List group memberships
+        $user_groups = $this->find_user_groups($_SESSION['user']->user_bind_dn);
+        //console("User's groups", $user_groups);
+
+        foreach ($user_groups as $user_group_dn) {
+            if ($user_is_admin)
+                continue;
+
+            $user_group_dn_components = ldap_explode_dn($user_group_dn, 1);
+            unset($user_group_dn_components["count"]);
+            $user_group_cn = array_shift($user_group_dn_components);
+            if (in_array($user_group_cn, array('admin', 'maintainer', 'domain-maintainer'))) {
+                // All rights default to write.
+                $user_is_admin = true;
+            } else {
+                // The user is a regular user, see if the subject is the same has the
+                // user session's bind_dn.
+                if ($subject_dn == $_SESSION['user']->user_bind_dn) {
+                    $user_is_self = true;
                 }
             }
         }
 
-        return $attribute_value;
-    }
-
-    private function parse_entry_level_rights($attribute_value)
-    {
-        $_attribute_value = array();
-
-        for ($i = 0; $i < strlen($attribute_value); $i++) {
-            $method = $this->entry_level_rights_map[substr($attribute_value, $i, 1)];
-
-            if (!in_array($method, $_attribute_value)) {
-                $_attribute_value[] = $method;
-            }
+        if ($user_is_admin) {
+            $standard_rights = array("add", "delete", "read", "write");
+        } elseif ($user_is_self) {
+            $standard_rights = array("read", "write");
+        } else {
+            $standard_rights = array("read");
         }
 
-        return $_attribute_value;
+        $rights = array(
+                'entryLevelRights' => $standard_rights,
+                'attributeLevelRights' => array(),
+            );
+
+        $subject    = self::normalize_result($this->_search($subject_dn));
+
+        $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
+        $attributes = array_merge($attributes['may'], $attributes['must']);
+
+        foreach ($attributes as $attribute) {
+            $rights['attributeLevelRights'][$attribute] = $standard_rights;
+        }
+
+        return $rights;
     }
 
     private function modify_entry($subject_dn, $old_attrs, $new_attrs)
@@ -1231,6 +1172,153 @@ class LDAP
         } else {
             return false;
         }
+    }
+
+    private function parse_attribute_level_rights($attribute_value)
+    {
+        $attribute_value = str_replace(", ", ",", $attribute_value);
+        $attribute_values = explode(",", $attribute_value);
+
+        $attribute_value = array();
+
+        foreach ($attribute_values as $access_right) {
+            $access_right_components = explode(":", $access_right);
+            $access_attribute = strtolower(array_shift($access_right_components));
+            $access_value = array_shift($access_right_components);
+
+            $attribute_value[$access_attribute] = array();
+
+            for ($i = 0; $i < strlen($access_value); $i++) {
+                $method = $this->attribute_level_rights_map[substr($access_value, $i, 1)];
+
+                if (!in_array($method, $attribute_value[$access_attribute])) {
+                    $attribute_value[$access_attribute][] = $method;
+                }
+            }
+        }
+
+        return $attribute_value;
+    }
+
+    private function parse_entry_level_rights($attribute_value)
+    {
+        $_attribute_value = array();
+
+        for ($i = 0; $i < strlen($attribute_value); $i++) {
+            $method = $this->entry_level_rights_map[substr($attribute_value, $i, 1)];
+
+            if (!in_array($method, $_attribute_value)) {
+                $_attribute_value[] = $method;
+            }
+        }
+
+        return $_attribute_value;
+    }
+
+    private function roles_list($attributes = array(), $search = array())
+    {
+        $conf = Conf::get_instance();
+
+        $base_dn = $conf->get('base_dn');
+        // TODO: From config
+        $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        if ($s_filter = $this->_search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
+        }
+
+        return $this->_search($base_dn, $filter, $attributes);
+    }
+
+    private function supported_controls()
+    {
+        $conf = Conf::get_instance();
+
+        $this->_bind($conf->get('bind_dn'), $conf->get('bind_pw'));
+
+        $result = ldap_read($this->conn, "", "(objectclass=*)", array("supportedControl"));
+        $result = ldap_get_entries($this->conn, $result);
+        $result = self::normalize_result($result);
+
+        return $result['']['supportedcontrol'];
+    }
+
+    private function users_list($attributes = array(), $search = array())
+    {
+        $conf = Conf::get_instance();
+
+        $base_dn = $conf->get('user_base_dn');
+
+        if (!$base_dn)
+            $base_dn = $conf->get('base_dn');
+
+        $filter  = $conf->get('user_filter');
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        if ($s_filter = $this->_search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
+        }
+
+        return $this->_search($base_dn, $filter, $attributes);
+    }
+
+    public static function normalize_result($__result)
+    {
+        if (!is_array($__result)) {
+            return array();
+        }
+
+        $conf = Conf::get_instance();
+
+        $dn_attr = $conf->get($conf->get('kolab', 'auth_mechanism'), 'domain_name_attribute');
+        $result  = array();
+
+        for ($x = 0; $x < $__result["count"]; $x++) {
+            $dn = $__result[$x]['dn'];
+            $result[$dn] = array();
+            for ($y = 0; $y < $__result[$x]["count"]; $y++) {
+                $attr = $__result[$x][$y];
+                if ($__result[$x][$attr]["count"] == 1) {
+                    switch ($attr) {
+                        case "objectclass":
+                            $result[$dn][$attr] = array(strtolower($__result[$x][$attr][0]));
+                            break;
+                        default:
+                            $result[$dn][$attr] = $__result[$x][$attr][0];
+                            break;
+                    }
+                }
+                else {
+                    $result[$dn][$attr] = array();
+                    for ($z = 0; $z < $__result[$x][$attr]["count"]; $z++) {
+                        // The first result in the array is the primary domain.
+                        if ($z == 0 && $attr == $dn_attr) {
+                            $result[$dn]['primary_domain'] = $__result[$x][$attr][$z];
+                        }
+
+                        switch ($attr) {
+                            case "objectclass":
+                                $result[$dn][$attr][] = strtolower($__result[$x][$attr][$z]);
+                                break;
+                            default:
+                                $result[$dn][$attr][] = $__result[$x][$attr][$z];
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -1731,16 +1819,18 @@ class LDAP
 
         $entry = self::normalize_result($this->_search($dn));
 
-        //console("ENTRIES for \$dn $dn", $entries);
+        //console("ENTRIES for \$dn $dn", $entry);
 
         foreach ($entry[$dn] as $attribute => $value) {
             if ($attribute == "objectclass") {
                 foreach ($value as $objectclass) {
                     switch (strtolower($objectclass)) {
                         case "groupofnames":
+                        case "kolabgroupofnames":
                             $group_members = array_merge($group_members, $this->_list_group_member($dn, $entry[$dn]['member'], $recurse));
                             break;
                         case "groupofuniquenames":
+                        case "kolabgroupofuniquenames":
                             $group_members = array_merge($group_members, $this->_list_group_uniquemember($dn, $entry[$dn]['uniquemember'], $recurse));
                             break;
                         case "groupofurls":
@@ -1759,6 +1849,9 @@ class LDAP
         error_log("Called _list_group_member(" . $dn . ")");
 
         $group_members = array();
+
+        $members = (array)($members);
+
         if (empty($members)) {
             return $group_members;
         }
@@ -1799,6 +1892,8 @@ class LDAP
             return $group_members;
         }
 
+        $uniquemembers = (array)($uniquemembers);
+
         if (is_string($uniquemembers)) {
             //console("uniquemember for entry is not an array");
             $uniquemembers = (array)($uniquemembers);
@@ -1835,7 +1930,7 @@ class LDAP
 
         $group_members = array();
 
-        foreach ((array)$memberurls as $url) {
+        foreach ((array)($memberurls) as $url) {
             $ldap_uri_components = $this->_parse_memberurl($url);
 
             $entries = self::normalize_result($this->_search($ldap_uri_components[3], $ldap_uri_components[6]));

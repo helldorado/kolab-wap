@@ -1002,7 +1002,7 @@ function kolab_admin()
       is_empty = 0;
 
       if ($.isArray(data[n]))
-        is_empty = data[n].length;
+        is_empty = (data[n].length == 0) ? 1 : 0;
       else
         is_empty = !data[n];
 

@@ -132,6 +132,13 @@ class kolab_api_service_group extends kolab_api_service
         return false;
     }
 
+    public function group_effective_rights($getdata, $postdata)
+    {
+        $auth = Auth::get_instance();
+        $effective_rights = $auth->list_rights($getdata['group']);
+        return $effective_rights;
+    }
+
     /**
      * Group information.
      *
@@ -151,8 +158,6 @@ class kolab_api_service_group extends kolab_api_service
 
         // normalize result
         $result = $this->parse_result_attributes('group', $result);
-
-        //console("group_info() \$result", $result);
 
         if ($result) {
             return $result;
@@ -174,9 +179,10 @@ class kolab_api_service_group extends kolab_api_service
         $auth = Auth::get_instance();
 
         if (empty($getdata['group'])) {
-            //error_log("Empty \$getdata['group']");
+            error_log("Empty \$getdata['group']");
             return FALSE;
         }
+
         $result = $auth->group_members_list($getdata['group'], false);
 
         return array(
