@@ -935,13 +935,7 @@ class LDAP
 
     private function legacy_rights($subject)
     {
-        //console($subject);
-
-        $subject = $this->user_info($subject);
-
-        //console($subject);
-
-        $subject_dn = key($subject);
+        $subject_dn = $this->entry_dn($subject);
 
         $user_is_admin = false;
         $user_is_self = false;
@@ -957,17 +951,13 @@ class LDAP
             $user_group_dn_components = ldap_explode_dn($user_group_dn, 1);
             unset($user_group_dn_components["count"]);
             $user_group_cn = array_shift($user_group_dn_components);
-            //console("Resolved user_group_dn $user_group_dn to cn $user_group_cn");
             if (in_array($user_group_cn, array('admin', 'maintainer', 'domain-maintainer'))) {
                 // All rights default to write.
-                //console("User is an admin");
                 $user_is_admin = true;
             } else {
-                //console("User is a user");
                 // The user is a regular user, see if the subject is the same has the
                 // user session's bind_dn.
-                if ($subject == $_SESSION['user']->user_bind_dn) {
-                    //console("the subject $subject is the same as the user's bind_dn");
+                if ($subject_dn == $_SESSION['user']->user_bind_dn) {
                     $user_is_self = true;
                 }
             }
@@ -976,7 +966,7 @@ class LDAP
         if ($user_is_admin) {
             $standard_rights = array("add", "delete", "read", "write");
         } elseif ($user_is_self) {
-            $standard_rights = array("read");
+            $standard_rights = array("read", "write");
         } else {
             $standard_rights = array("read");
         }
@@ -986,9 +976,9 @@ class LDAP
                 'attributeLevelRights' => array(),
             );
 
-        $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
-        //console($attributes);
+        $subject    = self::normalize_result($this->_search($subject_dn));
 
+        $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
         $attributes = array_merge($attributes['may'], $attributes['must']);
 
         foreach ($attributes as $attribute) {
@@ -996,7 +986,6 @@ class LDAP
         }
 
         return $rights;
-
     }
 
     private function modify_entry($subject_dn, $old_attrs, $new_attrs)
@@ -1301,7 +1290,7 @@ class LDAP
                 if ($__result[$x][$attr]["count"] == 1) {
                     switch ($attr) {
                         case "objectclass":
-                            $result[$dn][$attr] = strtolower($__result[$x][$attr][0]);
+                            $result[$dn][$attr] = array(strtolower($__result[$x][$attr][0]));
                             break;
                         default:
                             $result[$dn][$attr] = $__result[$x][$attr][0];
@@ -1830,16 +1819,18 @@ class LDAP
 
         $entry = self::normalize_result($this->_search($dn));
 
-        //console("ENTRIES for \$dn $dn", $entries);
+        //console("ENTRIES for \$dn $dn", $entry);
 
         foreach ($entry[$dn] as $attribute => $value) {
             if ($attribute == "objectclass") {
                 foreach ($value as $objectclass) {
                     switch (strtolower($objectclass)) {
                         case "groupofnames":
+                        case "kolabgroupofnames":
                             $group_members = array_merge($group_members, $this->_list_group_member($dn, $entry[$dn]['member'], $recurse));
                             break;
                         case "groupofuniquenames":
+                        case "kolabgroupofuniquenames":
                             $group_members = array_merge($group_members, $this->_list_group_uniquemember($dn, $entry[$dn]['uniquemember'], $recurse));
                             break;
                         case "groupofurls":
@@ -1858,6 +1849,9 @@ class LDAP
         error_log("Called _list_group_member(" . $dn . ")");
 
         $group_members = array();
+
+        $members = (array)($members);
+
         if (empty($members)) {
             return $group_members;
         }
@@ -1898,6 +1892,8 @@ class LDAP
             return $group_members;
         }
 
+        $uniquemembers = (array)($uniquemembers);
+
         if (is_string($uniquemembers)) {
             //console("uniquemember for entry is not an array");
             $uniquemembers = (array)($uniquemembers);
@@ -1934,7 +1930,7 @@ class LDAP
 
         $group_members = array();
 
-        foreach ((array)$memberurls as $url) {
+        foreach ((array)($memberurls) as $url) {
             $ldap_uri_components = $this->_parse_memberurl($url);
 
             $entries = self::normalize_result($this->_search($ldap_uri_components[3], $ldap_uri_components[6]));
