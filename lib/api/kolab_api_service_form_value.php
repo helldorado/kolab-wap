@@ -623,16 +623,16 @@ class kolab_api_service_form_value extends kolab_api_service
             $base_dn = $conf->get('base_dn');
         }
 
-        $subject = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')');
-
-        $subject_dn = $subject[0];
-
-        $subject_dn_components = ldap_explode_dn($subject_dn, 0);
-        unset($subject_dn_components['count']);
-
-        array_shift($subject_dn_components);
-
-        $subject_parent_ou = strtolower(implode(',', $subject_dn_components));
+        if (!empty($postdata['id'])) {
+            $subject = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')');
+            $subject_dn = $subject[0];
+            $subject_dn_components = ldap_explode_dn($subject_dn, 0);
+            unset($subject_dn_components['count']);
+            array_shift($subject_dn_components);
+            $default = strtolower(implode(',', $subject_dn_components));
+        } else {
+            $default = $base_dn;
+        }
 
         $ous = $auth->search($base_dn, '(objectclass=organizationalunit)');
 
@@ -644,7 +644,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
         sort($_ous);
 
-        $_ous['default'] = $subject_parent_ou;
+        $_ous['default'] = strtolower($default);
 
         return $_ous;
     }
