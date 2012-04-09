@@ -152,8 +152,7 @@ class Conf {
         }
 
 //        error_log("Could not find setting for \$key1: " . $key1 .
-//                " with \$key2: " . $key2
-            );
+//                " with \$key2: " . $key2);
 
         return false;
     }
