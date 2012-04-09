@@ -283,7 +283,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $highest_gidnumber = $conf->get('gidnumber_lower_barrier');
             if (!$highest_gidnumber) {
-                $highest_gidnumber = 1000;
+                $highest_gidnumber = 999;
             }
 
             foreach ($groups as $dn => $attributes) {
@@ -296,9 +296,14 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            //$users = $auth->list_users();
-            //console($groups);
-            return ($highest_gidnumber + 1);
+            $gidnumber = ($highest_gidnumber + 1);
+            $postdata['gidnumber'] = $gidnumber;
+            if (empty($postdata['uidnumber'])) {
+                $uidnumber = $this->generate_uidnumber($postdata, $attribs);
+                $gidnumber = $this->_highest_of_two($uidnumber, $gidnumber);
+            }
+
+            return $gidnumber;
         }
     }
 
@@ -451,6 +456,8 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_uid($postdata, $attribs = array())
     {
+        //console("generate_uid() \$postdata", $postdata);
+
         $conf = Conf::get_instance();
         $unique_attr = $conf->get('unique_attribute');
         if (!$unique_attr) {
@@ -485,11 +492,13 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $x = 2;
             while (($user_found = $auth->user_find_by_attribute(array('uid' => $uid)))) {
-                $user_found_dn = key($user_found);
-                $user_found_unique_attr = $auth->get_attribute($user_found_dn, $unique_attr);
-                //console("user that i found info", $user_found_unique_attr);
-                if ($user_found_unique_attr == $postdata[$unique_attr]) {
-                    break;
+                if (!empty($postdata['id'])) {
+                    $user_found_dn = key($user_found);
+                    $user_found_unique_attr = $auth->get_attribute($user_found_dn, $unique_attr);
+                    //console("user with uid $uid found", $user_found_unique_attr);
+                    if ($user_found_unique_attr == $postdata['id']) {
+                        break;
+                    }
                 }
 
                 $uid = $orig_uid . $x;
@@ -519,7 +528,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $highest_uidnumber = $conf->get('uidnumber_lower_barrier');
             if (!$highest_uidnumber) {
-                $highest_uidnumber = 1000;
+                $highest_uidnumber = 999;
             }
 
             foreach ($users as $dn => $attributes) {
@@ -531,7 +540,15 @@ class kolab_api_service_form_value extends kolab_api_service
                     $highest_uidnumber = $attributes['uidnumber'];
                 }
             }
-            return ($highest_uidnumber + 1);
+
+            $uidnumber = ($highest_uidnumber + 1);
+            $postdata['uidnumber'] = $uidnumber;
+            if (empty($postdata['gidnumber'])) {
+                $gidnumber = $this->generate_gidnumber($postdata, $attribs);
+                $uidnumber = $this->_highest_of_two($uidnumber, $gidnumber);
+            }
+
+            return $uidnumber;
         }
     }
 
@@ -730,4 +747,13 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
+    private function _highest_of_two($one, $two) {
+        if ($one > $two) {
+            return $one;
+        } elseif ($one == $two) {
+            return $one;
+        } else {
+            return $two;
+        }
+    }
 }
