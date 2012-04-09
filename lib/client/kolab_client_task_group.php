@@ -252,9 +252,6 @@ class kolab_client_task_group extends kolab_client_task
             );
         }
 
-        // Prepare data of the form
-        $this->form_data_prepare($fields, $data);
-
         // Create form object and populate with fields
         $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
 

@@ -944,18 +944,41 @@ class kolab_client_task
 
         // Add object type hidden field
         $fields['object_type'] = array(
-                'section'  => 'system',
-                'type'     => kolab_form::INPUT_HIDDEN,
-                'value'    => $name,
-            );
+            'section'  => 'system',
+            'type'     => kolab_form::INPUT_HIDDEN,
+            'value'    => $name,
+        );
+
+        // Get user-friendly names for lists
+        foreach ($fields as $fname => $field) {
+            if (!empty($field['data-autocomplete']) && !empty($data[$fname])) {
+                if (!is_array($data[$fname])) {
+                    $data[$fname] = (array) $data[$fname];
+                }
+
+                // request parameters
+                $post = array(
+                    'list'        => $data[$fname],
+                    'attribute'   => $fname,
+                    'object_type' => $name,
+                    'type_id'     => $data['type_id'],
+                );
+
+                // get options list
+                $result = $this->api->post('form_value.list_options', null, $post);
+                $result = $result->get('list');
+
+                $data[$fname] = $result;
+            }
+        }
 
         // Add entry identifier
         if (!$add_mode) {
             $fields['id'] = array(
-                    'section'   => 'system',
-                    'type'      => kolab_form::INPUT_HIDDEN,
-                    'value'     => $data['id']
-                );
+                'section'   => 'system',
+                'type'      => kolab_form::INPUT_HIDDEN,
+                'value'     => $data['id']
+            );
         }
 
         return array($fields, $types, $type);
@@ -1117,89 +1140,5 @@ class kolab_client_task
         return $form;
     }
 
-    /**
-     * Resolves entries of common list fields into user-friendly form
-     *
-     * @param array $fields  Form fields definition
-     * @param array $data    Form data
-     */
-    protected function form_data_prepare($fields, &$data)
-    {
-        // Roles (extract role names)
-        $role_attrs = array('nsrole', 'nsroledn');
-        foreach ($role_attrs as $ra) {
-            if (!empty($fields[$ra]) && !empty($data[$ra])) {
-                if (!is_array($data[$ra])) {
-                    $data[$ra] = (array) $data[$ra];
-                }
-                $data[$ra] = array_combine($data[$ra], $data[$ra]);
-                foreach ($data[$ra] as $dn => $val) {
-                    // @TODO: maybe ldap_explode_dn() would be better?
-                    if (preg_match('/^cn=([^,]+)/i', $val, $m)) {
-                        $data[$ra][$dn] = $m[1];
-                    }
-                }
-            }
-        }
-
-        // Get user-friendly names for DN lists, e.g. kolabdelegate
-        $list_attrs = array('kolabdelegate', 'member', 'uniquemember');
-        foreach ($list_attrs as $la) {
-            if (!empty($fields[$la]) && !empty($data[$la])) {
-                if (!is_array($data[$la])) {
-                    $data[$la] = (array) $data[$la];
-                }
-
-                $search = array();
-                foreach ($data[$la] as $key => $val) {
-                    $search[] = $val;
-                }
-
-                // request parameters
-                $post = array(
-                    'attributes'      => array('displayname', 'cn', 'mail'),
-                    'search'          => array(
-                        'entrydn' => array(
-                            'value' => $search,
-                            'type'  => 'exact',
-                        ),
-                    ),
-                    'search_operator' => 'OR',
-                );
-
-                // get users list
-                $result = $this->api->post('users.list', null, $post);
-                $result = $result->get('list');
-                $list   = array();
-                
-                if (is_array($result)) {
-                    foreach ($result as $key => $val) {
-                        $list[$key] = $val['displayname'] ? $val['displayname'] : $val['cn'];
-                        if ($val['mail']) {
-                            $list[$key] .= ' <' . $val['mail'] . '>';
-                        }
-                    }
-                }
-
-                // Search for groups too
-                if (count($list) < count($search)) {
-                    // get groups list
-                    $result = $this->api->post('groups.list', null, $post);
-                    $result = $result->get('list');
-                
-                    if (is_array($result)) {
-                        foreach ($result as $key => $val) {
-                            $list[$key] = $val['cn'];
-                            if ($val['mail']) {
-                                $list[$key] .= ' <' . $val['mail'] . '>';
-                            }
-                        }
-                    }
-                }
-
-                $data[$la] = $list;
-            }
-        }
-    }
 
 }

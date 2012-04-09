@@ -516,21 +516,31 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function list_options_kolabdelegate($postdata, $attribs = array())
     {
-        $service = $this->controller->get_service('users');
-
-        $keyword = array('value' => $postdata['search']);
-        $data    = array(
-            'attributes' => array('displayname', 'mail'),
-            'page_size'  => 15,
-            'search'     => array(
+        // return specified records only, by exact DN attributes
+        if (!empty($postdata['list'])) {
+            $data['search'] = array(
+                'entrydn' => array(
+                    'value' => $postdata['list'],
+                    'type'  => 'exact',
+                ),
+            );
+        }
+        // return records with specified string
+        else {
+            $keyword = array('value' => $postdata['search']);
+            $data['page_size'] = 15;
+            $data['search']    = array(
                 'displayname' => $keyword,
                 'cn'          => $keyword,
                 'mail'        => $keyword,
-            ),
-        );
+            );
+        }
 
-        $result = $service->users_list(null, $data);
-        $list   = $result['list'];
+        $data['attributes'] = array('displayname', 'mail');
+
+        $service = $this->controller->get_service('users');
+        $result  = $service->users_list(null, $data);
+        $list    = $result['list'];
 
         // convert to key=>value array
         foreach ($list as $idx => $value) {
@@ -556,21 +566,31 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function list_options_nsroledn($postdata, $attribs = Array())
     {
-        $service = $this->controller->get_service('roles');
-
-        $keyword = array('value' => $postdata['search']);
-        $data    = array(
-            'attributes' => array('cn'),
-            'page_size'  => 15,
-            'search'     => array(
+        // return specified records only, by exact DN attributes
+        if (!empty($postdata['list'])) {
+            $data['search'] = array(
+                'entrydn' => array(
+                    'value' => $postdata['list'],
+                    'type'  => 'exact',
+                ),
+            );
+        }
+        // return records with specified string
+        else {
+            $keyword = array('value' => $postdata['search']);
+            $data['page_size']  = 15;
+            $data['search']     = array(
                 'displayname' => $keyword,
                 'cn'          => $keyword,
                 'mail'        => $keyword,
-            ),
-        );
+            );
+        }
 
-        $result = $service->roles_list(null, $data);
-        $list   = $result['list'];
+        $data['attributes'] = array('cn');
+
+        $service = $this->controller->get_service('roles');
+        $result  = $service->roles_list(null, $data);
+        $list    = $result['list'];
 
         // convert to key=>value array
         foreach ($list as $idx => $value) {
@@ -671,27 +691,37 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function _list_options_members($postdata, $attribs = array())
     {
-        $service = $this->controller->get_service('users');
-
-        $keyword = array('value' => $postdata['search']);
-        $data    = array(
-            'attributes' => array('displayname', 'cn', 'mail'),
-            'page_size'  => 15,
-            'search'     => array(
+        // return specified records only, by exact DN attributes
+        if (!empty($postdata['list'])) {
+            $data['search'] = array(
+                'entrydn' => array(
+                    'value' => $postdata['list'],
+                    'type'  => 'exact',
+                ),
+            );
+        }
+        // return records with specified string
+        else {
+            $keyword = array('value' => $postdata['search']);
+            $data['page_size'] = 15;
+            $data['search']    = array(
                 'displayname' => $keyword,
                 'cn'          => $keyword,
                 'mail'        => $keyword,
-            ),
-        );
+            );
+        }
 
-        $result = $service->users_list(null, $data);
-        $list   = $result['list'];
+        $data['attributes'] = array('displayname', 'cn', 'mail');
 
-        $service = $this->controller->get_service('groups');
+        $service = $this->controller->get_service('users');
+        $result  = $service->users_list(null, $data);
+        $list    = $result['list'];
+
         $data['attributes'] = array('cn', 'mail');
 
-        $result = $service->groups_list(null, $data);
-        $list = array_merge($list, $result['list']);
+        $service = $this->controller->get_service('groups');
+        $result  = $service->groups_list(null, $data);
+        $list    = array_merge($list, $result['list']);
 
         // convert to key=>value array
         foreach ($list as $idx => $value) {

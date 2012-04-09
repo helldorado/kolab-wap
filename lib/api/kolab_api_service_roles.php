@@ -31,7 +31,7 @@ class kolab_api_service_roles extends kolab_api_service
     public $list_attribs = array(
         'cn',
         'objectclass',
-        'dn',
+        'entrydn',
         'description',
     );
 
