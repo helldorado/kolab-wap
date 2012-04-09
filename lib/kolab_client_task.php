@@ -877,8 +877,13 @@ class kolab_client_task
                 }
             }
             else {
-                // No entry level rights, check on attribute level
-                if (!in_array('write', $attribute_rights[$idx])) {
+                if (in_array('add', $entry_rights) && in_array('delete', $entry_rights)) {
+                    if ($admin_auto_fields_rw) {
+                        $fields[$idx]['readonly'] = false;
+                    }
+                }
+                // Explicit attribute level rights, check for 'write'
+                elseif (!in_array('write', $attribute_rights[$idx])) {
                     $fields[$idx]['readonly'] = true;
                 }
             }
