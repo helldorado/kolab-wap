@@ -1623,8 +1623,6 @@ class LDAP
 
         $filter = '';
         foreach ((array) $search['params'] as $field => $param) {
-            $value = self::_quote_string($param['value']);
-
             switch ((string)$param['type']) {
             case 'prefix':
                 $prefix = '';
@@ -1645,7 +1643,18 @@ class LDAP
                 break;
             }
 
-            $filter .= "($field=$prefix" . $value . "$suffix)";
+            if (is_array($param['value'])) {
+                $val_filter = array();
+                foreach ($param['value'] as $val) {
+                    $value = self::_quote_string($val);
+                    $val_filter[] = "($field=$prefix" . $value . "$suffix)";
+                }
+                $filter .= "(|" . implode($val_filter, '') . ")";
+            }
+            else {
+                $value = self::_quote_string($param['value']);
+                $filter .= "($field=$prefix" . $value . "$suffix)";
+            }
         }
 
         // join search parameters with specified operator ('OR' or 'AND')

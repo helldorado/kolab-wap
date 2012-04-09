@@ -39,7 +39,7 @@ class kolab_api_service_users extends kolab_api_service
         'uidnumber',
         'gidnumber',
         'mailhost',
-        'dn',
+        'entrydn',
     );
 
 
@@ -86,6 +86,7 @@ class kolab_api_service_users extends kolab_api_service
         // searching
         if (!empty($post['search']) && is_array($post['search'])) {
             $params = $post['search'];
+
             foreach ($params as $idx => $param) {
                 // get only supported attributes
                 if (!in_array($idx, $this->list_attribs)) {

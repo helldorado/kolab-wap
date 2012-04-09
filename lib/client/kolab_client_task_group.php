@@ -252,20 +252,8 @@ class kolab_client_task_group extends kolab_client_task
             );
         }
 
-        // Members (get member names)
-        if (!$add_mode) {
-            // find members attribute name
-            foreach (array('member', 'uniquemember') as $attr) {
-                if (isset($fields[$attr]) && isset($data[$attr])) {
-                    $attr_name = $attr;
-                }
-            }
-            if (!empty($attr_name)) {
-                $result = $this->api->get('group.members_list', array('group' => $data['id']));
-                $list   = (array) $result->get('list');
-                $data[$attr_name] = $this->parse_members($list);
-            }
-        }
+        // Prepare data of the form
+        $this->form_data_prepare($fields, $data);
 
         // Create form object and populate with fields
         $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data, $add_mode);

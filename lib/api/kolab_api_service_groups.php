@@ -33,6 +33,7 @@ class kolab_api_service_groups extends kolab_api_service
         'gidnumber',
         'objectclass',
         'mail',
+        'entrydn',
     );
 
     /**

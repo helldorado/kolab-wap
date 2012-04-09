@@ -166,14 +166,6 @@ abstract class kolab_api_service
                 if ($key != "id") {
                     if ($key == "attributes") {
                         $object_types[$row['id']][$key] = json_decode($value, true);
-                        // TODO: Insert unique_attr to attributes, auto_form_fields, $attribute, $data here.
-                        if (array_key_exists('auto_form_fields', $object_types[$row['id']][$key])) {
-                            foreach ($object_types[$row['id']][$key]['auto_form_fields'] as $attribute => $data) {
-                                if (array_key_exists('data', $data) && !in_array($unique_attr, $data['data'])) {
-                                    $object_types[$row['id']][$key]['auto_form_fields'][$attribute]['data'][] = $unique_attr;
-                                }
-                            }
-                        }
                     }
                     else {
                         $object_types[$row['id']][$key] = $value;

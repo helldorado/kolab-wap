@@ -311,24 +311,10 @@ class kolab_client_task_user extends kolab_client_task
                 'section'  => 'personal',
                 'value'    => $accttypes[$type]['content'],
             );
-
-            // Roles (extract role names)
-            $role_attrs = array('nsrole', 'nsroledn');
-            foreach ($role_attrs as $ra) {
-                if (!empty($fields[$ra]) && !empty($data[$ra])) {
-                    if (!is_array($data[$ra])) {
-                        $data[$ra] = (array) $data[$ra];
-                    }
-                    $data[$ra] = array_combine($data[$ra], $data[$ra]);
-                    foreach ($data[$ra] as $dn => $val) {
-                        // @TODO: maybe ldap_explode_dn() would be better?
-                        if (preg_match('/^cn=([^,]+)/i', $val, $m)) {
-                            $data[$ra][$dn] = $m[1];
-                        }
-                    }
-                }
-            }
         }
+
+        // Prepare data for the form
+        $this->form_data_prepare($fields, $data);
 
         // Create form object and populate with fields
         $form = $this->form_create('user', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
