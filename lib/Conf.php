@@ -151,8 +151,8 @@ class Conf {
             return $this->_conf['kolab'][$key1];
         }
 
-        error_log("Could not find setting for \$key1: " . $key1 .
-                " with \$key2: " . $key2
+//        error_log("Could not find setting for \$key1: " . $key1 .
+//                " with \$key2: " . $key2
             );
 
         return false;
