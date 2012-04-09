@@ -789,7 +789,6 @@ class kolab_client_task
             //console("\$field value for \$auto_fields[\$idx] (idx: $idx)", $auto_fields[$idx]);
             if (!is_array($field)) {
                 //console("not an array... unsetting");
-
                 unset($auto_fields[$idx]);
                 continue;
             }
@@ -803,7 +802,7 @@ class kolab_client_task
             }
 
             $field['name'] = $idx;
-            $fields[$idx] = $this->form_element_type($field, $data);
+            $fields[$idx]  = $this->form_element_type($field, $data);
             $fields[$idx]['readonly'] = true;
 
             $extra_fields[$idx] = true;
@@ -896,6 +895,7 @@ class kolab_client_task
                     'attributes'  => $auto_attribs,
                     'object_type' => $name,
                 ));
+
                 $resp = $this->api->post('form_value.generate', null, $data);
                 $data = array_merge((array)$data, (array)$resp->get());
             }
