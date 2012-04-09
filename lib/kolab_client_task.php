@@ -1137,7 +1137,7 @@ class kolab_client_task
             }
         }
 
-        // Get user names for DN lists, e.g. kolabdelegate
+        // Get user-friendly names for DN lists, e.g. kolabdelegate
         $list_attrs = array('kolabdelegate', 'member', 'uniquemember');
         foreach ($list_attrs as $la) {
             if (!empty($fields[$la]) && !empty($data[$la])) {
@@ -1163,7 +1163,6 @@ class kolab_client_task
                 );
 
                 // get users list
-                // @TODO: what about groups here?
                 $result = $this->api->post('users.list', null, $post);
                 $result = $result->get('list');
                 $list   = array();
@@ -1176,6 +1175,23 @@ class kolab_client_task
                         }
                     }
                 }
+
+                // Search for groups too
+                if (count($list) < count($search)) {
+                    // get groups list
+                    $result = $this->api->post('groups.list', null, $post);
+                    $result = $result->get('list');
+                
+                    if (is_array($result)) {
+                        foreach ($result as $key => $val) {
+                            $list[$key] = $val['cn'];
+                            if ($val['mail']) {
+                                $list[$key] .= ' <' . $val['mail'] . '>';
+                            }
+                        }
+                    }
+                }
+
                 $data[$la] = $list;
             }
         }

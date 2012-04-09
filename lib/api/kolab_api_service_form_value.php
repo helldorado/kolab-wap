@@ -703,7 +703,6 @@ class kolab_api_service_form_value extends kolab_api_service
         );
 
         $result = $service->users_list(null, $data);
-
         $list   = $result['list'];
 
         $service = $this->controller->get_service('groups');
