@@ -119,3 +119,12 @@ function write_log($name, $line)
 
     return false;
 }
+
+function timer($time = null, $label = '')
+{
+    $now = microtime(true);
+    if ($time) {
+        console(($label ? $label.' ' : '') . sprintf('%.4f', $now - $time));
+    }
+    return $now;
+}
