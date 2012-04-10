@@ -1187,6 +1187,25 @@ function kolab_admin()
     this.command('group.list', {page: this.env.list_page});
   };
 
+  this.generate_password = function(fieldname)
+  {
+    this.env.password_field = fieldname;
+    this.set_busy(true, 'loading');
+    // we can send only 'attributes' here, because password generation doesn't require object type name/id
+    this.api_post('form_value.generate', {attributes: [fieldname]}, 'generate_password_response');
+  };
+
+  this.generate_password_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    var f = this.env.password_field, pass = response.result[f];
+
+    $('input[name="' + f + '"]').val(pass);
+    $('input[name="' + f + '2"]').val(pass);
+  };
+
 };
 
 // Add escape() method to RegExp object
