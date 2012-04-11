@@ -771,6 +771,9 @@ class kolab_client_task
 
         $extra_fields = array_flip($extra_fields);
 
+        // Object type
+        $data['object_type'] = $name;
+
         // Selected account type
         if (!empty($data['type_id'])) {
             $type = $data['type_id'];
@@ -896,13 +899,10 @@ class kolab_client_task
         // (Re-|Pre-)populate auto_form_fields
         if ($add_mode) {
             if (!empty($auto_attribs)) {
-                $data = array_merge((array)$data, array(
-                    'attributes'  => $auto_attribs,
-                    'object_type' => $name,
-                ));
-
+                $data['attributes'] = $auto_attribs;
                 $resp = $this->api->post('form_value.generate', null, $data);
                 $data = array_merge((array)$data, (array)$resp->get());
+                unset($data['attributes']);
             }
         }
         else {

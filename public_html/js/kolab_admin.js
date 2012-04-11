@@ -734,6 +734,7 @@ function kolab_admin()
   this.form_element_wrapper = function(form_element)
   {
     var i = 0, j = 0, list = [], elem, e = $(form_element),
+      form = form_element.form,
       disabled = e.attr('disabled'),
       readonly = e.attr('readonly'),
       autocomplete = e.attr('data-autocomplete'),
@@ -760,7 +761,7 @@ function kolab_admin()
 
       // add simple input rows
       $.each(list, function(i, v) {
-        elem = $('<input>');
+        var elem = $('<input>');
         elem.attr({
           value: v,
           disabled: disabled,
@@ -775,21 +776,27 @@ function kolab_admin()
     else {
       // add autocompletion input
       if (autocomplete) {
-        elem = this.form_list_element(form_element.form, {
+        elem = this.form_list_element(form, {
           maxlength: maxlength,
           autocomplete: autocomplete,
           element: e
         }, -1);
 
-        elem.appendTo(area);
-        this.ac_init(elem, {attribute: form_element.name, oninsert: this.form_element_oninsert});
+        // Initialize autocompletion
+        var props = {attribute: form_element.name, oninsert: this.form_element_oninsert};
+        if (i = $('input[name="type_id"]', form).val())
+          props.type_id = i;
+        if (i = $('input[name="object_type"]', form).val())
+          props.object_type = i;
+        this.ac_init(elem, props);
 
+        elem.appendTo(area);
         area.addClass('autocomplete');
       }
 
       // add input rows
       $.each(list, function(i, v) {
-        elem = kadm.form_list_element(form_element.form, {
+        var elem = kadm.form_list_element(form, {
           value: v,
           key: i,
           maxlength: maxlength,
