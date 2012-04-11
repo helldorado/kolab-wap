@@ -720,24 +720,8 @@ class kolab_client_task
 
             // Exceptions
             if ($field['name'] == 'ou') {
-                foreach ($options as $idx => $ou) {
-                    $dn = ldap_explode_dn($ou, 0);
-                    if (!empty($dn)) {
-                        unset($dn['count']);
-                        $ous = array();
-                        $dcs = array();
-                        foreach ($dn as $dn_item) {
-                            if (preg_match('/^ou=/', $dn_item)) {
-                                $ous[] = substr($dn_item, 3);      
-                            }
-                            else {
-                                $dcs[] = substr($dn_item, 3);
-                            }
-                        }
-                        $ou = implode(', ', $ous) . ' (' . implode('.', $dcs) . ')';
-                    }
-                    $options[$idx] = $ou;
-                
+                foreach ($options as $idx => $dn) {
+                    $options[$idx] = ldap_dn2ufn($dn);
                 }
             }
         }
