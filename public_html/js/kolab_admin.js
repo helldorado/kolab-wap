@@ -947,9 +947,13 @@ function kolab_admin()
   {
     var i, j, e, elem, name, elem_name,
       form = $('#'+this.env.form_id),
+      id = $('[name="id"]', form).val(),
       type_id = $('[name="type_id"]', form).val(),
       object_type = $('[name="object_type"]', form).val(),
       data = {type_id: type_id, object_type: object_type, attributes: []};
+
+    if (id)
+      data.id = id;
 
     this.set_busy(true, 'loading');
 
