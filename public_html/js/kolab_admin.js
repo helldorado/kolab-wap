@@ -784,10 +784,12 @@ function kolab_admin()
 
         // Initialize autocompletion
         var props = {attribute: form_element.name, oninsert: this.form_element_oninsert};
-        if (i = $('input[name="type_id"]', form).val())
+        if (i = $('[name="type_id"]', form).val())
           props.type_id = i;
-        if (i = $('input[name="object_type"]', form).val())
+        if (i = $('[name="object_type"]', form).val())
           props.object_type = i;
+        if (i = $('[name="id"]', form).val())
+          props.id = i;
         this.ac_init(elem, props);
 
         elem.appendTo(area);
