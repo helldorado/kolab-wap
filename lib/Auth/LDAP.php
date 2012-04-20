@@ -568,7 +568,7 @@ class LDAP
         $_user_dn = key($_user);
         $_user = $this->user_info($_user_dn, array_keys($attributes));
 
-        //console("user_edit \$_user", $_user);
+        //console("Auth::LDAP::user_edit() existing \$_user info", $_user);
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($_user_dn, $_user[$_user_dn], $attributes);
@@ -999,7 +999,7 @@ class LDAP
 
         $rdn_attr = $rdn_components[0];
 
-        //console($rdn_attr);
+        //console("Auth::LDAP::modify_entry() using rdn attribute: " . $rdn_attr);
 
         $mod_array = Array(
                 "add"       => Array(), // For use with ldap_mod_add()
@@ -1019,15 +1019,14 @@ class LDAP
         foreach ($old_attrs as $attr => $old_attr_value) {
 
             if (array_key_exists($attr, $new_attrs)) {
-                $_sort1 = false;
-                $_sort2 = false;
-                if (is_array($new_attrs[$attr])) {
+                if (is_array($old_attrs[$attr]) && is_array($new_attrs[$attr])) {
                     $_sort1 = $new_attrs[$attr];
                     sort($_sort1);
-                }
-                if (is_array($old_attr_value)) {
                     $_sort2 = $old_attr_value;
                     sort($_sort2);
+                } else {
+                    $_sort1 = true;
+                    $_sort2 = false;
                 }
 
                 if (!($new_attrs[$attr] === $old_attr_value) && !($_sort1 === $_sort2)) {
@@ -1120,34 +1119,6 @@ class LDAP
         // Opportunities to set false include failed ldap commands.
         $result = true;
 
-        if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
-            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
-        }
-
-        if (!$result) {
-            //console("Failed to replace the following attributes", $attributes['replace']);
-            return false;
-        }
-
-        if (is_array($attributes['del']) && !empty($attributes['del'])) {
-            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
-        }
-
-        if (!$result) {
-            //console("Failed to delete the following attributes", $attributes['del']);
-            return false;
-        }
-
-
-        if (is_array($attributes['add']) && !empty($attributes['add'])) {
-            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
-        }
-
-        if (!$result) {
-            //console("Failed to add the following attributes", $attributes['add']);
-            return false;
-        }
-
         if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
             $olddn = $attributes['rename']['dn'];
             $newrdn = $attributes['rename']['new_rdn'];
@@ -1160,6 +1131,46 @@ class LDAP
             //console("Attempt to rename $olddn to $newrdn,$new_parent");
 
             $result = ldap_rename($this->conn, $olddn, $newrdn, $new_parent, true);
+            if ($result) {
+                if ($new_parent) {
+                    $subject_dn = $newrdn . ',' . $new_parent;
+                } else {
+                    $old_parent_dn_components = ldap_explode_dn($olddn, 0);
+                    unset($old_parent_dn_components["count"]);
+                    $old_rdn = array_shift($old_parent_dn_components);
+                    $old_parent_dn = implode(",", $old_parent_dn_components);
+                    $subject_dn = $newrdn . ',' . $old_parent_dn;
+                }
+            }
+
+        }
+
+        if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
+            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
+        }
+
+        if (!$result) {
+            console("Failed to replace the following attributes on subject " . $subject_dn, $attributes['replace']);
+            return false;
+        }
+
+        if (is_array($attributes['del']) && !empty($attributes['del'])) {
+            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
+        }
+
+        if (!$result) {
+            console("Failed to delete the following attributes", $attributes['del']);
+            return false;
+        }
+
+
+        if (is_array($attributes['add']) && !empty($attributes['add'])) {
+            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
+        }
+
+        if (!$result) {
+            console("Failed to add the following attributes", $attributes['add']);
+            return false;
         }
 
         if (!$result) {
