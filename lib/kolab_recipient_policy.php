@@ -175,6 +175,9 @@ class kolab_recipient_policy {
             );
 
         $userdata = self::normalize_userdata($userdata);
+        if (!array_key_exists('mail', $userdata)) {
+            $userdata['mail'] = self::primary_mail($userdata);
+        }
 
         $conf = Conf::get_instance();
 
@@ -234,6 +237,13 @@ class kolab_recipient_policy {
                 eval("\$result = sprintf('" . $format . "', '" . implode("', '", array_values($result)) . "');");
 
                 if ($result = self::parse_email($result)) {
+                    // See if the equivalent is already in the 'mail' attribute value(s)
+                    if (!empty($userdata['mail'])) {
+                        if (strtolower($userdata['mail']) == strtolower($result)) {
+                            continue;
+                        }
+                    }
+
                     $secondary_mail_addresses[] = $result;
                 }
             }
