@@ -389,7 +389,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_secondary_mail($postdata, $attribs = array())
     {
-        $secondary_mail_address = Array();
+        $secondary_mail_addresses = Array();
 
         if (isset($attribs['auto_form_fields'])) {
             if (isset($attribs['auto_form_fields']['alias'])) {
@@ -412,9 +412,17 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            $secondary_mail = kolab_recipient_policy::secondary_mail($postdata);
+            if (array_key_exists('mail', $attribs['auto_form_fields'])) {
+                if (!array_key_exists('mail', $postdata)) {
+                    $postdata['mail'] = $this->generate_primary_mail($postdata, $attribs);
+                }
+            }
 
-            return $secondary_mail;
+            $secondary_mail_addresses = kolab_recipient_policy::secondary_mail($postdata);
+
+            // TODO: Check for uniqueness. Not sure what to do if not unique.
+
+            return $secondary_mail_addresses;
         }
     }
 
@@ -459,6 +467,7 @@ class kolab_api_service_form_value extends kolab_api_service
                     $user_found_unique_attr = $auth->get_attribute($user_found_dn, $unique_attr);
                     //console("user with uid $uid found", $user_found_unique_attr);
                     if ($user_found_unique_attr == $postdata['id']) {
+                        //console("that's us.");
                         break;
                     }
                 }
