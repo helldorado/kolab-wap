@@ -426,10 +426,10 @@ class kolab_api_controller
         $label = $args[0];
 
         if (isset(self::$translation[$label])) {
-	        $content = trim(self::$translation[$label]);
+            $content = trim(self::$translation[$label]);
         }
-	    else {
-	        $content = $label;
+        else {
+            $content = $label;
         }
 
         for ($i = 1, $len = count($args); $i < $len; $i++) {
