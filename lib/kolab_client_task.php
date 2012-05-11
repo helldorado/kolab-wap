@@ -328,10 +328,7 @@ class kolab_client_task
             $msg . (isset($args['file']) ? sprintf(' in %s on line %d', $args['file'], $args['line']) : ''),
             $_SERVER['REQUEST_METHOD']);
 
-        if (!write_log('errors', $log_line)) {
-            // send error to PHPs error handler if write_log() didn't succeed
-            trigger_error($msg, E_USER_ERROR);
-        }
+        write_log('errors', $log_line);
 
         if (!$output) {
             return;
