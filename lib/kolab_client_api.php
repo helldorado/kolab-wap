@@ -64,16 +64,16 @@ class kolab_client_api
         // Configure connection options
         $config  = Conf::get_instance();
         $options = array(
-            'ssl_verify_peer',
-            'ssl_verify_host',
-            'ssl_cafile',
-            'ssl_capath',
-            'ssl_local_cert',
-            'ssl_passphrase',
+            'ssl_verify_peer' => Conf::BOOL,
+            'ssl_verify_host' => Conf::BOOL,
+            'ssl_cafile'      => Conf::STRING,
+            'ssl_capath'      => Conf::STRING,
+            'ssl_local_cert'  => Conf::STRING,
+            'ssl_passphrase'  => Conf::STRING,
         );
 
-        foreach ($options as $optname) {
-            if (($optvalue = $config->get('kolab_wap', $optname)) !== null) {
+        foreach ($options as $optname => $opttype) {
+            if (($optvalue = $config->get('kolab_wap', $optname, $opttype)) !== null) {
                 try {
                     $this->request->setConfig($optname, $optvalue);
                 }

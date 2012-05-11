@@ -30,6 +30,11 @@ class Conf {
 
     const CONFIG_FILE = '/etc/kolab/kolab.conf';
 
+    const STRING = 0;
+    const BOOL   = 1;
+    const INT    = 2;
+    const FLOAT  = 3;
+
     /**
      * This implements the 'singleton' design pattern
      *
@@ -55,9 +60,24 @@ class Conf {
 
     }
 
-    public function get($key1, $key2 = NULL)
+    public function get($key1, $key2 = null, $type = null)
     {
-        return $this->expand($this->get_raw($key1, $key2));
+        $value = $this->expand($this->get_raw($key1, $key2));
+
+        if ($value === null) {
+            return $value;
+        }
+
+        switch ($type) {
+            case self::INT:
+                return intval($value);
+            case self::FLOAT:
+                return floatval($value);
+            case self::BOOL:
+                return (bool) preg_match('/^(true|1|on|enabled|yes)$/i', $value);
+        }
+
+        return (string) $value;
     }
 
     public function get_list($key1, $key2 = NULL)
@@ -131,7 +151,7 @@ class Conf {
 //        error_log("Could not find setting for \$key1: " . $key1 .
 //                " with \$key2: " . $key2);
 
-        return false;
+        return null;
     }
 
     public function expand($str, $custom = FALSE)
