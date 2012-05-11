@@ -60,6 +60,28 @@ class kolab_client_api
     public function init()
     {
         $this->request = new HTTP_Request2();
+
+        // Configure connection options
+        $config  = Conf::get_instance();
+        $options = array(
+            'ssl_verify_peer',
+            'ssl_verify_host',
+            'ssl_cafile',
+            'ssl_capath',
+            'ssl_local_cert',
+            'ssl_passphrase',
+        );
+
+        foreach ($options as $optname) {
+            if (($optvalue = $config->get('kolab_wap', $optname)) !== null) {
+                try {
+                    $this->request->setConfig($optname, $optvalue);
+                }
+                catch (Exception $e) {
+                    write_log('errors', $e->getMessage());
+                }
+            }
+        }
     }
 
     /**
