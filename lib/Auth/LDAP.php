@@ -333,9 +333,13 @@ class LDAP
 
         //console("effective_rights for $subject resolves to $entry_dn");
 
+        $moz_ldapsearch = "/usr/lib64/mozldap/ldapsearch";
+        if (!is_file($moz_ldapsearch)) {
+            $moz_ldapsearch = "/usr/lib/mozldap/ldapsearch";
+        }
+
         $command = array(
-                // TODO: Very 64-bit specific
-                '/usr/lib64/mozldap/ldapsearch',
+                $moz_ldapsearch,
                 '-x',
                 '-h',
                 $this->_ldap_server,
