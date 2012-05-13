@@ -346,7 +346,7 @@ class LDAP
                 '-p',
                 $this->_ldap_port,
                 '-b',
-                $conf->get('base_dn'),
+                '"' . $entry_dn . '"',
                 '-D',
                 '"' . $_SESSION['user']->user_bind_dn . '"',
                 '-w',
@@ -360,7 +360,9 @@ class LDAP
                                 'dn:' . $_SESSION['user']->user_bind_dn // User DN
                             )
                     ) . '"',
-                '"(entrydn=' . $entry_dn . ')"',
+                '-s',
+                'base',
+                '"(objectclass=*)"',
                 '"*"',
             );
 
