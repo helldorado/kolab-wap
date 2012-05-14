@@ -205,6 +205,11 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->attribute_details($attributes);
     }
 
+    public function domain_add($domain, $parent_domain=null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->domain_add($domain, $parent_domain);
+    }
+
     public function find_user_groups($member_dn)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
