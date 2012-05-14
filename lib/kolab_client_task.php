@@ -457,14 +457,14 @@ class kolab_client_task
 
         $capabilities = $this->capabilities();
 
-        //console($capabilities);
+        console("Obtained the following capabilities:", $capabilities);
 
         foreach ($this->menu as $idx => $label) {
-            //console("$task: $task, idx: $idx, label: $label");
+            console("Looking if \$task: $task, \$idx: $idx, \$label: $label is part of the capabilities");
 
             if (in_array($task, array('user', 'group'))) {
                 if (!array_key_exists($task . "." . $idx, $capabilities['actions'])) {
-                    //console("$task.$idx not in \$capabilities['actions'], skipping", $capabilities['actions']);
+                    console("$task.$idx not in \$capabilities['actions'], skipping", $capabilities['actions']);
                     continue;
                 }
             }
@@ -553,16 +553,18 @@ class kolab_client_task
      */
     protected function capabilities()
     {
+        $domain = $_SESSION['user']['domain'];
+
         if (!isset($_SESSION['capabilities'])) {
             $result = $this->api->post('system.capabilities');
             $list   = $result->get('list');
 
             if (is_array($list)) {
                 $_SESSION['capabilities'] = $list;
+            } else {
+                $_SESSION['capabilities'][$domain] = $list;
             }
         }
-
-        $domain = $_SESSION['user']['domain'];
 
         return $_SESSION['capabilities'][$domain];
     }
