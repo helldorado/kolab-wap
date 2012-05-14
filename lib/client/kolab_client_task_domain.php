@@ -135,7 +135,14 @@ class kolab_client_task_domain extends kolab_client_task
 
                 $i++;
                 $cells = array();
-                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['associateddomain']),
+
+                if (is_array($item['associateddomain'])) {
+                    $domain_name = $item['associateddomain'][0];
+                } else {
+                    $domain_name = $item['associateddomain'];
+                }
+
+                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($domain_name),
                     'onclick' => "kadm.command('domain.info', '$idx')");
                 $rows[] = array('id' => $i, 'class' => 'selectable', 'cells' => $cells);
             }
@@ -168,10 +175,15 @@ class kolab_client_task_domain extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        console("action_info() on", $id);
+        //console("action_info() on", $id);
+
         $result = $this->api->get('domain.info', array('domain' => $id));
+        //console("action_info() \$result", $result);
+
         $domain  = $result->get();
-        $output = $this->domain_form(null, $domain);
+        //console("action_info() \$domain", $domain);
+
+        $output = $this->domain_form(array_keys($domain), $domain);
 
         $this->output->set_object('taskcontent', $output);
     }
