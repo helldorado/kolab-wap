@@ -292,11 +292,11 @@ class LDAP
 
     }
 
-    public function domain_add($domain, $domain_alias = false, $prepopulate = true)
+    public function domain_add($domain, $parent_domain = false, $prepopulate = true)
     {
         // Apply some routines for access control to this function here.
-        if ($domain_alias) {
-            return $this->_domain_add_alias($domain, $domain_alias);
+        if (!empty($parent_domain)) {
+            return $this->_domain_add_alias($domain, $parent_domain);
         }
         else {
             return $this->_domain_add_new($domain, $prepopulate);
@@ -809,11 +809,6 @@ class LDAP
         return $result;
     }
 
-    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
-    {
-        return $this->__search($base_dn, $search_filter, $attributes);
-    }
-
     private function domains_list()
     {
         $section = $this->conf->get('kolab', 'auth_mechanism');
@@ -1036,6 +1031,30 @@ class LDAP
                 if (!($new_attrs[$attr] === $old_attr_value) && !($_sort1 === $_sort2)) {
                     //console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
                     if ($attr === $rdn_attr) {
+                        //console("This attribute is the RDN attribute. Let's see if it is multi-valued, and if the original still exists in the new value.");
+                        if (is_array($old_attrs[$attr])) {
+                            if (!is_array($new_attrs[$attr])) {
+                                if (in_array($new_attrs[$attr], $old_attrs[$attr])) {
+                                    // TODO: Need to remove all $old_attrs[$attr] values not equal to $new_attrs[$attr]
+                                    if ($new_attrs[$attr] !== $old_attrs[$attr][0]) {
+                                        // TODO: Also need to rename the entry
+                                    }
+                                } else {
+                                    // TODO: Both replace attribute value and rename.
+                                }
+                            } else {
+                                // TODO: See if the rdn attr. value is still in $new_attrs[$attr]
+                            }
+                        } else {
+                            if (!is_array($new_attrs[$attr])) {
+                                // TODO: Do something here
+                            } else {
+                                // An additional attribute value is being supplied. Just replace and continue.
+                                $mod_array['replace'][$attr] = $new_attrs[$attr];
+                                continue;
+                            }
+                        }
+
                         $mod_array['rename']['dn'] = $subject_dn;
                         $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
                     } else {
@@ -1457,6 +1476,33 @@ class LDAP
         return true;
     }
 
+    private function _domain_add_alias($domain, $parent)
+    {
+        $conf = Conf::get_instance();
+        $domain_base_dn = $conf->get('ldap', 'domain_base_dn');
+        $domain_filter = $conf->get('ldap', 'domain_filter');
+
+        $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
+
+        $domain_filter = '(&(' . $domain_name_attribute . '=' . $parent . ')' . $domain_filter . ')';
+
+        $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
+
+        // TODO: Catch not having found any such parent domain
+
+        $domain_dn = key($domain_entry);
+
+        //    private function modify_entry($subject_dn, $old_attrs, $new_attrs)
+
+        $_old_attr = array($domain_name_attribute => $domain_entry[$domain_dn][$domain_name_attribute]);
+        $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_dn][$domain_name_attribute], $domain));
+
+        return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
+
+
+        
+    }
+
     /**
      * Shortcut to ldap_bind()
      */
@@ -1595,6 +1641,11 @@ class LDAP
         return $ldap_entries;
     }
 
+    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
+    {
+        return $this->__search($base_dn, $search_filter, $attributes);
+    }
+
     /**
      * Shortcut to ldap_search()
      */
@@ -1615,7 +1666,7 @@ class LDAP
         }
 
         if (($search_results = @ldap_search($this->conn, $base_dn, $search_filter, $attributes)) == false) {
-            //message("Could not search in " . __METHOD__ . " in " . __FILE__ . " on line " . __LINE__ . ": " . $this->_errstr());
+            //console("Could not search in " . __METHOD__ . " in " . __FILE__ . " on line " . __LINE__ . ": " . $this->_errstr());
             return false;
         }
 
