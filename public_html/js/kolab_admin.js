@@ -1043,6 +1043,46 @@ function kolab_admin()
     this.http_post('domain.info', {id: id});
   };
 
+  this.domain_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('domain.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('domain.' + action, data, 'domain_' + action + '_response');
+  };
+
+  this.domain_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('domain.add.success');
+    this.command('domain.list', {page: this.env.list_page});
+  };
+
+  this.domain_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('domain.edit.success');
+    this.command('domain.list', {page: this.env.list_page});
+  };
+
   this.user_info = function(id)
   {
     this.http_post('user.info', {id: id});
