@@ -857,6 +857,11 @@ class LDAP
         $base_dn = $this->conf->get($section, 'domain_base_dn');
         $filter  = $this->conf->get($section, 'domain_filter');
 
+        $kolab_filter = $this->conf->get($section, 'kolab_domain_filter');
+        if (empty($filter) && !empty($kolab_filter)) {
+            $filter = $kolab_filter;
+        }
+
         return $this->_search($base_dn, $filter);
     }
 
