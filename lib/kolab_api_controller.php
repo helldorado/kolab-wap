@@ -307,11 +307,13 @@ class kolab_api_controller
             $this->domains[] = $_SESSION['user']->get_domain();
         }
 
+        //console("\$this->domains:", $this->domains);
+
         // add capabilities of all registered services
         foreach ($this->domains as $domain) {
             // TODO: 'associateddomain' is very specific to 389ds based deployments, and this
             // is supposed to be very generic.
-            $domain_name = is_array($domain) ? $domain['associateddomain'] : $domain;
+            $domain_name = is_array($domain) ? (is_array($domain['associateddomain']) ? $domain['associateddomain'][0] : $domain['associateddomain']) : $domain;
             // define our very own capabilities
             $actions = array(
                 'system.quit'      => array('type' => 'w'),
@@ -324,6 +326,8 @@ class kolab_api_controller
                     $actions["$sname.$method"] = array('type' => $type);
                 }
             }
+
+            //console("api capabilities", $domain, $domain_name);
 
             $result[$domain_name] = array('actions' => $actions);
         }
