@@ -298,6 +298,8 @@ class kolab_client_task_group extends kolab_client_task
             }
         }
 
+        console($_SESSION['group_types']);
+
         return $_SESSION['group_types'];
     }
 

@@ -82,11 +82,11 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_add($getdata, $postdata)
     {
-        //console("user_add()", $postdata);
+        console("user_add()", $postdata);
 
         $user_attributes = $this->parse_input_attributes('user', $postdata); 
 
-        //console("user_add()", $user_attributes);
+        console("user_add()", $user_attributes);
 
         $auth = Auth::get_instance();
         $result = $auth->user_add($user_attributes, $postdata['type_id']);

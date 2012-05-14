@@ -25,9 +25,11 @@
 class kolab_client_task_main extends kolab_client_task
 {
     protected $menu = array(
-        'user.default'   => 'menu.users',
-        'group.default'  => 'menu.groups',
-        'about.default'  => 'menu.about',
+        'user.default'      => 'menu.users',
+        'group.default'     => 'menu.groups',
+        'domain.default'    => 'menu.domains',
+        'role.default'      => 'menu.roles',
+        'about.default'     => 'menu.about',
     );
 
 

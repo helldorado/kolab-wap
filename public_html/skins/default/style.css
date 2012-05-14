@@ -33,6 +33,7 @@ table.list {
   border: 1px solid #d0d0d0;
   border-spacing: 0;
   border-radius: 3px;
+  width: 100%;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
 }
@@ -553,7 +554,7 @@ span.listelement input {
 
 span.listarea.disabled span.listelement input,
 span.listarea.readonly span.listelement input {
-  width: 370px;  
+  width: 370px;
 }
 
 span.listelement input:focus {

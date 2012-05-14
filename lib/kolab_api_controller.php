@@ -48,11 +48,11 @@ class kolab_api_controller
                 );
             }
             else {
-                throw new Exception("Unknown method", 400);
+                throw new Exception("Unknown method " . $_GET['method'], 400);
             }
         }
         else {
-            throw new Exception("Unknown service", 400);
+            throw new Exception("Unknown service " . $_GET['service'], 400);
         }
 
         // TODO: register services based on config or whatsoever

@@ -1038,6 +1038,11 @@ function kolab_admin()
     return false;
   };
 
+  this.domain_info = function(id)
+  {
+    this.http_post('domain.info', {id: id});
+  };
+
   this.user_info = function(id)
   {
     this.http_post('user.info', {id: id});

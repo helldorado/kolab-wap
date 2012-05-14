@@ -150,6 +150,8 @@ class kolab_client_api
 
         $this->request->setMethod(HTTP_Request2::METHOD_GET);
 
+        console("GET", $url);
+
         return $this->get_response($url);
     }
 
@@ -168,6 +170,8 @@ class kolab_client_api
 
         $this->request->setMethod(HTTP_Request2::METHOD_POST);
         $this->request->setBody(@json_encode($post));
+
+        console("POST", $url, $post);
 
         return $this->get_response($url);
     }

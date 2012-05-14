@@ -59,7 +59,7 @@ abstract class kolab_api_service
      */
     protected function object_type_attributes($object_name, $type_id, $required = true)
     {
-        $supported = array('group', 'user');
+        $supported = array('domain', 'group', 'role', 'user');
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
@@ -75,7 +75,28 @@ abstract class kolab_api_service
         $object_types = $this->object_types($object_name);
 
         if (empty($object_types[$type_id])) {
-            throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
+            if ($object_name == 'domain') {
+                return array(
+                        'auto_form_fields' => array(),
+                        'form_fields' => array(
+                                'associateddomain' => array(
+                                        'type' => 'list'
+                                    ),
+                                'o' => array(
+                                        'optional' => 'true',
+                                    ),
+                            ),
+                        'fields' => array(
+                                'objectclass' => array(
+                                        'top',
+                                        'domainrelatedobject',
+                                    ),
+                            ),
+                    );
+
+            } else {
+                throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
+            }
         }
 
         return $object_types[$type_id]['attributes'];
@@ -91,6 +112,8 @@ abstract class kolab_api_service
      */
     protected function object_type_id($object_name, $object_class)
     {
+        if ($object_name == 'domain') return 1;
+
         if (empty($object_class)) {
             return null;
         }
@@ -199,6 +222,12 @@ abstract class kolab_api_service
 
         // add group type id to the result
         $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
+
+        if (empty($attrs['type_id'])) {
+            if ($object_name == 'domain') {
+                $attrs['type_id'] = 1;
+            }
+        }
 
         // Search for attributes associated with the type_id that are not part
         // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
