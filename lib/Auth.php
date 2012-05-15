@@ -210,6 +210,11 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->domain_add($domain, $parent_domain);
     }
 
+    public function domain_edit($domain, $attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->domain_edit($domain, $attributes, $typeid);
+    }
+
     public function domain_find_by_attribute($attribute)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->domain_find_by_attribute($attribute);
