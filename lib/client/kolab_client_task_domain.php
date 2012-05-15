@@ -128,7 +128,7 @@ class kolab_client_task_domain extends kolab_client_task
         // table body
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
-                console($idx);
+                //console($idx);
                 if (!is_array($item) || empty($item['associateddomain'])) {
                     continue;
                 }
@@ -170,7 +170,7 @@ class kolab_client_task_domain extends kolab_client_task
     }
 
     /**
-     * Group information (form) action.
+     * Domain information (form) action.
      */
     public function action_info()
     {
@@ -189,7 +189,7 @@ class kolab_client_task_domain extends kolab_client_task
     }
 
     /**
-     * Groups adding (form) action.
+     * Domain adding (form) action.
      */
     public function action_add()
     {
@@ -200,7 +200,7 @@ class kolab_client_task_domain extends kolab_client_task
     }
 
     /**
-     * Group edit/add form.
+     * Domain edit/add form.
      */
     private function domain_form($attribs, $data = array())
     {
@@ -221,8 +221,12 @@ class kolab_client_task_domain extends kolab_client_task
             'associateddomain'  => 'system',
         );
 
+        //console("domain_form() \$data", $data);
+
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('domain', $data);
+
+        //console("Result from form_prepare", $fields, $types, $type);
 
         $add_mode  = empty($data['id']);
         $accttypes = array();
@@ -231,7 +235,7 @@ class kolab_client_task_domain extends kolab_client_task
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
 
-        // Add user type id selector
+        // Add domain type id selector
         $fields['type_id'] = array(
             'section'  => 'system',
             'type'     => kolab_form::INPUT_SELECT,
@@ -251,9 +255,9 @@ class kolab_client_task_domain extends kolab_client_task
         }
         // Edit mode
         else {
-            $title = $data['cn'];
+            $title = $data['primary_domain'];
 
-            // Add user type name
+            // Add domain type name
             $fields['type_id_name'] = array(
                 'label'    => 'domain.type_id',
                 'section'  => 'system',
@@ -264,31 +268,13 @@ class kolab_client_task_domain extends kolab_client_task
         // Create form object and populate with fields
         $form = $this->form_create('domain', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
 
+        //console("domain_form() \$form", $form);
+
         $form->set_title(kolab_html::escape($title));
 
         $this->output->add_translation('domain.add.success', 'domain.edit.success', 'domain.delete.success');
 
         return $form->output();
-    }
-
-    private function parse_members($list)
-    {
-        // convert to key=>value array, see kolab_api_service_form_value::list_options_uniquemember()
-        foreach ($list as $idx => $value) {
-            if (!empty($value['displayname'])) {
-                $list[$idx] = $value['displayname'];
-            } elseif (!empty($value['cn'])) {
-                $list[$idx] = $value['cn'];
-            } else {
-                console("No display name or cn for $idx");
-            }
-
-            if (!empty($value['mail'])) {
-                $list[$idx] .= ' <' . $value['mail'] . '>';
-            }
-        }
-
-        return $list;
     }
 
     /**
@@ -298,19 +284,32 @@ class kolab_client_task_domain extends kolab_client_task
      */
     public function domain_types()
     {
-        return array(
-                array(
+        $result = array(
+                1 => array(
                         'key' => 'standard',
                         'name' => 'standard domain name space',
                         'description' => 'A standard domain name space',
                         'attributes' => array(
-                                'associateddomain' => array(),
-                                'inetdomainbasedn' => array(
-                                        'optional' => true
-                                    )
-                            )
+                                'auto_form_fields' => array(),
+                                'form_fields' => array(
+                                        'associateddomain' => array(
+                                                'type' => 'list',
+                                            ),
+                                        'inetdomainbasedn' => array(
+                                                'optional' => 'true',
+                                            ),
+                                    ),
+                                'fields' => array(
+                                        'objectclass' => array(
+                                                'top',
+                                                'domainrelatedobject',
+                                            ),
+                                    ),
+                            ),
                     )
             );
+        //console("domain_types() \$result", $result);
+        return $result;
     }
 
     /**
