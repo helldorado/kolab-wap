@@ -303,6 +303,28 @@ class LDAP
         }
     }
 
+    public function domain_edit($domain, $attributes, $typeid = null)
+    {
+        // Domain identifier
+        $unique_attr = $this->unique_attribute();
+        $attributes[$unique_attr] = $domain;
+
+        // Now that values have been re-generated where necessary, compare
+        // the new domain attributes to the original domain attributes.
+        $_domain = $this->domain_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+
+        if (!$_domain) {
+            //console("Could not find domain");
+            return false;
+        }
+
+        $_domain_dn = key($_domain);
+        $_domain = $this->domain_info($_domain_dn, array_keys($attributes));
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($_domain_dn, $_domain[$_domain_dn], $attributes);
+    }
+
     public function domain_find_by_attribute($attribute)
     {
         $conf = Conf::get_instance();
@@ -330,7 +352,7 @@ class LDAP
             return false;
         }
 
-        console("domain_info() result:", $result);
+        //console("domain_info() result:", $result);
 
         return $result;
     }
@@ -363,7 +385,7 @@ class LDAP
             $entry_dn = $conf->get("base_dn");
         }
 
-        console("effective_rights for $subject resolves to $entry_dn");
+        //console("effective_rights for $subject resolves to $entry_dn");
 
         $moz_ldapsearch = "/usr/lib64/mozldap/ldapsearch";
         if (!is_file($moz_ldapsearch)) {
@@ -398,11 +420,11 @@ class LDAP
                 '"*"',
             );
 
-        console("Executing command " . implode(' ', $command));
+        //console("Executing command " . implode(' ', $command));
 
         exec(implode(' ', $command), $output, $return_code);
 
-        console("Output", $output, "Return code: " . $return_code);
+        //console("Output", $output, "Return code: " . $return_code);
 
         $lines = array();
         foreach ($output as $line_num => $line) {
@@ -437,6 +459,28 @@ class LDAP
         return $attributes;
     }
 
+    public function find_user_groups($member_dn)
+    {
+        error_log(__FILE__ . "(" . __LINE__ . "): " .  $member_dn);
+
+        $groups = array();
+
+        $root_dn = $this->domain_root_dn($this->domain);
+
+        // TODO: Do not query for both, it's either one or the other
+        $entries = $this->_search($root_dn, "(|" .
+                "(&(objectclass=groupofnames)(member=$member_dn))" .
+                "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
+            ")");
+
+        $entries = self::normalize_result($entries);
+
+        foreach ($entries as $entry_dn => $entry_attributes) {
+            $groups[] = $entry_dn;
+        }
+
+        return $groups;
+    }
 
     public function get_attribute($subject_dn, $attribute)
     {
@@ -458,6 +502,101 @@ class LDAP
         }
 
         return false;
+    }
+
+    public function group_add($attrs, $typeid = null)
+    {
+        if ($typeid == null) {
+            $type_str = 'group';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+
+        // Check if the group_type has a specific base DN specified.
+        $base_dn = $this->conf->get($type_str . "_group_base_dn");
+        // If not, take the regular user_base_dn
+        if (!$base_dn)
+            $base_dn = $this->conf->get("group_base_dn");
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->_add($dn, $attrs);
+    }
+
+    public function group_delete($group)
+    {
+        $group_dn = $this->entry_dn($group);
+
+        if (!$group_dn) {
+            return false;
+        }
+
+        return $this->_delete($group_dn);
+    }
+
+    public function group_edit($group, $attributes, $typeid = null)
+    {
+/*
+        // Get the type "key" string for the next few settings.
+        if ($typeid == null) {
+            $type_str = 'group';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+*/
+        // Group identifier
+        $unique_attr = $this->unique_attribute();
+        $attributes[$unique_attr] = $group;
+
+        // Now that values have been re-generated where necessary, compare
+        // the new group attributes to the original group attributes.
+        $_group = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+
+        if (!$_group) {
+            //console("Could not find group");
+            return false;
+        }
+
+        $_group_dn = key($_group);
+        $_group = $this->group_info($_group_dn, array_keys($attributes));
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($_group_dn, $_group[$_group_dn], $attributes);
+    }
+
+    public function group_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
+    }
+
+    public function group_info($group, $attributes = array('*'))
+    {
+        $group_dn = $this->entry_dn($group);
+
+        if (!$group_dn) {
+            return false;
+        }
+
+        return self::normalize_result($this->_search($group_dn, '(objectclass=*)', $attributes));
+    }
+
+    public function group_members_list($group, $recurse = true)
+    {
+        $group_dn = $this->entry_dn($group);
+
+        if (!$group_dn) {
+            return false;
+        }
+
+        return $this->_list_group_members($group_dn, null, $recurse);
     }
 
     public function list_domains()
@@ -577,7 +716,7 @@ class LDAP
             $base_dn = $attrs['ou'];
         }
 
-        console("Base DN now: $base_dn");
+        //console("Base DN now: $base_dn");
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -647,124 +786,6 @@ class LDAP
     }
 
     public function user_find_by_attribute($attribute)
-    {
-        return $this->entry_find_by_attribute($attribute);
-    }
-
-    public function find_user_groups($member_dn)
-    {
-        error_log(__FILE__ . "(" . __LINE__ . "): " .  $member_dn);
-
-        $groups = array();
-
-        $root_dn = $this->domain_root_dn($this->domain);
-
-        // TODO: Do not query for both, it's either one or the other
-        $entries = $this->_search($root_dn, "(|" .
-                "(&(objectclass=groupofnames)(member=$member_dn))" .
-                "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
-            ")");
-
-        $entries = self::normalize_result($entries);
-
-        foreach ($entries as $entry_dn => $entry_attributes) {
-            $groups[] = $entry_dn;
-        }
-
-        return $groups;
-    }
-
-    public function group_add($attrs, $typeid = null)
-    {
-        if ($typeid == null) {
-            $type_str = 'group';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-
-        // Check if the group_type has a specific base DN specified.
-        $base_dn = $this->conf->get($type_str . "_group_base_dn");
-        // If not, take the regular user_base_dn
-        if (!$base_dn)
-            $base_dn = $this->conf->get("group_base_dn");
-
-        // TODO: The rdn is configurable as well.
-        // Use [$type_str . "_"]user_rdn_attr
-        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
-
-        return $this->_add($dn, $attrs);
-    }
-
-    public function group_edit($group, $attributes, $typeid = null)
-    {
-/*
-        // Get the type "key" string for the next few settings.
-        if ($typeid == null) {
-            $type_str = 'group';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-*/
-        // Group identifier
-        $unique_attr = $this->unique_attribute();
-        $attributes[$unique_attr] = $group;
-
-        // Now that values have been re-generated where necessary, compare
-        // the new group attributes to the original group attributes.
-        $_group = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
-
-        if (!$_group) {
-            //console("Could not find group");
-            return false;
-        }
-
-        $_group_dn = key($_group);
-        $_group = $this->group_info($_group_dn, array_keys($attributes));
-
-        // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_group_dn, $_group[$_group_dn], $attributes);
-    }
-
-    public function group_delete($group)
-    {
-        $group_dn = $this->entry_dn($group);
-
-        if (!$group_dn) {
-            return false;
-        }
-
-        return $this->_delete($group_dn);
-    }
-
-    public function group_info($group, $attributes = array('*'))
-    {
-        $group_dn = $this->entry_dn($group);
-
-        if (!$group_dn) {
-            return false;
-        }
-
-        return self::normalize_result($this->_search($group_dn, '(objectclass=*)', $attributes));
-    }
-
-    public function group_members_list($group, $recurse = true)
-    {
-        $group_dn = $this->entry_dn($group);
-
-        if (!$group_dn) {
-            return false;
-        }
-
-        return $this->_list_group_members($group_dn, null, $recurse);
-    }
-
-    public function group_find_by_attribute($attribute)
     {
         return $this->entry_find_by_attribute($attribute);
     }
@@ -1057,10 +1078,15 @@ class LDAP
             );
 
         // This is me cheating. Remove this special attribute.
-        $old_ou = $old_attrs['ou'];
-        $new_ou = $new_attrs['ou'];
-        unset($old_attrs['ou']);
-        unset($new_attrs['ou']);
+        if (array_key_exists('ou', $old_attrs) || array_key_exists('ou', $new_attrs)) {
+            $old_ou = $old_attrs['ou'];
+            $new_ou = $new_attrs['ou'];
+            unset($old_attrs['ou']);
+            unset($new_attrs['ou']);
+        } else {
+            $old_ou = null;
+            $new_ou = null;
+        }
 
         // Compare each attribute value of the old attrs with the corresponding value
         // in the new attrs, if any.
@@ -1084,28 +1110,59 @@ class LDAP
                         if (is_array($old_attrs[$attr])) {
                             if (!is_array($new_attrs[$attr])) {
                                 if (in_array($new_attrs[$attr], $old_attrs[$attr])) {
-                                    // TODO: Need to remove all $old_attrs[$attr] values not equal to $new_attrs[$attr]
-                                    if ($new_attrs[$attr] !== $old_attrs[$attr][0]) {
-                                        // TODO: Also need to rename the entry
+                                    // TODO: Need to remove all $old_attrs[$attr] values not equal to $new_attrs[$attr], and not equal to the current $rdn_attr value [0]
+
+                                    //console("old attrs. is array, new attrs. is not array. new attr. exists in old attrs.");
+
+                                    $rdn_attr_value = array_shift($old_attrs[$attr]);
+                                    $_attr_to_remove = array();
+
+                                    foreach ($old_attrs[$attr] as $value) {
+                                        if (strtolower($value) != strtolower($new_attrs[$attr])) {
+                                            $_attr_to_remove[] = $value;
+                                        }
                                     }
+
+                                    //console("Adding to delete attribute $attr values:" . implode(', ', $_attr_to_remove));
+
+                                    $mod_array['delete'][$attr] = $_attr_to_remove;
+
+                                    if (strtolower($new_attrs[$attr]) !== strtolower($rdn_attr_value)) {
+                                        //console("new attrs is not the same as the old rdn value, issuing a rename");
+                                        $mod_array['rename']['dn'] = $subject_dn;
+                                        $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr][0];
+                                    }
+
                                 } else {
-                                    // TODO: Both replace attribute value and rename.
+                                    //console("new attrs is not the same as any of the old rdn value, issuing a full rename");
+                                    $mod_array['rename']['dn'] = $subject_dn;
+                                    $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
                                 }
                             } else {
                                 // TODO: See if the rdn attr. value is still in $new_attrs[$attr]
+                                if (in_array($old_attrs[$attr][0], $new_attrs[$attr])) {
+                                    //console("Simply replacing attr $attr as rnd attr value is preserved.");
+                                    $mod_array['replace'][$attr] = $new_attrs[$attr];
+                                } else {
+                                    // TODO: This fails.
+                                    $mod_array['rename']['dn'] = $subject_dn;
+                                    $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr][0];
+                                    $mod_array['delete'][$attr] = $old_attrs[$attr][0];
+                                }
                             }
                         } else {
                             if (!is_array($new_attrs[$attr])) {
-                                // TODO: Do something here
+                                //console("Renaming " . $old_attrs[$attr] . " to " . $new_attrs[$attr]);
+                                $mod_array['rename']['dn'] = $subject_dn;
+                                $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
                             } else {
+                                //console("Adding to replace");
                                 // An additional attribute value is being supplied. Just replace and continue.
                                 $mod_array['replace'][$attr] = $new_attrs[$attr];
                                 continue;
                             }
                         }
 
-                        $mod_array['rename']['dn'] = $subject_dn;
-                        $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
                     } else {
                         if (empty($new_attrs[$attr])) {
                             switch ($attr) {
@@ -1166,7 +1223,7 @@ class LDAP
             $old_ou = implode(',', $subject_dn_components);
         }
 
-        if (!(strtolower($old_ou) === strtolower($new_ou))) {
+        if (!(empty($old_ou) || empty($new_ou)) && !(strtolower($old_ou) === strtolower($new_ou))) {
             $mod_array['rename']['new_parent'] = $new_ou;
             if (empty($mod_array['rename']['dn']) || empty($mod_array['rename']['new_rdn'])) {
                 $mod_array['rename']['dn'] = $subject_dn;
@@ -1187,6 +1244,8 @@ class LDAP
     private function modify_entry_attributes($subject_dn, $attributes)
     {
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        //console($attributes);
 
         // Opportunities to set false include failed ldap commands.
         $result = true;
@@ -1222,7 +1281,7 @@ class LDAP
         }
 
         if (!$result) {
-            console("Failed to replace the following attributes on subject " . $subject_dn, $attributes['replace']);
+            //console("Failed to replace the following attributes on subject " . $subject_dn, $attributes['replace']);
             return false;
         }
 
@@ -1231,7 +1290,7 @@ class LDAP
         }
 
         if (!$result) {
-            console("Failed to delete the following attributes", $attributes['del']);
+            //console("Failed to delete the following attributes", $attributes['del']);
             return false;
         }
 
@@ -1241,7 +1300,7 @@ class LDAP
         }
 
         if (!$result) {
-            console("Failed to add the following attributes", $attributes['add']);
+            //console("Failed to add the following attributes", $attributes['add']);
             return false;
         }
 
@@ -1508,8 +1567,8 @@ class LDAP
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        console("Entry DN", $entry_dn);
-        console("Attributes", $attributes);
+        //console("Entry DN", $entry_dn);
+        //console("Attributes", $attributes);
 
         foreach ($attributes as $attr_name => $attr_value) {
             if (empty($attr_value)) {
