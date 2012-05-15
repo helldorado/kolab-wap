@@ -40,6 +40,8 @@ class kolab_api_service_domain extends kolab_api_service
     {
         return array(
             'add' => 'w',
+            'edit' => 'w',
+            'delete' => 'w'
         );
     }
 
@@ -57,12 +59,30 @@ class kolab_api_service_domain extends kolab_api_service
         $auth->domain_add($postdata['domain'], $postdata['parent']);
     }
 
+    public function domain_edit($getdata, $postdata)
+    {
+        //console("domain_edit \$postdata", $postdata);
+
+        $domain_attributes  = $this->parse_input_attributes('domain', $postdata);
+        $domain             = $postdata['id'];
+
+        $auth   = Auth::get_instance();
+        $result = $auth->domain_edit($postdata['id'], $domain_attributes, $postdata['type_id']);
+
+        // @TODO: return unique attribute or all attributes as domain_add()
+        if ($result) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function domain_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
         $conf = Conf::get_instance();
 
-        console($getdata);
+        //console($getdata);
 
         if (!empty($getdata['domain'])) {
             $entry_dn = $getdata['domain'];
@@ -73,7 +93,7 @@ class kolab_api_service_domain extends kolab_api_service
                     array($unique_attr => $entry_dn)
                 );
 
-            console($domain);
+            //console($domain);
 
             if (!empty($domain)) {
                 $entry_dn = key($domain);
@@ -84,13 +104,13 @@ class kolab_api_service_domain extends kolab_api_service
             $entry_dn = $conf->get('ldap', 'domain_base_dn');
         }
 
-        console("API/domain.effective_rights(); Using entry_dn: " . $entry_dn);
+        //console("API/domain.effective_rights(); Using entry_dn: " . $entry_dn);
 
         // TODO: Fix searching the correct base_dn... Perhaps find the entry
         // first.
         $effective_rights = $auth->list_rights($entry_dn);
 
-        console($effective_rights);
+        //console($effective_rights);
         return $effective_rights;
     }
 
@@ -114,7 +134,7 @@ class kolab_api_service_domain extends kolab_api_service
         // normalize result
         $result = $this->parse_result_attributes('domain', $result);
 
-        console("API/domain.info() \$result:", $result);
+        //console("API/domain.info() \$result:", $result);
 
         if ($result) {
             return $result;
