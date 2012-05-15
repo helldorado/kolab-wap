@@ -287,7 +287,7 @@ class kolab_client_task_domain extends kolab_client_task
         $result = array(
                 1 => array(
                         'key' => 'standard',
-                        'name' => 'standard domain name space',
+                        'name' => 'Standard domain',
                         'description' => 'A standard domain name space',
                         'attributes' => array(
                                 'auto_form_fields' => array(),
@@ -306,7 +306,7 @@ class kolab_client_task_domain extends kolab_client_task
                                             ),
                                     ),
                             ),
-                    )
+                    ),
             );
         //console("domain_types() \$result", $result);
         return $result;
