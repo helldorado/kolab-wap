@@ -271,7 +271,7 @@ class kolab_client_task_group extends kolab_client_task
             } elseif (!empty($value['cn'])) {
                 $list[$idx] = $value['cn'];
             } else {
-                console("No display name or cn for $idx");
+                //console("No display name or cn for $idx");
             }
 
             if (!empty($value['mail'])) {
@@ -298,7 +298,7 @@ class kolab_client_task_group extends kolab_client_task
             }
         }
 
-        console($_SESSION['group_types']);
+        //console($_SESSION['group_types']);
 
         return $_SESSION['group_types'];
     }

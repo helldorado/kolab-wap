@@ -76,14 +76,11 @@ abstract class kolab_api_service
 
         if (empty($object_types[$type_id])) {
             if ($object_name == 'domain') {
-                return array(
+                $result = array(
                         'auto_form_fields' => array(),
                         'form_fields' => array(
                                 'associateddomain' => array(
                                         'type' => 'list'
-                                    ),
-                                'o' => array(
-                                        'optional' => 'true',
                                     ),
                             ),
                         'fields' => array(
@@ -93,6 +90,10 @@ abstract class kolab_api_service
                                     ),
                             ),
                     );
+
+                //console("object_type_attributes('domain', $type_id);", $result);
+
+                return $result;
 
             } else {
                 throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
@@ -142,8 +143,8 @@ abstract class kolab_api_service
             $commonalities = count($object_class) - $differences;
             $elem_score    = $differences > 0 ? ($commonalities / $differences) : $commonalities;
 
-//            console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
-//            console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
+            //console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
+            //console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
             //console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
 
             if ($elem_score > $type_score) {
@@ -210,6 +211,8 @@ abstract class kolab_api_service
      */
     protected function parse_result_attributes($object_name, $attrs = array())
     {
+        //console("parse_result_attributes($object_name, \$attrs = ", $attrs);
+
         if (empty($attrs) || !is_array($attrs)) {
             return $attrs;
         }
@@ -282,6 +285,7 @@ abstract class kolab_api_service
         $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
 
         //console("parse_input_attributes", $type_attrs);
+        //console("called with \$attribs", $attribs);
 
         $form_service = $this->controller->get_service('form_value');
         $result       = array();

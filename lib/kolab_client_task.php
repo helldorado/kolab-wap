@@ -457,7 +457,7 @@ class kolab_client_task
 
         $capabilities = $this->capabilities();
 
-        //console($capabilities);
+        //console("Capabilities", $capabilities);
 
         foreach ($this->menu as $idx => $label) {
             //console("$task: $task, idx: $idx, label: $label");
@@ -515,6 +515,8 @@ class kolab_client_task
             $_SESSION['user_types'] = $list;
         }
 
+        //console("user_types() \$list", $list);
+
         return $list;
     }
 
@@ -556,6 +558,8 @@ class kolab_client_task
         if (!isset($_SESSION['capabilities'])) {
             $result = $this->api->post('system.capabilities');
             $list   = $result->get('list');
+
+            //console("Capabilities obtained from the API", $list);
 
             if (is_array($list)) {
                 $_SESSION['capabilities'] = $list;
@@ -741,6 +745,9 @@ class kolab_client_task
     protected function form_prepare($name, &$data, $extra_fields = array())
     {
         $types        = (array) $this->{$name . '_types'}();
+
+        //console("form_prepare types", $types);
+
         $form_id      = $attribs['id'];
         $add_mode     = empty($data['id']);
 
@@ -979,12 +986,23 @@ class kolab_client_task
      */
     protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data, $add_mode)
     {
+        //console("Creating form for $name");
+
+        //console("Assign fields to sections", $fields);
         // Assign sections to fields
         foreach ($fields as $idx => $field) {
             if (!$field['section']) {
                 $fields[$idx]['section'] = isset($fields_map[$idx]) ? $fields_map[$idx] : 'other';
+                //console("Assigned field $idx to section " . $fields[$idx]['section']);
+/*
+            } else {
+                $fields[$idx]['section'] = 'other';
+                //console("Assigned field $idx to section " . $fields[$idx]['section']);
+*/
             }
         }
+
+        //console("Using fields_map", $fields_map);
 
         // Sort
         foreach ($fields_map as $idx => $val) {
@@ -1000,13 +1018,19 @@ class kolab_client_task
             $fields_map = array_merge($fields_map, $fields);
         }
 
+        //console("Using attribs", $attribs);
+
         $form = new kolab_form($attribs);
         $assoc_fields = array();
         $req_fields   = array();
         $writeable    = 0;
 
         $auto_fields = $this->output->get_env('auto_fields');
-        //console("\$auto_fields", $auto_fields);
+
+        //console("form_create() \$attribs", $attribs);
+        //console("form_create() \$auto_fields", $auto_fields);
+
+        //console("Going to walk through sections", $sections);
 
         // Parse elements and add them to the form object
         foreach ($sections as $section_idx => $section) {
@@ -1026,6 +1050,9 @@ class kolab_client_task
                 $field['section']     = $section_idx;
 
                 if (empty($field['value']) && !empty($data[$idx])) {
+
+                    //console("Using data value", $data[$idx], "for value of field $idx");
+
                     $field['value'] = $data[$idx];
 
                     // Convert data for the list field with autocompletion
@@ -1089,6 +1116,8 @@ class kolab_client_task
                         $req_fields[] = $idx;
                     }
                 }
+
+                //console("Adding field to form", $field);
 
                 $form->add_element($field);
             }

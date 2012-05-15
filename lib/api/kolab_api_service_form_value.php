@@ -442,7 +442,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 setlocale(LC_ALL, $postdata['preferredlanguage']);
             }
 /*            else {
-                console("No locale specified...!");
+                //console("No locale specified...!");
             }
 */
 
@@ -454,7 +454,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $auth = Auth::get_instance($_SESSION['user']->get_domain());
             $conf = Conf::get_instance();
-            
+
             $unique_attr = $conf->get('unique_attribute');
             if (!$unique_attr) {
                 $unique_attr = 'nsuniqueid';
@@ -739,7 +739,7 @@ class kolab_api_service_form_value extends kolab_api_service
             } elseif (!empty($value['cn'])) {
                 $list[$idx] = $value['cn'];
             } else {
-                console("No display name or cn for $idx");
+                //console("No display name or cn for $idx");
             }
 
             if (!empty($value['mail'])) {

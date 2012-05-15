@@ -271,7 +271,7 @@ class kolab_client_task_role extends kolab_client_task
             } elseif (!empty($value['cn'])) {
                 $list[$idx] = $value['cn'];
             } else {
-                console("No display name or cn for $idx");
+                //console("No display name or cn for $idx");
             }
 
             if (!empty($value['mail'])) {

@@ -133,7 +133,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $postdata = @json_decode($postdata, true);
 
-        console("Calling method " . $method . " on service " . $service);
+        //console("Calling method " . $method . " on service " . $service);
 
         // validate user session
         if ($service != 'system' || $method != 'authenticate') {
@@ -181,7 +181,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $url     = rtrim($url, '/') . '/' . $service . '.' . $method;
 
-        console("Proxying " . $url);
+        //console("Proxying " . $url);
 
         $request = new HTTP_Request2();
         $url     = new Net_URL2($url);
@@ -297,7 +297,9 @@ class kolab_api_controller
      */
     private function capabilities()
     {
+        //console("system.capabilities called");
         $auth = Auth::get_instance();
+
         $this->domains = $auth->list_domains();
 
         $result = array();
@@ -305,6 +307,7 @@ class kolab_api_controller
         // Should we have no permissions to list domain name spaces,
         // we should always return our own.
         if (count($this->domains) < 1) {
+            //console("As there is but one domain, we insert our own");
             $this->domains[] = $_SESSION['user']->get_domain();
         }
 

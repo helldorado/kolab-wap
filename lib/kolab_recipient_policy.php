@@ -157,7 +157,7 @@ class kolab_recipient_policy {
                         );
                 }
             } else {
-                console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
+                //console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
             }
         }
 
@@ -209,7 +209,7 @@ class kolab_recipient_policy {
                     if (array_key_exists($substrings[1][$x], $userdata)) {
                         $userdata[$substrings[1][$x]] = substr($userdata[$substrings[1][$x]], $substrings[2][$x], $substrings[3][$x]);
                     } else {
-                        console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
+                        //console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
                     }
 
                     $rule = preg_replace(

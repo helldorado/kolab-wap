@@ -262,6 +262,8 @@ class kolab_client_task_user extends kolab_client_task
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2'));
 
+        //console("Result from form_prepare", $fields, $types, $type);
+
         $add_mode  = empty($data['id']);
         $accttypes = array();
 

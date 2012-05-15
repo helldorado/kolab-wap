@@ -56,7 +56,7 @@ class kolab_api_service_domains extends kolab_api_service
         $auth = Auth::get_instance();
 
         $domains = $auth->list_domains();
-        console($domains);
+        //console($domains);
         $count   = count($domains);
 
         // pagination
