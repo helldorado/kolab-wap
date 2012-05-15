@@ -10,8 +10,15 @@ $LANG['delete.button'] = 'Delete';
 $LANG['deleting'] = 'Deleting data...';
 
 $LANG['domain.add'] = 'Add Domain';
+$LANG['domain.add.success'] = 'Added domain';
+$LANG['domain.associateddomain'] = 'Domain name(s)';
+$LANG['domain.edit'] = 'Edit domain';
+$LANG['domain.edit.success'] = 'Domain updated';
+$LANG['domain.inetdomainbasedn'] = 'Custom Root DN(s)';
 $LANG['domain.list'] = 'Domains List';
 $LANG['domain.list.records'] = '$1 to $2 of $3';
+$LANG['domain.o'] = 'Organization';
+$LANG['domain.other'] = 'Other';
 $LANG['domain.system'] = 'System';
 $LANG['domain.type_id'] = 'Standard Domain';
 
