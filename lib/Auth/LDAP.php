@@ -661,6 +661,37 @@ class LDAP
         return $users;
     }
 
+    public function list_resources($attributes = array(), $search = array(), $params = array())
+    {
+        if (!empty($params['sort_by'])) {
+            if (is_array($params['sort_by'])) {
+                foreach ($params['sort_by'] as $attrib) {
+                    if (!in_array($attrib, $attributes)) {
+                        $attributes[] = $attrib;
+                    }
+                }
+            } else {
+                if (!in_array($params['sort_by'], $attributes)) {
+                    $attributes[] = $params['sort_by'];
+                }
+            }
+        }
+
+        $resources = $this->resources_list($attributes, $search);
+        $resources = self::normalize_result($resources);
+
+        if (!empty($params['sort_by'])) {
+            $this->sort_result_key = $params['sort_by'];
+            uasort($resources, array($this, 'sort_result'));
+
+            if ($params['sort_order'] == 'DESC') {
+                $resources = array_reverse($resources, true);
+            }
+        }
+
+        return $resources;
+    }
+
     public function list_roles($attributes = array(), $search = array(), $params = array())
     {
         if (!empty($params['sort_by'])) {
@@ -682,6 +713,105 @@ class LDAP
         }
 
         return $roles;
+    }
+
+    public function resource_add($attrs, $typeid = null)
+    {
+        if ($typeid == null) {
+            $type_str = 'resource';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM resource_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+
+        // Check if the resource_type has a specific base DN specified.
+        $base_dn = $this->conf->get($type_str . "_resource_base_dn");
+        // If not, take the regular user_base_dn
+        if (!$base_dn)
+            $base_dn = $this->conf->get("resource_base_dn");
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->_add($dn, $attrs);
+    }
+
+    public function resource_delete($resource)
+    {
+        $resource_dn = $this->entry_dn($resource);
+
+        if (!$resource_dn) {
+            return false;
+        }
+
+        return $this->_delete($resource_dn);
+    }
+
+    public function resource_edit($resource, $attributes, $typeid = null)
+    {
+/*
+        // Get the type "key" string for the next few settings.
+        if ($typeid == null) {
+            $type_str = 'resource';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM resource_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+*/
+        // Group identifier
+        $unique_attr = $this->unique_attribute();
+        $attributes[$unique_attr] = $resource;
+
+        // Now that values have been re-generated where necessary, compare
+        // the new resource attributes to the original resource attributes.
+        $_resource = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+
+        if (!$_resource) {
+            //console("Could not find resource");
+            return false;
+        }
+
+        $_resource_dn = key($_resource);
+        $_resource = $this->resource_info($_resource_dn, array_keys($attributes));
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($_resource_dn, $_resource[$_resource_dn], $attributes);
+    }
+
+    public function resource_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
+    }
+
+    /**
+     * Resource attributes
+     *
+     *
+     */
+    public function resource_info($resource, $attributes = array('*'))
+    {
+        $resource_dn = $this->entry_dn($resource);
+
+        if (!$resource_dn)
+            return false;
+
+        return self::normalize_result($this->_search($resource_dn, '(objectclass=*)', $attributes));
+    }
+
+    public function resource_members_list($resource, $recurse = true)
+    {
+        $resource_dn = $this->entry_dn($resource);
+
+        if (!$resource_dn) {
+            return false;
+        }
+
+        return $this->_list_resource_members($resource_dn, null, $recurse);
     }
 
     public function user_add($attrs, $typeid = null)
@@ -1390,6 +1520,32 @@ class LDAP
         return $result['']['supportedcontrol'];
     }
 
+    private function resources_list($attributes = array(), $search = array())
+    {
+        $conf = Conf::get_instance();
+
+        $base_dn = $conf->get('resource_base_dn');
+
+        if (!$base_dn)
+            $base_dn = "ou=Resources," . $conf->get('base_dn');
+
+        $filter  = $conf->get('resource_filter');
+        if (!$filter)
+            $filter = '(objectclass=*)';
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        if ($s_filter = $this->_search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
+        }
+
+        return $this->_search($base_dn, $filter, $attributes);
+    }
+
+
     private function users_list($attributes = array(), $search = array())
     {
         $conf = Conf::get_instance();
@@ -1781,9 +1937,11 @@ class LDAP
         }
 
         if (($entries = ldap_get_entries($this->conn, $search_results)) == false) {
-            //message("Could not get the results of the search: " . $this->_errstr());
+            console("Could not get the results of the search: " . $this->_errstr());
             return false;
         }
+
+        //console("__search() entries:", $entries);
 
         return $entries;
     }

@@ -306,6 +306,19 @@ class Auth {
         return $groups;
     }
 
+    public function list_resources($domain = NULL, $attributes = array(), $search = array(), $params = array())
+    {
+        $this->connect($domain);
+        if ($domain === NULL) {
+            $domain = $this->conf->get('primary_domain');
+        }
+
+        $resources = $this->_auth[$domain]->list_resources($attributes, $search, $params);
+
+        return $resources;
+    }
+
+
     public function list_roles($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
         $this->connect($domain);
@@ -338,6 +351,36 @@ class Auth {
         else {
             return FALSE;
         }
+    }
+
+    public function resource_add($attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->resource_add($attributes, $typeid);
+    }
+
+    public function resource_edit($resource, $attributes, $typeid = null)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->resource_edit($resource, $attributes, $typeid);
+    }
+
+    public function resource_delete($subject)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->resource_delete($subject);
+    }
+
+    public function resource_find_by_attribute($attribute)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->resource_find_by_attribute($attribute);
+    }
+
+    public function resource_info($resourcedata)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->resource_info($resourcedata);
+    }
+
+    public function resource_members_list($resourcedata, $recurse = true)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->resource_members_list($resourcedata, $recurse);
     }
 
     public function search()
