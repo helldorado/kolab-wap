@@ -56,16 +56,19 @@ class kolab_api_controller
         }
 
         // TODO: register services based on config or whatsoever
-        $this->add_service('domain', 'kolab_api_service_domain');
-        $this->add_service('domains', 'kolab_api_service_domains');
-        $this->add_service('form_value', 'kolab_api_service_form_value');
-        $this->add_service('group_types', 'kolab_api_service_group_types');
-        $this->add_service('group', 'kolab_api_service_group');
-        $this->add_service('groups', 'kolab_api_service_groups');
-        $this->add_service('roles', 'kolab_api_service_roles');
-        $this->add_service('user_types', 'kolab_api_service_user_types');
-        $this->add_service('user', 'kolab_api_service_user');
-        $this->add_service('users', 'kolab_api_service_users');
+        $this->add_service('domain',            'kolab_api_service_domain');
+        $this->add_service('domains',           'kolab_api_service_domains');
+        $this->add_service('form_value',        'kolab_api_service_form_value');
+        $this->add_service('group_types',       'kolab_api_service_group_types');
+        $this->add_service('group',             'kolab_api_service_group');
+        $this->add_service('groups',            'kolab_api_service_groups');
+        $this->add_service('resource_types',    'kolab_api_service_resource_types');
+        $this->add_service('resource',          'kolab_api_service_resource');
+        $this->add_service('resources',         'kolab_api_service_resources');
+        $this->add_service('roles',             'kolab_api_service_roles');
+        $this->add_service('user_types',        'kolab_api_service_user_types');
+        $this->add_service('user',              'kolab_api_service_user');
+        $this->add_service('users',             'kolab_api_service_users');
     }
 
     /**
