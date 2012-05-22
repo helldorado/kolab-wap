@@ -59,7 +59,7 @@ abstract class kolab_api_service
      */
     protected function object_type_attributes($object_name, $type_id, $required = true)
     {
-        $supported = array('domain', 'group', 'role', 'user');
+        $supported = array('domain', 'group', 'resource', 'role', 'user');
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
@@ -165,10 +165,11 @@ abstract class kolab_api_service
      */
     protected function object_types($object_name)
     {
-        $supported = array('group', 'user');
+        $supported = array('group', 'resource', 'user');
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
+
 
         if (!empty($this->cache['object_types']) && !empty($this->cache['object_types'][$object_name])) {
             return $this->cache['object_types'][$object_name];
@@ -198,7 +199,12 @@ abstract class kolab_api_service
             }
         }
 
+        //console("Object types for " . $object_name, $object_types);
+
+//         return $object_types;
+
         return $this->cache['object_types'][$object_name] = $object_types;
+
     }
 
     /**
