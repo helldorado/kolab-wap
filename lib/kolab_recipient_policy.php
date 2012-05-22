@@ -44,6 +44,12 @@ class kolab_recipient_policy {
         foreach ($groupdata as $key => $value) {
             if (isset($groupdata['preferredlanguage'])) {
                 setlocale(LC_ALL, $groupdata['preferredlanguage']);
+            } else {
+                $conf = Conf::get_instance();
+                $locale = $conf->get('default_locale');
+                if (!empty($locale)) {
+                    setlocale(LC_ALL, $locale);
+                }
             }
 
             if (!is_array($groupdata[$key])) {
@@ -73,6 +79,12 @@ class kolab_recipient_policy {
 
             if (isset($userdata['preferredlanguage'])) {
                 setlocale(LC_ALL, $userdata['preferredlanguage']);
+            } else {
+                $conf = Conf::get_instance();
+                $locale = $conf->get('default_locale');
+                if (!empty($locale)) {
+                    setlocale(LC_ALL, $locale);
+                }
             }
 
             if (!is_array($userdata[$_key])) {
