@@ -184,15 +184,20 @@ class kolab_api_service_form_value extends kolab_api_service
             return $result;
         }
 
-        $method_name = 'list_options_' . strtolower($attr_name);
 
-        //console($method_name);
+        $method_name = 'list_options_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
 
         if (!method_exists($this, $method_name)) {
-            return $result;
+            //console("Method $method_name doesn't exist");
+
+            $method_name = 'list_options_' . strtolower($attr_name);
+
+            if (!method_exists($this, $method_name)) {
+                return $result;
+            }
         }
 
-        //console("Still here");
+        //console($method_name);
 
         $result['list'] = $this->{$method_name}($postdata, $attribs);
 
@@ -216,6 +221,46 @@ class kolab_api_service_form_value extends kolab_api_service
 
             // TODO: Generate using policy from configuration
             $cn = trim($postdata['givenname'] . " " . $postdata['sn']);
+
+            return $cn;
+        }
+    }
+
+    private function generate_cn_resource($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['cn'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['cn']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            $auth = Auth::get_instance($_SESSION['user']->get_domain());
+            $conf = Conf::get_instance();
+
+            $unique_attr = $conf->get('unique_attribute');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            $cn = $postdata['cn'];
+
+            $x = 2;
+            while (($resource_found = $auth->resource_find_by_attribute(array('cn' => $cn)))) {
+                if (!empty($postdata['id'])) {
+                    $resource_found_dn = key($resource_found);
+                    $resource_found_unique_attr = $auth->get_attribute($resource_found_dn, $unique_attr);
+                    //console("resource with mail $mail found", $resource_found_unique_attr);
+                    if ($resource_found_unique_attr == $postdata['id']) {
+                        //console("that's us.");
+                        break;
+                    }
+                }
+
+                $cn = $postdata['cn'] . ' #' . $x;
+                $x++;
+            }
 
             return $cn;
         }
@@ -314,6 +359,24 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function generate_kolabtargetfolder_resource($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['kolabtargetfolder'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['kolabtargetfolder']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            // TODO: Detect or from config
+            $imap_hierarchysep = '/';
+            $cn = $this->generate_cn_resource($postdata, $attribs);
+
+            return 'shared' . $imap_hierarchysep . 'Resources' . $imap_hierarchysep . $cn . '@' . $_SESSION['user']->get_domain();
+        }
+    }
+
     private function generate_mail($postdata, $attribs = array())
     {
         return $this->generate_primary_mail($postdata, $attribs);
@@ -322,6 +385,61 @@ class kolab_api_service_form_value extends kolab_api_service
     private function generate_mail_group($postdata, $attribs = array())
     {
         return $this->generate_primary_mail_group($postdata, $attribs);
+    }
+
+    private function generate_mail_resource($postdata, $attribs = array())
+    {
+        $db = SQL::get_instance();
+        $result = $db->fetch_assoc($db->query("SELECT `key` FROM `resource_types` WHERE id = ?", $postdata['type_id']));
+
+        $object_type_key = $result['key'];
+
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            $resourcedata = kolab_recipient_policy::normalize_groupdata($postdata);
+            console("normalized resource data", $resourcedata);
+
+            // TODO: Normalize $postdata
+            $mail_local = 'resource-' . $object_type_key . '-' . strtolower($resourcedata['cn']);
+            $mail_domain = $_SESSION['user']->get_domain();
+            $mail = $mail_local . '@' . $mail_domain;
+
+            $orig_mail = $mail;
+
+            $auth = Auth::get_instance($_SESSION['user']->get_domain());
+            $conf = Conf::get_instance();
+
+            $unique_attr = $conf->get('unique_attribute');
+            if (!$unique_attr) {
+                $unique_attr = 'nsuniqueid';
+            }
+
+            $x = 2;
+            while (($resource_found = $auth->resource_find_by_attribute(array('mail' => $mail)))) {
+                if (!empty($postdata['id'])) {
+                    $resource_found_dn = key($resource_found);
+                    $resource_found_unique_attr = $auth->get_attribute($resource_found_dn, $unique_attr);
+                    //console("resource with mail $mail found", $resource_found_unique_attr);
+                    if ($resource_found_unique_attr == $postdata['id']) {
+                        //console("that's us.");
+                        break;
+                    }
+                }
+
+                $mail = $mail_local . '-' . $x . '@' . $mail_domain;
+                $x++;
+            }
+
+            return $mail;
+
+
+        }
     }
 
     private function generate_mailalternateaddress($postdata, $attribs = array())
@@ -614,6 +732,11 @@ class kolab_api_service_form_value extends kolab_api_service
         return $this->_list_options_members($postdata, $attribs);
     }
 
+    private function list_options_uniquemember_resource($postdata, $attribs = array())
+    {
+        return $this->_list_options_resources($postdata, $attribs);
+    }
+
     private function select_options_c($postdata, $attribs = array())
     {
         return $this->_select_options_from_db('c');
@@ -745,6 +868,49 @@ class kolab_api_service_form_value extends kolab_api_service
             if (!empty($value['mail'])) {
                 $list[$idx] .= ' <' . $value['mail'] . '>';
             }
+        }
+
+        return $list;
+    }
+
+    private function _list_options_resources($postdata, $attribs = array())
+    {
+        // return specified records only, by exact DN attributes
+        if (!empty($postdata['list'])) {
+            $data['search'] = array(
+                'entrydn' => array(
+                    'value' => $postdata['list'],
+                    'type'  => 'exact',
+                ),
+            );
+        }
+        // return records with specified string
+        else {
+            $keyword = array('value' => $postdata['search']);
+            $data['page_size'] = 15;
+            $data['search']    = array(
+                'cn'          => $keyword,
+            );
+        }
+
+        $data['attributes'] = array('cn');
+
+        console("api/form_value._list_options_resources() searching with data", $data);
+
+        $service = $this->controller->get_service('resources');
+        $result  = $service->resources_list(null, $data);
+        $list    = $result['list'];
+
+        // convert to key=>value array
+        foreach ($list as $idx => $value) {
+            if (!empty($value['displayname'])) {
+                $list[$idx] = $value['displayname'];
+            } elseif (!empty($value['cn'])) {
+                $list[$idx] = $value['cn'];
+            } else {
+                //console("No display name or cn for $idx");
+            }
+
         }
 
         return $list;
