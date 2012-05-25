@@ -88,76 +88,6 @@ class kolab_api_service_form_value extends kolab_api_service
     }
 
     /**
-     * Validation of field values.
-     *
-     * @param array $getdata   GET parameters
-     * @param array $postdata  POST parameters. Required parameters:
-     *                         - type_id: Type identifier
-     *                         - object_type: Object type (user, group, etc.)
-     *
-     * @return array Response with attribute name as a key
-     */
-    public function validate($getdata, $postdata)
-    {
-        $attribs = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
-        $result  = array();
-
-        foreach ((array)$postdata as $attr_name => $attr_value) {
-            if (empty($attr_name) || $attr_name == 'type_id' || $attr_name == 'object_type') {
-                continue;
-            }
-
-            $method_name = 'validate_' . strtolower($attr_name);
-
-            if (!method_exists($this, $method_name)) {
-                $result[$attr_name] = 'OK';
-                continue;
-            }
-
-            $result[$attr_name] = $this->{$method_name}($attr_value);
-        }
-
-        return $result;
-    }
-
-    /**
-     * Generation of values for fields of type SELECT.
-     *
-     * @param array $getdata   GET parameters
-     * @param array $postdata  POST parameters. Required parameters:
-     *                         - attributes: list of attribute names
-     *                         - type_id: Type identifier
-     *                         - object_type: Object type (user, group, etc.)
-     *
-     * @return array Response with attribute name as a key
-     */
-    public function select_options($getdata, $postdata)
-    {
-        //console("form_value.select_options postdata", $postdata);
-
-        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
-        $attributes = (array) $postdata['attributes'];
-        $result     = array();
-
-        foreach ($attributes as $attr_name) {
-            if (empty($attr_name)) {
-                continue;
-            }
-
-            $method_name = 'select_options_' . strtolower($attr_name);
-
-            if (!method_exists($this, $method_name)) {
-                $result[$attr_name] = array();
-                continue;
-            }
-
-            $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
-        }
-
-        return $result;
-    }
-
-    /**
      * Generation of values for fields of type LIST.
      *
      * @param array $getdata   GET parameters
@@ -200,6 +130,84 @@ class kolab_api_service_form_value extends kolab_api_service
         //console($method_name);
 
         $result['list'] = $this->{$method_name}($postdata, $attribs);
+
+        return $result;
+    }
+
+    /**
+     * Generation of values for fields of type SELECT.
+     *
+     * @param array $getdata   GET parameters
+     * @param array $postdata  POST parameters. Required parameters:
+     *                         - attributes: list of attribute names
+     *                         - type_id: Type identifier
+     *                         - object_type: Object type (user, group, etc.)
+     *
+     * @return array Response with attribute name as a key
+     */
+    public function select_options($getdata, $postdata)
+    {
+        //console("form_value.select_options postdata", $postdata);
+
+        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+        $attributes = (array) $postdata['attributes'];
+        $result     = array();
+
+        foreach ($attributes as $attr_name) {
+            if (empty($attr_name)) {
+                continue;
+            }
+
+            $method_name = 'select_options_' . strtolower($attr_name);
+
+            if (!method_exists($this, $method_name)) {
+                $result[$attr_name] = array();
+                continue;
+            }
+
+            $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validation of field values.
+     *
+     * @param array $getdata   GET parameters
+     * @param array $postdata  POST parameters. Required parameters:
+     *                         - type_id: Type identifier
+     *                         - object_type: Object type (user, group, etc.)
+     *
+     * @return array Response with attribute name as a key
+     */
+    public function validate($getdata, $postdata)
+    {
+        console("Executing validate() for \$getdata, \$postdata", $getdata, $postdata);
+
+        $attribs = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+        $result  = array();
+
+        foreach ((array)$postdata as $attr_name => $attr_value) {
+            if (empty($attr_name) || $attr_name == 'type_id' || $attr_name == 'object_type') {
+                continue;
+            }
+
+            $method_name = 'validate_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
+
+            if (!method_exists($this, $method_name)) {
+                //console("Method $method_name doesn't exist");
+
+                $method_name = 'validate_' . strtolower($attr_name);
+
+                if (!method_exists($this, $method_name)) {
+                    $result[$attr_name] = 'OK';
+                    continue;
+                }
+            }
+
+            $result[$attr_name] = $this->{$method_name}($attr_value);
+        }
 
         return $result;
     }
@@ -687,7 +695,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function list_options_nsrole($postdata, $attribs = array())
     {
-        error_log("Listing options for attribute 'nsrole', while the expected attribute to use is 'nsroledn'");
+        //console("Listing options for attribute 'nsrole', while the expected attribute to use is 'nsroledn'");
         return $this->list_options_nsroledn($postdata, $attribs);
     }
 
@@ -802,22 +810,83 @@ class kolab_api_service_form_value extends kolab_api_service
         return $options;
     }
 
-    private function _select_options_from_db($attribute)
+    private function validate_alias($value)
     {
-
-        if (empty($attribute)) {
-            return false;
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+        if (!is_array($value)) {
+            $value = (array)($value);
         }
 
-        $db = SQL::get_instance();
-        $result = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = ?", $attribute));
+        foreach ($value as $mail_address) {
+            if (!$this->_validate_email_address($mail_address)) {
+                throw new Exception("Invalid email address '$mail_address'", 692);
+            }
 
-        $result = json_decode($result['option_values']);
+            // Only validate the 'alias' attribute is in any of my domain name
+            // spaces if indeed it is listed as a mail attribute.
+            if (in_array('alias', $conf->get_list('mail_attributes'))) {
+                if (!$this->_validate_email_address_in_any_of_my_domains($mail_address)) {
+                    throw new Exception("Email address '$mail_address' not in local domain", 693);
+                }
+            }
+        }
 
-        if (empty($result)) {
-            return false;
+    }
+
+    private function validate_mail($value)
+    {
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+        if (!is_array($value)) {
+            $value = (array)($value);
+        }
+
+        foreach ($value as $mail_address) {
+            if (!$this->_validate_email_address($mail_address)) {
+                throw new Exception("Invalid email address '$mail_address'", 692);
+            }
+
+            // Only validate the 'mail' attribute is in any of my domain name
+            // spaces if indeed it is listed as a mail attribute.
+            if (in_array('mail', $conf->get_list('mail_attributes'))) {
+                if (!$this->_validate_email_address_in_any_of_my_domains($mail_address)) {
+                    throw new Exception("Email address '$mail_address' not in local domain", 693);
+                }
+            }
+        }
+    }
+
+    private function validate_mailalternateaddress($value)
+    {
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+        if (!is_array($value)) {
+            $value = (array)($value);
+        }
+
+        foreach ($value as $mail_address) {
+            if (!$this->_validate_email_address($mail_address)) {
+                throw new Exception("Invalid email address '$mail_address'", 692);
+            }
+
+            // Only validate the 'mailalternateaddress' attribute is in any of my domain name
+            // spaces if indeed it is listed as a mail attribute.
+            if (in_array('mailalternateaddress', $conf->get_list('mail_attributes'))) {
+                if (!$this->_validate_email_address_in_any_of_my_domains($mail_address)) {
+                    throw new Exception("Email address '$mail_address' not in local domain", 693);
+                }
+            }
+        }
+    }
+
+    private function _highest_of_two($one, $two) {
+        if ($one > $two) {
+            return $one;
+        } elseif ($one == $two) {
+            return $one;
         } else {
-            return $result;
+            return $two;
         }
     }
 
@@ -916,13 +985,112 @@ class kolab_api_service_form_value extends kolab_api_service
         return $list;
     }
 
-    private function _highest_of_two($one, $two) {
-        if ($one > $two) {
-            return $one;
-        } elseif ($one == $two) {
-            return $one;
+    private function _select_options_from_db($attribute)
+    {
+
+        if (empty($attribute)) {
+            return false;
+        }
+
+        $db = SQL::get_instance();
+        $result = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = ?", $attribute));
+
+        $result = json_decode($result['option_values']);
+
+        if (empty($result)) {
+            return false;
         } else {
-            return $two;
+            return $result;
         }
     }
+
+    private function _validate_email_address($mail_address) {
+        $valid = true;
+
+        $at_index = strrpos($mail_address, "@");
+        if (is_bool($at_index) && !$at_index) {
+            $valid = false;
+
+        } else {
+            $domain = substr($mail_address, $at_index+1);
+            $local = substr($mail_address, 0, $at_index);
+
+            if (strlen($local) < 1 || strlen($local) > 64) {
+                // local part length exceeded
+                $valid = false;
+
+            } else if (strlen($domain) < 1 || strlen($domain) > 255) {
+                // domain part length exceeded
+                $valid = false;
+
+            } else if ($local[0] == '.' || $local[strlen($local)-1] == '.') {
+                // local part starts or ends with '.'
+                $valid = false;
+
+            } else if (preg_match('/\\.\\./', $local)) {
+                // local part has two consecutive dots
+                $valid = false;
+
+            } else if (!preg_match('/^[A-Za-z0-9\\-\\.]+$/', $domain)) {
+                // character not valid in domain part
+                $valid = false;
+
+            } else if (preg_match('/\\.\\./', $domain)) {
+                // domain part has two consecutive dots
+                $valid = false;
+
+            } else if (!preg_match('/^(\\\\.|[A-Za-z0-9!#%&`_=\\/$\'*+?^{}|~.-])+$/', str_replace("\\\\","",$local))) {
+                // character not valid in local part unless
+                // local part is quoted
+                if (!preg_match('/^"(\\\\"|[^"])+"$/', str_replace("\\\\","",$local))) {
+                    $valid = false;
+                }
+            }
+
+            if ($valid && !(checkdnsrr($domain,"MX") || checkdnsrr($domain,"A"))) {
+                // domain not found in DNS
+                $valid = false;
+            }
+        }
+
+        return $valid;
+    }
+
+    private function _validate_email_address_in_any_of_my_domains($mail_address) {
+        $valid = false;
+
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+
+        $my_primary_domain = $_SESSION['user']->get_domain();
+        $all_domains = $auth->list_domains();
+
+        $valid_domains = array();
+
+        $dna = $conf->get('domain_name_attribute');
+
+        $at_index = strrpos($mail_address, "@");
+        if (is_bool($at_index) && !$at_index) {
+            throw new Exception("Invalid email address: No domain name space", 235);
+        } else {
+            $email_domain = substr($mail_address, $at_index+1);
+        }
+
+        foreach ($all_domains as $domain_id => $domain_attrs) {
+            if (!is_array($domain_attrs[$dna])) {
+                $domain_attrs[$dna] = (array)($domain_attrs[$dna]);
+            }
+
+            if (in_array($my_primary_domain, $domain_attrs[$dna])) {
+                $valid_domains = array_merge($valid_domains, $domain_attrs[$dna]);
+            }
+        }
+
+        if (in_array($email_domain, $valid_domains)) {
+            $valid = true;
+        }
+
+        return $valid;
+    }
+
 }
