@@ -208,6 +208,73 @@ abstract class kolab_api_service
     }
 
     /**
+     * Parses input (for add/edit) attributes
+     *
+     * @param string $object_name  Name of the object (user, group, etc.)
+     * @param array  $attrs        Entry attributes
+     *
+     * @return array Entry attributes
+     */
+    protected function parse_input_attributes($object_name, $attribs)
+    {
+        $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
+
+        //console("parse_input_attributes", $type_attrs);
+        //console("called with \$attribs", $attribs);
+
+        $form_service = $this->controller->get_service('form_value');
+
+        // With the result, start validating the input
+        $form_service->validate(null, $attribs);
+
+        $result       = array();
+
+        if (isset($type_attrs['form_fields'])) {
+            foreach ($type_attrs['form_fields'] as $key => $value) {
+                //console("Running parse input attributes for key $key");
+
+                if (empty($attribs[$key]) && empty($value['optional'])) {
+                    //console("\$attribs['" . $key . "'] is empty, and the field is not optional");
+                    throw new Exception("Missing input value for $key", 345);
+                }
+                else {
+                    //console("Either \$attribs['" . $key . "'] is empty or the field is optional");
+                    $result[$key] = $attribs[$key];
+                }
+            }
+        }
+
+        if (isset($type_attrs['auto_form_fields'])) {
+            foreach ($type_attrs['auto_form_fields'] as $key => $value) {
+                if (empty($attribs[$key])) {
+                    if (empty($value['optional'])) {
+                        $attribs['attributes'] = array($key);
+                        $res                   = $form_service->generate(null, $attribs);
+                        $attribs[$key]         = $res[$key];
+                        $result[$key]          = $attribs[$key];
+                    }
+                } else {
+                    $result[$key] = $attribs[$key];
+                }
+            }
+        }
+
+        if (isset($type_attrs['fields'])) {
+            foreach ($type_attrs['fields'] as $key => $value) {
+                if (empty($attribs[$key])) {
+                    $result[$key] = $type_attrs['fields'][$key];
+                } else {
+                    $result[$key] = $attribs[$key];
+                }
+            }
+        }
+
+        //console("parse_input_attributes result", $result);
+
+        return $result;
+    }
+
+    /**
      * Parses result attributes
      *
      * @param string $object_name  Name of the object (user, group, etc.)
@@ -276,69 +343,6 @@ abstract class kolab_api_service
         unset($attrs[$unique_attr]);
 
         return $attrs;
-    }
-
-    /**
-     * Parses input (for add/edit) attributes
-     *
-     * @param string $object_name  Name of the object (user, group, etc.)
-     * @param array  $attrs        Entry attributes
-     *
-     * @return array Entry attributes
-     */
-    protected function parse_input_attributes($object_name, $attribs)
-    {
-        $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
-
-        //console("parse_input_attributes", $type_attrs);
-        //console("called with \$attribs", $attribs);
-
-        $form_service = $this->controller->get_service('form_value');
-        $result       = array();
-
-        if (isset($type_attrs['form_fields'])) {
-            foreach ($type_attrs['form_fields'] as $key => $value) {
-                //console("Running parse input attributes for key $key");
-
-                if (empty($attribs[$key]) && empty($value['optional'])) {
-                    //console("\$attribs['" . $key . "'] is empty, and the field is not optional");
-                    throw new Exception("Missing input value for $key", 345);
-                }
-                else {
-                    //console("Either \$attribs['" . $key . "'] is empty or the field is optional");
-                    $result[$key] = $attribs[$key];
-                }
-            }
-        }
-
-        if (isset($type_attrs['auto_form_fields'])) {
-            foreach ($type_attrs['auto_form_fields'] as $key => $value) {
-                if (empty($attribs[$key])) {
-                    if (empty($value['optional'])) {
-                        $attribs['attributes'] = array($key);
-                        $res                   = $form_service->generate(null, $attribs);
-                        $attribs[$key]         = $res[$key];
-                        $result[$key]          = $attribs[$key];
-                    }
-                } else {
-                    $result[$key] = $attribs[$key];
-                }
-            }
-        }
-
-        if (isset($type_attrs['fields'])) {
-            foreach ($type_attrs['fields'] as $key => $value) {
-                if (empty($attribs[$key])) {
-                    $result[$key] = $type_attrs['fields'][$key];
-                } else {
-                    $result[$key] = $attribs[$key];
-                }
-            }
-        }
-
-        //console("parse_input_attributes result", $result);
-
-        return $result;
     }
 
 }
