@@ -1937,7 +1937,7 @@ class LDAP
         }
 
         if (($entries = ldap_get_entries($this->conn, $search_results)) == false) {
-            console("Could not get the results of the search: " . $this->_errstr());
+            //console("Could not get the results of the search: " . $this->_errstr());
             return false;
         }
 
