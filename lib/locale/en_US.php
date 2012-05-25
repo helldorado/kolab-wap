@@ -113,6 +113,7 @@ $LANG['user.astaccountrealmedpassword'] = 'Realmed Account Password';
 $LANG['user.astaccountsecret'] = 'Plaintext Password';
 $LANG['user.astaccounttype'] = 'Account Type';
 $LANG['user.astcontext'] = 'Asterisk Context';
+$LANG['user.asterisk'] = 'Asterisk SIP';
 $LANG['user.astextension'] = 'Asterisk Extension';
 $LANG['user.c'] = 'Country';
 $LANG['user.city'] = 'City';
