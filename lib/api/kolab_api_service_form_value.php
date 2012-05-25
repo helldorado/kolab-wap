@@ -403,7 +403,7 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             $resourcedata = kolab_recipient_policy::normalize_groupdata($postdata);
-            console("normalized resource data", $resourcedata);
+            //console("normalized resource data", $resourcedata);
 
             // TODO: Normalize $postdata
             $mail_local = 'resource-' . $object_type_key . '-' . strtolower($resourcedata['cn']);
@@ -895,7 +895,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
         $data['attributes'] = array('cn');
 
-        console("api/form_value._list_options_resources() searching with data", $data);
+        //console("api/form_value._list_options_resources() searching with data", $data);
 
         $service = $this->controller->get_service('resources');
         $result  = $service->resources_list(null, $data);
