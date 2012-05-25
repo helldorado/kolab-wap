@@ -77,7 +77,7 @@ class kolab_api_controller
     public function add_service($service, $handler)
     {
         if ($this->services[$service]) {
-            error_log("Service $service is already registered.");
+            //console("Service $service is already registered.");
             return false;
         }
 
@@ -104,7 +104,7 @@ class kolab_api_controller
             }
         }
 
-        error_log("Unknown service $service");
+        //console("Unknown service $service");
 
         throw new Exception("Unknown service", 400);
     }

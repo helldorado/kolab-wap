@@ -179,7 +179,7 @@ class kolab_api_service_group extends kolab_api_service
         $auth = Auth::get_instance();
 
         if (empty($getdata['group'])) {
-            error_log("Empty \$getdata['group']");
+            //console("Empty \$getdata['group']");
             return FALSE;
         }
 

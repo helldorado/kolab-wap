@@ -72,7 +72,7 @@ class LDAP
                     $domain = $_SESSION['user']->get_domain();
                 } catch (Exception $e) {
                     // TODO: Debug logging
-                    error_log("Warning, user not authenticated yet");
+                    //console("Warning, user not authenticated yet");
                 }
             }
         }
@@ -128,7 +128,7 @@ class LDAP
      */
     public function authenticate($username, $password)
     {
-        error_log("LDAP authentication request for $username");
+        //console("LDAP authentication request for $username");
 
         if (!$this->_connect()) {
             return false;
@@ -189,17 +189,17 @@ class LDAP
                 $_SESSION['user']->user_root_dn = $root_dn;
                 $_SESSION['user']->user_bind_dn = $subject_dn;
                 $_SESSION['user']->user_bind_pw = $password;
-                error_log("Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
+                //console("Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
             }
             else {
-                error_log("Successfully bound with User DN: " . $subject_dn . " but not saving it to the session");
+                //console("Successfully bound with User DN: " . $subject_dn . " but not saving it to the session");
             }
 
             // @TODO: return unique attribute
             return $subject_dn;
         }
         else {
-            error_log("LDAP Error: " . $this->_errstr());
+            //console("LDAP Error: " . $this->_errstr());
             return false;
         }
     }
@@ -236,7 +236,7 @@ class LDAP
                     }
                 }
             } else {
-                error_log("No schema details exist for attribute $attribute (which is strange)");
+                //console("No schema details exist for attribute $attribute (which is strange)");
             }
 
             // The relevant parts only, please
@@ -364,7 +364,7 @@ class LDAP
         $supported_controls = $this->supported_controls();
 
         if (!in_array($effective_rights_control_oid, $supported_controls)) {
-            error_log("No getEffectiveRights control in supportedControls");
+            //console("No getEffectiveRights control in supportedControls");
             return $this->legacy_rights($subject);
         }
 
@@ -461,7 +461,7 @@ class LDAP
 
     public function find_user_groups($member_dn)
     {
-        error_log(__FILE__ . "(" . __LINE__ . "): " .  $member_dn);
+        //console(__FILE__ . "(" . __LINE__ . "): " .  $member_dn);
 
         $groups = array();
 
@@ -935,11 +935,11 @@ class LDAP
             return false;
         }
 
-        error_log("Searching for domain $domain");
-        error_log("From domain to root dn");
+        //console("Searching for domain $domain");
+        //console("From domain to root dn");
 
         if (($this->_bind($conf->get('ldap', 'bind_dn'), $conf->get('ldap', 'bind_pw'))) == false) {
-            error_log("WARNING: Invalid Service bind credentials supplied");
+            //console("WARNING: Invalid Service bind credentials supplied");
             $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
         }
 
@@ -967,7 +967,7 @@ class LDAP
 
         $this->_unbind();
 
-        error_log("Using $domain_rootdn");
+        //console("Using $domain_rootdn");
 
         return $domain_rootdn;
     }
@@ -1059,11 +1059,11 @@ class LDAP
         $result = self::normalize_result($this->_search($base_dn, $filter, array_keys($attribute)));
 
         if (count($result) > 0) {
-            error_log("Results found: " . implode(', ', array_keys($result)));
+            //console("Results found: " . implode(', ', array_keys($result)));
             return $result;
         }
         else {
-            error_log("No result");
+            //console("No result");
             return false;
         }
     }
@@ -1435,7 +1435,7 @@ class LDAP
         }
 
         if (!$result) {
-            error_log("LDAP Error: " . $this->_errstr());
+            //console("LDAP Error: " . $this->_errstr());
             return false;
         }
 
@@ -1783,13 +1783,13 @@ class LDAP
         }
 
         // TODO: Debug logging
-        error_log("->_bind() Binding with $dn");
+        //console("->_bind() Binding with $dn");
 
         $this->bind_dn = $dn;
         $this->bind_pw = $pw;
 
         if (($bind_ok = ldap_bind($this->conn, $dn, $pw)) == false) {
-            error_log("LDAP Error: " . $this->_errstr());
+            //console("LDAP Error: " . $this->_errstr());
             // Issue error message
             return false;
         }
@@ -1809,13 +1809,13 @@ class LDAP
         ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 9);
 
         // TODO: Debug logging
-        error_log("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
+        //console("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
         $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
 
         if ($connection == false) {
             $this->conn = null;
             // TODO: Debug logging
-            error_log("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
+            //console("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
             return false;
         }
 
@@ -1824,7 +1824,7 @@ class LDAP
         ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
 
         // TODO: Debug logging
-        error_log("Connected!");
+        //console("Connected!");
 
         return true;
     }
@@ -2038,13 +2038,13 @@ class LDAP
      */
     private function _probe_root_dn($entry_root_dn)
     {
-        error_log("Running for entry root dn: " . $entry_root_dn);
+        //console("Running for entry root dn: " . $entry_root_dn);
         if (($tmpconn = ldap_connect($this->_ldap_server)) == false) {
             //message("LDAP Error: " . $this->_errstr());
             return false;
         }
 
-        error_log("User DN: " . $_SESSION['user']->user_bind_dn);
+        //console("User DN: " . $_SESSION['user']->user_bind_dn);
 
         if (($bind_success = ldap_bind($tmpconn, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw)) == false) {
             //message("LDAP Error: " . $this->_errstr());
@@ -2105,7 +2105,7 @@ class LDAP
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
 
-        error_log("Searching for a group dn in $root_dn, with search filter: $search_filter");
+        //console("Searching for a group dn in $root_dn, with search filter: $search_filter");
 
         $search_results = ldap_search($this->conn, $root_dn, $search_filter);
 
@@ -2129,7 +2129,7 @@ class LDAP
             $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
         }
 
-        error_log("Searching for a user dn in $root_dn, with search filter: $search_filter");
+        //console("Searching for a user dn in $root_dn, with search filter: $search_filter");
 
         $search_results = ldap_search($this->conn, $root_dn, $search_filter);
 
@@ -2153,10 +2153,10 @@ class LDAP
 
         if (is_array($entry) && in_array('objectclass', $entry)) {
             if (!in_array(array('groupofnames', 'groupofuniquenames', 'groupofurls'), $entry['objectclass'])) {
-                error_log("Called _list_groups_members on a non-group!");
+                //console("Called _list_groups_members on a non-group!");
             }
             else {
-                error_log("Called list_group_members(" . $dn . ")");
+                //console("Called list_group_members(" . $dn . ")");
             }
         }
 
@@ -2189,7 +2189,7 @@ class LDAP
 
     private function _list_group_member($dn, $members, $recurse = true)
     {
-        error_log("Called _list_group_member(" . $dn . ")");
+        //console("Called _list_group_member(" . $dn . ")");
 
         $group_members = array();
 
@@ -2266,7 +2266,7 @@ class LDAP
 
     private function _list_group_memberurl($dn, $memberurls, $recurse = true)
     {
-        error_log("Called _list_group_memberurl(" . $dn . ")");
+        //console("Called _list_group_memberurl(" . $dn . ")");
 
         // Use the member attributes to return an array of member ldap objects
         // NOTE that the member attribute is supposed to contain a DN
@@ -2280,7 +2280,7 @@ class LDAP
 
             foreach ($entries as $entry_dn => $_entry) {
                 $group_members[$entry_dn] = $_entry;
-                error_log("Found " . $entry_dn);
+                //console("Found " . $entry_dn);
 
                 if ($recurse) {
                     // Nested group
@@ -2304,7 +2304,7 @@ class LDAP
      */
     private function _parse_memberurl($url)
     {
-        error_log("Parsing URL: " . $url);
+        //console("Parsing URL: " . $url);
         preg_match('/(.*):\/\/(.*)\/(.*)\?(.*)\?(.*)\?(.*)/', $url, $matches);
         return $matches;
     }
