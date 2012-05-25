@@ -498,6 +498,31 @@ class kolab_client_task
     }
 
     /**
+     * Returns list of resource types.
+     *
+     * @return array List of resource types
+     */
+    protected function resource_types()
+    {
+
+        if (isset($_SESSION['resource_types'])) {
+            return $_SESSION['resource_types'];
+        }
+
+
+        $result = $this->api->post('resource_types.list');
+        $list   = $result->get('list');
+
+
+        if (is_array($list) && !$this->config_get('devel_mode')) {
+            $_SESSION['resource_types'] = $list;
+        }
+
+        return $list;
+    }
+
+
+    /**
      * Returns list of user types.
      *
      * @return array List of user types
@@ -744,6 +769,8 @@ class kolab_client_task
      */
     protected function form_prepare($name, &$data, $extra_fields = array())
     {
+        //console("Preparing form for $name with data", $data);
+
         $types        = (array) $this->{$name . '_types'}();
 
         //console("form_prepare types", $types);
@@ -944,6 +971,7 @@ class kolab_client_task
                     $data[$fname] = (array) $data[$fname];
                 }
 
+                //console("The data for field $fname at this point is", $data[$fname]);
                 // request parameters
                 $post = array(
                     'list'        => $data[$fname],
@@ -957,6 +985,7 @@ class kolab_client_task
                 $result = $result->get('list');
 
                 $data[$fname] = $result;
+                //console("Set \$data['$fname'] to", $result);
             }
         }
 
@@ -986,7 +1015,7 @@ class kolab_client_task
      */
     protected function form_create($name, $attribs, $sections, $fields, $fields_map, $data, $add_mode)
     {
-        //console("Creating form for $name");
+        //console("Creating form for $name with data", $data);
 
         //console("Assign fields to sections", $fields);
         // Assign sections to fields
