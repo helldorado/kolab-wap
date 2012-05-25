@@ -56,12 +56,29 @@ $LANG['menu.domains'] = 'Domains';
 $LANG['menu.groups'] = 'Groups';
 $LANG['menu.kolab'] = 'Kolab';
 $LANG['menu.kolabsys'] = 'Kolab Systems';
+$LANG['menu.resources'] = 'Resources';
 $LANG['menu.technology'] = 'Technology';
 $LANG['menu.users'] = 'Users';
 
 $LANG['modifiersname'] = 'Modified by';
 $LANG['password.generate'] = 'Generate password';
 $LANG['reqtime'] = 'Request time: $1 sec.';
+
+$LANG['resource.add'] = 'Add Resource';
+$LANG['resource.add.success'] = 'Added Resource';
+$LANG['resource.cn'] = 'Name';
+$LANG['resource.delete'] = 'Delete Resource';
+$LANG['resource.delete.success'] = 'Successfully deleted Resource';
+$LANG['resource.edit'] = 'Edit Resource';
+$LANG['resource.edit.success'] = 'Successfully updated Resource';
+$LANG['resource.kolabtargetfolder'] = 'Target Folder';
+$LANG['resource.list.records'] = '$1 to $2 of $3';
+$LANG['resource.mail'] = 'Mail Address';
+$LANG['resource.other'] = 'Other';
+$LANG['resource.system'] = 'System';
+$LANG['resource.type_id'] = 'Resource Type';
+$LANG['resource.uniquemember'] = 'Collection Members';
+
 $LANG['saving'] = 'Saving data...';
 
 $LANG['search'] = 'Search';
