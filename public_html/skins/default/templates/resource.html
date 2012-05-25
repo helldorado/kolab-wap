@@ -1,0 +1,17 @@
+<div id="toc" class="resource">
+    <div id="search">
+        <div class="searchinput">
+            <input type="text" id="searchinput" name="search" value="{$engine->translate('search')}" />
+            <script type="text/javascript">search_init('resource')</script>
+            <span class="searchactions">
+                <span id="search-details" title="{$engine->translate('search.criteria')}" onclick="search_details()"></span>
+                <span id="search-reset" title="{$engine->translate('search.reset')}" onclick="search_reset()"></span>
+            </span>
+        </div>
+        <div class="searchdetails">{$engine->search_form()}</div>
+    </div>
+    <div id="resourcelist"></div>
+</div>
+<div class="vsplitter">&nbsp;</div>
+<div id="taskcontent" class="resource"></div>
+<div class="clear"></div>
