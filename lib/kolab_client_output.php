@@ -51,6 +51,8 @@ class kolab_client_output
      */
     private function init()
     {
+        $conf = Conf::get_instance();
+
         $smarty_path = array('Smarty', 'smarty3', 'smarty');
 
         if ($path = $conf->get('kolab_wap', 'smarty_path')) {
