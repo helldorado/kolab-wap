@@ -51,7 +51,18 @@ class kolab_client_output
      */
     private function init()
     {
-        require_once 'Smarty/Smarty.class.php';
+        $smarty_path = array('Smarty', 'smarty3', 'smarty');
+
+        if ($path = $conf->get('kolab_wap', 'smarty_path')) {
+            array_unshift($smarty_path, $path);
+        }
+
+        foreach ($smarty_path as $path) {
+            @include_once "$path/Smarty.class.php";
+            if (class_exists('Smarty', false)) {
+                break;
+            }
+        }
 
         $SMARTY = new Smarty;
 
