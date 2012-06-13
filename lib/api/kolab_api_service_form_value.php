@@ -857,6 +857,11 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
+    private function validate_mailquota($value)
+    {
+        return (int)($value);
+    }
+
     private function validate_mailalternateaddress($value)
     {
         $auth = Auth::get_instance();
