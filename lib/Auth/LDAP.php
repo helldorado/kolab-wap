@@ -75,6 +75,8 @@ class LDAP
                     //console("Warning, user not authenticated yet");
                 }
             }
+        } else {
+            //console("LDAP::__construct() using domain $domain");
         }
 
         // Continue and default to the primary domain.
@@ -159,8 +161,9 @@ class LDAP
 
             $filter .= $user_filter;
 
-            $auth_attrs = $this->conf->get_list('auth_attrs');
+            $auth_attrs = $this->conf->get_list('auth_attributes');
 
+            //console("Using authentication attributes", $auth_attrs);
             if (count($auth_attrs) > 0) {
                 $filter .= '(|';
 
@@ -176,6 +179,8 @@ class LDAP
             }
 
             $filter .= ')';
+
+            //console("LDAP::authenticate() using filter " . $filter);
 
             $subject_dn = $this->_get_user_dn($root_dn, $filter);
         } else {
@@ -767,6 +772,7 @@ class LDAP
         $unique_attr = $this->unique_attribute();
         $attributes[$unique_attr] = $resource;
 
+        //console("\$this->domain: " . $this->domain);
         // Now that values have been re-generated where necessary, compare
         // the new resource attributes to the original resource attributes.
         $_resource = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
@@ -931,7 +937,7 @@ class LDAP
             return false;
         }
 
-        if (!$this->_connect()) {
+        if (!$this->_connect($domain)) {
             return false;
         }
 
@@ -943,33 +949,34 @@ class LDAP
             $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
         }
 
-        // TODO: Get domain_attr from config
-        $results = ldap_search($this->conn, $conf->get('domain_base_dn'), '(associatedDomain=' . $domain . ')');
-
-        if (!$result) {
-            // Not a multi-domain setup
-            $domain_name = $conf->get('kolab', 'primary_domain');
-            return $this->_standard_root_dn($domain_name);
+        $domain_name_attribute = $conf->get('domain_name_attribute');
+        if (empty($domain_name_attribute)) {
+            $domain_name_attribute = 'associateddomain';
         }
 
-        $domain = ldap_first_entry($this->conn, $results);
-        $domain_info = ldap_get_attributes($this->conn, $domain);
+        $result = self::normalize_result(
+                $this->_search(
+                        $conf->get('domain_base_dn'),
+                        '(' . $domain_name_attribute . '=' . $domain . ')'
+                    )
+            );
 
-//        echo "<pre>"; print_r($domain_info); echo "</pre>";
+        $result = $result[key($result)];
 
-        // TODO: Also very 389 specific
-        if (isset($domain_info['inetDomainBaseDN'][0])) {
-            $domain_rootdn = $domain_info['inetDomainBaseDN'][0];
+        if (is_array($result)) {
+            if (in_array('inetdomainbasedn', $result)) {
+                return $result['inetdomainbasedn'];
+            } else {
+                if (is_array($result[$domain_name_attribute])) {
+                    return $this->_standard_root_dn($result[$domain_name_attribute[0]]);
+                } else {
+                    return $this->_standard_root_dn($result[$domain_name_attribute]);
+                }
+            }
+        } else {
+            return $this->_standard_root_dn($domain);
         }
-        else {
-            $domain_rootdn = $this->_standard_root_dn($domain_info['associatedDomain']);
-        }
 
-        $this->_unbind();
-
-        //console("Using $domain_rootdn");
-
-        return $domain_rootdn;
     }
 
     public function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
@@ -1054,6 +1061,7 @@ class LDAP
 
         if (empty($base_dn)) {
             $base_dn = $this->domain_root_dn($this->domain);
+            //console("Using base_dn from domain " . $this->domain . ": " . $base_dn);
         }
 
         $result = self::normalize_result($this->_search($base_dn, $filter, array_keys($attribute)));
@@ -1762,9 +1770,217 @@ class LDAP
         $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_dn][$domain_name_attribute], $domain));
 
         return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
+    }
 
+    private function _domain_add_new($domain)
+    {
+        //console("Auth::LDAP::_domain_add_new()", $domain);
 
+        $conf = Conf::get_instance();
+        $auth = Auth::get_instance();
+        $domain_base_dn = $conf->get('ldap', 'domain_base_dn');
+        $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
 
+        if (is_array($domain)) {
+            $domain_name = array_shift($domain);
+        } else {
+            $domain_name = $domain;
+            $domain = (array)($domain);
+        }
+
+        $dn = $domain_name_attribute . '=' . $domain_name . ',' . $domain_base_dn;
+        $attrs = array(
+                'objectclass' => Array(
+                        'top',
+                        'domainrelatedobject'
+                    ),
+                $domain_name_attribute => array_merge((array)($domain_name), $domain),
+            );
+
+        $this->_add($dn, $attrs);
+
+        $inetdomainbasedn = $this->_standard_root_dn($domain_name);
+        $cn = str_replace(array(',', '='), array('\2C', '\3D'), $inetdomainbasedn);
+
+        $dn = "cn=" . $cn . ",cn=mapping tree,cn=config";
+        $attrs = array(
+                'objectclass' => Array(
+                        'top',
+                        'extensibleObject',
+                        'nsMappingTree',
+                    ),
+                'nsslapd-state' => 'backend',
+                'cn' => $inetdomainbasedn,
+                'nsslapd-backend' => str_replace('.', '_', $domain_name),
+            );
+
+        $this->_add($dn, $attrs);
+
+        $domain_filter = $conf->get('ldap', 'domain_filter');
+        $domain_filter = '(&(' . $domain_name_attribute . '=' . $conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
+        $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
+        if (in_array('inetdomainbasedn', $domain_entry)) {
+            $_base_dn = $domain_entry['inetdomainbasedn'];
+        } else {
+            $_base_dn = $this->_standard_root_dn($conf->get('kolab', 'primary_domain'));
+        }
+
+        $result = @ldap_read($this->conn, "cn=" . str_replace('.', '_', $conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
+        $result = @ldap_get_entries($this->conn, $result);
+
+        $result = self::normalize_result($result);
+
+        //console("Result normalized", $result);
+
+        $result = $result[key($result)];
+        $directory = str_replace(str_replace('.', '_', $conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
+
+        $dn = "cn=" . str_replace('.', '_', $domain_name) . ",cn=ldbm database,cn=plugins,cn=config";
+        $attrs = Array(
+                'objectclass' => Array(
+                        'top',
+                        'extensibleobject',
+                        'nsbackendinstance',
+                    ),
+                'cn' => str_replace('.', '_', $domain_name),
+                'nsslapd-suffix' => $inetdomainbasedn,
+                'nsslapd-cachesize' => '-1',
+                'nsslapd-cachememsize' => '10485760',
+                'nsslapd-readonly' => 'off',
+                'nsslapd-require-index' => 'off',
+                'nsslapd-directory' => $directory,
+                'nsslapd-dncachememsize' => '10485760'
+            );
+
+        $this->_add($dn, $attrs);
+
+        // Query the ACI for the primary domain
+        $domain_filter = $conf->get('ldap', 'domain_filter');
+        $domain_filter = '(&(' . $domain_name_attribute . '=' . $conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
+        $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
+        if (in_array('inetdomainbasedn', $domain_entry)) {
+            $_base_dn = $domain_entry['inetdomainbasedn'];
+        } else {
+            $_base_dn = $this->_standard_root_dn($conf->get('kolab', 'primary_domain'));
+        }
+
+        $result = @ldap_read($this->conn, $_base_dn, '(objectclass=*)', array('aci'));
+        $result = @ldap_get_entries($this->conn, $result);
+
+        $result = self::normalize_result($result);
+
+        $result = $result[key($result)];
+        $acis = $result['aci'];
+
+        foreach ($acis as $aci) {
+            if (stristr($aci, "SIE Group") === FALSE) {
+                continue;
+            }
+            $_aci = $aci;
+        }
+
+        $dn = $inetdomainbasedn;
+        $attrs = Array(
+                # TODO: Probably just use ldap_explode_dn()
+                'dc' => substr($dn, (strpos($dn, '=')+1), ((strpos($dn, ',')-strpos($dn, '='))-1)),
+                'objectclass' => Array(
+                        'top',
+                        'domain',
+                    ),
+                'aci' => Array(
+                        # Self-modification
+                        "(targetattr=\"carLicense || description || displayName || facsimileTelephoneNumber || homePhone || homePostalAddress || initials || jpegPhoto || labeledURI || mobile || pager || photo || postOfficeBox || postalAddress || postalCode || preferredDeliveryMethod || preferredLanguage || registeredAddress || roomNumber || secretary || seeAlso || st || street || telephoneNumber || telexNumber || title || userCertificate || userPassword || userSMIMECertificate || x500UniqueIdentifier\")(version 3.0; acl \"Enable self write for common attributes\"; allow (write) userdn=\"ldap:///self\";)",
+
+                        # Directory Administrators
+                        "(targetattr =\"*\")(version 3.0;acl \"Directory Administrators Group\";allow (all) (groupdn=\"ldap:///cn=Directory Administrators," . $inetdomainbasedn . "\" or roledn=\"ldap:///cn=kolab-admin," . $inetdomainbasedn . "\");)",
+
+                        # Configuration Administrators
+                        "(targetattr=\"*\")(version 3.0; acl \"Configuration Administrators Group\"; allow (all) groupdn=\"ldap:///cn=Configuration Administrators,ou=Groups,ou=TopologyManagement,o=NetscapeRoot\";)",
+
+                        # Administrator users
+                        "(targetattr=\"*\")(version 3.0; acl \"Configuration Administrator\"; allow (all) userdn=\"ldap:///uid=admin,ou=Administrators,ou=TopologyManagement,o=NetscapeRoot\";)",
+
+                        # SIE Group
+                        $_aci,
+
+                        # Search Access,
+                        "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "\");)",
+
+                    ),
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = "cn=Directory Administrators," . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array(
+                        'top',
+                        'groupofuniquenames',
+                    ),
+
+                'cn' => 'Directory Administrators',
+                'uniquemember' => Array(
+                        'cn=Directory Manager'
+                    ),
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = "ou=Groups," . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array('top', 'organizationalunit'),
+                'ou' => 'Groups',
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = "ou=People," . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array('top', 'organizationalunit'),
+                'ou' => 'People',
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = "ou=Special Users," . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array('top', 'organizationalunit'),
+                'ou' => 'Special Users',
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = "ou=Resources," . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array('top', 'organizationalunit'),
+                'ou' => 'Resources',
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = "ou=Shared Folders," . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array('top', 'organizationalunit'),
+                'ou' => 'Shared Folders',
+            );
+
+        $this->_add($dn, $attrs);
+
+        $dn = 'cn=kolab-admin,ou=People,' . $inetdomainbasedn;
+        $attrs = Array(
+                'objectclass' => Array(
+                        'top',
+                        'ldapsubentry',
+                        'nsroledefinition',
+                        'nssimpleroledefinition',
+                        'nsmanagedroledefinition',
+                    ),
+                'cn' => 'kolab-admin'
+            );
+
+        $this->_add($dn, $attrs);
+
+        return TRUE;
     }
 
     /**
@@ -1917,6 +2133,8 @@ class LDAP
      */
     private function __search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
+        $conf = Conf::get_instance();
+
         if (!$this->_connect()) {
             return false;
         }
@@ -1925,7 +2143,11 @@ class LDAP
 
         //console("Searching $base_dn with filter: $search_filter, attempting to get attributes", $attributes);
 
-        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        if (!empty($_SESSION['user'])) {
+            $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        } else {
+            $this->_bind($conf->get('ldap', 'service_bind_dn'), $conf->get('ldap', 'service_bind_pw'));
+        }
 
         if (!in_array($this->unique_attribute(), $attributes)) {
             $attributes[] = $this->unique_attribute();
