@@ -176,7 +176,7 @@ class kolab_client_task
             $login = $this->get_input('login', 'POST');
 
             if ($login['username']) {
-                $result = $this->api->login($login['username'], $login['password']);
+                $result = $this->api->login($login['username'], $login['password'], $login['domain']);
 
                 //console($result);
 
@@ -485,7 +485,7 @@ class kolab_client_task
         foreach ($this->menu as $idx => $label) {
             //console("$task: $task, idx: $idx, label: $label");
 
-            if (in_array($task, array('user', 'group'))) {
+            if (in_array($task, array('domain', 'group', 'resource', 'role', 'user'))) {
                 if (!array_key_exists($task . "." . $idx, $capabilities['actions'])) {
                     //console("$task.$idx not in \$capabilities['actions'], skipping", $capabilities['actions']);
                     continue;
@@ -671,6 +671,15 @@ class kolab_client_task
                 'name'  => 'login[password]',
                 'value' => ''));
 
+        $domain = kolab_html::label(array(
+                'for'   => 'login_domain',
+                'content' => $this->translate('login.domain')), true)
+            . kolab_html::select(array(
+                'type'  => 'select',
+                'id'    => 'login_domain',
+                'name'  => 'login[domain]',
+                'options' => array('kolabsys.com' => 'kolabsys.com', 'kanarip.com' => 'kanarip.com')));
+
         $button = kolab_html::input(array(
             'type'  => 'submit',
             'id'    => 'login_submit',
@@ -683,6 +692,7 @@ class kolab_client_task
             'action' => '?'),
             kolab_html::span(array('content' => $username))
             . kolab_html::span(array('content' => $password))
+            . kolab_html::span(array('content' => $domain))
             . $button);
 
         return $form;
