@@ -47,6 +47,7 @@ $LANG['internalerror'] = 'Internal system error!';
 $LANG['loading'] = 'Loading...';
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
+$LANG['login.domain'] = 'Domain:';
 $LANG['login.login'] = 'Login';
 $LANG['loginerror'] = 'Incorrect username or password!';
 $LANG['MB'] = 'MB';
@@ -57,6 +58,7 @@ $LANG['menu.groups'] = 'Groups';
 $LANG['menu.kolab'] = 'Kolab';
 $LANG['menu.kolabsys'] = 'Kolab Systems';
 $LANG['menu.resources'] = 'Resources';
+$LANG['menu.roles'] = 'Roles';
 $LANG['menu.technology'] = 'Technology';
 $LANG['menu.users'] = 'Users';
 
@@ -72,12 +74,20 @@ $LANG['resource.delete.success'] = 'Successfully deleted Resource';
 $LANG['resource.edit'] = 'Edit Resource';
 $LANG['resource.edit.success'] = 'Successfully updated Resource';
 $LANG['resource.kolabtargetfolder'] = 'Target Folder';
+$LANG['resource.list'] = 'Resource (Collection) List';
 $LANG['resource.list.records'] = '$1 to $2 of $3';
 $LANG['resource.mail'] = 'Mail Address';
+$LANG['resource.member'] = 'Collection Members';
+$LANG['resource.norecords'] = 'No resource record(s) found!';
 $LANG['resource.other'] = 'Other';
 $LANG['resource.system'] = 'System';
 $LANG['resource.type_id'] = 'Resource Type';
 $LANG['resource.uniquemember'] = 'Collection Members';
+
+$LANG['role.add'] = 'Add Role';
+$LANG['role.list'] = 'Role List';
+$LANG['role.list.records'] = '$1 to $2 of $3';
+$LANG['role.norecords'] = 'No role records found!';
 
 $LANG['saving'] = 'Saving data...';
 
