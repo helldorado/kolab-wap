@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sed -r -i -e 's|^(\s*)//console|\1console|g' `find . -type f -name "*.php"`
+

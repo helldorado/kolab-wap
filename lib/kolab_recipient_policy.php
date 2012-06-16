@@ -44,6 +44,12 @@ class kolab_recipient_policy {
         foreach ($groupdata as $key => $value) {
             if (isset($groupdata['preferredlanguage'])) {
                 setlocale(LC_ALL, $groupdata['preferredlanguage']);
+            } else {
+                $conf = Conf::get_instance();
+                $locale = $conf->get('default_locale');
+                if (!empty($locale)) {
+                    setlocale(LC_ALL, $locale);
+                }
             }
 
             if (!is_array($groupdata[$key])) {
@@ -73,6 +79,12 @@ class kolab_recipient_policy {
 
             if (isset($userdata['preferredlanguage'])) {
                 setlocale(LC_ALL, $userdata['preferredlanguage']);
+            } else {
+                $conf = Conf::get_instance();
+                $locale = $conf->get('default_locale');
+                if (!empty($locale)) {
+                    setlocale(LC_ALL, $locale);
+                }
             }
 
             if (!is_array($userdata[$_key])) {
@@ -157,7 +169,7 @@ class kolab_recipient_policy {
                         );
                 }
             } else {
-                console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
+                //console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
             }
         }
 
@@ -175,6 +187,9 @@ class kolab_recipient_policy {
             );
 
         $userdata = self::normalize_userdata($userdata);
+        if (!array_key_exists('mail', $userdata)) {
+            $userdata['mail'] = self::primary_mail($userdata);
+        }
 
         $conf = Conf::get_instance();
 
@@ -206,7 +221,7 @@ class kolab_recipient_policy {
                     if (array_key_exists($substrings[1][$x], $userdata)) {
                         $userdata[$substrings[1][$x]] = substr($userdata[$substrings[1][$x]], $substrings[2][$x], $substrings[3][$x]);
                     } else {
-                        console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
+                        //console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
                     }
 
                     $rule = preg_replace(
@@ -234,6 +249,13 @@ class kolab_recipient_policy {
                 eval("\$result = sprintf('" . $format . "', '" . implode("', '", array_values($result)) . "');");
 
                 if ($result = self::parse_email($result)) {
+                    // See if the equivalent is already in the 'mail' attribute value(s)
+                    if (!empty($userdata['mail'])) {
+                        if (strtolower($userdata['mail']) == strtolower($result)) {
+                            continue;
+                        }
+                    }
+
                     $secondary_mail_addresses[] = $result;
                 }
             }

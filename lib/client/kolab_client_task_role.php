@@ -22,12 +22,12 @@
  +--------------------------------------------------------------------------+
 */
 
-class kolab_client_task_group extends kolab_client_task
+class kolab_client_task_role extends kolab_client_task
 {
     protected $ajax_only = true;
 
     protected $menu = array(
-        'add'  => 'group.add',
+        'add'  => 'role.add',
     );
 
     /**
@@ -35,7 +35,7 @@ class kolab_client_task_group extends kolab_client_task
      */
     public function action_default()
     {
-        $this->output->set_object('content', 'group', true);
+        $this->output->set_object('content', 'role', true);
         $this->output->set_object('task_navigation', $this->menu());
 
         $this->action_list();
@@ -84,8 +84,8 @@ class kolab_client_task_group extends kolab_client_task
             $post['search_operator'] = 'OR';
         }
 
-        // get groups list
-        $result = $this->api->post('groups.list', null, $post);
+        // get roles list
+        $result = $this->api->post('roles.list', null, $post);
         $count  = (int) $result->get('count');
         $result = (array) $result->get('list');
 
@@ -100,7 +100,7 @@ class kolab_client_task_group extends kolab_client_task
         $i    = 0;
 
         // table header
-        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('group.list'));
+        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('role.list'));
 
         // table footer (navigation)
         if ($count) {
@@ -109,16 +109,16 @@ class kolab_client_task_group extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('group.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('role.list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
-                'onclick' => $prev ? "kadm.command('group.list', {page: $prev})" : "return false",
+                'onclick' => $prev ? "kadm.command('role.list', {page: $prev})" : "return false",
             ));
             $next = kolab_html::a(array(
                 'class' => 'next' . ($next ? '' : ' disabled'),
                 'href'  => '#',
-                'onclick' => $next ? "kadm.command('group.list', {page: $next})" : "return false",
+                'onclick' => $next ? "kadm.command('role.list', {page: $next})" : "return false",
             ));
 
             $foot_body = kolab_html::span(array('content' => $prev . $count_str . $next));
@@ -135,18 +135,18 @@ class kolab_client_task_group extends kolab_client_task
                 $i++;
                 $cells = array();
                 $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['cn']),
-                    'onclick' => "kadm.command('group.info', '$idx')");
+                    'onclick' => "kadm.command('role.info', '$idx')");
                 $rows[] = array('id' => $i, 'class' => 'selectable', 'cells' => $cells);
             }
         }
         else {
             $rows[] = array('cells' => array(
-                0 => array('class' => 'empty-body', 'body' => $this->translate('group.norecords')
+                0 => array('class' => 'empty-body', 'body' => $this->translate('role.norecords')
             )));
         }
 
         $table = kolab_html::table(array(
-            'id'    => 'grouplist',
+            'id'    => 'rolelist',
             'class' => 'list',
             'head'  => $head,
             'body'  => $rows,
@@ -158,7 +158,7 @@ class kolab_client_task_group extends kolab_client_task
         $this->output->set_env('list_count', $count);
 
         $this->watermark('taskcontent');
-        $this->output->set_object('grouplist', $table);
+        $this->output->set_object('rolelist', $table);
     }
 
     /**
@@ -167,9 +167,9 @@ class kolab_client_task_group extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api->get('group.info', array('group' => $id));
-        $group  = $result->get();
-        $output = $this->group_form(null, $group);
+        $result = $this->api->get('role.info', array('role' => $id));
+        $role  = $result->get();
+        $output = $this->role_form(null, $role);
 
         $this->output->set_object('taskcontent', $output);
     }
@@ -180,7 +180,7 @@ class kolab_client_task_group extends kolab_client_task
     public function action_add()
     {
         $data   = $this->get_input('data', 'POST');
-        $output = $this->group_form(null, $data, true);
+        $output = $this->role_form(null, $data, true);
 
         $this->output->set_object('taskcontent', $output);
     }
@@ -188,16 +188,16 @@ class kolab_client_task_group extends kolab_client_task
     /**
      * Group edit/add form.
      */
-    private function group_form($attribs, $data = array())
+    private function role_form($attribs, $data = array())
     {
         if (empty($attribs['id'])) {
-            $attribs['id'] = 'group-form';
+            $attribs['id'] = 'role-form';
         }
 
         // Form sections
         $sections = array(
-            'system'   => 'group.system',
-            'other'    => 'group.other',
+            'system'   => 'role.system',
+            'other'    => 'role.other',
         );
 
         // field-to-section map and fields order
@@ -213,7 +213,7 @@ class kolab_client_task_group extends kolab_client_task
         );
 
         // Prepare fields
-        list($fields, $types, $type) = $this->form_prepare('group', $data);
+        list($fields, $types, $type) = $this->form_prepare('role', $data);
 
         $add_mode  = empty($data['id']);
         $accttypes = array();
@@ -227,7 +227,7 @@ class kolab_client_task_group extends kolab_client_task
             'section'  => 'system',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
-            'onchange' => "kadm.group_save(true, 'system')",
+            'onchange' => "kadm.role_save(true, 'system')",
         );
 
         // Hide account type selector if there's only one type
@@ -238,7 +238,7 @@ class kolab_client_task_group extends kolab_client_task
         // Create mode
         if ($add_mode) {
             // Page title
-            $title = $this->translate('group.add');
+            $title = $this->translate('role.add');
         }
         // Edit mode
         else {
@@ -246,18 +246,18 @@ class kolab_client_task_group extends kolab_client_task
 
             // Add user type name
             $fields['type_id_name'] = array(
-                'label'    => 'group.type_id',
+                'label'    => 'role.type_id',
                 'section'  => 'system',
                 'value'    => $accttypes[$type]['content'],
             );
         }
 
         // Create form object and populate with fields
-        $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
+        $form = $this->form_create('role', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('group.add.success', 'group.edit.success', 'group.delete.success');
+        $this->output->add_translation('role.add.success', 'role.edit.success', 'role.delete.success');
 
         return $form->output();
     }
@@ -283,24 +283,22 @@ class kolab_client_task_group extends kolab_client_task
     }
 
     /**
-     * Returns list of group types.
+     * Returns list of role types.
      *
-     * @return array List of group types
+     * @return array List of role types
      */
-    public function group_types()
+    public function role_types()
     {
-        if (!isset($_SESSION['group_types'])) {
-            $result = $this->api->post('group_types.list');
+        if (!isset($_SESSION['role_types'])) {
+            $result = $this->api->post('role_types.list');
             $list   = $result->get('list');
 
             if (is_array($list)) {
-                $_SESSION['group_types'] = $list;
+                $_SESSION['role_types'] = $list;
             }
         }
 
-        //console($_SESSION['group_types']);
-
-        return $_SESSION['group_types'];
+        return $_SESSION['role_types'];
     }
 
     /**

@@ -59,7 +59,7 @@ abstract class kolab_api_service
      */
     protected function object_type_attributes($object_name, $type_id, $required = true)
     {
-        $supported = array('group', 'user');
+        $supported = array('domain', 'group', 'resource', 'role', 'user');
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
@@ -75,7 +75,29 @@ abstract class kolab_api_service
         $object_types = $this->object_types($object_name);
 
         if (empty($object_types[$type_id])) {
-            throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
+            if ($object_name == 'domain') {
+                $result = array(
+                        'auto_form_fields' => array(),
+                        'form_fields' => array(
+                                'associateddomain' => array(
+                                        'type' => 'list'
+                                    ),
+                            ),
+                        'fields' => array(
+                                'objectclass' => array(
+                                        'top',
+                                        'domainrelatedobject',
+                                    ),
+                            ),
+                    );
+
+                //console("object_type_attributes('domain', $type_id);", $result);
+
+                return $result;
+
+            } else {
+                throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
+            }
         }
 
         return $object_types[$type_id]['attributes'];
@@ -91,6 +113,8 @@ abstract class kolab_api_service
      */
     protected function object_type_id($object_name, $object_class)
     {
+        if ($object_name == 'domain') return 1;
+
         if (empty($object_class)) {
             return null;
         }
@@ -119,8 +143,8 @@ abstract class kolab_api_service
             $commonalities = count($object_class) - $differences;
             $elem_score    = $differences > 0 ? ($commonalities / $differences) : $commonalities;
 
-//            console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
-//            console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
+            //console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
+            //console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
             //console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
 
             if ($elem_score > $type_score) {
@@ -141,10 +165,11 @@ abstract class kolab_api_service
      */
     protected function object_types($object_name)
     {
-        $supported = array('group', 'user');
+        $supported = array('group', 'resource', 'user');
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
+
 
         if (!empty($this->cache['object_types']) && !empty($this->cache['object_types'][$object_name])) {
             return $this->cache['object_types'][$object_name];
@@ -174,70 +199,12 @@ abstract class kolab_api_service
             }
         }
 
+        //console("Object types for " . $object_name, $object_types);
+
+//         return $object_types;
+
         return $this->cache['object_types'][$object_name] = $object_types;
-    }
 
-    /**
-     * Parses result attributes
-     *
-     * @param string $object_name  Name of the object (user, group, etc.)
-     * @param array  $attrs        Entry attributes
-     *
-     * @return array Entry attributes
-     */
-    protected function parse_result_attributes($object_name, $attrs = array())
-    {
-        if (empty($attrs) || !is_array($attrs)) {
-            return $attrs;
-        }
-
-        $conf        = Conf::get_instance();
-        $auth        = Auth::get_instance();
-        $dn          = key($attrs);
-        $attrs       = $attrs[$dn];
-        $extra_attrs = array();
-
-        // add group type id to the result
-        $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
-
-        // Search for attributes associated with the type_id that are not part
-        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
-        // @TODO: this should go to LDAP class
-        if ($attrs['type_id']) {
-            $uta = $this->object_type_attributes($object_name, $attrs['type_id']);
-
-            foreach ((array)$uta as $field_type => $attributes) {
-                foreach ($attributes as $attribute => $data) {
-                    if (!array_key_exists($attribute, $attrs)) {
-                        $extra_attrs[] = $attribute;
-                    }
-                }
-            }
-        }
-
-        // Insert the persistent, unique attribute
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-
-        if (!array_key_exists($unique_attr, $attrs)) {
-            $extra_attrs[] = $unique_attr;
-        }
-
-        // Get extra attributes
-        if (!empty($extra_attrs)) {
-            $extra_attrs = $auth->get_attributes($dn, $extra_attrs);
-            if (!empty($extra_attrs)) {
-                $attrs = array_merge($attrs, $extra_attrs);
-            }
-        }
-
-        // Replace unique attribute with 'id' key
-        $attrs['id'] = $attrs[$unique_attr];
-        unset($attrs[$unique_attr]);
-
-        return $attrs;
     }
 
     /**
@@ -253,8 +220,13 @@ abstract class kolab_api_service
         $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
 
         //console("parse_input_attributes", $type_attrs);
+        //console("called with \$attribs", $attribs);
 
         $form_service = $this->controller->get_service('form_value');
+
+        // With the result, start validating the input
+        $form_service->validate(null, $attribs);
+
         $result       = array();
 
         if (isset($type_attrs['form_fields'])) {
@@ -300,6 +272,77 @@ abstract class kolab_api_service
         //console("parse_input_attributes result", $result);
 
         return $result;
+    }
+
+    /**
+     * Parses result attributes
+     *
+     * @param string $object_name  Name of the object (user, group, etc.)
+     * @param array  $attrs        Entry attributes
+     *
+     * @return array Entry attributes
+     */
+    protected function parse_result_attributes($object_name, $attrs = array())
+    {
+        //console("parse_result_attributes($object_name, \$attrs = ", $attrs);
+
+        if (empty($attrs) || !is_array($attrs)) {
+            return $attrs;
+        }
+
+        $conf        = Conf::get_instance();
+        $auth        = Auth::get_instance();
+        $dn          = key($attrs);
+        $attrs       = $attrs[$dn];
+        $extra_attrs = array();
+
+        // add group type id to the result
+        $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
+
+        if (empty($attrs['type_id'])) {
+            if ($object_name == 'domain') {
+                $attrs['type_id'] = 1;
+            }
+        }
+
+        // Search for attributes associated with the type_id that are not part
+        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
+        // @TODO: this should go to LDAP class
+        if ($attrs['type_id']) {
+            $uta = $this->object_type_attributes($object_name, $attrs['type_id']);
+
+            foreach ((array)$uta as $field_type => $attributes) {
+                foreach ($attributes as $attribute => $data) {
+                    if (!array_key_exists($attribute, $attrs)) {
+                        $extra_attrs[] = $attribute;
+                    }
+                }
+            }
+        }
+
+        // Insert the persistent, unique attribute
+        $unique_attr = $conf->get('unique_attribute');
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        if (!array_key_exists($unique_attr, $attrs)) {
+            $extra_attrs[] = $unique_attr;
+        }
+
+        // Get extra attributes
+        if (!empty($extra_attrs)) {
+            $extra_attrs = $auth->get_attributes($dn, $extra_attrs);
+            if (!empty($extra_attrs)) {
+                $attrs = array_merge($attrs, $extra_attrs);
+            }
+        }
+
+        // Replace unique attribute with 'id' key
+        $attrs['id'] = $attrs[$unique_attr];
+        unset($attrs[$unique_attr]);
+
+        return $attrs;
     }
 
 }

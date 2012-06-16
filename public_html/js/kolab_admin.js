@@ -1038,6 +1038,51 @@ function kolab_admin()
     return false;
   };
 
+  this.domain_info = function(id)
+  {
+    this.http_post('domain.info', {id: id});
+  };
+
+  this.domain_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('domain.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('domain.' + action, data, 'domain_' + action + '_response');
+  };
+
+  this.domain_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('domain.add.success');
+    this.command('domain.list', {page: this.env.list_page});
+  };
+
+  this.domain_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('domain.edit.success');
+    this.command('domain.list', {page: this.env.list_page});
+  };
+
   this.user_info = function(id)
   {
     this.http_post('user.info', {id: id});
@@ -1199,6 +1244,84 @@ function kolab_admin()
     this.display_message('group.edit.success');
     this.command('group.list', {page: this.env.list_page});
   };
+
+  this.resource_info = function(id)
+  {
+    this.http_post('resource.info', {id: id});
+  };
+
+  this.resource_list = function(props)
+  {
+    if (!props)
+      props = {};
+
+    if (props.search === undefined && this.env.search_request)
+      props.search_request = this.env.search_request;
+
+    this.http_post('resource.list', props);
+  };
+
+  this.resource_delete = function(resourceid)
+  {
+    this.set_busy(true, 'deleting');
+    this.api_post('resource.delete', {resource: resourceid}, 'resource_delete_response');
+  };
+
+  this.resource_delete_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    var page = this.env.list_page;
+
+    // goto previous page if last user on the current page has been deleted
+    if (this.env.list_count)
+      page -= 1;
+
+    this.display_message('resource.delete.success');
+    this.command('resource.list', {page: page});
+  };
+
+  this.resource_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('resource.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('resource.' + action, data, 'resource_' + action + '_response');
+  };
+
+  this.resource_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('resource.add.success');
+    this.command('resource.list', {page: this.env.list_page});
+  };
+
+  this.resource_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('resource.edit.success');
+    this.command('resource.list', {page: this.env.list_page});
+  };
+
 
   this.generate_password = function(fieldname)
   {

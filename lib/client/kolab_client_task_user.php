@@ -197,6 +197,7 @@ class kolab_client_task_user extends kolab_client_task
             'contact_info'  => 'user.contact_info',
             'system'        => 'user.system',
             'config'        => 'user.config',
+            'asterisk'      => 'user.asterisk',
             'other'         => 'user.other',
         );
 
@@ -257,10 +258,27 @@ class kolab_client_task_user extends kolab_client_task
             'kolabdelegate'             => 'config',
             'kolaballowsmtprecipient'   => 'config',
             'kolaballowsmtpsender'      => 'config',
+
+            /* Asterisk Settings */
+            'astaccountallowedcodec'    => 'asterisk',
+            'astaccountcallerid'        => 'asterisk',
+            'astaccountcontext'         => 'asterisk',
+            'astaccountdeny'            => 'asterisk',
+            'astaccounthost'            => 'asterisk',
+            'astaccountnat'             => 'asterisk',
+            'astaccountname'            => 'asterisk',
+            'astaccountqualify'         => 'asterisk',
+            'astaccountrealmedpassword' => 'asterisk',
+            'astaccountsecret'          => 'asterisk',
+            'astaccounttype'            => 'asterisk',
+            'astcontext'                => 'asterisk',
+            'astextension'              => 'asterisk',
         );
 
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2'));
+
+        //console("Result from form_prepare", $fields, $types, $type);
 
         $add_mode  = empty($data['id']);
         $accttypes = array();

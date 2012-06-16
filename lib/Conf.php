@@ -26,7 +26,14 @@
 class Conf {
     static private $instance;
 
+    private $_conf = array();
+
     const CONFIG_FILE = '/etc/kolab/kolab.conf';
+
+    const STRING = 0;
+    const BOOL   = 1;
+    const INT    = 2;
+    const FLOAT  = 3;
 
     /**
      * This implements the 'singleton' design pattern
@@ -49,38 +56,28 @@ class Conf {
             return;
         }
 
-        $_ini_raw = file(self::CONFIG_FILE);
+        $this->read_config();
 
-        $this->_conf = array();
-
-        foreach ($_ini_raw as $_line) {
-            if (preg_match('/^\[([a-z0-9-_\.]+)\]/', $_line, $matches)) {
-                $_cur_section = $matches[1];
-                $this->_conf[$_cur_section] = array();
-                unset($_cur_key);
-            }
-
-            if (preg_match('/^;/', $_line, $matches)) {
-            }
-
-            if (preg_match('/^([a-z0-9\.-_]+)\s*=\s*(.*)/', $_line, $matches)) {
-                if (isset($_cur_section) && !empty($_cur_section)) {
-                    $_cur_key = $matches[1];
-                    $this->_conf[$_cur_section][$matches[1]] = isset($matches[2]) ? $matches[2] : '';
-                }
-            }
-
-            if (preg_match('/^\s+(.*)$/', $_line, $matches)) {
-                if (isset($_cur_key) && !empty($_cur_key)) {
-                    $this->_conf[$_cur_section][$_cur_key] .= $matches[1];
-                }
-            }
-        }
     }
 
-    public function get($key1, $key2 = NULL)
+    public function get($key1, $key2 = null, $type = null)
     {
-        return $this->expand($this->get_raw($key1, $key2));
+        $value = $this->expand($this->get_raw($key1, $key2));
+
+        if ($value === null) {
+            return $value;
+        }
+
+        switch ($type) {
+            case self::INT:
+                return intval($value);
+            case self::FLOAT:
+                return floatval($value);
+            case self::BOOL:
+                return (bool) preg_match('/^(true|1|on|enabled|yes)$/i', $value);
+        }
+
+        return (string) $value;
     }
 
     public function get_list($key1, $key2 = NULL)
@@ -130,7 +127,7 @@ class Conf {
                     return $this->_conf[$domain_section_name][$key1];
                 }
             } catch (Exception $e) {
-                $domain_section_name = $this->get('kolab', 'primary_domain');
+                $domain_section_name = $this->get_raw('kolab', 'primary_domain');
                 if (isset($this->_conf[$domain_section_name][$key1])) {
                     return $this->_conf[$domain_section_name][$key1];
                 }
@@ -154,7 +151,7 @@ class Conf {
 //        error_log("Could not find setting for \$key1: " . $key1 .
 //                " with \$key2: " . $key2);
 
-        return false;
+        return null;
     }
 
     public function expand($str, $custom = FALSE)
@@ -181,6 +178,37 @@ class Conf {
         }
         else {
             return $str;
+        }
+    }
+
+    private function read_config()
+    {
+        $_ini_raw = file(self::CONFIG_FILE);
+
+        $this->_conf = array();
+
+        foreach ($_ini_raw as $_line) {
+            if (preg_match('/^\[([a-z0-9-_\.]+)\]/', $_line, $matches)) {
+                $_cur_section = $matches[1];
+                $this->_conf[$_cur_section] = array();
+                unset($_cur_key);
+            }
+
+            if (preg_match('/^;/', $_line, $matches)) {
+            }
+
+            if (preg_match('/^([a-z0-9\.-_]+)\s*=\s*(.*)/', $_line, $matches)) {
+                if (isset($_cur_section) && !empty($_cur_section)) {
+                    $_cur_key = $matches[1];
+                    $this->_conf[$_cur_section][$matches[1]] = isset($matches[2]) ? $matches[2] : '';
+                }
+            }
+
+            if (preg_match('/^\s+(.*)$/', $_line, $matches)) {
+                if (isset($_cur_key) && !empty($_cur_key)) {
+                    $this->_conf[$_cur_section][$_cur_key] .= $matches[1];
+                }
+            }
         }
     }
 }

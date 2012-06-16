@@ -24,9 +24,9 @@
 */
 
 /**
- *
+ * Service providing resource data management
  */
-class kolab_api_service_group extends kolab_api_service
+class kolab_api_service_resource extends kolab_api_service
 {
     /**
      * Returns service capabilities.
@@ -41,7 +41,7 @@ class kolab_api_service_group extends kolab_api_service
 
         $auth = Auth::get_instance();
 
-        $effective_rights = $auth->list_rights('group');
+        $effective_rights = $auth->list_rights('resource');
 
         //console("effective_rights", $effective_rights);
 
@@ -60,134 +60,126 @@ class kolab_api_service_group extends kolab_api_service
         }
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
+            $rights['find'] = "r";
+            $rights['find_by_any_attribute'] = "r";
+            $rights['find_by_attribute'] = "r";
+            $rights['find_by_attributes'] = "r";
             $rights['info'] = "r";
-            $rights['members_list'] = "r";
         }
+
+        $rights['effective_rights'] = "r";
 
         return $rights;
     }
 
     /**
-     * Group create.
+     * Create resource.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
-     * @return array|bool Group attributes or False on failure
+     * @return array|bool User attributes or False on error.
      */
-    public function group_add($getdata, $postdata)
+    public function resource_add($getdata, $postdata)
     {
-        $group_attributes = $this->parse_input_attributes('group', $postdata);
+        //console("resource_add()", $postdata);
 
-        $auth   = Auth::get_instance();
-        $result = $auth->group_add($group_attributes, $postdata['type_id']);
+        $resource_attributes = $this->parse_input_attributes('resource', $postdata);
+
+        //console("resource_add()", $resource_attributes);
+
+        // TODO: The cn needs to be unique
+        $auth = Auth::get_instance();
+        $result = $auth->resource_add($resource_attributes, $postdata['type_id']);
 
         if ($result) {
-            return $group_attributes;
+            return $resource_attributes;
         }
 
-        return FALSE;
+        return false;
     }
 
     /**
-     * Group delete.
+     * Detete resource.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
      * @return bool True on success, False on failure
      */
-    public function group_delete($getdata, $postdata)
+    public function resource_delete($getdata, $postdata)
     {
-        if (empty($postdata['group'])) {
-            return FALSE;
+        //console("resource_delete()", $getdata, $postdata);
+        if (!isset($postdata['resource'])) {
+            return false;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->group_delete($postdata['group']);
+        $result = $auth->resource_delete($postdata['resource']);
 
         if ($result) {
             return $result;
         }
 
-        return FALSE;
-    }
-
-    public function group_edit($getdata, $postdata)
-    {
-        //console("group_edit \$postdata", $postdata);
-
-        $group_attributes = $this->parse_input_attributes('group', $postdata);
-        $group            = $postdata['id'];
-
-        $auth   = Auth::get_instance();
-        $result = $auth->group_edit($postdata['id'], $group_attributes, $postdata['type_id']);
-
-        // @TODO: return unique attribute or all attributes as group_add()
-        if ($result) {
-            return true;
-        }
-
         return false;
     }
 
-    public function group_effective_rights($getdata, $postdata)
+    public function resource_edit($getdata, $postdata)
+    {
+        //console("\$postdata to resource_edit()", $postdata);
+
+        $resource_attributes = $this->parse_input_attributes('resource', $postdata);
+
+        //console("\$resource_attributes as result from parse_input_attributes", $resource_attributes);
+
+        $resource            = $postdata['id'];
+
+        $auth   = Auth::get_instance();
+        $result = $auth->resource_edit($resource, $resource_attributes, $postdata['type_id']);
+
+        // Return the $mod_array
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+
+    }
+
+    public function resource_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights($getdata['group']);
+        $effective_rights = $auth->list_rights($getdata['resource']);
         return $effective_rights;
     }
 
     /**
-     * Group information.
+     * User information.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
-     * @return array|bool Group attributes or False on failure
+     * @return array|bool User attributes, False on error
      */
-    public function group_info($getdata, $postdata)
+    public function resource_info($getdata, $postdata)
     {
-        if (empty($getdata['group'])) {
+        if (!isset($getdata['resource'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->group_info($getdata['group']);
+        $result = $auth->resource_info($getdata['resource']);
 
         // normalize result
-        $result = $this->parse_result_attributes('group', $result);
+        $result = $this->parse_result_attributes('resource', $result);
+
+        //console($result);
 
         if ($result) {
             return $result;
         }
 
         return false;
-    }
-
-    /**
-     * Group members listing.
-     *
-     * @param array $get   GET parameters
-     * @param array $post  POST parameters
-     *
-     * @return array List of group members ('list' and 'count' items)
-     */
-    public function group_members_list($getdata, $postdata)
-    {
-        $auth = Auth::get_instance();
-
-        if (empty($getdata['group'])) {
-            //console("Empty \$getdata['group']");
-            return FALSE;
-        }
-
-        $result = $auth->group_members_list($getdata['group'], false);
-
-        return array(
-            'list'  => $result,
-            'count' => count($result),
-        );
     }
 }

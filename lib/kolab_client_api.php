@@ -60,6 +60,28 @@ class kolab_client_api
     public function init()
     {
         $this->request = new HTTP_Request2();
+
+        // Configure connection options
+        $config  = Conf::get_instance();
+        $options = array(
+            'ssl_verify_peer' => Conf::BOOL,
+            'ssl_verify_host' => Conf::BOOL,
+            'ssl_cafile'      => Conf::STRING,
+            'ssl_capath'      => Conf::STRING,
+            'ssl_local_cert'  => Conf::STRING,
+            'ssl_passphrase'  => Conf::STRING,
+        );
+
+        foreach ($options as $optname => $opttype) {
+            if (($optvalue = $config->get('kolab_wap', $optname, $opttype)) !== null) {
+                try {
+                    $this->request->setConfig($optname, $optvalue);
+                }
+                catch (Exception $e) {
+                    write_log('errors', $e->getMessage());
+                }
+            }
+        }
     }
 
     /**
@@ -128,6 +150,8 @@ class kolab_client_api
 
         $this->request->setMethod(HTTP_Request2::METHOD_GET);
 
+        //console("GET", $url);
+
         return $this->get_response($url);
     }
 
@@ -146,6 +170,8 @@ class kolab_client_api
 
         $this->request->setMethod(HTTP_Request2::METHOD_POST);
         $this->request->setBody(@json_encode($post));
+
+        //console("POST", $url, $post);
 
         return $this->get_response($url);
     }

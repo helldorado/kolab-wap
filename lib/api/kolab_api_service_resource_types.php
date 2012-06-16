@@ -24,11 +24,10 @@
 */
 
 /**
- * Service providing domains listing
+ *
  */
-class kolab_api_service_domains extends kolab_api_service
+class kolab_api_service_resource_types extends kolab_api_service
 {
-
     /**
      * Returns service capabilities.
      *
@@ -44,34 +43,22 @@ class kolab_api_service_domains extends kolab_api_service
     }
 
     /**
-     * Users listing (with searching).
+     * User types listing.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
      * @return array List result with 'list' and 'count' items
      */
-    public function domains_list($get, $post)
+    public function resource_types_list($get, $post)
     {
-        $auth = Auth::get_instance();
+        $resource_types = $this->object_types('resource');
 
-        $domains = $auth->list_domains();
-        //console($domains);
-        $count   = count($domains);
-
-        // pagination
-        if (!empty($post['page_size']) && $count) {
-            $size   = (int) $post['page_size'];
-            $page   = !empty($post['page']) ? $post['page'] : 1;
-            $page   = max(1, (int) $page);
-            $offset = ($page - 1) * $size;
-
-            $domains = array_slice($domains, $offset, $size, true);
-        }
+        //console("api/resource_types_list()", $resource_types);
 
         return array(
-            'list'  => $domains,
-            'count' => $count,
+            'list'  => $resource_types,
+            'count' => count($resource_types),
         );
     }
 }

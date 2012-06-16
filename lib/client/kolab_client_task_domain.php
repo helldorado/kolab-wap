@@ -22,12 +22,12 @@
  +--------------------------------------------------------------------------+
 */
 
-class kolab_client_task_group extends kolab_client_task
+class kolab_client_task_domain extends kolab_client_task
 {
     protected $ajax_only = true;
 
     protected $menu = array(
-        'add'  => 'group.add',
+        'add'  => 'domain.add',
     );
 
     /**
@@ -35,7 +35,7 @@ class kolab_client_task_group extends kolab_client_task
      */
     public function action_default()
     {
-        $this->output->set_object('content', 'group', true);
+        $this->output->set_object('content', 'domain', true);
         $this->output->set_object('task_navigation', $this->menu());
 
         $this->action_list();
@@ -54,9 +54,9 @@ class kolab_client_task_group extends kolab_client_task
 
         // request parameters
         $post = array(
-            'attributes' => array('cn'),
+            'attributes' => array('associateddomain'),
 //            'sort_order' => 'ASC',
-            'sort_by'    => 'cn',
+            'sort_by'    => 'associateddomain',
             'page_size'  => $page_size,
             'page'       => $page,
         );
@@ -84,8 +84,8 @@ class kolab_client_task_group extends kolab_client_task
             $post['search_operator'] = 'OR';
         }
 
-        // get groups list
-        $result = $this->api->post('groups.list', null, $post);
+        // get domains list
+        $result = $this->api->post('domains.list', null, $post);
         $count  = (int) $result->get('count');
         $result = (array) $result->get('list');
 
@@ -100,7 +100,7 @@ class kolab_client_task_group extends kolab_client_task
         $i    = 0;
 
         // table header
-        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('group.list'));
+        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('domain.list'));
 
         // table footer (navigation)
         if ($count) {
@@ -109,16 +109,16 @@ class kolab_client_task_group extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('group.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('domain.list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
-                'onclick' => $prev ? "kadm.command('group.list', {page: $prev})" : "return false",
+                'onclick' => $prev ? "kadm.command('domain.list', {page: $prev})" : "return false",
             ));
             $next = kolab_html::a(array(
                 'class' => 'next' . ($next ? '' : ' disabled'),
                 'href'  => '#',
-                'onclick' => $next ? "kadm.command('group.list', {page: $next})" : "return false",
+                'onclick' => $next ? "kadm.command('domain.list', {page: $next})" : "return false",
             ));
 
             $foot_body = kolab_html::span(array('content' => $prev . $count_str . $next));
@@ -128,25 +128,33 @@ class kolab_client_task_group extends kolab_client_task
         // table body
         if (!empty($result)) {
             foreach ($result as $idx => $item) {
-                if (!is_array($item) || empty($item['cn'])) {
+                //console($idx);
+                if (!is_array($item) || empty($item['associateddomain'])) {
                     continue;
                 }
 
                 $i++;
                 $cells = array();
-                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['cn']),
-                    'onclick' => "kadm.command('group.info', '$idx')");
+
+                if (is_array($item['associateddomain'])) {
+                    $domain_name = $item['associateddomain'][0];
+                } else {
+                    $domain_name = $item['associateddomain'];
+                }
+
+                $cells[] = array('class' => 'name', 'body' => kolab_html::escape($domain_name),
+                    'onclick' => "kadm.command('domain.info', '$idx')");
                 $rows[] = array('id' => $i, 'class' => 'selectable', 'cells' => $cells);
             }
         }
         else {
             $rows[] = array('cells' => array(
-                0 => array('class' => 'empty-body', 'body' => $this->translate('group.norecords')
+                0 => array('class' => 'empty-body', 'body' => $this->translate('domain.norecords')
             )));
         }
 
         $table = kolab_html::table(array(
-            'id'    => 'grouplist',
+            'id'    => 'domainlist',
             'class' => 'list',
             'head'  => $head,
             'body'  => $rows,
@@ -158,62 +166,67 @@ class kolab_client_task_group extends kolab_client_task
         $this->output->set_env('list_count', $count);
 
         $this->watermark('taskcontent');
-        $this->output->set_object('grouplist', $table);
+        $this->output->set_object('domainlist', $table);
     }
 
     /**
-     * Group information (form) action.
+     * Domain information (form) action.
      */
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api->get('group.info', array('group' => $id));
-        $group  = $result->get();
-        $output = $this->group_form(null, $group);
+        //console("action_info() on", $id);
+
+        $result = $this->api->get('domain.info', array('domain' => $id));
+        //console("action_info() \$result", $result);
+
+        $domain  = $result->get();
+        //console("action_info() \$domain", $domain);
+
+        $output = $this->domain_form(array_keys($domain), $domain);
 
         $this->output->set_object('taskcontent', $output);
     }
 
     /**
-     * Groups adding (form) action.
+     * Domain adding (form) action.
      */
     public function action_add()
     {
         $data   = $this->get_input('data', 'POST');
-        $output = $this->group_form(null, $data, true);
+        $output = $this->domain_form(null, $data, true);
 
         $this->output->set_object('taskcontent', $output);
     }
 
     /**
-     * Group edit/add form.
+     * Domain edit/add form.
      */
-    private function group_form($attribs, $data = array())
+    private function domain_form($attribs, $data = array())
     {
         if (empty($attribs['id'])) {
-            $attribs['id'] = 'group-form';
+            $attribs['id'] = 'domain-form';
         }
 
         // Form sections
         $sections = array(
-            'system'   => 'group.system',
-            'other'    => 'group.other',
+            'system'   => 'domain.system',
+            'other'    => 'domain.other',
         );
 
         // field-to-section map and fields order
         $fields_map = array(
-            'type_id'       => 'system',
-            'type_id_name'  => 'system',
-            'cn'            => 'system',
-            'gidnumber'     => 'system',
-            'mail'          => 'system',
-            'member'        => 'system',
-            'uniquemember'  => 'system',
-            'memberurl'     => 'system',
+            'type_id'           => 'system',
+            'type_id_name'      => 'system',
+            'associateddomain'  => 'system',
         );
 
+        //console("domain_form() \$data", $data);
+
         // Prepare fields
-        list($fields, $types, $type) = $this->form_prepare('group', $data);
+        list($fields, $types, $type) = $this->form_prepare('domain', $data);
+
+        //console("Result from form_prepare", $fields, $types, $type);
 
         $add_mode  = empty($data['id']);
         $accttypes = array();
@@ -222,12 +235,12 @@ class kolab_client_task_group extends kolab_client_task
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
 
-        // Add user type id selector
+        // Add domain type id selector
         $fields['type_id'] = array(
             'section'  => 'system',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
-            'onchange' => "kadm.group_save(true, 'system')",
+            'onchange' => "kadm.domain_save(true, 'system')",
         );
 
         // Hide account type selector if there's only one type
@@ -238,69 +251,65 @@ class kolab_client_task_group extends kolab_client_task
         // Create mode
         if ($add_mode) {
             // Page title
-            $title = $this->translate('group.add');
+            $title = $this->translate('domain.add');
         }
         // Edit mode
         else {
-            $title = $data['cn'];
+            $title = $data['primary_domain'];
 
-            // Add user type name
+            // Add domain type name
             $fields['type_id_name'] = array(
-                'label'    => 'group.type_id',
+                'label'    => 'domain.type_id',
                 'section'  => 'system',
                 'value'    => $accttypes[$type]['content'],
             );
         }
 
         // Create form object and populate with fields
-        $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
+        $form = $this->form_create('domain', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
+
+        //console("domain_form() \$form", $form);
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('group.add.success', 'group.edit.success', 'group.delete.success');
+        $this->output->add_translation('domain.add.success', 'domain.edit.success', 'domain.delete.success');
 
         return $form->output();
     }
 
-    private function parse_members($list)
-    {
-        // convert to key=>value array, see kolab_api_service_form_value::list_options_uniquemember()
-        foreach ($list as $idx => $value) {
-            if (!empty($value['displayname'])) {
-                $list[$idx] = $value['displayname'];
-            } elseif (!empty($value['cn'])) {
-                $list[$idx] = $value['cn'];
-            } else {
-                //console("No display name or cn for $idx");
-            }
-
-            if (!empty($value['mail'])) {
-                $list[$idx] .= ' <' . $value['mail'] . '>';
-            }
-        }
-
-        return $list;
-    }
-
     /**
-     * Returns list of group types.
+     * Returns list of domain types.
      *
-     * @return array List of group types
+     * @return array List of domain types
      */
-    public function group_types()
+    public function domain_types()
     {
-        if (!isset($_SESSION['group_types'])) {
-            $result = $this->api->post('group_types.list');
-            $list   = $result->get('list');
-
-            if (is_array($list)) {
-                $_SESSION['group_types'] = $list;
-            }
-        }
-
-        //console($_SESSION['group_types']);
-
-        return $_SESSION['group_types'];
+        $result = array(
+                1 => array(
+                        'key' => 'standard',
+                        'name' => 'Standard domain',
+                        'description' => 'A standard domain name space',
+                        'attributes' => array(
+                                'auto_form_fields' => array(),
+                                'form_fields' => array(
+                                        'associateddomain' => array(
+                                                'type' => 'list',
+                                            ),
+                                        'inetdomainbasedn' => array(
+                                                'optional' => 'true',
+                                            ),
+                                    ),
+                                'fields' => array(
+                                        'objectclass' => array(
+                                                'top',
+                                                'domainrelatedobject',
+                                            ),
+                                    ),
+                            ),
+                    ),
+            );
+        //console("domain_types() \$result", $result);
+        return $result;
     }
 
     /**

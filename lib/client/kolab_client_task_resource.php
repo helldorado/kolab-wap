@@ -22,12 +22,12 @@
  +--------------------------------------------------------------------------+
 */
 
-class kolab_client_task_group extends kolab_client_task
+class kolab_client_task_resource extends kolab_client_task
 {
     protected $ajax_only = true;
 
     protected $menu = array(
-        'add'  => 'group.add',
+        'add'  => 'resource.add',
     );
 
     /**
@@ -35,14 +35,14 @@ class kolab_client_task_group extends kolab_client_task
      */
     public function action_default()
     {
-        $this->output->set_object('content', 'group', true);
+        $this->output->set_object('content', 'resource', true);
         $this->output->set_object('task_navigation', $this->menu());
 
         $this->action_list();
     }
 
     /**
-     * Groups list action.
+     * Users list action.
      */
     public function action_list()
     {
@@ -56,7 +56,7 @@ class kolab_client_task_group extends kolab_client_task
         $post = array(
             'attributes' => array('cn'),
 //            'sort_order' => 'ASC',
-            'sort_by'    => 'cn',
+            'sort_by'    => array('cn'),
             'page_size'  => $page_size,
             'page'       => $page,
         );
@@ -84,10 +84,12 @@ class kolab_client_task_group extends kolab_client_task
             $post['search_operator'] = 'OR';
         }
 
-        // get groups list
-        $result = $this->api->post('groups.list', null, $post);
-        $count  = (int) $result->get('count');
+        // get resources list
+        $result = $this->api->post('resources.list', null, $post);
+        $count  = $result->get('count');
         $result = (array) $result->get('list');
+
+        //console($result);
 
         // calculate records
         if ($count) {
@@ -100,7 +102,7 @@ class kolab_client_task_group extends kolab_client_task
         $i    = 0;
 
         // table header
-        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('group.list'));
+        $head[0]['cells'][] = array('class' => 'name', 'body' => $this->translate('resource.list'));
 
         // table footer (navigation)
         if ($count) {
@@ -109,16 +111,16 @@ class kolab_client_task_group extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('group.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('resource.list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
-                'onclick' => $prev ? "kadm.command('group.list', {page: $prev})" : "return false",
+                'onclick' => $prev ? "kadm.command('resource.list', {page: $prev})" : "return false",
             ));
             $next = kolab_html::a(array(
                 'class' => 'next' . ($next ? '' : ' disabled'),
                 'href'  => '#',
-                'onclick' => $next ? "kadm.command('group.list', {page: $next})" : "return false",
+                'onclick' => $next ? "kadm.command('resource.list', {page: $next})" : "return false",
             ));
 
             $foot_body = kolab_html::span(array('content' => $prev . $count_str . $next));
@@ -135,18 +137,18 @@ class kolab_client_task_group extends kolab_client_task
                 $i++;
                 $cells = array();
                 $cells[] = array('class' => 'name', 'body' => kolab_html::escape($item['cn']),
-                    'onclick' => "kadm.command('group.info', '$idx')");
+                    'onclick' => "kadm.command('resource.info', '$idx')");
                 $rows[] = array('id' => $i, 'class' => 'selectable', 'cells' => $cells);
             }
         }
         else {
             $rows[] = array('cells' => array(
-                0 => array('class' => 'empty-body', 'body' => $this->translate('group.norecords')
+                0 => array('class' => 'empty-body', 'body' => $this->translate('resource.norecords')
             )));
         }
 
         $table = kolab_html::table(array(
-            'id'    => 'grouplist',
+            'id'    => 'resourcelist',
             'class' => 'list',
             'head'  => $head,
             'body'  => $rows,
@@ -158,62 +160,85 @@ class kolab_client_task_group extends kolab_client_task
         $this->output->set_env('list_count', $count);
 
         $this->watermark('taskcontent');
-        $this->output->set_object('grouplist', $table);
+        $this->output->set_object('resourcelist', $table);
     }
 
     /**
-     * Group information (form) action.
-     */
-    public function action_info()
-    {
-        $id     = $this->get_input('id', 'POST');
-        $result = $this->api->get('group.info', array('group' => $id));
-        $group  = $result->get();
-        $output = $this->group_form(null, $group);
-
-        $this->output->set_object('taskcontent', $output);
-    }
-
-    /**
-     * Groups adding (form) action.
+     * Resource adding (form) action.
      */
     public function action_add()
     {
         $data   = $this->get_input('data', 'POST');
-        $output = $this->group_form(null, $data, true);
+        $output = $this->resource_form(null, $data, true);
 
         $this->output->set_object('taskcontent', $output);
     }
 
     /**
-     * Group edit/add form.
+     * Resource information (form) action.
      */
-    private function group_form($attribs, $data = array())
+    public function action_info()
+    {
+        $id         = $this->get_input('id', 'POST');
+        $result     = $this->api->get('resource.info', array('resource' => $id));
+        $resource   = $result->get();
+
+        //console("action_info()", $resource);
+
+        $output     = $this->resource_form(null, $resource);
+
+        $this->output->set_object('taskcontent', $output);
+    }
+
+    private function resource_form($attribs, $data = array())
     {
         if (empty($attribs['id'])) {
-            $attribs['id'] = 'group-form';
+            $attribs['id'] = 'resource-form';
         }
+
+        //console("resource_form(\$attribs, \$data)", $attribs, $data);
 
         // Form sections
         $sections = array(
-            'system'   => 'group.system',
-            'other'    => 'group.other',
+            'system'        => 'resource.system',
+            'other'         => 'resource.other',
         );
 
         // field-to-section map and fields order
         $fields_map = array(
-            'type_id'       => 'system',
-            'type_id_name'  => 'system',
-            'cn'            => 'system',
-            'gidnumber'     => 'system',
-            'mail'          => 'system',
-            'member'        => 'system',
-            'uniquemember'  => 'system',
-            'memberurl'     => 'system',
+            'type_id'                   => 'system',
+            'type_id_name'              => 'system',
+
+            'cn'                        => 'system',
+            'ou'                        => 'system',
+            'preferredlanguage'         => 'system',
+
+            'mail'                      => 'system',
+            'alias'                     => 'system',
+            'mailalternateaddress'      => 'system',
+
+            'member'                    => 'system',
+            'uniquemember'              => 'system',
+            'memberurl'                 => 'system',
+
+            'nsrole'                    => 'system',
+            'nsroledn'                  => 'system',
+
+            /* Kolab Settings */
+            'kolabhomeserver'           => 'system',
+            'mailhost'                  => 'system',
+            'mailquota'                 => 'system',
+            'kolabfreebusyfuture'       => 'system',
+            'kolabinvitationpolicy'     => 'system',
+            'kolabdelegate'             => 'system',
+            'kolaballowsmtprecipient'   => 'system',
+            'kolaballowsmtpsender'      => 'system',
         );
 
         // Prepare fields
-        list($fields, $types, $type) = $this->form_prepare('group', $data);
+        list($fields, $types, $type) = $this->form_prepare('resource', $data);
+
+        //console("Result from form_prepare", $fields, $types, $type);
 
         $add_mode  = empty($data['id']);
         $accttypes = array();
@@ -222,85 +247,47 @@ class kolab_client_task_group extends kolab_client_task
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
 
-        // Add user type id selector
+        // Add resource type id selector
         $fields['type_id'] = array(
             'section'  => 'system',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
-            'onchange' => "kadm.group_save(true, 'system')",
+            'onchange' => "kadm.resource_save(true, 'system')",
         );
+
+        //console($accttypes);
 
         // Hide account type selector if there's only one type
         if (count($accttypes) < 2 || !$add_mode) {
+            //console("setting type_id form type to hidden");
             $fields['type_id']['type'] = kolab_form::INPUT_HIDDEN;
         }
 
         // Create mode
         if ($add_mode) {
             // Page title
-            $title = $this->translate('group.add');
+            $title = $this->translate('resource.add');
         }
         // Edit mode
         else {
             $title = $data['cn'];
 
-            // Add user type name
+            // Add resource type name
             $fields['type_id_name'] = array(
-                'label'    => 'group.type_id',
+                'label'    => 'resource.type_id',
                 'section'  => 'system',
                 'value'    => $accttypes[$type]['content'],
             );
         }
 
         // Create form object and populate with fields
-        $form = $this->form_create('group', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
+        $form = $this->form_create('resource', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('group.add.success', 'group.edit.success', 'group.delete.success');
+        $this->output->add_translation('resource.add.success', 'resource.edit.success', 'resource.delete.success');
 
         return $form->output();
-    }
-
-    private function parse_members($list)
-    {
-        // convert to key=>value array, see kolab_api_service_form_value::list_options_uniquemember()
-        foreach ($list as $idx => $value) {
-            if (!empty($value['displayname'])) {
-                $list[$idx] = $value['displayname'];
-            } elseif (!empty($value['cn'])) {
-                $list[$idx] = $value['cn'];
-            } else {
-                //console("No display name or cn for $idx");
-            }
-
-            if (!empty($value['mail'])) {
-                $list[$idx] .= ' <' . $value['mail'] . '>';
-            }
-        }
-
-        return $list;
-    }
-
-    /**
-     * Returns list of group types.
-     *
-     * @return array List of group types
-     */
-    public function group_types()
-    {
-        if (!isset($_SESSION['group_types'])) {
-            $result = $this->api->post('group_types.list');
-            $list   = $result->get('list');
-
-            if (is_array($list)) {
-                $_SESSION['group_types'] = $list;
-            }
-        }
-
-        //console($_SESSION['group_types']);
-
-        return $_SESSION['group_types'];
     }
 
     /**
@@ -319,8 +306,9 @@ class kolab_client_task_group extends kolab_client_task
             'name'    => 'field',
             'type'    => kolab_form::INPUT_SELECT,
             'options' => array(
-                'cn'   => kolab_html::escape($this->translate('search.name')),
-                'mail' => kolab_html::escape($this->translate('search.email')),
+                'cn'    => kolab_html::escape($this->translate('search.name')),
+                'email' => kolab_html::escape($this->translate('search.email')),
+                'uid'   => kolab_html::escape($this->translate('search.uid')),
             ),
         ));
         $form->add_element(array(

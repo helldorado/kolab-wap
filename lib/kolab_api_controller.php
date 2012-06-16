@@ -48,23 +48,27 @@ class kolab_api_controller
                 );
             }
             else {
-                throw new Exception("Unknown method", 400);
+                throw new Exception("Unknown method " . $_GET['method'], 400);
             }
         }
         else {
-            throw new Exception("Unknown service", 400);
+            throw new Exception("Unknown service " . $_GET['service'], 400);
         }
 
         // TODO: register services based on config or whatsoever
-        $this->add_service('form_value', 'kolab_api_service_form_value');
-        $this->add_service('group_types', 'kolab_api_service_group_types');
-        $this->add_service('group', 'kolab_api_service_group');
-        $this->add_service('groups', 'kolab_api_service_groups');
-        $this->add_service('user_types', 'kolab_api_service_user_types');
-        $this->add_service('user', 'kolab_api_service_user');
-        $this->add_service('users', 'kolab_api_service_users');
-        $this->add_service('domains', 'kolab_api_service_domains');
-        $this->add_service('roles', 'kolab_api_service_roles');
+        $this->add_service('domain',            'kolab_api_service_domain');
+        $this->add_service('domains',           'kolab_api_service_domains');
+        $this->add_service('form_value',        'kolab_api_service_form_value');
+        $this->add_service('group_types',       'kolab_api_service_group_types');
+        $this->add_service('group',             'kolab_api_service_group');
+        $this->add_service('groups',            'kolab_api_service_groups');
+        $this->add_service('resource_types',    'kolab_api_service_resource_types');
+        $this->add_service('resource',          'kolab_api_service_resource');
+        $this->add_service('resources',         'kolab_api_service_resources');
+        $this->add_service('roles',             'kolab_api_service_roles');
+        $this->add_service('user_types',        'kolab_api_service_user_types');
+        $this->add_service('user',              'kolab_api_service_user');
+        $this->add_service('users',             'kolab_api_service_users');
     }
 
     /**
@@ -73,7 +77,7 @@ class kolab_api_controller
     public function add_service($service, $handler)
     {
         if ($this->services[$service]) {
-            error_log("Service $service is already registered.");
+            //console("Service $service is already registered.");
             return false;
         }
 
@@ -100,7 +104,7 @@ class kolab_api_controller
             }
         }
 
-        error_log("Unknown service $service");
+        //console("Unknown service $service");
 
         throw new Exception("Unknown service", 400);
     }
@@ -132,7 +136,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $postdata = @json_decode($postdata, true);
 
-        console("Calling method " . $method . " on service " . $service);
+        //console("Calling method " . $method . " on service " . $service);
 
         // validate user session
         if ($service != 'system' || $method != 'authenticate') {
@@ -180,7 +184,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $url     = rtrim($url, '/') . '/' . $service . '.' . $method;
 
-        console("Proxying " . $url);
+        //console("Proxying " . $url);
 
         $request = new HTTP_Request2();
         $url     = new Net_URL2($url);
@@ -296,7 +300,9 @@ class kolab_api_controller
      */
     private function capabilities()
     {
+        //console("system.capabilities called");
         $auth = Auth::get_instance();
+
         $this->domains = $auth->list_domains();
 
         $result = array();
@@ -304,14 +310,17 @@ class kolab_api_controller
         // Should we have no permissions to list domain name spaces,
         // we should always return our own.
         if (count($this->domains) < 1) {
+            //console("As there is but one domain, we insert our own");
             $this->domains[] = $_SESSION['user']->get_domain();
         }
+
+        //console("\$this->domains:", $this->domains);
 
         // add capabilities of all registered services
         foreach ($this->domains as $domain) {
             // TODO: 'associateddomain' is very specific to 389ds based deployments, and this
             // is supposed to be very generic.
-            $domain_name = is_array($domain) ? $domain['associateddomain'] : $domain;
+            $domain_name = is_array($domain) ? (is_array($domain['associateddomain']) ? $domain['associateddomain'][0] : $domain['associateddomain']) : $domain;
             // define our very own capabilities
             $actions = array(
                 'system.quit'      => array('type' => 'w'),
@@ -324,6 +333,8 @@ class kolab_api_controller
                     $actions["$sname.$method"] = array('type' => $type);
                 }
             }
+
+            //console("api capabilities", $domain, $domain_name);
 
             $result[$domain_name] = array('actions' => $actions);
         }

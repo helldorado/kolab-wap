@@ -84,7 +84,7 @@ class kolab_api_service_user extends kolab_api_service
     {
         //console("user_add()", $postdata);
 
-        $user_attributes = $this->parse_input_attributes('user', $postdata); 
+        $user_attributes = $this->parse_input_attributes('user', $postdata);
 
         //console("user_add()", $user_attributes);
 
@@ -171,7 +171,7 @@ class kolab_api_service_user extends kolab_api_service
         $result = $auth->user_info($getdata['user']);
 
         // normalize result
-        $result = $this->parse_result_attributes('user', $result); 
+        $result = $this->parse_result_attributes('user', $result);
 
         if ($result) {
             return $result;

@@ -108,23 +108,26 @@ function write_log($name, $line)
     $logfile = $log_dir . '/' . $name;
     $date    = date('d-M-Y H:i:s O');
     $sess_id = session_id();
-    $line    = sprintf("[%s]%s: %s\n", $date, $sess_id ? "($sess_id)" : '', $line);
+    $logline = sprintf("[%s]%s: %s\n", $date, $sess_id ? "($sess_id)" : '', $line);
 
     if ($fp = @fopen($logfile, 'a')) {
-        fwrite($fp, $line);
+        fwrite($fp, $logline);
         fflush($fp);
         fclose($fp);
-        return true;
+        return;
     }
 
-    return false;
+    if ($name == 'errors') {
+        // send error to PHPs error handler if write to file didn't succeed
+        trigger_error($line, E_USER_ERROR);
+    }
 }
 
 function timer($time = null, $label = '')
 {
     $now = microtime(true);
     if ($time) {
-        console(($label ? $label.' ' : '') . sprintf('%.4f', $now - $time));
+        //console(($label ? $label.' ' : '') . sprintf('%.4f', $now - $time));
     }
     return $now;
 }
