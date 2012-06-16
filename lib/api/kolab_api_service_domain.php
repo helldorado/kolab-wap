@@ -38,25 +38,61 @@ class kolab_api_service_domain extends kolab_api_service
      */
     public function capabilities($domain)
     {
-        return array(
-            'add' => 'w',
-            'edit' => 'w',
-            'delete' => 'w'
-        );
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+
+        $domain_base_dn = $conf->get('domain_base_dn');
+
+        if (empty($domain_base_dn)) {
+            return array();
+        }
+
+        $effective_rights = $auth->list_rights($domain_base_dn);
+
+        //console("effective_rights", $effective_rights);
+
+        $rights = array();
+
+        if (in_array('add', $effective_rights['entryLevelRights'])) {
+            $rights['add'] = "w";
+        }
+
+        if (in_array('delete', $effective_rights['entryLevelRights'])) {
+            $rights['delete'] = "w";
+        }
+
+        if (in_array('modrdn', $effective_rights['entryLevelRights'])) {
+            $rights['edit'] = "w";
+        }
+
+        if (in_array('read', $effective_rights['entryLevelRights'])) {
+            $rights['find'] = "r";
+            $rights['find_by_any_attribute'] = "r";
+            $rights['find_by_attribute'] = "r";
+            $rights['find_by_attributes'] = "r";
+            $rights['info'] = "r";
+        }
+
+        $rights['effective_rights'] = "r";
+
+        return $rights;
     }
 
     public function domain_add($getdata, $postdata)
     {
-        if (empty($postdata['domain'])) {
-            return;
+        $conf = Conf::get_instance();
+        $dna = $conf->get('domain_name_attribute');
+
+        if (empty($dna)) {
+            $dna = 'associateddomain';
         }
 
-        if (empty($postdata['parent'])) {
+        if (empty($postdata[$dna])) {
             return;
         }
 
         $auth = Auth::get_instance();
-        $auth->domain_add($postdata['domain'], $postdata['parent']);
+        $auth->domain_add($postdata[$dna]);
     }
 
     public function domain_edit($getdata, $postdata)
