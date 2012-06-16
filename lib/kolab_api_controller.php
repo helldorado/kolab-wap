@@ -268,6 +268,8 @@ class kolab_api_controller
      */
     private function authenticate($request, $postdata)
     {
+        //console("Authenticating with postdata", $postdata);
+
         $valid = false;
 
         // destroy old session
@@ -278,7 +280,7 @@ class kolab_api_controller
         session_start();
 
         $_SESSION['user'] = new User();
-        $valid = $_SESSION['user']->authenticate($postdata['username'], $postdata['password']);
+        $valid = $_SESSION['user']->authenticate($postdata['username'], $postdata['password'], $postdata['domain']);
 
         // start new (PHP) session
         if ($valid) {
