@@ -92,11 +92,12 @@ class kolab_client_api
      *
      * @return kolab_client_api_result Request response
      */
-    public function login($username, $password)
+    public function login($username, $password, $domain = null)
     {
         $query = array(
             'username' => $username,
-            'password' => $password
+            'password' => $password,
+            'domain' => $domain
         );
 
         $response = $this->post('system.authenticate', null, $query);
