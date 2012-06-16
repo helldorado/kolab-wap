@@ -234,8 +234,17 @@ class kolab_client_task
             }
         }
         else if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token'])) {
+            // Validate session
+            $timeout = $this->config_get('session_timeout', 3600);
+            if ($timeout && $_SESSION['time'] && $_SESSION['time'] < time() - $timeout) {
+                $this->action_logout(true);
+            }
+
+            // update session time
+            $_SESSION['time'] = time();
+
+            // Set API session key
             $this->api->set_session_token($_SESSION['user']['token']);
-            return;
         }
     }
 
@@ -295,7 +304,7 @@ class kolab_client_task
     /**
      * Logout action.
      */
-    private function action_logout()
+    private function action_logout($sess_expired = false)
     {
         if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token'])) {
             $this->api->logout();
@@ -303,10 +312,24 @@ class kolab_client_task
         $_SESSION = array();
 
         if ($this->output->is_ajax()) {
-            $this->output->command('main_logout');
+            if ($sess_expired) {
+                $args = array('error' => 'session.expired');
+            }
+            $this->output->command('main_logout', $args);
         }
         else {
-            $this->output->add_translation('loginerror', 'internalerror');
+            $this->output->add_translation('loginerror', 'internalerror', 'session.expired');
+        }
+
+        if ($sess_expired) {
+            $error = 'session.expired';
+        }
+        else {
+            $error = $this->get_input('error', 'GET');
+        }
+
+        if ($error) {
+            $this->output->command('display_message', $error, 'error');
         }
 
         $this->output->send('login');
@@ -407,10 +430,10 @@ class kolab_client_task
         $label = $args[0];
 
         if (isset(self::$translation[$label])) {
-	        $content = trim(self::$translation[$label]);
+            $content = trim(self::$translation[$label]);
         }
-	    else {
-	        $content = $label;
+        else {
+            $content = $label;
         }
 
         for ($i = 1, $len = count($args); $i < $len; $i++) {

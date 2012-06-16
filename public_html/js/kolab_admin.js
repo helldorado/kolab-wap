@@ -1032,9 +1032,9 @@ function kolab_admin()
   /*********          Client commands              *********/
   /*********************************************************/
 
-  this.main_logout = function()
+  this.main_logout = function(params)
   {
-    location.href = '?task=main&action=logout';
+    location.href = '?task=main&action=logout' + (params ? '&' + $.param(params) : '');
     return false;
   };
 

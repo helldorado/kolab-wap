@@ -13,6 +13,7 @@ $LANG['debug'] = 'Debug info';
 $LANG['info'] = 'Information';
 $LANG['creatorsname'] = 'Created by';
 $LANG['modifiersname'] = 'Modified by';
+$LANG['session.expired'] = 'Session has expired. Login again, please';
 
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
