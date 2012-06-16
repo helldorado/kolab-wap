@@ -534,7 +534,7 @@ span.listelement {
   display: block;
   padding: 0;
   margin: 0;
-  height: 20px;
+  height: 18px;
   overflow: hidden;
   border-top: 1px solid #d0d0d0;
 }
@@ -549,7 +549,7 @@ span.listelement input {
   padding-left: 2px;
   /* FIXME: it should be 330px, but when listarea has scroller, input jumps below action buttons */
   width: 314px;
-  height: 19px;
+  height: 16px;
 }
 
 span.listarea.disabled span.listelement input,
