@@ -40,8 +40,16 @@ class Auth {
     {
         $conf = Conf::get_instance();
 
-        if ($domain === NULL) {
-            $domain = $conf->get('primary_domain');
+        if (empty($domain)) {
+            if (!empty($_SESSION['user'])) {
+                $domain = $_SESSION['user']->get_domain();
+                //console("Auth::get_instance() using domain $domain from session");
+            } else {
+                $domain = $conf->get('primary_domain');
+                //console("Auth::get_instance() using default domain $domain");
+            }
+        } else {
+            //console("Auth::get_instance() using domain $domain");
         }
 
         if (!isset(self::$instance[$domain])) {
@@ -103,12 +111,13 @@ class Auth {
     public function authenticate($username, $password)
     {
         // TODO: Log authentication request.
-//         error_log("Authentication request for $username");
+        //console("Authentication request for $username");
 
         if (strpos($username, '@')) {
             // Case-sensitivity does not matter for strstr() on '@', which
             // has no case.
-            $user_domain = strstr($username, '@');
+            $user_domain = substr(strstr($username, '@'), 1);
+            //console("Auth::authenticate(): User domain: " . $user_domain);
 
             if (isset($this->_auth[$user_domain])) {
                 // We know this domain
@@ -120,6 +129,7 @@ class Auth {
                 //
                 // This will enable john@example.org to login using 'alias'
                 // domains as well, such as 'john@example.ch'.
+                //console("Attempting to find the primary domain name space for the user domain $user_domain");
                 $associated_domain = $this->primary_for_valid_domain($user_domain);
 
                 if ($associated_domain) {
@@ -149,8 +159,17 @@ class Auth {
 
     public function connect($domain = NULL)
     {
-        if ($domain === NULL) {
-            $domain = $this->conf->get('primary_domain');
+        if (empty($domain)) {
+            if (!empty($_SESSION['user'])) {
+                //console("Using domain from session");
+                $domain = $_SESSION['user']->get_domain();
+            } else {
+                //console("Using primary_domain");
+                $domain = $this->conf->get('primary_domain');
+            }
+            //console("Domain to connect to not set, using primary domain $domain");
+        } else {
+            //console("Domain to connect to set to $domain");
         }
 
         if ($domain) {
@@ -169,7 +188,10 @@ class Auth {
 
         if (!isset($this->_auth[$domain])) {
             require_once 'Auth/' . $auth_method . '.php';
+            //console("Creating Auth for $domain");
             $this->_auth[$domain] = new $auth_method($domain);
+        //} else {
+            //console("Auth for $domain already available");
         }
     }
 
@@ -284,7 +306,12 @@ class Auth {
 
     public function list_users($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
+        if (empty($domain)) {
+            $domain = $_SESSION['user']->get_domain();
+        }
+
         $this->connect($domain);
+
         if ($domain === NULL) {
             $domain = $this->conf->get('primary_domain');
         }
@@ -308,10 +335,11 @@ class Auth {
 
     public function list_resources($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
-        $this->connect($domain);
         if ($domain === NULL) {
             $domain = $this->conf->get('primary_domain');
         }
+
+        $this->connect($domain);
 
         $resources = $this->_auth[$domain]->list_resources($attributes, $search, $params);
 
@@ -360,6 +388,8 @@ class Auth {
 
     public function resource_edit($resource, $attributes, $typeid = null)
     {
+        //console("Domain: " . $_SESSION['user']->get_domain());
+
         return $this->_auth[$_SESSION['user']->get_domain()]->resource_edit($resource, $attributes, $typeid);
     }
 
@@ -385,18 +415,16 @@ class Auth {
 
     public function search()
     {
-        $this->connect($domain);
-        if ($domain === NULL) {
-            $domain = $this->conf->get('primary_domain');
-        }
+        $this->connect();
 
-        $result = $this->_auth[$domain]->search(func_get_args());
+        $result = $this->_auth[$_SESSION['user']->get_domain()]->search(func_get_args());
 
         return $result;
     }
 
     public function user_add($attributes, $typeid = null)
     {
+        $this->connect($_SESSION['user']->get_domain());
         return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $typeid);
     }
 
