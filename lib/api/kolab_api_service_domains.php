@@ -38,9 +38,38 @@ class kolab_api_service_domains extends kolab_api_service
      */
     public function capabilities($domain)
     {
-        return array(
-            'list' => 'r',
-        );
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+
+        $domain_base_dn = $conf->get('domain_base_dn');
+
+        if (empty($domain_base_dn)) {
+            return array();
+        }
+
+        $effective_rights = $auth->list_rights($domain_base_dn);
+
+        $rights = array();
+
+        if (in_array('add', $effective_rights['entryLevelRights'])) {
+            $rights['list'] = "r";
+        }
+
+        if (in_array('delete', $effective_rights['entryLevelRights'])) {
+            $rights['list'] = "r";
+        }
+
+        if (in_array('modrdn', $effective_rights['entryLevelRights'])) {
+            $rights['list'] = "r";
+        }
+
+        if (in_array('read', $effective_rights['entryLevelRights'])) {
+            $rights['list'] = "r";
+        }
+
+        $rights['effective_rights'] = "r";
+
+        return $rights;
     }
 
     /**
