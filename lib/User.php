@@ -45,12 +45,19 @@ class User
             'email_address' => $this->_auth_method->_get_email_address(),
             'username' => $this->username,
             'password' => $this->password,
+            'domain' => $this->get_domain()
         );
     }
 
-    public function authenticate($username, $password, $method = FALSE)
+    public function authenticate($username, $password, $domain = null, $method = FALSE)
     {
-        $this->auth = Auth::get_instance();
+        //console("Running with domain", $domain);
+
+        if (empty($domain)) {
+            $this->auth = Auth::get_instance();
+        } else {
+            $this->auth = Auth::get_instance($domain);
+        }
 
         $result = $this->auth->authenticate($username, $password);
 
@@ -59,8 +66,14 @@ class User
             $this->username = $username;
             $this->password = $password;
             $this->userid   = $result;
-            $this->domain   = $this->auth->domain;
-//            $this->_groups = $this->groups();
+
+            if (empty($domain)) {
+                $this->domain   = $this->auth->domain;
+            } else {
+                $this->domain = $domain;
+            }
+
+            //$this->_groups = $this->groups();
         }
 
         return $this->_authenticated;
