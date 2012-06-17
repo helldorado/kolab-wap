@@ -755,6 +755,7 @@ fieldset.tabbed
   display: block;
   line-height: 24px;
   width: 330px;
+  text-align: left;
 }
 
 #login_form label {
@@ -762,12 +763,13 @@ fieldset.tabbed
   width: 80px;
   text-align: right;
   float: left;
-  margin-right: -20px;
+  margin-right: 10px;
 }
 
+#login_form select,
 #login_form input[type="text"],
 #login_form input[type="password"] {
-  width: 200px;
+  width: 210px;
 }
 
 #login_submit {
