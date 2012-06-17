@@ -652,6 +652,24 @@ class kolab_client_task
     {
         $post = $this->get_input('login', 'POST');
 
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+        $dna = $conf->get('domain_name_attribute');
+        $auth->connect();
+
+        $domains = Array();
+        $_domains = $auth->list_domains();
+
+        foreach ($_domains as $domain_dn => $domain_attrs) {
+            if (is_array($domain_attrs[$dna])) {
+                $domain = array_shift($domain_attrs[$dna]);
+            } else {
+                $domain = $domain_attrs[$dna];
+            }
+
+            $domains[$domain] = $domain;
+        }
+
         $username = kolab_html::label(array(
                 'for'     => 'login_name',
                 'content' => $this->translate('login.username')), true)
@@ -678,7 +696,7 @@ class kolab_client_task
                 'type'  => 'select',
                 'id'    => 'login_domain',
                 'name'  => 'login[domain]',
-                'options' => array('kolabsys.com' => 'kolabsys.com', 'kanarip.com' => 'kanarip.com')));
+                'options' => $domains));
 
         $button = kolab_html::input(array(
             'type'  => 'submit',
