@@ -1563,7 +1563,7 @@ class LDAP
 
         $filter  = $conf->get('resource_filter');
         if (!$filter)
-            $filter = '(objectclass=*)';
+            $filter = '(&(objectclass=*)(!(objectclass=organizationalunit)))';
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
