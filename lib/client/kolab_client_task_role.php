@@ -42,7 +42,7 @@ class kolab_client_task_role extends kolab_client_task
     }
 
     /**
-     * Groups list action.
+     * Roles list action.
      */
     public function action_list()
     {
@@ -162,7 +162,7 @@ class kolab_client_task_role extends kolab_client_task
     }
 
     /**
-     * Group information (form) action.
+     * Role information (form) action.
      */
     public function action_info()
     {
@@ -175,7 +175,7 @@ class kolab_client_task_role extends kolab_client_task
     }
 
     /**
-     * Groups adding (form) action.
+     * Roles adding (form) action.
      */
     public function action_add()
     {
@@ -186,7 +186,7 @@ class kolab_client_task_role extends kolab_client_task
     }
 
     /**
-     * Group edit/add form.
+     * Role edit/add form.
      */
     private function role_form($attribs, $data = array())
     {
@@ -205,15 +205,15 @@ class kolab_client_task_role extends kolab_client_task
             'type_id'       => 'system',
             'type_id_name'  => 'system',
             'cn'            => 'system',
-            'gidnumber'     => 'system',
-            'mail'          => 'system',
-            'member'        => 'system',
-            'uniquemember'  => 'system',
-            'memberurl'     => 'system',
+            'description'   => 'system',
         );
+
+        //console("role_form \$data", $data);
 
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('role', $data);
+
+        //console("role_form \$types", $types);
 
         $add_mode  = empty($data['id']);
         $accttypes = array();
@@ -289,13 +289,17 @@ class kolab_client_task_role extends kolab_client_task
      */
     public function role_types()
     {
-        if (!isset($_SESSION['role_types'])) {
-            $result = $this->api->post('role_types.list');
-            $list   = $result->get('list');
-
-            if (is_array($list)) {
-                $_SESSION['role_types'] = $list;
+        if (!$this->config_get('devel_mode', false)) {
+            if (isset($_SESSION['role_types'])) {
+                return $_SESSION['role_types'];
             }
+        }
+
+        $result = $this->api->post('role_types.list');
+        $list   = $result->get('list');
+
+        if (is_array($list)) {
+            $_SESSION['role_types'] = $list;
         }
 
         return $_SESSION['role_types'];
