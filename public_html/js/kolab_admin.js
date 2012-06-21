@@ -1322,6 +1322,82 @@ function kolab_admin()
     this.command('resource.list', {page: this.env.list_page});
   };
 
+  this.role_info = function(id)
+  {
+    this.http_post('role.info', {id: id});
+  };
+
+  this.role_list = function(props)
+  {
+    if (!props)
+      props = {};
+
+    if (props.search === undefined && this.env.search_request)
+      props.search_request = this.env.search_request;
+
+    this.http_post('role.list', props);
+  };
+
+  this.role_delete = function(roleid)
+  {
+    this.set_busy(true, 'deleting');
+    this.api_post('role.delete', {role: roleid}, 'role_delete_response');
+  };
+
+  this.role_delete_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    var page = this.env.list_page;
+
+    // goto previous page if last user on the current page has been deleted
+    if (this.env.list_count)
+      page -= 1;
+
+    this.display_message('role.delete.success');
+    this.command('role.list', {page: page});
+  };
+
+  this.role_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('role.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('role.' + action, data, 'role_' + action + '_response');
+  };
+
+  this.role_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('role.add.success');
+    this.command('role.list', {page: this.env.list_page});
+  };
+
+  this.role_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('role.edit.success');
+    this.command('role.list', {page: this.env.list_page});
+  };
 
   this.generate_password = function(fieldname)
   {
