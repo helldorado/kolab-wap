@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: May 25, 2012 at 12:21 PM
--- Server version: 5.5.23
--- PHP Version: 5.4.1
+-- Generation Time: Jun 21, 2012 at 12:14 PM
+-- Server version: 5.5.13
+-- PHP Version: 5.3.10
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -90,6 +90,29 @@ INSERT INTO `resource_types` (`id`, `key`, `name`, `description`, `attributes`) 
 (3, 'confroom', 'Conference Room', 'A conference room', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}'),
 (4, 'beamer', 'Beamer', 'A portable beamer', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}'),
 (5, 'footballtickets', 'Football Season Tickets', 'Season tickets to the game (pretty good seats too!)', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role_types`
+--
+
+CREATE TABLE IF NOT EXISTS `role_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
+
+--
+-- Dumping data for table `role_types`
+--
+
+INSERT INTO `role_types` (`id`, `key`, `name`, `description`, `attributes`) VALUES
+(1, 'simple_managed', 'Standard Role', 'A standard role definition', '{"auto_form_fields":[],"fields":{"objectclass":["top","ldapsubentry","nsroledefinition","nssimpleroledefinition","nsmanagedroledefinition"]},"form_fields":{"cn":[],"description":[]}}');
 
 -- --------------------------------------------------------
 
