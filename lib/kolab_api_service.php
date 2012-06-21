@@ -107,13 +107,15 @@ abstract class kolab_api_service
      * Detects object type ID for specified objectClass attribute value
      *
      * @param string $object_name   Name of the object (user, group, etc.)
-     * @param array  $object_class  Value of objectClass attribute
+     * @param array  $attributes    Array of attributes and values
      *
      * @return int Object type identifier
      */
-    protected function object_type_id($object_name, $object_class)
+    protected function object_type_id($object_name, $attributes)
     {
         if ($object_name == 'domain') return 1;
+
+        $object_class = $attributes['objectclass'];
 
         if (empty($object_class)) {
             return null;
@@ -150,6 +152,18 @@ abstract class kolab_api_service
             if ($elem_score > $type_score) {
                 $type_id    = $idx;
                 $type_score = $elem_score;
+            }
+
+            // On the likely chance that the object is a resource (types of which likely have the same
+            // set of objectclass attribute values), consider the other attributes. (#853)
+            if ($object_name == 'resource') {
+                //console("From database", $elem);
+                //console("Element key is " . $elem['key'] . " and \$attributes['mail'] is " . $attributes['mail']);
+
+                if (strstr($attributes['mail'], "-" . $elem['key'] . "-")) {
+                    $type_id = $idx;
+                    $type_score = 10;
+                }
             }
         }
 
@@ -303,7 +317,7 @@ abstract class kolab_api_service
         $extra_attrs = array();
 
         // add group type id to the result
-        $attrs['type_id'] = $this->object_type_id($object_name, $attrs['objectclass']);
+        $attrs['type_id'] = $this->object_type_id($object_name, $attrs);
 
         if (empty($attrs['type_id'])) {
             if ($object_name == 'domain') {
