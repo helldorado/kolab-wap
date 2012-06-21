@@ -66,6 +66,8 @@ class kolab_api_controller
         $this->add_service('resource',          'kolab_api_service_resource');
         $this->add_service('resources',         'kolab_api_service_resources');
         $this->add_service('roles',             'kolab_api_service_roles');
+        $this->add_service('role',              'kolab_api_service_role');
+        $this->add_service('role_types',        'kolab_api_service_role_types');
         $this->add_service('user_types',        'kolab_api_service_user_types');
         $this->add_service('user',              'kolab_api_service_user');
         $this->add_service('users',             'kolab_api_service_users');
@@ -89,6 +91,8 @@ class kolab_api_controller
      */
     public function get_service($service)
     {
+        //console("Obtaining service $service");
+
         // we are the system!
         if ($service == 'system') {
             return $this;
