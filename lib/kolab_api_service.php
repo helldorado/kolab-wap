@@ -165,17 +165,21 @@ abstract class kolab_api_service
      */
     protected function object_types($object_name)
     {
-        $supported = array('group', 'resource', 'user');
+        $supported = array('group', 'resource', 'role', 'user');
         if (!$object_name || !in_array($object_name, $supported)) {
             return array();
         }
 
+        $conf = Conf::get_instance();
 
-        if (!empty($this->cache['object_types']) && !empty($this->cache['object_types'][$object_name])) {
-            return $this->cache['object_types'][$object_name];
+        $devel_mode = $conf->get('kolab_wap', 'devel_mode');
+
+        if ($devel_mode == null) {
+            if (!empty($this->cache['object_types']) && !empty($this->cache['object_types'][$object_name])) {
+                return $this->cache['object_types'][$object_name];
+            }
         }
 
-        $conf = Conf::get_instance();
         $unique_attr = $conf->get('unique_attribute');
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
@@ -201,9 +205,11 @@ abstract class kolab_api_service
 
         //console("Object types for " . $object_name, $object_types);
 
-//         return $object_types;
-
-        return $this->cache['object_types'][$object_name] = $object_types;
+        if ($devel_mode == null) {
+            return $this->cache['object_types'][$object_name] = $object_types;
+        } else {
+            return $object_types;
+        }
 
     }
 
