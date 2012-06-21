@@ -1879,6 +1879,11 @@ class LDAP
             $_aci = $aci;
         }
 
+        $service_bind_dn = $conf->get('ldap', 'service_bind_dn');
+        if (empty($service_bind_dn)) {
+            $service_bind_dn = $conf->get('ldap', 'bind_dn');
+        }
+
         $dn = $inetdomainbasedn;
         $attrs = Array(
                 # TODO: Probably just use ldap_explode_dn()
@@ -1906,6 +1911,8 @@ class LDAP
                         # Search Access,
                         "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "\");)",
 
+                        # Service Search Access
+                        "(targetattr = \"*\") (version 3.0;acl \"Service Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $service_bind_dn . "\");)",
                     ),
             );
 
