@@ -577,8 +577,10 @@ class kolab_client_task
      */
     protected function user_name($dn)
     {
-        if (!empty($this->cache['user_names']) && isset($this->cache['user_names'][$dn])) {
-            return $this->cache['user_names'][$dn];
+        if (!$this->config_get('devel_mode', false)) {
+            if (!empty($this->cache['user_names']) && isset($this->cache['user_names'][$dn])) {
+                return $this->cache['user_names'][$dn];
+            }
         }
 
         $result   = $this->api->get('user.info', array('user' => $dn));
@@ -593,7 +595,11 @@ class kolab_client_task
             }
         }
 
-        return $this->cache['user_names'][$dn] = $username;
+        if (!$this->config_get('devel_mode', false)) {
+            return $this->cache['user_names'][$dn] = $username;
+        } else {
+            return $username;
+        }
     }
 
     /**
