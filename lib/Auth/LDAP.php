@@ -820,6 +820,30 @@ class LDAP
         return $this->_list_resource_members($resource_dn, null, $recurse);
     }
 
+    public function role_find_by_attribute($attribute)
+    {
+        //console("Finding role by attribute", $attribute);
+
+        $attribute['objectclass'] = 'ldapsubentry';
+        $result = $this->entry_find_by_attribute($attribute);
+        if (is_array($result) && count($result) == 0) {
+            return key($result);
+        } else {
+            return false;
+        }
+    }
+
+    public function role_info($role, $attributes = array('*'))
+    {
+        $role_dn = $this->entry_dn($role);
+
+        if (!$role_dn) {
+            return false;
+        }
+
+        return self::normalize_result($this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes));
+    }
+
     public function user_add($attrs, $typeid = null)
     {
         if ($typeid == null) {
@@ -1043,7 +1067,7 @@ class LDAP
 
     private function entry_find_by_attribute($attribute, $base_dn = null)
     {
-        if (empty($attribute) || !is_array($attribute) || count($attribute) > 1) {
+        if (empty($attribute) || !is_array($attribute)) {
             return false;
         }
 

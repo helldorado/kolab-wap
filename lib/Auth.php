@@ -413,6 +413,16 @@ class Auth {
         return $this->_auth[$_SESSION['user']->get_domain()]->resource_members_list($resourcedata, $recurse);
     }
 
+    public function role_find_by_attribute($attribute)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->role_find_by_attribute($attribute);
+    }
+
+    public function role_info($roledata)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->role_info($roledata);
+    }
+
     public function search()
     {
         $this->connect();
