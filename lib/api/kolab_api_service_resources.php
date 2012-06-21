@@ -139,7 +139,7 @@ class kolab_api_service_resources extends kolab_api_service
             'count' => $count,
         );
 
-        //console($result);
+        //console("api::resources.list() \$result", $result);
 
         return $result;
     }
