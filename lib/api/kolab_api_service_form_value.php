@@ -183,7 +183,7 @@ class kolab_api_service_form_value extends kolab_api_service
      */
     public function validate($getdata, $postdata)
     {
-        console("Executing validate() for \$getdata, \$postdata", $getdata, $postdata);
+        //console("Executing validate() for \$getdata, \$postdata", $getdata, $postdata);
 
         $attribs = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $result  = array();
@@ -1022,40 +1022,47 @@ class kolab_api_service_form_value extends kolab_api_service
 
             if (strlen($local) < 1 || strlen($local) > 64) {
                 // local part length exceeded
+                //console("Local part of email address is longer than permitted");
                 $valid = false;
 
             } else if (strlen($domain) < 1 || strlen($domain) > 255) {
                 // domain part length exceeded
+                //console("Domain part of email address is longer than permitted");
                 $valid = false;
 
             } else if ($local[0] == '.' || $local[strlen($local)-1] == '.') {
                 // local part starts or ends with '.'
+                //console("Local part of email address starts or ends with '.'");
                 $valid = false;
 
             } else if (preg_match('/\\.\\./', $local)) {
+                //console("Local part contains two consecutive dots");
                 // local part has two consecutive dots
                 $valid = false;
 
             } else if (!preg_match('/^[A-Za-z0-9\\-\\.]+$/', $domain)) {
                 // character not valid in domain part
+                //console("Invalid character in domain part");
                 $valid = false;
 
             } else if (preg_match('/\\.\\./', $domain)) {
                 // domain part has two consecutive dots
+                //console("Domain part contains two consecutive dots");
                 $valid = false;
 
             } else if (!preg_match('/^(\\\\.|[A-Za-z0-9!#%&`_=\\/$\'*+?^{}|~.-])+$/', str_replace("\\\\","",$local))) {
                 // character not valid in local part unless
                 // local part is quoted
                 if (!preg_match('/^"(\\\\"|[^"])+"$/', str_replace("\\\\","",$local))) {
+                    //console("Unquoted invalid character in local part");
                     $valid = false;
                 }
             }
 
-            if ($valid && !(checkdnsrr($domain,"MX") || checkdnsrr($domain,"A"))) {
-                // domain not found in DNS
-                $valid = false;
-            }
+//            if ($valid && !(checkdnsrr($domain,"MX") || checkdnsrr($domain,"A"))) {
+//                // domain not found in DNS
+//                $valid = false;
+//            }
         }
 
         return $valid;
