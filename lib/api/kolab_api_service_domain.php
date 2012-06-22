@@ -91,8 +91,14 @@ class kolab_api_service_domain extends kolab_api_service
             return;
         }
 
-        $auth = Auth::get_instance();
-        $auth->domain_add($postdata[$dna]);
+        $auth = Auth::get_instance($conf->get('kolab', 'primary_domain'));
+
+        if (is_array($postdata[$dna])) {
+            $parent_domain = array_shift($postdata[$dna]);
+            return $auth->domain_add($parent_domain, $postdata[$dna]);
+        } else {
+            return $auth->domain_add($postdata[$dna]);
+        }
     }
 
     public function domain_edit($getdata, $postdata)
