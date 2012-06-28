@@ -67,7 +67,7 @@ class kolab_client_task
     /**
      * Localization initialization.
      */
-    private function locale_init()
+    protected function locale_init()
     {
         $language = $this->get_language();
         $LANG     = array();
