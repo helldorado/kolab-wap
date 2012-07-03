@@ -43,8 +43,8 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Set the session token we got in the API client instance, so subsequent
         // API calls are made in the same session.
-        $token = $result->get('session_token');
-        $this->api->set_session_token($token);
+        $this->token = $result->get('session_token');
+        $this->api->set_session_token($this->token);
                 
         // Run security checks
         // TODO figure out to reenable this
@@ -112,15 +112,15 @@ class kolab_client_task_signup extends kolab_client_task
             'label'   => 'Username',
             'name'    => 'alias',
             'type'    => kolab_form::INPUT_TEXT,
-//            'onchange'=> "kadm.command('signup.update_mail', 'test')",
-//            'onchange'=> "kadm.form_value_change(['mail'])",
+            'value'   => 'john.doe',
+            'onchange'=> "kadm.check_user_availability()",
         ));
         $form->add_element(array(
             'label'   => 'Domain',
             'name'    => 'domain',
             'type'    => kolab_form::INPUT_SELECT,
             'options' => $domain_form_names,
-//            'onchange'=> "kadm.command('signup.update_mail', 'test')",
+            'onchange'=> "kadm.check_user_availability()",
         ));
         $form->add_element(array(
             'label'   => 'Current Email Address',
@@ -135,18 +135,18 @@ class kolab_client_task_signup extends kolab_client_task
         ));
         $form->add_button(array(
             'value'   => kolab_html::escape('Sign up'),
-//            'onclick' => "kadm.command('signup.check', 'test')",
+            'onclick' => "alert('not working yet')",
         ));
 
+        // keep session
+        $this->output->set_env('token', $this->token);
+
+        // assign form output to template variable
         $this->output->assign('form', $form->output());
     }
     
-    public function action_update_mail() {
-        $this->output->set_object('test', 'TEST UPDATE');
-    }
-
-    public function action_check() {
-        $this->output->set_object('test', 'TEST CHECK');
+    public function action_add_user() {
+        // TODO actually add user here
     }
 
 }
