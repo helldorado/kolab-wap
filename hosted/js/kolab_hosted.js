@@ -25,7 +25,7 @@ kadm.check_user_availability = function(userid)
 {
     // get form data and build new email address
     data = kadm.serialize_form('#signup-form');
-    uid = data['alias'] + '@' + data['domain'];
+    uid = data['uid'] + '@' + data['domain'];
     
     if(isValidEmailAddress(uid)) {
         // update future mail form field
@@ -57,7 +57,7 @@ function update_user_info(msg) {
     }
     else {
         // add span area and inform about non-availability
-        $('input[name="alias"]').after(' <span id="availability" style="font-weight:bold;margin-left:1em;color:red;">' + msg + '</span>');
+        $('input[name="uid"]').after(' <span id="availability" style="font-weight:bold;margin-left:1em;color:red;">' + msg + '</span>');
     }
 }
 
