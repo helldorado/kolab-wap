@@ -21,7 +21,7 @@
  +--------------------------------------------------------------------------+
 */
 
-kadm.check_user_availability = function(userid)
+kadm.check_user_availability = function()
 {
     // get form data and build new email address
     data = kadm.serialize_form('#signup-form');
@@ -34,7 +34,7 @@ kadm.check_user_availability = function(userid)
         // check if user with that email address already exists
         kadm.api_post('users.list', {'search': {'mail': {'value': uid} } }, 'check_user_availability_response');
     } else {
-        update_user_info('This is not a valid email address!');
+        update_user_info('This will not produce a valid email address!');
     }
 };
 
@@ -50,7 +50,28 @@ kadm.check_user_availability_response = function(response)
     update_user_info(msg);
 };
 
-function update_user_info(msg) {
+kadm.user_signup = function()
+{
+    if(isValidEmailAddress($('input[name="mailalternateaddress"]').val())) {
+        kadm.user_save();
+    } else{
+        kadm.display_message('Please provide a valid email adress as this is where your password will be sent to.', 'error');
+    }
+}
+
+
+function update_ou()
+{
+    // update ou string from domain field
+    $('input[name="ou"]').val("ou=people,dc=" + $('select[name="domain"]').val().split(".").join(",dc="));
+
+    // also update user name availability
+    kadm.check_user_availability();
+}
+
+function update_user_info(msg)
+{
+    // display message next to form field
     if($('span[id="availability"]').length) {
         // update existing span area
         $('span[id="availability"]').html(msg);
@@ -59,6 +80,18 @@ function update_user_info(msg) {
         // add span area and inform about non-availability
         $('input[name="uid"]').after(' <span id="availability" style="font-weight:bold;margin-left:1em;color:red;">' + msg + '</span>');
     }
+    
+    // enable/disable button
+    if(msg == '') {
+        $('input[type="button"]').removeAttr("disabled");
+    } else {
+        $('input[type="button"]').attr("disabled", "disabled");
+    }
+
+    // update givenname and cn
+    // TODO remove when no longer needed
+    $('input[name="givenname"]').val($('input[name="uid"]').val());
+    $('input[name="cn"]').val($('input[name="uid"]').val());
 }
 
 function isValidEmailAddress(emailAddress) {

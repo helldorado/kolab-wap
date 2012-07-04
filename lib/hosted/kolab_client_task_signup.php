@@ -132,7 +132,6 @@ class kolab_client_task_signup extends kolab_client_task
             'label'   => 'Username',
             'name'    => 'uid',
             'type'    => kolab_form::INPUT_TEXT,
-            'value'   => 'john.doe',
             'onchange'=> "kadm.check_user_availability()",
         ));
         $form->add_element(array(
@@ -140,11 +139,11 @@ class kolab_client_task_signup extends kolab_client_task
             'name'    => 'domain',
             'type'    => kolab_form::INPUT_SELECT,
             'options' => $domain_form_names,
-            'onchange'=> "kadm.check_user_availability()",
+            'onchange'=> "update_ou()",
         ));
         $form->add_element(array(
             'label'   => 'Current Email Address',
-            'name'    => 'cur_mail',
+            'name'    => 'mailalternateaddress',
             'type'    => kolab_form::INPUT_TEXT,
         ));
         $form->add_element(array(
@@ -196,7 +195,7 @@ class kolab_client_task_signup extends kolab_client_task
         ));
         $form->add_button(array(
             'value'   => kolab_html::escape('Sign up'),
-            'onclick' => "kadm.user_save()",
+            'onclick' => "kadm.user_signup()",
 //            'onclick' => "kadm.command('signup.add_user')",
         ));
 
@@ -208,7 +207,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         // define form_id and required fields
         $this->output->set_env('form_id', $form_id);
-        $this->output->set_env('required_fields', Array('uid', 'mail', 'cur_mail', 'domain'));
+        $this->output->set_env('required_fields', Array('uid', 'mail', 'mailalternateaddress', 'domain'));
 
         // assign form output to template variable
         $this->output->assign('form', $form->output());
