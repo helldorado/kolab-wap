@@ -66,6 +66,80 @@ class kolab_client_task_signup extends kolab_client_task
 
     public function action_default()
     {
+        // keep session
+        $this->output->set_env('token', $_SESSION['user']['token']);
+
+        $this->output->assign('form', $this->user_form());
+    }
+    
+    public function action_add_user() {
+        // TODO actually add user here
+        $this->output->command('display_message', 'Not adding user here, yet', 'notice');
+    }
+
+    private function user_form($data = array()) {
+        $attribs['id'] = 'signup-form';
+
+        // Prepare fields
+        list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2')); 
+        
+        // remove delete button
+        if(($key = array_search('delete', $data['effective_rights']['entry'])) !== false) {
+            unset($data['effective_rights']['entry'][$key]);
+        }
+        
+        // Show only required fields
+        foreach ($fields as $field_name => $field_attrs) {
+            if(!array_key_exists('required', $field_attrs) or $field_attrs['required'] != 'true') {
+                unset($fields[$field_name]);
+            }
+        }
+
+        // Add user type field
+        $fields['type_id'] = array(
+            'type'     => kolab_form::INPUT_HIDDEN,
+            'value'    => $this->type_id,
+        );
+
+        // Add available domains
+        $fields['mailhost']['options'] = $this->get_domains();
+    
+        // Hide ou field
+        if (isset($fields['ou'])) {
+            $fields['ou']['type'] = kolab_form::INPUT_HIDDEN;
+        }
+        
+        // Add password confirmation
+        if (isset($fields['userpassword'])) {
+            $fields['userpassword2'] = $fields['userpassword'];
+            // Add 'Generate password' link
+            if (empty($fields['userpassword']['readonly'])) {
+                $fields['userpassword']['suffix'] = kolab_html::a(array(
+                    'content' => $this->translate('password.generate'),
+                    'href'    => '#',
+                    'onclick' => "kadm.generate_password('userpassword')",
+                ));
+            }
+        }
+        
+        // Change field labels for hosted case
+        // TODO make translatable
+        $fields['uid']['label'] = "Username";
+        $fields['mail']['label'] = "Your Future Email Address";
+        $fields['mailalternateaddress']['label'] = "Your Current Email Address";
+        $fields['mailhost']['label'] = "Domain";
+
+        // Create form object and populate with fields
+        $form = $this->form_create('user', $attribs, array('other'), $fields, array(), $data, true);
+
+        $form->set_title(kolab_html::escape($title));
+
+        $this->output->add_translation('user.password.mismatch', 'user.add.success', 'user.edit.success', 'user.delete.success');
+
+        return $form->output();
+    }
+
+    private function get_domains() {
         // Get a list of domains ($domains again is a kolab_client_api_result instance)
         $domains = $this->api->get('domains.list')->get();
 
@@ -104,118 +178,6 @@ class kolab_client_task_signup extends kolab_client_task
            $domain_form_names[$domain] = $domain;
         }
 
-
-        // retrieve user types
-        $user_types = $this->api->get('user_types.list')->get();
-
-        // We're interested in user_type 'kolab' for personal users
-        foreach ($user_types['list'] as $type_id => $type_attrs) {
-            if ($type_attrs['key'] == 'kolab') {
-                $this->type_id = $type_id;
-                
-/*                foreach ($type_attrs['attributes']['form_fields'] as $field_name => $field_attrs) {
-                    // Use the $field_attrs['type'] to see what type the field is, use lookup map in lib/kolab_form.php
-                    if($field_attrs['optional'] != 'yes') {
-                        console($field_name . " type=" . (empty($field_attrs['type']) ? "text" : $field_attrs['type']));
-                    }
-                }
- */
-            }
-        }
-
-        
-        // The sign-up form is deliberately kept minimal. All further information can be entered after sign-up.
-        $form_id = 'signup-form';
-        $form = new kolab_form(array('id' => $form_id));
-
-        $form->add_element(array(
-            'label'   => 'Username',
-            'name'    => 'uid',
-            'type'    => kolab_form::INPUT_TEXT,
-            'onchange'=> "kadm.check_user_availability()",
-        ));
-        $form->add_element(array(
-            'label'   => 'Domain',
-            'name'    => 'domain',
-            'type'    => kolab_form::INPUT_SELECT,
-            'options' => $domain_form_names,
-            'onchange'=> "update_ou()",
-        ));
-        $form->add_element(array(
-            'label'   => 'Current Email Address',
-            'name'    => 'mailalternateaddress',
-            'type'    => kolab_form::INPUT_TEXT,
-        ));
-        $form->add_element(array(
-            'label'   => 'Future Email Address',
-            'name'    => 'mail',
-            'type'    => kolab_form::INPUT_TEXT,
-            'readonly'=> true,
-        ));
-        // TODO make the following fields optional
-        $form->add_element(array(
-            'name'    => 'type_id',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => $this->type_id,
-        ));
-        $form->add_element(array(
-            'name'    => 'givenname',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'test',
-        ));
-        $form->add_element(array(
-            'name'    => 'sn',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'test',
-        ));
-        $form->add_element(array(
-            'name'    => 'cn',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'test',
-        ));
-        $form->add_element(array(
-            'name'    => 'userpassword',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'test',
-        ));
-        $form->add_element(array(
-            'name'    => 'userpassword2',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'test',
-        ));
-        $form->add_element(array(
-            'name'    => 'ou',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'ou=people,dc=notifytest,dc=tld', // TODO this would need to be updated if kept
-        ));
-        $form->add_element(array(
-            'name'    => 'preferredlanguage',
-            'type'    => kolab_form::INPUT_HIDDEN,
-            'value'   => 'en_US',
-        ));
-        $form->add_button(array(
-            'value'   => kolab_html::escape('Sign up'),
-            'onclick' => "kadm.user_signup()",
-//            'onclick' => "kadm.command('signup.add_user')",
-        ));
-
-        // keep session
-        $this->output->set_env('token', $_SESSION['user']['token']);
-    
-        // add message translations
-        $this->output->add_translation('form.required.empty', 'user.add.success');
-
-        // define form_id and required fields
-        $this->output->set_env('form_id', $form_id);
-        $this->output->set_env('required_fields', Array('uid', 'mail', 'mailalternateaddress', 'domain'));
-
-        // assign form output to template variable
-        $this->output->assign('form', $form->output());
+        return $domain_form_names;
     }
-    
-    public function action_add_user() {
-        // TODO actually add user here
-        $this->output->command('display_message', 'Not adding user here, yet', 'notice');
-    }
-
 }
