@@ -955,6 +955,7 @@ class LDAP
     */
     private function domain_root_dn($domain = '')
     {
+        //console("Auth::LDAP::domain_root_dn(\$domain) called with \$domain", $domain);
         $conf = Conf::get_instance();
 
         if ($domain == '') {
@@ -986,13 +987,14 @@ class LDAP
             );
 
         $result = $result[key($result)];
+        //console("intermediate result for domain_root_dn()", $result);
 
         if (is_array($result)) {
-            if (in_array('inetdomainbasedn', $result)) {
+            if (in_array('inetdomainbasedn', $result) && !empty($result['inetdomainbasedn'])) {
                 return $result['inetdomainbasedn'];
             } else {
                 if (is_array($result[$domain_name_attribute])) {
-                    return $this->_standard_root_dn($result[$domain_name_attribute[0]]);
+                    return $this->_standard_root_dn($result[$domain_name_attribute][0]);
                 } else {
                     return $this->_standard_root_dn($result[$domain_name_attribute]);
                 }
@@ -1067,6 +1069,8 @@ class LDAP
 
     private function entry_find_by_attribute($attribute, $base_dn = null)
     {
+        //console("Auth::LDAP::entry_find_by_attribute(\$attribute, \$base_dn) called with base_dn", $base_dn);
+
         if (empty($attribute) || !is_array($attribute)) {
             return false;
         }
