@@ -1040,6 +1040,10 @@ class LDAP
 
     private function domains_list()
     {
+        $conf = Conf::get_instance();
+
+        $this->_bind($conf->get('bind_dn'), $conf->get('bind_pw'));
+
         $section = $this->conf->get('kolab', 'auth_mechanism');
         $base_dn = $this->conf->get($section, 'domain_base_dn');
         $filter  = $this->conf->get($section, 'domain_filter');
