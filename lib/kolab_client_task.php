@@ -756,6 +756,9 @@ class kolab_client_task
             if (!empty($field['maxlength'])) {
                 $result['data-maxlength'] = $field['maxlength'];
             }
+            if (!empty($field['maxcount'])) {
+                $result['data-maxcount'] = $field['maxcount'];
+            }
             if (!empty($field['autocomplete'])) {
                 $result['data-autocomplete'] = true;
             }

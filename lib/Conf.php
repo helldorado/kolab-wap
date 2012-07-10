@@ -28,8 +28,7 @@ class Conf {
 
     private $_conf = array();
 
-//    const CONFIG_FILE = '/etc/kolab/kolab.conf';
-    const CONFIG_FILE = '/home/grote/public_html/kolab-webadmin/kolab.conf';
+    const CONFIG_FILE = '/etc/kolab/kolab.conf';
 
     const STRING = 0;
     const BOOL   = 1;
@@ -58,7 +57,6 @@ class Conf {
         }
 
         $this->read_config();
-
     }
 
     public function get($key1, $key2 = null, $type = null)
