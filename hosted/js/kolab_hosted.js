@@ -24,15 +24,15 @@
 kadm.check_user_availability = function()
 {
     // get form data and build new email address
-    data = kadm.serialize_form('#signup-form');
-    uid = data['uid'] + '@' + data['domain'];
+    var data = kadm.serialize_form('#signup-form');
+    var mail = data['uid'] + '@' + data['domain'];
     
-    if(isValidEmailAddress(uid)) {
+    if(isValidEmailAddress(mail)) {
         // update future mail form field
-        $('input[name="mail"]').val(uid);
+        $('input[name="mail"]').val(mail);
         
         // check if user with that email address already exists
-        kadm.api_post('users.list', {'search': {'mail': {'value': uid} } }, 'check_user_availability_response');
+        kadm.api_post('users.list', {'search': {'mail': {'value': mail} } }, 'check_user_availability_response');
     } else {
         update_user_info('This will not produce a valid email address!');
     }
@@ -60,15 +60,6 @@ kadm.user_signup = function()
 }
 
 
-function update_ou()
-{
-    // update ou string from domain field
-    $('input[name="ou"]').val("ou=people,dc=" + $('select[name="domain"]').val().split(".").join(",dc="));
-
-    // also update user name availability
-    kadm.check_user_availability();
-}
-
 function update_user_info(msg)
 {
     // display message next to form field
@@ -87,11 +78,6 @@ function update_user_info(msg)
     } else {
         $('input[type="button"]').attr("disabled", "disabled");
     }
-
-    // update givenname and cn
-    // TODO remove when no longer needed
-    $('input[name="givenname"]').val($('input[name="uid"]').val());
-    $('input[name="cn"]').val($('input[name="uid"]').val());
 }
 
 function isValidEmailAddress(emailAddress) {

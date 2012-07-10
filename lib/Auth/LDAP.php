@@ -866,6 +866,9 @@ class LDAP
         if (empty($base_dn))
             $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
 
+        if (empty($base_dn))
+            $base_dn = $this->conf->get('ldap', "user_base_dn");
+
         // If still no base dn to add the user to... use the toplevel dn
         if (empty($base_dn))
             $base_dn = $this->conf->get($this->domain, "base_dn");

@@ -39,7 +39,7 @@ class kolab_client_task_signup extends kolab_client_task
         $this->output->assign('engine', $this);
         
         // Login ($result is a kolab_client_api_result instance))
-        $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), 'notifytest.tld');
+        $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), 'hostedtest.tld');
 
         // Set the session token we got in the API client instance, so subsequent
         // API calls are made in the same session.
@@ -79,19 +79,32 @@ class kolab_client_task_signup extends kolab_client_task
 
     private function user_form($data = array()) {
         $attribs['id'] = 'signup-form';
-        $show_fields = array('mailalternateaddress');
+
+        $fields_map = array(
+            'givenname'                 => 'other',
+            'sn'                        => 'other',
+            'cn'                        => 'other',
+            'mailalternateaddress'      => 'other',
+            'uid'                       => 'other',
+            'domain'                    => 'other',
+            'userpassword'              => 'other',
+            'userpassword2'             => 'other',
+            'mail'                      => 'other',
+            'alias'                     => 'other',
+        );
 
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2')); 
 
         // Remove delete button
+        // TODO adapt effective rights and then remove
         if(($key = array_search('delete', $data['effective_rights']['entry'])) !== false) {
             unset($data['effective_rights']['entry'][$key]);
         }
         
         // Show only required fields
         foreach ($fields as $field_name => $field_attrs) {
-            if((!array_key_exists('required', $field_attrs) or $field_attrs['required'] != 'true') and !in_array($field_name, $show_fields)) {
+            if(!array_key_exists('required', $field_attrs) or $field_attrs['required'] != 'true') {
                 unset($fields[$field_name]);
             }
         }
@@ -102,7 +115,7 @@ class kolab_client_task_signup extends kolab_client_task
             'value'    => $type,
         );
         
-        // Add object type
+        // Add object type field
         $fields['object_type'] = array(
             'type'     => kolab_form::INPUT_HIDDEN,
             'value'    => 'user',
@@ -112,14 +125,12 @@ class kolab_client_task_signup extends kolab_client_task
         $fields['domain'] = array(
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $this->get_domains(),
-            'onchange' => 'kadm.form_value_change(["mail"])',
+            'onchange' => 'kadm.check_user_availability()',
         );
-        // TODO get domain into auto-fields
 
+        // Check for user availability
+        $fields['uid']['onchange'] = 'kadm.check_user_availability()';
 
-        // Require mail alternate address
-        $fields['mailalternateaddress']['required'] = 'true';
-    
         // Hide cn field
         if (isset($fields['cn'])) {
             $fields['cn']['type'] = kolab_form::INPUT_HIDDEN;
@@ -137,7 +148,6 @@ class kolab_client_task_signup extends kolab_client_task
                 ));
             }
         }
-
         
         // Change field labels for hosted case
         // TODO make translatable
@@ -147,7 +157,7 @@ class kolab_client_task_signup extends kolab_client_task
         $fields['domain']['label'] = "Domain";
 
         // Create form object and populate with fields
-        $form = $this->form_create('user', $attribs, array('other'), $fields, array(), $data, true);
+        $form = $this->form_create('user', $attribs, array('other'), $fields, $fields_map, $data, true);
 
         $form->set_title(kolab_html::escape('Sign up'));
 
