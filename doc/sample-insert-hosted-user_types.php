@@ -53,31 +53,13 @@
                         ),
                 ),
             "form_fields" => Array(
-                    "givenname" => Array(),
-                    "kolabdelegate" => Array(
-                            "type" => "list",
-                            "autocomplete" => true,
-                            "optional" => true,
-                        ),
-                    "kolabinvitationpolicy" => Array(
-                            "type" => "select",
-                            "values" => Array(
-                                    "",
-                                    "ACT_MANUAL",
-                                    "ACT_REJECT",
-                                ),
-                            "optional" => true,
-                        ),
-                    "kolaballowsmtprecipient" => Array(
-                            "type" => "list",
-                            "optional" => true,
-                        ),
-                    "kolaballowsmtpsender" => Array(
-                            "type" => "list",
-                            "optional" => true,
-                        ),
                     /*
-                     *
+                     * Givenname is a requirement, but could
+                     * be filled with random data if not
+                     * wanted.
+                     */
+                    "givenname" => Array(),
+                    /*
                      * The 'mailalternateaddress' is supposed
                      * to contain the original email address
                      * for the user.
@@ -152,38 +134,21 @@
                     "alias" => Array(
                             "type" => "list",
                             "optional" => true,
-                            "max_count" => 2,
+                            "maxcount" => 2,
                         ),
+                    /*
+                     * Givenname is a requirement, but could
+                     * be filled with random data if not
+                     * wanted.
+                     */
                     "givenname" => Array(),
-                    "kolabdelegate" => Array(
-                            "type" => "list",
-                            "autocomplete" => true,
-                            "optional" => true,
-                        ),
-                    "kolabinvitationpolicy" => Array(
-                            "type" => "select",
-                            "values" => Array(
-                                    "",
-                                    "ACT_MANUAL",
-                                    "ACT_REJECT",
-                                ),
-                            "optional" => true,
-                        ),
-                    "kolaballowsmtprecipient" => Array(
-                            "type" => "list",
-                            "optional" => true,
-                        ),
-                    "kolaballowsmtpsender" => Array(
-                            "type" => "list",
-                            "optional" => true,
-                        ),
                     /*
                      * The 'mailalternateaddress' is supposed
                      * to contain the original email address
                      * for the user.
                      */
                     "mailalternateaddress" => Array(
-                            "optional" => true,
+//                            "optional" => true,
                         ),
                     "sn" => Array(),
                     "uid" => Array(),

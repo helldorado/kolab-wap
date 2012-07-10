@@ -39,7 +39,7 @@ class kolab_client_task_signup extends kolab_client_task
         $this->output->assign('engine', $this);
         
         // Login ($result is a kolab_client_api_result instance))
-        $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), 'hostedtest.tld');
+        $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), $this->config->get('kolab', 'primary_domain') );
 
         // Set the session token we got in the API client instance, so subsequent
         // API calls are made in the same session.
@@ -69,7 +69,10 @@ class kolab_client_task_signup extends kolab_client_task
         // keep session
         $this->output->set_env('token', $_SESSION['user']['token']);
 
-        $this->output->assign('form', $this->user_form());
+        $data = $this->get_input('data', 'POST');
+        $form = $this->user_form($data);
+        $this->output->assign('form', $form);
+        $this->output->set_object('taskcontent', $form);
     }
     
     public function action_add_user() {
@@ -81,6 +84,7 @@ class kolab_client_task_signup extends kolab_client_task
         $attribs['id'] = 'signup-form';
 
         $fields_map = array(
+            'type_id'                   => 'other',
             'givenname'                 => 'other',
             'sn'                        => 'other',
             'cn'                        => 'other',
@@ -109,10 +113,16 @@ class kolab_client_task_signup extends kolab_client_task
             }
         }
 
-        // Add user type field
+        // Add user type id selector
+        $accttypes = array();
+        foreach ($types as $idx => $elem) {
+            $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
+        }
         $fields['type_id'] = array(
-            'type'     => kolab_form::INPUT_HIDDEN,
-            'value'    => $type,
+            'section'  => 'personal',
+            'type'     => kolab_form::INPUT_SELECT,
+            'options'  => $accttypes,
+            'onchange' => "kadm.change_user_type()",
         );
         
         // Add object type field
@@ -153,7 +163,7 @@ class kolab_client_task_signup extends kolab_client_task
         // TODO make translatable
         $fields['uid']['label'] = "Username";
         $fields['mail']['label'] = "Your Future Email Address";
-        $fields['mailalternateaddress']['label'] = "Your Current Email Address";
+        if(isset($fields['mailalternateaddress'])) $fields['mailalternateaddress']['label'] = "Your Current Email Address";
         $fields['domain']['label'] = "Domain";
 
         // Create form object and populate with fields
@@ -196,7 +206,7 @@ class kolab_client_task_signup extends kolab_client_task
             }
 
             // TODO: Perform a check to see if this domain is available for public registration somehow.
-            // Lacking business support, everything but 'kolab.net' (the primary domain) is available.
+            // or provide an account that only sees available domains
             if ($domain_name == $this->config->get('kolab', 'primary_domain')) {
                 continue;
             }
@@ -206,7 +216,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         // prepare array with proper key ids for form building
         foreach ($domain_names as $domain) {
-           $domain_form_names[$domain] = $domain;
+            $domain_form_names[$domain] = $domain;
         }
 
         return $domain_form_names;
