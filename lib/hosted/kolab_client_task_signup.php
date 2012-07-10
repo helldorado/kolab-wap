@@ -98,7 +98,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Remove delete button
         // TODO adapt effective rights and then remove
-        if(($key = array_search('delete', $data['effective_rights']['entry'])) !== false) {
+        if(($key = array_search('delete', (array)$data['effective_rights']['entry'])) !== false) {
             unset($data['effective_rights']['entry'][$key]);
         }
         
@@ -168,7 +168,11 @@ class kolab_client_task_signup extends kolab_client_task
 
     private function get_domains() {
         // Get a list of domains ($domains again is a kolab_client_api_result instance)
-        $domains = $this->api->get('domains.list')->get();
+        $domains_list = $this->api->get('domains.list')->get('list');
+
+        if (empty($domains_list)) {
+            return array();
+        }
 
         // The domain name attribute (the name of the LDAP attribute that holds the actual domain name space)
         // is configurable as well. Provide a fallback.
@@ -180,7 +184,7 @@ class kolab_client_task_signup extends kolab_client_task
         // Placeholder for the domain names in this deployment
         $domain_names = array();
 
-        foreach ($domains['list'] as $domain_dn => $domain_attrs) {
+        foreach ($domains_list as $domain_dn => $domain_attrs) {
             // If $domain_attrs[$domain_name_attribute] is an array, the primary domain name space
             // is the first value in the array.
             if (is_array($domain_attrs[$domain_name_attribute])) {
