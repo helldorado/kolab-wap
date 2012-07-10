@@ -34,6 +34,11 @@ kadm.user_save = function(reload, section)
         return;
     }
 
+    if (!kadm.check_required_fields(data)) {
+      kadm.display_message('form.required.empty', 'error');
+      return;
+    }
+
     // check password
     if (data.userpassword != data.userpassword2) {
       kadm.display_message('user.password.mismatch', 'error');
@@ -41,11 +46,6 @@ kadm.user_save = function(reload, section)
       return;
     }
     delete data['userpassword2'];
-
-    if (!kadm.check_required_fields(data)) {
-      kadm.display_message('form.required.empty', 'error');
-      return;
-    }
 
     kadm.http_post('signup.add_user', {data: data});
 };

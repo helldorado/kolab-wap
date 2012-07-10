@@ -69,7 +69,7 @@
                     "sn" => Array(),
                     "uid" => Array(),
                     "userpassword" => Array(
-                            "optional" => true,
+//                            "optional" => true,
                         ),
                 ),
             "fields" => Array(
@@ -153,7 +153,7 @@
                     "sn" => Array(),
                     "uid" => Array(),
                     "userpassword" => Array(
-                            "optional" => true,
+//                            "optional" => true,
                         ),
                 ),
             "fields" => Array(

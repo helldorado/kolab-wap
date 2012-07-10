@@ -23,6 +23,8 @@
  +--------------------------------------------------------------------------+
 */
 
+require_once('hosted/recaptchalib.php');
+
 class kolab_client_task_signup extends kolab_client_task
 {
     protected $ajax_only = true;
@@ -71,13 +73,38 @@ class kolab_client_task_signup extends kolab_client_task
 
         $data = $this->get_input('data', 'POST');
         $form = $this->user_form($data);
+
+        // add captcha
+        $publickey = $this->config->get('kolab_wap', 'recaptcha_public_key');
+        // TODO find a less dirty way to add captcha into form
+        $form = preg_replace('/<div class="formbuttons">/', '<div class="formbuttons">'.recaptcha_get_html($publickey), $form);
+
         $this->output->assign('form', $form);
         $this->output->set_object('taskcontent', $form);
     }
     
     public function action_add_user() {
+        $data = $this->get_input('data', 'POST');
+
+        // Check for valid CAPTCHA
+        $resp = recaptcha_check_answer(
+                    $this->config->get('kolab_wap', 'recaptcha_private_key'),
+                    $_SERVER['REMOTE_ADDR'],
+                    $data['recaptcha_challenge_field'],
+                    $data['recaptcha_response_field']
+        );
+
+        if (!$resp->is_valid) {
+            // What happens when the CAPTCHA was entered incorrectly
+            $this->output->command('display_message', "The reCAPTCHA wasn't entered correctly. Please reload and try it again.", 'error');
+            return;
+        }
+
         // TODO actually add user here
         $this->output->command('display_message', 'Not adding user here, yet', 'notice');
+//        $result = $this->api->post('user.add', null, $data);
+//        console($result);
+//        $this->output->command('display_message', 'user.add.success', 'notice');
     }
 
     private function user_form($data = array()) {
@@ -171,7 +198,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         $form->set_title(kolab_html::escape('Sign up'));
 
-        $this->output->add_translation('user.password.mismatch', 'user.add.success', 'user.edit.success', 'user.delete.success');
+        $this->output->add_translation('user.password.mismatch', 'user.add.success');
 
         return $form->output();
     }
