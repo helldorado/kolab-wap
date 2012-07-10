@@ -731,6 +731,7 @@ class kolab_client_task
             if (!empty($field['maxlength'])) {
                 $result['data-maxlength'] = $field['maxlength'];
             }
+$field['maxcount'] = 2;
             if (!empty($field['maxcount'])) {
                 $result['data-maxcount'] = $field['maxcount'];
             }
@@ -915,7 +916,7 @@ class kolab_client_task
         // See if "administrators" (those who can delete and add back on the entry
         // level) may override the automatically generated contents of auto_form_fields.
         $admin_auto_fields_rw = $this->config_get('admin_auto_fields_rw', false);
-
+/*
         foreach ($fields as $idx => $field) {
             if (!array_key_exists($idx, $attribute_rights)) {
                 // If the entry level rights contain 'add' and 'delete', well, you're an admin
@@ -940,7 +941,7 @@ class kolab_client_task
                 }
             }
         }
-
+*/
         // Register list of auto-generated fields
         $this->output->set_env('auto_fields', $auto_fields);
         // Register list of disabled fields

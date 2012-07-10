@@ -853,7 +853,7 @@ function kolab_admin()
           span = $(this.parentNode.parentNode),
           maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
 
-        if (maxcount && maxcount <= ('input', span).length) {
+        if (maxcount && maxcount <= span.parent().children().length) {
           alert(kadm.t('form.maxcount.exceeded'));
           return;
         }
