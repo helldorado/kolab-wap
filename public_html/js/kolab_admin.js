@@ -853,6 +853,7 @@ function kolab_admin()
           span = $(this.parentNode.parentNode),
           maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
 
+        // check element count limit
         if (maxcount && maxcount <= span.parent().children().length) {
           alert(kadm.t('form.maxcount.exceeded'));
           return;
@@ -895,10 +896,17 @@ function kolab_admin()
       dt = (new Date()).getTime(),
       span = $(input.parentNode),
       name = input.name.replace(/\[-1\]$/, ''),
-      af = kadm.env.assoc_fields;
+      af = kadm.env.assoc_fields,
+      maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
 
     // reset autocomplete input
     input.value = '';
+
+    // check element count limit
+    if (maxcount && maxcount <= span.parent().children().length - 1) {
+      alert(kadm.t('form.maxcount.exceeded'));
+      return;
+    }
 
     // check if element doesn't exist on the list already
     if (!af[name])
