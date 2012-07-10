@@ -962,7 +962,7 @@ class LDAP
             return false;
         }
 
-        if (!$this->_connect($domain)) {
+        if (!$this->_connect()) {
             return false;
         }
 

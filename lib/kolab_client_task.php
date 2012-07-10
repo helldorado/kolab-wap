@@ -1209,7 +1209,7 @@ class kolab_client_task
         $this->output->set_env('form_id', $attribs['id']);
         $this->output->set_env('assoc_fields', $assoc_fields);
         $this->output->set_env('required_fields', $req_fields);
-        $this->output->add_translation('form.required.empty');
+        $this->output->add_translation('form.required.empty', 'form.maxcount.exceeded');
 
         return $form;
     }

@@ -849,14 +849,21 @@ function kolab_admin()
     // attach element creation event
     if (!ac)
       $('span[class="add"]', elem).click(function() {
-        var dt = (new Date()).getTime(),
+        var name = data.name.replace(/\[[0-9]+\]$/, ''),
           span = $(this.parentNode.parentNode),
-          name = data.name.replace(/\[[0-9]+\]$/, ''),
+          maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
+
+        if (maxcount && maxcount <= ('input', span).length) {
+          alert(kadm.t('form.maxcount.exceeded'));
+          return;
+        }
+
+        var dt = (new Date()).getTime(),
           elem = kadm.form_list_element(form, {name: name}, dt);
 
+        kadm.ac_stop();
         span.after(elem);
         $('input', elem).focus();
-        kadm.ac_stop();
       });
 
     // attach element deletion event

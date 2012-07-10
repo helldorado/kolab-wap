@@ -25,6 +25,7 @@ $LANG['domain.type_id'] = 'Standard Domain';
 $LANG['error'] = 'Error';
 
 $LANG['form.required.empty'] = 'Some of the required fields are empty!';
+$LANG['form.maxcount.exceeded'] = 'Maximum count of field items exceeded!';
 
 $LANG['group.add'] = 'Add Group';
 $LANG['group.add.success'] = 'Group created successfully.';
