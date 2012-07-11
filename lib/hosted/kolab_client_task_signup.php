@@ -77,7 +77,13 @@ class kolab_client_task_signup extends kolab_client_task
         // add captcha
         $publickey = $this->config->get('kolab_wap', 'recaptcha_public_key');
         // TODO find a less dirty way to add captcha into form
-        $form = preg_replace('/<div class="formbuttons">/', '<div class="formbuttons">'.recaptcha_get_html($publickey), $form);
+        $form = preg_replace('/<div class="formbuttons">/', '<div id="recaptcha_div"></div><div class="formbuttons">', $form);
+
+        // load captcha
+        $form .= '
+            <script type="text/javascript">
+                Recaptcha.create("'.$publickey.'", "recaptcha_div", {theme: "red"});
+            </script>';
 
         $this->output->assign('form', $form);
         $this->output->set_object('taskcontent', $form);
