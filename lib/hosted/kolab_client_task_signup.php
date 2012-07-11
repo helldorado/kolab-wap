@@ -178,6 +178,13 @@ class kolab_client_task_signup extends kolab_client_task
         if (isset($fields['cn'])) {
             $fields['cn']['type'] = kolab_form::INPUT_HIDDEN;
         }
+
+        // Prevent add mode so mail field value is kept when selecting user type
+        $fields['id'] = array(
+            'section'   => 'system',
+            'type'      => kolab_form::INPUT_HIDDEN,
+            'value'     => 'test',
+        );
         
         // Add password confirmation
         if (isset($fields['userpassword'])) {
