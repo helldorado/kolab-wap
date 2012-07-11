@@ -65,6 +65,7 @@
                      * for the user.
                      */
                     "mailalternateaddress" => Array(
+                            "optional" => true,
                         ),
                     "sn" => Array(),
                     "uid" => Array(),
@@ -148,7 +149,7 @@
                      * for the user.
                      */
                     "mailalternateaddress" => Array(
-//                            "optional" => true,
+                            "optional" => true,
                         ),
                     "sn" => Array(),
                     "uid" => Array(),

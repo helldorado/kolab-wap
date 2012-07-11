@@ -27,7 +27,7 @@ kadm.user_save = function(reload, section)
     var data = kadm.serialize_form('#'+this.env.form_id);
 
     // check email address
-    if(!isValidEmailAddress(data.mailalternateaddress)) {
+    if(typeof data.mailalternateaddress != 'undefined' && !isValidEmailAddress(data.mailalternateaddress)) {
         // TODO use translatable error message
         kadm.display_message('Please provide a valid email adress as this is where your password will be sent to.', 'error');
         kadm.form_value_error('mailalternateaddress');
@@ -67,6 +67,9 @@ kadm.check_user_availability = function()
         // update future mail form field
         $('input[name="mail"]').val(mail);
         
+        // switch domain before checking for user availability
+        kadm.http_post('signup.check_user', {data: {'domain': data['domain']}});
+
         // check if user with that email address already exists
         kadm.api_post('users.list', {'search': {'mail': {'value': mail} } }, 'check_user_availability_response');
     } else {

@@ -40,15 +40,22 @@ class kolab_client_task_signup extends kolab_client_task
         // Assign self to template variable
         $this->output->assign('engine', $this);
         
-        // Login ($result is a kolab_client_api_result instance))
-        $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), $this->config->get('kolab', 'primary_domain') );
+        // Session handling
+        $timeout = $this->config_get('session_timeout', 3600);
+        if (empty($_SESSION['user']) || empty($_SESSION['user']['token']) || ($timeout && $_SESSION['time'] && $_SESSION['time'] < time() - $timeout)) {
+            // Login ($result is a kolab_client_api_result instance))
+            $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), $this->config->get('kolab', 'primary_domain') );
 
-        // Set the session token we got in the API client instance, so subsequent
-        // API calls are made in the same session.
-        $this->token = $result->get('session_token');
-        $this->api->set_session_token($this->token);
-        $_SESSION['user']['token'] = $this->token;
-                
+            // Set the session token we got in the API client instance, so subsequent
+            // API calls are made in the same session.
+            $this->token = $result->get('session_token');
+            $this->api->set_session_token($this->token);
+            $_SESSION['user']['token'] = $this->token;
+
+            // update session time
+            $_SESSION['time'] = time();
+        }
+
         // Run security checks
         // TODO figure out to reenable this
 //        $this->input_checks();
@@ -89,6 +96,15 @@ class kolab_client_task_signup extends kolab_client_task
         $this->output->set_object('taskcontent', $form);
     }
     
+    // switching to proper domain is necessary before calling users.list for that domain
+    public function action_switch_domain($data = array()) {
+        if(count($data) == 0) $data = $this->get_input('data', 'POST');
+
+        // Login in user-chosen domain
+        // TODO perform security check on value of $data['domain']
+        $result = $this->api->get('system.select_domain', array('domain' => $data['domain']));
+    }
+
     public function action_add_user() {
         $data = $this->get_input('data', 'POST');
 
@@ -106,11 +122,38 @@ class kolab_client_task_signup extends kolab_client_task
             return;
         }
 
-        // TODO actually add user here
-        $this->output->command('display_message', 'Not adding user here, yet', 'notice');
-//        $result = $this->api->post('user.add', null, $data);
-//        console($result);
-//        $this->output->command('display_message', 'user.add.success', 'notice');
+        // Log in to proper domain
+        $this->action_switch_domain($data);
+
+        // Assemble mail attribute and throw away submitted attribute
+        $mail = $data['uid'].'@'.$data['domain'];
+        $data['mail'] = $mail;
+
+        // Check again for user availability before adding user
+        // TODO perform security check on value of $data['uid'] and $data['domain']
+        $post = array('search' => array('mail' => array('value' => $mail) ) );
+        $result = $this->api->post('users.list', null, $post);
+
+        if($result->get('count') > 0) {
+            // TODO make this message translatable
+            $this->output->command('display_message', 'A user with that username already exists. Please choose another one.', 'error');
+            return false;
+        }
+
+        // Remove domain from $data before adding user
+        unset($data['domain']);
+
+        // Add user
+        $result = $this->api->post('user.add', null, $data);
+
+        if (array_key_exists('error_code', $result)) {
+            // TODO make this message translatable
+            $this->output->command('display_message', 'An Error occured. You could not be signed up. Please try again.', 'error');
+            return;
+        } else {
+            // TODO make this message translatable
+            $this->output->set_object('taskcontent', '<h3>Your account has been successfully added!</h3>Congratulations, you now have your own Kolab account.');
+        }
     }
 
     private function user_form($data = array()) {
@@ -179,13 +222,6 @@ class kolab_client_task_signup extends kolab_client_task
             $fields['cn']['type'] = kolab_form::INPUT_HIDDEN;
         }
 
-        // Prevent add mode so mail field value is kept when selecting user type
-        $fields['id'] = array(
-            'section'   => 'system',
-            'type'      => kolab_form::INPUT_HIDDEN,
-            'value'     => 'test',
-        );
-        
         // Add password confirmation
         if (isset($fields['userpassword'])) {
             $fields['userpassword2'] = $fields['userpassword'];
