@@ -71,7 +71,6 @@ class kolab_api_service_domain extends kolab_api_service
             $rights['find_by_attribute'] = "r";
             $rights['find_by_attributes'] = "r";
             $rights['info'] = "r";
-            $rights['select'] = "r";
         }
 
         $rights['effective_rights'] = "r";
@@ -184,22 +183,5 @@ class kolab_api_service_domain extends kolab_api_service
         }
 
         return false;
-    }
-
-    public function domain_select($getdata, $postdata)
-    {
-        if (!isset($getdata['domain'])) {
-            return false;
-        }
-
-        if (empty($_SESSION['user'])) {
-            return false;
-        }
-
-        console("Setting work domain to " . $getdata['domain']);
-
-        $_SESSION['user']->set_domain($getdata['domain']);
-
-        return true;
     }
 }
