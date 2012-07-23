@@ -739,6 +739,14 @@ class kolab_client_task
             }
             break;
 
+        case 'password':
+            $result['type'] = kolab_form::INPUT_PASSWORD;
+
+            if (isset($field['maxlength'])) {
+                $result['maxlength'] = $field['maxlength'];
+            }
+            break;
+
         default:
             $result['type'] = kolab_form::INPUT_TEXT;
             if (isset($field['maxlength'])) {

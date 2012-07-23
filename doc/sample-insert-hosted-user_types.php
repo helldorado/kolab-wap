@@ -70,6 +70,7 @@
                     "sn" => Array(),
                     "uid" => Array(),
                     "userpassword" => Array(
+                            "type" => "password",
 //                            "optional" => true,
                         ),
                 ),
@@ -154,6 +155,7 @@
                     "sn" => Array(),
                     "uid" => Array(),
                     "userpassword" => Array(
+                            "type" => "password",
 //                            "optional" => true,
                         ),
                 ),

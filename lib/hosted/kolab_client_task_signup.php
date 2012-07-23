@@ -225,14 +225,6 @@ class kolab_client_task_signup extends kolab_client_task
         // Add password confirmation
         if (isset($fields['userpassword'])) {
             $fields['userpassword2'] = $fields['userpassword'];
-            // Add 'Generate password' link
-            if (empty($fields['userpassword']['readonly'])) {
-                $fields['userpassword']['suffix'] = kolab_html::a(array(
-                    'content' => $this->translate('password.generate'),
-                    'href'    => '#',
-                    'onclick' => "kadm.generate_password('userpassword')",
-                ));
-            }
         }
         
         // Change field labels for hosted case
