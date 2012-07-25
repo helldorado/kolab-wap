@@ -56,8 +56,7 @@ class kolab_client_task_signup extends kolab_client_task
         // One API session token for a single run/hit of/against hosted/index.php
         if (empty($_SESSION['user']) || empty($_SESSION['user']['token']) || ($timeout && $_SESSION['time'] && $_SESSION['time'] < time() - $timeout)) {
             // Login ($result is a kolab_client_api_result instance))
-            // TODO log in with different primary domain
-            $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->config->get('kolab', 'primary_domain') );
+            $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->config_get('primary_domain') );
 
             // Set the session token we got in the API client instance, so subsequent
             // API calls are made in the same session.
