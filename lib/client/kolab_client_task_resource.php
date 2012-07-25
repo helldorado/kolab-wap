@@ -331,7 +331,7 @@ class kolab_client_task_resource extends kolab_client_task
      *
      * @return array List of resource types
      */
-    private function resource_types()
+    public function resource_types()
     {
         if (isset($_SESSION['resource_types'])) {
             return $_SESSION['resource_types'];
