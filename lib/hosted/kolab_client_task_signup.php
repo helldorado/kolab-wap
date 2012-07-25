@@ -42,14 +42,29 @@ class kolab_client_task_signup extends kolab_client_task
         
         // Session handling
         $timeout = $this->config_get('session_timeout', 3600);
+
+        // TODO
+        // Do not use the API token for the user browser session.
+        // Use a different token for the user browser session, to verify whether subsequent interactions
+        // belong to the same user nicely progressing through the signup (and not bastardizing the process).
+        //
+        // Do not maintain the API session across hits to this interface.
+        //
+        // So...
+        //
+        // One session token for user browser <-> hosted/index.php
+        // One API session token for a single run/hit of/against hosted/index.php
         if (empty($_SESSION['user']) || empty($_SESSION['user']['token']) || ($timeout && $_SESSION['time'] && $_SESSION['time'] < time() - $timeout)) {
             // Login ($result is a kolab_client_api_result instance))
-            $result = $this->api->login($this->config->get('ldap', 'bind_dn'), $this->config->get('ldap', 'bind_pw'), $this->config->get('kolab', 'primary_domain') );
+            // TODO log in with different primary domain
+            $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->config->get('kolab', 'primary_domain') );
 
             // Set the session token we got in the API client instance, so subsequent
             // API calls are made in the same session.
             $this->token = $result->get('session_token');
             $this->api->set_session_token($this->token);
+
+            // TODO don't expose session to browser
             $_SESSION['user']['token'] = $this->token;
 
             // update session time
@@ -82,7 +97,7 @@ class kolab_client_task_signup extends kolab_client_task
         $form = $this->user_form($data);
 
         // add captcha
-        $publickey = $this->config->get('kolab_wap', 'recaptcha_public_key');
+        $publickey = $this->config_get('recaptcha_public_key');
         // TODO find a less dirty way to add captcha into form
         $form = preg_replace('/<div class="formbuttons">/', '<div id="recaptcha_div"></div><div class="formbuttons">', $form);
 
@@ -110,7 +125,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Check for valid CAPTCHA
         $resp = recaptcha_check_answer(
-                    $this->config->get('kolab_wap', 'recaptcha_private_key'),
+                    $this->config_get('recaptcha_private_key'),
                     $_SERVER['REMOTE_ADDR'],
                     $data['recaptcha_challenge_field'],
                     $data['recaptcha_response_field']
@@ -175,12 +190,6 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2')); 
-
-        // Remove delete button
-        // TODO adapt effective rights and then remove
-        if(($key = array_search('delete', (array)$data['effective_rights']['entry'])) !== false) {
-            unset($data['effective_rights']['entry'][$key]);
-        }
         
         // Show only required fields
         foreach ($fields as $field_name => $field_attrs) {
@@ -194,6 +203,7 @@ class kolab_client_task_signup extends kolab_client_task
         foreach ($types as $idx => $elem) {
             $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
         }
+
         $fields['type_id'] = array(
             'section'  => 'personal',
             'type'     => kolab_form::INPUT_SELECT,
@@ -273,12 +283,6 @@ class kolab_client_task_signup extends kolab_client_task
                 $domain_name = $domain_attrs[$domain_name_attribute];
             }
 
-            // TODO: Perform a check to see if this domain is available for public registration somehow.
-            // or provide an account that only sees available domains
-            if ($domain_name == $this->config->get('kolab', 'primary_domain')) {
-                continue;
-            }
-
             $domain_names = array_merge($domain_names, $_domain_names);
         }
 
@@ -288,5 +292,20 @@ class kolab_client_task_signup extends kolab_client_task
         }
 
         return $domain_form_names;
+    }
+
+    /**
+     * Overrides config_get() from kolab_client_task
+     * Returns configuration option value for hosting.
+     *
+     * @param string $name      Option name
+     * @param mixed  $fallback  Default value
+     *
+     * @return mixed Option value
+     */
+    public function config_get($name, $fallback = null)
+    {
+        $value = $this->config->get('kolab_hosting', $name);
+        return $value !== null ? $value : $fallback;
     }
 }
