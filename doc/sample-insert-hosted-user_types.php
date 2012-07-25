@@ -88,9 +88,9 @@
                 ),
         );
 
-    $result = $db->query("INSERT INTO `user_types` (`key`, `name`, `description`, `attributes`) " .
+    $result = $db->query("INSERT INTO `user_types` (`key`, `name`, `description`, `attributes`, `used_for`) " .
                 "VALUES ('personal','Personal', 'A user with a personal hosted plan'," .
-                "'" . json_encode($attributes) . "')");
+                "'" . json_encode($attributes) . "', 'hosted')");
 
     $attributes = Array(
             /*
@@ -173,8 +173,8 @@
                 ),
         );
 
-    $result = $db->query("INSERT INTO `user_types` (`key`, `name`, `description`, `attributes`) " .
+    $result = $db->query("INSERT INTO `user_types` (`key`, `name`, `description`, `attributes`, `used_for`) " .
                 "VALUES ('professional','Professional', 'A user with a professional hosted plan'," .
-                "'" . json_encode($attributes) . "')");
+                "'" . json_encode($attributes) . "', 'hosted')");
 
 ?>

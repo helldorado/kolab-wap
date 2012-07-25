@@ -201,7 +201,9 @@ class kolab_client_task_signup extends kolab_client_task
         // Add user type id selector
         $accttypes = array();
         foreach ($types as $idx => $elem) {
-            $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
+            if($elem['used_for'] == 'hosted') {
+                $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
+            }
         }
 
         $fields['type_id'] = array(
