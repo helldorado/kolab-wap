@@ -62,35 +62,20 @@ kadm.check_user_availability = function()
     // get form data and build new email address
     var data = kadm.serialize_form('#signup-form');
     var mail = data['uid'] + '@' + data['domain'];
-    
+
     if(isValidEmailAddress(mail)) {
         // update future mail form field
         $('input[name="mail"]').val(mail);
-        
-        // switch domain before checking for user availability
-        kadm.http_post('signup.check_user', {data: {'domain': data['domain']}});
 
         // check if user with that email address already exists
-        kadm.api_post('users.list', {'search': {'mail': {'value': mail} } }, 'check_user_availability_response');
+        kadm.http_post('signup.check_user', {data: data});
     } else {
-        update_user_info('This will not produce a valid email address!');
+        // TODO use translatable string
+        kadm.update_user_info('This will not produce a valid email address!');
     }
 };
 
-kadm.check_user_availability_response = function(response)
-{
-    if (!kadm.api_response(response))
-      return;
-  
-    // setup up user message
-    var msg = '';
-    if(response['result']['count'] > 0) msg = 'User does already exist!';
-    
-    update_user_info(msg);
-};
-
-
-function update_user_info(msg)
+kadm.update_user_info = function(msg)
 {
     // display message next to form field
     if($('span[id="availability"]').length) {
@@ -110,6 +95,8 @@ function update_user_info(msg)
     }
 };
 
+
+// TODO use form.validate api call for that
 function isValidEmailAddress(emailAddress) {
     var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
     return pattern.test(emailAddress);

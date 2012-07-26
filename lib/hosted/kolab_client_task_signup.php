@@ -34,41 +34,23 @@ class kolab_client_task_signup extends kolab_client_task
      */
     public function run()
     {
+        // don't set any cookies
+        ini_set('session.use_cookies', '0');
+
         // Initialize locales
         $this->locale_init();
 
         // Assign self to template variable
         $this->output->assign('engine', $this);
         
-        // Session handling
-        $timeout = $this->config_get('session_timeout', 3600);
+        // Login ($result is a kolab_client_api_result instance))
+        // TODO login in own method only when needed
+        $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->config_get('primary_domain') );
 
-        // TODO
-        // Do not use the API token for the user browser session.
-        // Use a different token for the user browser session, to verify whether subsequent interactions
-        // belong to the same user nicely progressing through the signup (and not bastardizing the process).
-        //
-        // Do not maintain the API session across hits to this interface.
-        //
-        // So...
-        //
-        // One session token for user browser <-> hosted/index.php
-        // One API session token for a single run/hit of/against hosted/index.php
-        if (empty($_SESSION['user']) || empty($_SESSION['user']['token']) || ($timeout && $_SESSION['time'] && $_SESSION['time'] < time() - $timeout)) {
-            // Login ($result is a kolab_client_api_result instance))
-            $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->config_get('primary_domain') );
-
-            // Set the session token we got in the API client instance, so subsequent
-            // API calls are made in the same session.
-            $this->token = $result->get('session_token');
-            $this->api->set_session_token($this->token);
-
-            // TODO don't expose session to browser
-            $_SESSION['user']['token'] = $this->token;
-
-            // update session time
-            $_SESSION['time'] = time();
-        }
+        // Set the session token we got in the API client instance, so subsequent
+        // API calls are made in the same session.
+        $this->token = $result->get('session_token');
+        $this->api->set_session_token($this->token);
 
         // Run security checks
         // TODO figure out to reenable this
@@ -89,9 +71,6 @@ class kolab_client_task_signup extends kolab_client_task
 
     public function action_default()
     {
-        // keep session
-        $this->output->set_env('token', $_SESSION['user']['token']);
-
         $data = $this->get_input('data', 'POST');
         $form = $this->user_form($data);
 
@@ -109,7 +88,27 @@ class kolab_client_task_signup extends kolab_client_task
         $this->output->assign('form', $form);
         $this->output->set_object('taskcontent', $form);
     }
-    
+
+    // check if user already exists
+    public function action_check_user($data = array()) {
+        if(count($data) == 0) $data = $this->get_input('data', 'POST');
+
+        // Assemble mail attribute
+        $mail = $data['uid'].'@'.$data['domain'];
+
+        $post = array('search' => array('mail' => array('value' => $mail) ) );
+        $result = $this->api->post('users.list', null, $post);
+
+        if($result->get('count') > 0) {
+            // TODO make this message translatable
+            $this->output->command('update_user_info("User does already exist!")');
+            return false;
+        }
+
+        $this->output->command('update_user_info("")');
+        return true;
+    }
+
     // switching to proper domain is necessary before calling users.list for that domain
     public function action_switch_domain($data = array()) {
         if(count($data) == 0) $data = $this->get_input('data', 'POST');
@@ -139,19 +138,10 @@ class kolab_client_task_signup extends kolab_client_task
         // Log in to proper domain
         $this->action_switch_domain($data);
 
-        // Assemble mail attribute and throw away submitted attribute
-        $mail = $data['uid'].'@'.$data['domain'];
-        $data['mail'] = $mail;
-
         // Check again for user availability before adding user
         // TODO perform security check on value of $data['uid'] and $data['domain']
-        $post = array('search' => array('mail' => array('value' => $mail) ) );
-        $result = $this->api->post('users.list', null, $post);
-
-        if($result->get('count') > 0) {
-            // TODO make this message translatable
-            $this->output->command('display_message', 'A user with that username already exists. Please choose another one.', 'error');
-            return false;
+        if(!$this->action_check_user($data)) {
+            return;
         }
 
         // Remove domain from $data before adding user
@@ -230,12 +220,19 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Hide cn field
         if (isset($fields['cn'])) {
+            // TODO use type info from user types table
             $fields['cn']['type'] = kolab_form::INPUT_HIDDEN;
+
+            // TODO auto generate value again with indirect API call
+            $fields['cn']['value'] = 'temporary fake cn';
+            $fields['sn']['onchange'] = '';
+            $fields['givenname']['onchange'] = '';
         }
 
         // Add password confirmation
         if (isset($fields['userpassword'])) {
             $fields['userpassword2'] = $fields['userpassword'];
+            // TODO check for password match with ajax
         }
         
         // Change field labels for hosted case
