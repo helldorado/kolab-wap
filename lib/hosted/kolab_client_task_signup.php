@@ -42,15 +42,6 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Assign self to template variable
         $this->output->assign('engine', $this);
-        
-        // Login ($result is a kolab_client_api_result instance))
-        // TODO login in own method only when needed
-        $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->config_get('primary_domain') );
-
-        // Set the session token we got in the API client instance, so subsequent
-        // API calls are made in the same session.
-        $this->token = $result->get('session_token');
-        $this->api->set_session_token($this->token);
 
         // Run security checks
         // TODO figure out to reenable this
@@ -69,8 +60,25 @@ class kolab_client_task_signup extends kolab_client_task
         }
     }
 
+    private function login($domain=NULL)
+    {
+        if(is_null($domain)) {
+            $domain = $this->config_get('primary_domain');
+        }
+
+        // Login ($result is a kolab_client_api_result instance)
+        $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $domain);
+
+        // Set the session token we got in the API client instance, so subsequent
+        // API calls are made in the same session.
+        $this->token = $result->get('session_token');
+        $this->api->set_session_token($this->token);
+    }
+
     public function action_default()
     {
+        $this->login();
+
         $data = $this->get_input('data', 'POST');
         $form = $this->user_form($data);
 
@@ -93,6 +101,8 @@ class kolab_client_task_signup extends kolab_client_task
     public function action_check_user($data = array()) {
         if(count($data) == 0) $data = $this->get_input('data', 'POST');
 
+        $this->login($data['domain']);
+
         // Assemble mail attribute
         $mail = $data['uid'].'@'.$data['domain'];
 
@@ -107,15 +117,6 @@ class kolab_client_task_signup extends kolab_client_task
 
         $this->output->command('update_user_info("")');
         return true;
-    }
-
-    // switching to proper domain is necessary before calling users.list for that domain
-    public function action_switch_domain($data = array()) {
-        if(count($data) == 0) $data = $this->get_input('data', 'POST');
-
-        // Login in user-chosen domain
-        // TODO perform security check on value of $data['domain']
-        $result = $this->api->get('system.select_domain', array('domain' => $data['domain']));
     }
 
     public function action_add_user() {
@@ -134,9 +135,6 @@ class kolab_client_task_signup extends kolab_client_task
             $this->output->command('display_message', "The reCAPTCHA wasn't entered correctly. Please reload and try it again.", 'error');
             return;
         }
-
-        // Log in to proper domain
-        $this->action_switch_domain($data);
 
         // Check again for user availability before adding user
         // TODO perform security check on value of $data['uid'] and $data['domain']
