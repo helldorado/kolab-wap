@@ -71,22 +71,27 @@ kadm.check_user_availability = function()
         kadm.http_post('signup.check_user', {data: data});
     } else {
         // TODO use translatable string
-        kadm.update_user_info('This will not produce a valid email address!');
+        kadm.update_user_info('This will not produce a valid email address!', 'uid');
     }
 };
 
-kadm.update_user_info = function(msg)
+kadm.update_user_info = function(msg, part)
 {
+    var span_id = 'availability';
+    if(!part.localeCompare('userpassword')) {
+        span_id = 'pass_match';
+    }
+
     // display message next to form field
-    if($('span[id="availability"]').length) {
+    if($('span[id="'+span_id+'"]').length) {
         // update existing span area
-        $('span[id="availability"]').html(msg);
+        $('span[id="'+span_id+'"]').html(msg);
     }
     else {
-        // add span area and inform about non-availability
-        $('input[name="uid"]').after(' <span id="availability" style="font-weight:bold;margin-left:1em;color:red;">' + msg + '</span>');
+        // add span area and add message
+        $('input[name="'+part+'"]').after(' <span id="'+span_id+'" style="font-weight:bold;margin-left:1em;color:red;">' + msg + '</span>');
     }
-    
+
     // enable/disable button
     if(msg == '') {
         $('input[type="button"]').removeAttr("disabled");
@@ -95,6 +100,17 @@ kadm.update_user_info = function(msg)
     }
 };
 
+
+function password_match()
+{
+    if($('input[name="userpassword"]').val().localeCompare($('input[name="userpassword2"]').val())) {
+        // TODO make message translatable
+        kadm.update_user_info("The passwords don't match!", 'userpassword');
+    }
+    else {
+        kadm.update_user_info("", 'userpassword');
+    }
+}
 
 // TODO use form.validate api call for that
 function isValidEmailAddress(emailAddress) {

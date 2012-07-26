@@ -111,11 +111,11 @@ class kolab_client_task_signup extends kolab_client_task
 
         if($result->get('count') > 0) {
             // TODO make this message translatable
-            $this->output->command('update_user_info("User does already exist!")');
+            $this->output->command('update_user_info("User does already exist!", "uid")');
             return false;
         }
 
-        $this->output->command('update_user_info("")');
+        $this->output->command('update_user_info("", "uid")');
         return true;
     }
 
@@ -137,8 +137,10 @@ class kolab_client_task_signup extends kolab_client_task
         }
 
         // Check again for user availability before adding user
+        // this also logs into the API
         // TODO perform security check on value of $data['uid'] and $data['domain']
         if(!$this->action_check_user($data)) {
+            $this->output->command('form_value_error', 'uid');
             return;
         }
 
@@ -230,7 +232,8 @@ class kolab_client_task_signup extends kolab_client_task
         // Add password confirmation
         if (isset($fields['userpassword'])) {
             $fields['userpassword2'] = $fields['userpassword'];
-            // TODO check for password match with ajax
+            $fields['userpassword']['onchange']  = 'password_match()';
+            $fields['userpassword2']['onchange'] = 'password_match()';
         }
         
         // Change field labels for hosted case
