@@ -80,6 +80,7 @@ class kolab_api_service_domain extends kolab_api_service
 
     public function domain_add($getdata, $postdata)
     {
+        //console("api::domain_add(\$getdata, \$postdata)", $getdata, $postdata);
         $conf = Conf::get_instance();
         $dna = $conf->get('domain_name_attribute');
 
@@ -169,6 +170,10 @@ class kolab_api_service_domain extends kolab_api_service
 
         // normalize result
         $result = $this->parse_result_attributes('domain', $result);
+
+        if (empty($result['id'])) {
+            $result['id'] = $getdata['domain'];
+        }
 
         //console("API/domain.info() \$result:", $result);
 
