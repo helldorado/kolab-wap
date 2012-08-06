@@ -225,6 +225,7 @@ class kolab_client_api
             return new kolab_client_api_result(null,
                 self::ERROR_INTERNAL, $e->getMessage());
         }
+        //console($body);
 
         $body     = @json_decode($body, true);
         $err_code = null;

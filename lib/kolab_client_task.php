@@ -67,7 +67,7 @@ class kolab_client_task
     /**
      * Localization initialization.
      */
-    private function locale_init()
+    protected function locale_init()
     {
         $language = $this->get_language();
         $LANG     = array();
@@ -521,31 +521,6 @@ class kolab_client_task
     }
 
     /**
-     * Returns list of resource types.
-     *
-     * @return array List of resource types
-     */
-    protected function resource_types()
-    {
-
-        if (isset($_SESSION['resource_types'])) {
-            return $_SESSION['resource_types'];
-        }
-
-
-        $result = $this->api->post('resource_types.list');
-        $list   = $result->get('list');
-
-
-        if (is_array($list) && !$this->config_get('devel_mode')) {
-            $_SESSION['resource_types'] = $list;
-        }
-
-        return $list;
-    }
-
-
-    /**
      * Returns list of user types.
      *
      * @return array List of user types
@@ -756,8 +731,19 @@ class kolab_client_task
             if (!empty($field['maxlength'])) {
                 $result['data-maxlength'] = $field['maxlength'];
             }
+            if (!empty($field['maxcount'])) {
+                $result['data-maxcount'] = $field['maxcount'];
+            }
             if (!empty($field['autocomplete'])) {
                 $result['data-autocomplete'] = true;
+            }
+            break;
+
+        case 'password':
+            $result['type'] = kolab_form::INPUT_PASSWORD;
+
+            if (isset($field['maxlength'])) {
+                $result['maxlength'] = $field['maxlength'];
             }
             break;
 
@@ -1231,7 +1217,7 @@ class kolab_client_task
         $this->output->set_env('form_id', $attribs['id']);
         $this->output->set_env('assoc_fields', $assoc_fields);
         $this->output->set_env('required_fields', $req_fields);
-        $this->output->add_translation('form.required.empty');
+        $this->output->add_translation('form.required.empty', 'form.maxcount.exceeded');
 
         return $form;
     }

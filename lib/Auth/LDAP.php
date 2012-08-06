@@ -899,6 +899,9 @@ class LDAP
         if (empty($base_dn))
             $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
 
+        if (empty($base_dn))
+            $base_dn = $this->conf->get('ldap', "user_base_dn");
+
         // If still no base dn to add the user to... use the toplevel dn
         if (empty($base_dn))
             $base_dn = $this->conf->get($this->domain, "base_dn");
@@ -988,13 +991,14 @@ class LDAP
     */
     private function domain_root_dn($domain = '')
     {
+        //console("Auth::LDAP::domain_root_dn(\$domain) called with \$domain", $domain);
         $conf = Conf::get_instance();
 
         if ($domain == '') {
             return false;
         }
 
-        if (!$this->_connect($domain)) {
+        if (!$this->_connect()) {
             return false;
         }
 
@@ -1019,13 +1023,14 @@ class LDAP
             );
 
         $result = $result[key($result)];
+        //console("intermediate result for domain_root_dn()", $result);
 
         if (is_array($result)) {
-            if (in_array('inetdomainbasedn', $result)) {
+            if (in_array('inetdomainbasedn', $result) && !empty($result['inetdomainbasedn'])) {
                 return $result['inetdomainbasedn'];
             } else {
                 if (is_array($result[$domain_name_attribute])) {
-                    return $this->_standard_root_dn($result[$domain_name_attribute[0]]);
+                    return $this->_standard_root_dn($result[$domain_name_attribute][0]);
                 } else {
                     return $this->_standard_root_dn($result[$domain_name_attribute]);
                 }
@@ -1068,6 +1073,10 @@ class LDAP
 
     private function domains_list()
     {
+        $conf = Conf::get_instance();
+
+        $this->_bind($conf->get('bind_dn'), $conf->get('bind_pw'));
+
         $section = $this->conf->get('kolab', 'auth_mechanism');
         $base_dn = $this->conf->get($section, 'domain_base_dn');
         $filter  = $this->conf->get($section, 'domain_filter');
@@ -1100,6 +1109,8 @@ class LDAP
 
     private function entry_find_by_attribute($attribute, $base_dn = null)
     {
+        //console("Auth::LDAP::entry_find_by_attribute(\$attribute, \$base_dn) called with base_dn", $base_dn);
+
         if (empty($attribute) || !is_array($attribute)) {
             return false;
         }

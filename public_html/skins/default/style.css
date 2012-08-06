@@ -586,16 +586,16 @@ span.listelement span.actions span:hover {
 }
 
 span.listelement span.actions span.reset {
-  background-position: -1px 0;
+  background-position: -1px -1px;
   border-left: 1px solid #e0e0e0;
 }
 
 span.listelement span.actions span.add {
-  background-position: -43px 0;
+  background-position: -43px -2px;
 }
 
 span.listelement span.actions span.search {
-  background-position: -65px 0;
+  background-position: -65px -1px;
   cursor: default;
 }
 

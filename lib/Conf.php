@@ -57,7 +57,6 @@ class Conf {
         }
 
         $this->read_config();
-
     }
 
     public function get($key1, $key2 = null, $type = null)
@@ -127,9 +126,10 @@ class Conf {
                     return $this->_conf[$domain_section_name][$key1];
                 }
             } catch (Exception $e) {
-                $domain_section_name = $this->get_raw('kolab', 'primary_domain');
-                if (isset($this->_conf[$domain_section_name][$key1])) {
-                    return $this->_conf[$domain_section_name][$key1];
+                if ($domain_section_name = $this->_conf['kolab']['primary_domain']) {
+                    if (isset($this->_conf[$domain_section_name][$key1])) {
+                        return $this->_conf[$domain_section_name][$key1];
+                    }
                 }
             }
         }

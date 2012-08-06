@@ -326,4 +326,24 @@ class kolab_client_task_resource extends kolab_client_task
         return $form->output();
     }
 
+    /**
+     * Returns list of resource types.
+     *
+     * @return array List of resource types
+     */
+    public function resource_types()
+    {
+        if (isset($_SESSION['resource_types'])) {
+            return $_SESSION['resource_types'];
+        }
+
+        $result = $this->api->post('resource_types.list');
+        $list   = $result->get('list');
+
+        if (is_array($list) && !$this->config_get('devel_mode')) {
+            $_SESSION['resource_types'] = $list;
+        }
+
+        return $list;
+    }
 }

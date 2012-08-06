@@ -1,0 +1,1 @@
+../../public_html/js/kolab_admin.js

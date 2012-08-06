@@ -849,14 +849,22 @@ function kolab_admin()
     // attach element creation event
     if (!ac)
       $('span[class="add"]', elem).click(function() {
-        var dt = (new Date()).getTime(),
+        var name = data.name.replace(/\[[0-9]+\]$/, ''),
           span = $(this.parentNode.parentNode),
-          name = data.name.replace(/\[[0-9]+\]$/, ''),
+          maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
+
+        // check element count limit
+        if (maxcount && maxcount <= span.parent().children().length) {
+          alert(kadm.t('form.maxcount.exceeded'));
+          return;
+        }
+
+        var dt = (new Date()).getTime(),
           elem = kadm.form_list_element(form, {name: name}, dt);
 
+        kadm.ac_stop();
         span.after(elem);
         $('input', elem).focus();
-        kadm.ac_stop();
       });
 
     // attach element deletion event
@@ -888,10 +896,17 @@ function kolab_admin()
       dt = (new Date()).getTime(),
       span = $(input.parentNode),
       name = input.name.replace(/\[-1\]$/, ''),
-      af = kadm.env.assoc_fields;
+      af = kadm.env.assoc_fields,
+      maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
 
     // reset autocomplete input
     input.value = '';
+
+    // check element count limit
+    if (maxcount && maxcount <= span.parent().children().length - 1) {
+      alert(kadm.t('form.maxcount.exceeded'));
+      return;
+    }
 
     // check if element doesn't exist on the list already
     if (!af[name])
