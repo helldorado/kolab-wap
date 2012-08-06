@@ -195,169 +195,151 @@ class Auth {
         }
     }
 
+    /**
+     * Return Auth instance for specified domain
+     */
+    private function auth_instance($domain = null)
+    {
+        if (empty($domain)) {
+            if (!empty($_SESSION['user'])) {
+                //console("Using domain from session");
+                $domain = $_SESSION['user']->get_domain();
+            } else {
+                //console("Using primary_domain");
+                $domain = $this->conf->get('primary_domain');
+            }
+        }
+
+        if (!isset($this->_auth[$domain])) {
+            $this->connect($domain);        
+        }
+
+        return $this->_auth[$domain];
+    }
+
     // TODO: Dummy function to be removed
     public function attr_details($attribute)
     {
-        $conf = Conf::get_instance();
-        return $this->_auth[$conf->get('kolab', 'primary_domain')]->attribute_details((array)($attribute));
+        $conf   = Conf::get_instance();
+        $domain = $conf->get('kolab', 'primary_domain');
+        
+        return $this->auth_instance($domain)->attribute_details((array)$attribute);
     }
 
     // TODO: Dummy function to be removed
     public function attrs_allowed($objectclasses = array())
     {
-        $conf = Conf::get_instance();
-        return $this->_auth[$conf->get('kolab', 'primary_domain')]->allowed_attributes($objectclasses);
+        $conf   = Conf::get_instance();
+        $domain = $conf->get('kolab', 'primary_domain');
+
+        return $this->auth_instance($domain)->allowed_attributes($objectclasses);
     }
 
     public function allowed_attributes($objectclasses = array())
     {
-        if (!is_array($objectclasses)) {
-            $objectclasses = (array)($objectclasses);
-        }
-
-        return $this->_auth[$_SESSION['user']->get_domain()]->allowed_attributes($objectclasses);
+        return $this->auth_instance()->allowed_attributes((array)$objectclasses);
     }
 
     public function attribute_details($attributes = array())
     {
-        if (!is_array($attributes)) {
-            $attributes = (array)($attributes);
-        }
-
-        return $this->_auth[$_SESSION['user']->get_domain()]->attribute_details($attributes);
+        return $this->auth_instance()->attribute_details((array)$attributes);
     }
 
     public function domain_add($domain, $parent_domain=null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->domain_add($domain, $parent_domain);
+        return $this->auth_instance()->domain_add($domain, $parent_domain);
     }
 
     public function domain_edit($domain, $attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->domain_edit($domain, $attributes, $typeid);
+        return $this->auth_instance()->domain_edit($domain, $attributes, $typeid);
     }
 
     public function domain_find_by_attribute($attribute)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->domain_find_by_attribute($attribute);
+        return $this->auth_instance()->domain_find_by_attribute($attribute);
     }
 
     public function domain_info($domaindata)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->domain_info($domaindata);
+        return $this->auth_instance()->domain_info($domaindata);
     }
 
     public function find_user_groups($member_dn)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->find_user_groups($member_dn);
+        return $this->auth_instance()->find_user_groups($member_dn);
     }
 
     public function get_attribute($subject, $attribute)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->get_attribute($subject, $attribute);
+        return $this->auth_instance()->get_attribute($subject, $attribute);
     }
 
     public function get_attributes($subject, $attributes)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->get_attributes($subject, $attributes);
+        return $this->auth_instance()->get_attributes($subject, $attributes);
     }
 
     public function group_add($attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_add($attributes, $typeid);
+        return $this->auth_instance()->group_add($attributes, $typeid);
     }
 
     public function group_edit($group, $attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_edit($group, $attributes, $typeid);
+        return $this->auth_instance()->group_edit($group, $attributes, $typeid);
     }
 
     public function group_delete($subject)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_delete($subject);
+        return $this->auth_instance()->group_delete($subject);
     }
 
     public function group_find_by_attribute($attribute)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_find_by_attribute($attribute);
+        return $this->auth_instance()->group_find_by_attribute($attribute);
     }
 
     public function group_info($groupdata)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_info($groupdata);
+        return $this->auth_instance()->group_info($groupdata);
     }
 
     public function group_members_list($groupdata, $recurse = true)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->group_members_list($groupdata, $recurse);
+        return $this->auth_instance()->group_members_list($groupdata, $recurse);
     }
 
     public function list_domains()
     {
         // TODO: Consider a normal user does not have privileges on
         // the base_dn where domain names and configuration is stored.
-        return $this->_auth[$this->domain]->list_domains();
+        return $this->auth_instance($this->domain)->list_domains();
     }
 
     public function list_rights($subject)
     {
-        return $this->_auth[$this->domain]->effective_rights($subject);
+        return $this->auth_instance($this->domain)->effective_rights($subject);
     }
 
     public function list_users($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
-        if (empty($domain)) {
-            $domain = $_SESSION['user']->get_domain();
-        }
-
-        $this->connect($domain);
-
-        if ($domain === NULL) {
-            $domain = $this->conf->get('primary_domain');
-        }
-
-        $users = $this->_auth[$domain]->list_users($attributes, $search, $params);
-
-        return $users;
+        return $this->auth_instance()->list_users($attributes, $search, $params);
     }
 
     public function list_groups($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
-        $this->connect($domain);
-        if ($domain === NULL) {
-            $domain = $this->conf->get('primary_domain');
-        }
-
-        $groups = $this->_auth[$domain]->list_groups($attributes, $search, $params);
-
-        return $groups;
+        return $this->auth_instance($domain)->list_groups($attributes, $search, $params);
     }
 
     public function list_resources($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
-        if ($domain === NULL) {
-            $domain = $this->conf->get('primary_domain');
-        }
-
-        $this->connect($domain);
-
-        $resources = $this->_auth[$domain]->list_resources($attributes, $search, $params);
-
-        return $resources;
+        return $this->auth_instance($domain)->list_resources($attributes, $search, $params);
     }
-
 
     public function list_roles($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
-        if ($domain === NULL) {
-            $domain = $this->conf->get('primary_domain');
-        }
-
-        $this->connect($domain);
-
-        $roles = $this->_auth[$domain]->list_roles($attributes, $search, $params);
-
-        return $roles;
+        return $this->auth_instance($domain)->list_roles($attributes, $search, $params);
     }
 
     public function primary_for_valid_domain($domain)
@@ -384,83 +366,76 @@ class Auth {
 
     public function resource_add($attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->resource_add($attributes, $typeid);
+        return $this->auth_instance()->resource_add($attributes, $typeid);
     }
 
     public function resource_edit($resource, $attributes, $typeid = null)
     {
-        //console("Domain: " . $_SESSION['user']->get_domain());
-
-        return $this->_auth[$_SESSION['user']->get_domain()]->resource_edit($resource, $attributes, $typeid);
+        return $this->auth_instance()->resource_edit($resource, $attributes, $typeid);
     }
 
     public function resource_delete($subject)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->resource_delete($subject);
+        return $this->auth_instance()->resource_delete($subject);
     }
 
     public function resource_find_by_attribute($attribute)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->resource_find_by_attribute($attribute);
+        return $this->auth_instance()->resource_find_by_attribute($attribute);
     }
 
     public function resource_info($resourcedata)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->resource_info($resourcedata);
+        return $this->auth_instance()->resource_info($resourcedata);
     }
 
     public function resource_members_list($resourcedata, $recurse = true)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->resource_members_list($resourcedata, $recurse);
+        return $this->auth_instance()->resource_members_list($resourcedata, $recurse);
     }
 
     public function role_add($role)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->role_add($role);
+        return $this->auth_instance()->role_add($role);
     }
 
     public function role_find_by_attribute($attribute)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->role_find_by_attribute($attribute);
+        return $this->auth_instance()->role_find_by_attribute($attribute);
     }
 
     public function role_info($roledata)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->role_info($roledata);
+        return $this->auth_instance()->role_info($roledata);
     }
 
     public function search()
     {
-        $this->connect();
-
-        $result = $this->_auth[$_SESSION['user']->get_domain()]->search(func_get_args());
-
-        return $result;
+        return $this->auth_instance()->search(func_get_args());
     }
 
     public function user_add($attributes, $typeid = null)
     {
-        $this->connect($_SESSION['user']->get_domain());
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_add($attributes, $typeid);
+        return $this->auth_instance()->user_add($attributes, $typeid);
     }
 
     public function user_edit($user, $attributes, $typeid = null)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_edit($user, $attributes, $typeid);
+        return $this->auth_instance()->user_edit($user, $attributes, $typeid);
     }
 
     public function user_delete($userdata)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_delete($userdata);
+        return $this->auth_instance()->user_delete($userdata);
     }
 
     public function user_find_by_attribute($attribute)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_find_by_attribute($attribute);
+        return $this->auth_instance()->user_find_by_attribute($attribute);
     }
 
     public function user_info($userdata)
     {
-        return $this->_auth[$_SESSION['user']->get_domain()]->user_info($userdata);
+        return $this->auth_instance()->user_info($userdata);
     }
 }
