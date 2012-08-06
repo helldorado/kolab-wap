@@ -312,18 +312,28 @@ class LDAP
     {
         // Domain identifier
         $unique_attr = $this->unique_attribute();
-        $attributes[$unique_attr] = $domain;
 
         // Now that values have been re-generated where necessary, compare
         // the new domain attributes to the original domain attributes.
         $_domain = $this->domain_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
+
+        if (empty($_domain)) {
+            $_domain = $this->entry_dn($domain);
+
+            if (empty($_domain)) {
+                return false;
+            }
+
+            $_domain_dn = $domain;
+        } else {
+            $_domain_dn = key($_domain);
+        }
 
         if (!$_domain) {
             //console("Could not find domain");
             return false;
         }
 
-        $_domain_dn = key($_domain);
         $_domain = $this->domain_info($_domain_dn, array_keys($attributes));
 
         // We should start throwing stuff over the fence here.
@@ -818,6 +828,29 @@ class LDAP
         }
 
         return $this->_list_resource_members($resource_dn, null, $recurse);
+    }
+
+    public function role_add($attrs)
+    {
+        if ($typeid == null) {
+            $type_str = 'role';
+        }
+        else {
+            $db   = SQL::get_instance();
+            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM role_types WHERE id = ?", $typeid));
+            $type_str = $_key['key'];
+        }
+
+        // Check if the user_type has a specific base DN specified.
+        $base_dn = $this->conf->get($this->domain, $type_str . "base_dn");
+        if (empty($base_dn))
+            $base_dn = $this->conf->get('ldap', "base_dn");
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->_add($dn, $attrs);
     }
 
     public function role_find_by_attribute($attribute)
