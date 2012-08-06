@@ -349,10 +349,11 @@ class Auth {
 
     public function list_roles($domain = NULL, $attributes = array(), $search = array(), $params = array())
     {
-        $this->connect($domain);
         if ($domain === NULL) {
             $domain = $this->conf->get('primary_domain');
         }
+
+        $this->connect($domain);
 
         $roles = $this->_auth[$domain]->list_roles($attributes, $search, $params);
 
@@ -411,6 +412,11 @@ class Auth {
     public function resource_members_list($resourcedata, $recurse = true)
     {
         return $this->_auth[$_SESSION['user']->get_domain()]->resource_members_list($resourcedata, $recurse);
+    }
+
+    public function role_add($role)
+    {
+        return $this->_auth[$_SESSION['user']->get_domain()]->role_add($role);
     }
 
     public function role_find_by_attribute($attribute)
