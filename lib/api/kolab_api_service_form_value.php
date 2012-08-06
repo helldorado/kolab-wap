@@ -834,6 +834,23 @@ class kolab_api_service_form_value extends kolab_api_service
 
     }
 
+    private function validate_associateddomain($value)
+    {
+        return $value;
+
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+
+        if (!is_array($value)) {
+            $value = (array)($value);
+        }
+
+        //console("form_value.validate_associateddomain(\$value)", $value);
+
+        return $value;
+
+    }
+
     private function validate_mail($value)
     {
         $auth = Auth::get_instance();
