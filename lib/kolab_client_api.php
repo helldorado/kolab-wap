@@ -78,7 +78,7 @@ class kolab_client_api
                     $this->request->setConfig($optname, $optvalue);
                 }
                 catch (Exception $e) {
-                    write_log('errors', $e->getMessage());
+                    Log::error("HTTP: " . $e->getMessage());
                 }
             }
         }

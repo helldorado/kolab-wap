@@ -54,8 +54,9 @@ class SQL
 
     public function __construct($_conn = 'kolab_wap')
     {
-        $this->name = $_conn;
         $conf = Conf::get_instance();
+
+        $this->name    = $_conn;
         $this->sql_uri = $conf->get($_conn, 'sql_uri');
     }
 
@@ -77,10 +78,12 @@ class SQL
             $start = $pos + strlen($param) + 1;
         }
 
+        Log::trace("SQL: $query");
+
         $result = mysql_query($query);
 
         if (!$result) {
-            write_log('errors', 'SQL Error: ' . mysql_error($this->conn));
+            Log::error('SQL Error: ' . mysql_error($this->conn));
         }
 
         return $result;
@@ -107,6 +110,8 @@ class SQL
     private function _connect()
     {
         if (!$this->conn) {
+            Log::debug("SQL: Connecting to " . $this->sql_uri);
+
             $_uri = parse_url($this->sql_uri);
             $this->_username = $_uri['user'];
             $this->_password = $_uri['pass'];
