@@ -301,6 +301,10 @@ class LDAP
     {
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
+            if (!$this->domain_info($parent_domain)) {
+                $this->_domain_add_new($parent_domain, $prepopulate);
+            }
+
             return $this->_domain_add_alias($domain, $parent_domain);
         }
         else {
@@ -1824,18 +1828,18 @@ class LDAP
 
         $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
 
+        // Get the parent
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $parent . ')' . $domain_filter . ')';
 
         $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
-
-        // TODO: Catch not having found any such parent domain
-
         $domain_dn = key($domain_entry);
 
-        //    private function modify_entry($subject_dn, $old_attrs, $new_attrs)
-
         $_old_attr = array($domain_name_attribute => $domain_entry[$domain_dn][$domain_name_attribute]);
-        $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_dn][$domain_name_attribute], $domain));
+        if (is_array($domain)) {
+            $_new_attr = array($domain_name_attribute => array_unique(array_merge((array)($domain_entry[$domain_dn][$domain_name_attribute]), $domain)));
+        } else {
+            $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_dn][$domain_name_attribute], $domain));
+        }
 
         return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
     }
@@ -1862,7 +1866,9 @@ class LDAP
                         'top',
                         'domainrelatedobject'
                     ),
-                $domain_name_attribute => array_merge((array)($domain_name), $domain),
+                $domain_name_attribute => array_unique(
+                        array_merge((array)($domain_name), $domain)
+                    ),
             );
 
         $this->_add($dn, $attrs);
