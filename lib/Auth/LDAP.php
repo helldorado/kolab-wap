@@ -71,12 +71,11 @@ class LDAP
                 try {
                     $domain = $_SESSION['user']->get_domain();
                 } catch (Exception $e) {
-                    // TODO: Debug logging
-                    //console("Warning, user not authenticated yet");
+                    Log::warning("LDAP: User not authenticated yet");
                 }
             }
         } else {
-            //console("LDAP::__construct() using domain $domain");
+            Log::debug("LDAP: __construct() using domain $domain");
         }
 
         // Continue and default to the primary domain.
@@ -130,7 +129,7 @@ class LDAP
      */
     public function authenticate($username, $password)
     {
-        //console("LDAP authentication request for $username");
+        Log::debug("LDAP: authentication request for $username");
 
         if (!$this->_connect()) {
             return false;
@@ -194,10 +193,11 @@ class LDAP
                 $_SESSION['user']->user_root_dn = $root_dn;
                 $_SESSION['user']->user_bind_dn = $subject_dn;
                 $_SESSION['user']->user_bind_pw = $password;
-                //console("Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
+
+                Log::debug("LDAP: Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
             }
             else {
-                //console("Successfully bound with User DN: " . $subject_dn . " but not saving it to the session");
+                Log::debug("LDAP: Successfully bound with User DN: $subject_dn but not saving it to the session");
             }
 
             // @TODO: return unique attribute
@@ -241,7 +241,7 @@ class LDAP
                     }
                 }
             } else {
-                //console("No schema details exist for attribute $attribute (which is strange)");
+                Log::warning("LDAP: No schema details exist for attribute $attribute (which is strange)");
             }
 
             // The relevant parts only, please
@@ -383,14 +383,14 @@ class LDAP
         $supported_controls = $this->supported_controls();
 
         if (!in_array($effective_rights_control_oid, $supported_controls)) {
-            //console("No getEffectiveRights control in supportedControls");
+            Log::debug("LDAP: No getEffectiveRights control in supportedControls");
             return $this->legacy_rights($subject);
         }
 
         $attributes = array(
-                'attributeLevelRights' => array(),
-                'entryLevelRights' => array(),
-            );
+            'attributeLevelRights' => array(),
+            'entryLevelRights' => array(),
+        );
 
         $output = array();
 
@@ -439,9 +439,11 @@ class LDAP
                 '"*"',
             );
 
-        //console("Executing command " . implode(' ', $command));
+        $command = implode(' ', $command);
 
-        exec(implode(' ', $command), $output, $return_code);
+        Log::debug("LDAP: Executing command: $command");
+
+        exec($command, $output, $return_code);
 
         //console("Output", $output, "Return code: " . $return_code);
 
@@ -505,8 +507,9 @@ class LDAP
     {
         $result = $this->_search($subject_dn, '(objectclass=*)', (array)($attribute));
         $result = self::normalize_result($result);
-        $dn = key($result);
-        $attr = key($result[$dn]);
+        $dn     = key($result);
+        $attr   = key($result[$dn]);
+
         return $result[$dn][$attr];
     }
 
@@ -847,8 +850,9 @@ class LDAP
 
         // Check if the user_type has a specific base DN specified.
         $base_dn = $this->conf->get($this->domain, $type_str . "base_dn");
-        if (empty($base_dn))
+        if (empty($base_dn)) {
             $base_dn = $this->conf->get('ldap', "base_dn");
+        }
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -990,9 +994,9 @@ class LDAP
         return $this->entry_find_by_attribute($attribute);
     }
 
-    /*
-        Translate a domain name into it's corresponding root dn.
-    */
+    /**
+     * Translate a domain name into it's corresponding root dn.
+     */
     private function domain_root_dn($domain = '')
     {
         //console("Auth::LDAP::domain_root_dn(\$domain) called with \$domain", $domain);
@@ -1068,7 +1072,7 @@ class LDAP
             $_base_dn = $base_dn;
         }
 
-        $result = self::normalize_result($this->__search($_base_dn, $search_filter, $attributes));
+        $result = self::normalize_result($this->_search($_base_dn, $search_filter, $attributes));
         $result = array_keys($result);
         //console($result);
 
@@ -1182,19 +1186,19 @@ class LDAP
 
         require_once("Net/LDAP2.php");
 
-        $_ldap_cfg = Array(
-                'host' => $this->_ldap_server,
-                'port' => $this->_ldap_port,
-                'tls' => false,
-                'version' => 3,
-                'binddn' => $conf->get('bind_dn'),
-                'bindpw' => $conf->get('bind_pw')
-            );
+        $_ldap_cfg = array(
+            'host'   => $this->_ldap_server,
+            'port'   => $this->_ldap_port,
+            'tls'    => false,
+            'version' => 3,
+            'binddn' => $conf->get('bind_dn'),
+            'bindpw' => $conf->get('bind_pw')
+        );
 
-        $_ldap_schema_cache_cfg = Array(
-                'path' => "/tmp/" . $this->_ldap_server . ":" . ($this->_ldap_port ? $this->_ldap_port : '389') . "-Net_LDAP2_Schema.cache",
-                'max_age' => 86400,
-            );
+        $_ldap_schema_cache_cfg = array(
+            'path' => "/tmp/" . $this->_ldap_server . ":" . ($this->_ldap_port ? $this->_ldap_port : '389') . "-Net_LDAP2_Schema.cache",
+            'max_age' => 86400,
+        );
 
         $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
 
@@ -1256,7 +1260,6 @@ class LDAP
             );
 
         $subject    = self::normalize_result($this->_search($subject_dn));
-
         $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
         $attributes = array_merge($attributes['may'], $attributes['must']);
 
@@ -1280,12 +1283,12 @@ class LDAP
 
         //console("Auth::LDAP::modify_entry() using rdn attribute: " . $rdn_attr);
 
-        $mod_array = Array(
-                "add"       => Array(), // For use with ldap_mod_add()
-                "del"       => Array(), // For use with ldap_mod_del()
-                "replace"   => Array(), // For use with ldap_mod_replace()
-                "rename"    => Array(), // For use with ldap_rename()
-            );
+        $mod_array = array(
+            'add'       => array(), // For use with ldap_mod_add()
+            'del'       => array(), // For use with ldap_mod_del()
+            'replace'   => array(), // For use with ldap_mod_replace()
+            'rename'    => array(), // For use with ldap_rename()
+        );
 
         // This is me cheating. Remove this special attribute.
         if (array_key_exists('ou', $old_attrs) || array_key_exists('ou', $new_attrs)) {
@@ -1403,7 +1406,7 @@ class LDAP
                 if (empty($value)) {
                     if (!array_key_exists($attr, $mod_array['del'])) {
                         switch ($attr) {
-                            case "userpassword":
+                            case 'userpassword':
                                 break;
                             default:
                                 //console("Adding to del(2): $attr");
@@ -1514,16 +1517,7 @@ class LDAP
             return false;
         }
 
-        if (!$result) {
-            //console("LDAP Error: " . $this->_errstr());
-            return false;
-        }
-
-        if ($result) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
 
     private function parse_attribute_level_rights($attribute_value)
@@ -1795,9 +1789,9 @@ class LDAP
      ************      Shortcut functions       ****************
      ***********************************************************/
 
-    /*
-        Shortcut to ldap_add()
-    */
+    /**
+     * Shortcut to ldap_add()
+     */
     private function _add($entry_dn, $attributes)
     {
         // Always bind with the session credentials
@@ -1959,33 +1953,33 @@ class LDAP
         }
 
         $dn = $inetdomainbasedn;
-        $attrs = Array(
-                # TODO: Probably just use ldap_explode_dn()
+        $attrs = array(
+                // @TODO: Probably just use ldap_explode_dn()
                 'dc' => substr($dn, (strpos($dn, '=')+1), ((strpos($dn, ',')-strpos($dn, '='))-1)),
                 'objectclass' => Array(
                         'top',
                         'domain',
                     ),
                 'aci' => Array(
-                        # Self-modification
+                        // Self-modification
                         "(targetattr=\"carLicense || description || displayName || facsimileTelephoneNumber || homePhone || homePostalAddress || initials || jpegPhoto || labeledURI || mobile || pager || photo || postOfficeBox || postalAddress || postalCode || preferredDeliveryMethod || preferredLanguage || registeredAddress || roomNumber || secretary || seeAlso || st || street || telephoneNumber || telexNumber || title || userCertificate || userPassword || userSMIMECertificate || x500UniqueIdentifier\")(version 3.0; acl \"Enable self write for common attributes\"; allow (write) userdn=\"ldap:///self\";)",
 
-                        # Directory Administrators
+                        // Directory Administrators
                         "(targetattr =\"*\")(version 3.0;acl \"Directory Administrators Group\";allow (all) (groupdn=\"ldap:///cn=Directory Administrators," . $inetdomainbasedn . "\" or roledn=\"ldap:///cn=kolab-admin," . $inetdomainbasedn . "\");)",
 
-                        # Configuration Administrators
+                        // Configuration Administrators
                         "(targetattr=\"*\")(version 3.0; acl \"Configuration Administrators Group\"; allow (all) groupdn=\"ldap:///cn=Configuration Administrators,ou=Groups,ou=TopologyManagement,o=NetscapeRoot\";)",
 
-                        # Administrator users
+                        // Administrator users
                         "(targetattr=\"*\")(version 3.0; acl \"Configuration Administrator\"; allow (all) userdn=\"ldap:///uid=admin,ou=Administrators,ou=TopologyManagement,o=NetscapeRoot\";)",
 
-                        # SIE Group
+                        // SIE Group
                         $_aci,
 
-                        # Search Access,
+                        // Search Access,
                         "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "\");)",
 
-                        # Service Search Access
+                        // Service Search Access
                         "(targetattr = \"*\") (version 3.0;acl \"Service Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $service_bind_dn . "\");)",
                     ),
             );
@@ -1993,75 +1987,74 @@ class LDAP
         $this->_add($dn, $attrs);
 
         $dn = "cn=Directory Administrators," . $inetdomainbasedn;
-        $attrs = Array(
-                'objectclass' => Array(
-                        'top',
-                        'groupofuniquenames',
-                    ),
-
-                'cn' => 'Directory Administrators',
-                'uniquemember' => Array(
-                        'cn=Directory Manager'
-                    ),
-            );
+        $attrs = array(
+            'objectclass' => array(
+                'top',
+                'groupofuniquenames',
+            ),
+            'cn' => 'Directory Administrators',
+            'uniquemember' => array(
+                'cn=Directory Manager'
+            ),
+        );
 
         $this->_add($dn, $attrs);
 
         $dn = "ou=Groups," . $inetdomainbasedn;
-        $attrs = Array(
-                'objectclass' => Array('top', 'organizationalunit'),
-                'ou' => 'Groups',
-            );
+        $attrs = array(
+            'objectclass' => array('top', 'organizationalunit'),
+            'ou' => 'Groups',
+        );
 
         $this->_add($dn, $attrs);
 
         $dn = "ou=People," . $inetdomainbasedn;
-        $attrs = Array(
-                'objectclass' => Array('top', 'organizationalunit'),
-                'ou' => 'People',
-            );
+        $attrs = array(
+            'objectclass' => Array('top', 'organizationalunit'),
+            'ou' => 'People',
+        );
 
         $this->_add($dn, $attrs);
 
         $dn = "ou=Special Users," . $inetdomainbasedn;
         $attrs = Array(
-                'objectclass' => Array('top', 'organizationalunit'),
-                'ou' => 'Special Users',
-            );
+            'objectclass' => Array('top', 'organizationalunit'),
+            'ou' => 'Special Users',
+        );
 
         $this->_add($dn, $attrs);
 
         $dn = "ou=Resources," . $inetdomainbasedn;
         $attrs = Array(
-                'objectclass' => Array('top', 'organizationalunit'),
-                'ou' => 'Resources',
-            );
+            'objectclass' => Array('top', 'organizationalunit'),
+            'ou' => 'Resources',
+        );
 
         $this->_add($dn, $attrs);
 
         $dn = "ou=Shared Folders," . $inetdomainbasedn;
         $attrs = Array(
-                'objectclass' => Array('top', 'organizationalunit'),
-                'ou' => 'Shared Folders',
-            );
+            'objectclass' => Array('top', 'organizationalunit'),
+            'ou' => 'Shared Folders',
+        );
 
         $this->_add($dn, $attrs);
 
         $dn = 'cn=kolab-admin,ou=People,' . $inetdomainbasedn;
         $attrs = Array(
-                'objectclass' => Array(
-                        'top',
-                        'ldapsubentry',
-                        'nsroledefinition',
-                        'nssimpleroledefinition',
-                        'nsmanagedroledefinition',
-                    ),
-                'cn' => 'kolab-admin'
-            );
+            'objectclass' => Array(
+                'top',
+                'ldapsubentry',
+                'nsroledefinition',
+                'nssimpleroledefinition',
+                'nsmanagedroledefinition',
+            ),
+            'cn' => 'kolab-admin'
+        );
 
         $this->_add($dn, $attrs);
 
-        return TRUE;
+        return true;
     }
 
     /**
@@ -2079,8 +2072,7 @@ class LDAP
             return true;
         }
 
-        // TODO: Debug logging
-        //console("->_bind() Binding with $dn");
+        Log::debug("LDAP: Binding with $dn");
 
         $this->bind_dn = $dn;
         $this->bind_pw = $pw;
@@ -2105,14 +2097,12 @@ class LDAP
 
         ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 9);
 
-        // TODO: Debug logging
-        //console("Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
+        Log::debug("LDAP: Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
         $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
 
         if ($connection == false) {
             $this->conn = null;
-            // TODO: Debug logging
-            //console("Not connected: " . ldap_err2str() .  "(no.) " . ldap_errno());
+            Log::error("LDAP: Not connected: " . ldap_err2str() .  " (" . ldap_errno() . ")");
             return false;
         }
 
@@ -2120,8 +2110,7 @@ class LDAP
 
         ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
 
-        // TODO: Debug logging
-        //console("Connected!");
+        Log::debug("LDAP: Connected!");
 
         return true;
     }
@@ -2204,15 +2193,10 @@ class LDAP
         return $ldap_entries;
     }
 
-    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
-    {
-        return $this->__search($base_dn, $search_filter, $attributes);
-    }
-
     /**
      * Shortcut to ldap_search()
      */
-    private function __search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
+    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
     {
         $conf = Conf::get_instance();
 
