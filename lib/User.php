@@ -110,9 +110,6 @@ class User
 
     public function groups()
     {
-        //console("Called " . __FUNCTION__ . " on line " . __LINE__ . " of " . __FILE__);
-        //debug_print_backtrace();
-
         if ($this->_groups || (is_array($this->_groups) && count($this->_groups) >= 1)) {
             return $this->_groups;
         }

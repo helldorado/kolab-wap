@@ -79,7 +79,7 @@ class kolab_api_controller
     public function add_service($service, $handler)
     {
         if ($this->services[$service]) {
-            //console("Service $service is already registered.");
+            Log::warning("Service $service is already registered");
             return false;
         }
 
@@ -91,7 +91,7 @@ class kolab_api_controller
      */
     public function get_service($service)
     {
-        //console("Obtaining service $service");
+        Log::debug("Obtaining service: $service");
 
         // we are the system!
         if ($service == 'system') {
@@ -107,8 +107,6 @@ class kolab_api_controller
                 return $handler;
             }
         }
-
-        //console("Unknown service $service");
 
         throw new Exception("Unknown service", 400);
     }
@@ -140,7 +138,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $postdata = @json_decode($postdata, true);
 
-        //console("Calling method " . $method . " on service " . $service);
+        Log::debug("Calling $service.$method");
 
         // validate user session
         if ($service != 'system' || $method != 'authenticate') {
@@ -188,7 +186,7 @@ class kolab_api_controller
         $method  = $this->request['method'];
         $url     = rtrim($url, '/') . '/' . $service . '.' . $method;
 
-        //console("Proxying " . $url);
+        Log::debug("Proxying: $url");
 
         $request = new HTTP_Request2();
         $url     = new Net_URL2($url);
@@ -272,7 +270,7 @@ class kolab_api_controller
      */
     private function authenticate($request, $postdata)
     {
-        //console("Authenticating with postdata", $postdata);
+        Log::debug("Authenticating with postdata: " . json_encode($postdata));
 
         $valid = false;
 
@@ -306,7 +304,8 @@ class kolab_api_controller
      */
     private function capabilities()
     {
-        //console("system.capabilities called");
+        Log::debug("system.capabilities called");
+
         $auth = Auth::get_instance();
 
         $this->domains = $auth->list_domains();
