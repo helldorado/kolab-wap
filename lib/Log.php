@@ -27,13 +27,27 @@
  */
 class Log
 {
+    const TRACE   = 16; // use for protocol tracking: sql queries, ldap commands, etc.
     const DEBUG   = 8;
-    const INFO    = 4;
+    const INFO    = 4;  // use to log entry creation/update/delete etc.
     const WARNING = 2;
     const ERROR   = 0;
 
     private static $mode;
 
+
+    /**
+     * Logs tracing message
+     *
+     * @param string $message Log message
+     * @param array  $args    Additional arguments ('file', 'line')
+     */
+    static function trace($message, $args = array())
+    {
+        if (self::mode() >= self::TRACE) {
+            self::log_message(self::TRACE, $message, $args);    
+        }
+    }
 
     /**
      * Logs debug message
@@ -103,6 +117,7 @@ class Log
         // otherwise use separate file for info/debug and warning/error
         if (!$logfile) {
             switch ($mode) {
+            case self::TRACE:
             case self::DEBUG:
             case self::INFO:
                 $file = 'console';
@@ -117,6 +132,9 @@ class Log
         }
 
         switch ($mode) {
+        case self::TRACE:
+            $prefix = 'TRACE';
+            break;
         case self::DEBUG:
             $prefix = 'DEBUG';
             break;
@@ -177,6 +195,12 @@ class Log
         $mode = $conf->get('kolab_wap', 'debug_mode');
 
         switch ($mode) {
+        case self::TRACE:
+        case 'trace':
+        case 'TRACE':
+            self::$mode = self::TRACE;
+            break;
+
         case self::DEBUG:
         case 'debug':
         case 'DEBUG':
