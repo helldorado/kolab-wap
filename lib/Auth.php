@@ -110,8 +110,7 @@ class Auth {
      */
     public function authenticate($username, $password)
     {
-        // TODO: Log authentication request.
-        //console("Authentication request for $username");
+        Log::info("Authentication request for $username");
 
         if (strpos($username, '@')) {
             // Case-sensitivity does not matter for strstr() on '@', which
