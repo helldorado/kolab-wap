@@ -204,7 +204,6 @@ class LDAP
             return $subject_dn;
         }
         else {
-            //console("LDAP Error: " . $this->_errstr());
             return false;
         }
     }
@@ -1218,10 +1217,9 @@ class LDAP
 
     private function legacy_rights($subject)
     {
-        $subject_dn = $this->entry_dn($subject);
-
+        $subject_dn    = $this->entry_dn($subject);
         $user_is_admin = false;
-        $user_is_self = false;
+        $user_is_self  = false;
 
         // List group memberships
         $user_groups = $this->find_user_groups($_SESSION['user']->user_bind_dn);
@@ -1255,9 +1253,9 @@ class LDAP
         }
 
         $rights = array(
-                'entryLevelRights' => $standard_rights,
-                'attributeLevelRights' => array(),
-            );
+            'entryLevelRights' => $standard_rights,
+            'attributeLevelRights' => array(),
+        );
 
         $subject    = self::normalize_result($this->_search($subject_dn));
         $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
@@ -1276,7 +1274,7 @@ class LDAP
         //console("NEW ATTRIBUTES", $new_attrs);
 
         // TODO: Get $rdn_attr - we have type_id in $new_attrs
-        $dn_components = ldap_explode_dn($subject_dn, 0);
+        $dn_components  = ldap_explode_dn($subject_dn, 0);
         $rdn_components = explode('=', $dn_components[0]);
 
         $rdn_attr = $rdn_components[0];
@@ -1472,10 +1470,13 @@ class LDAP
                 $new_parent = null;
             }
 
-            //console("Attempt to rename $olddn to $newrdn,$new_parent");
+            Log::trace("LDAP: C: Rename $olddn to $newrdn,$new_parent");
 
             $result = ldap_rename($this->conn, $olddn, $newrdn, $new_parent, true);
+
             if ($result) {
+                Log::trace("LDAP: S: OK");
+
                 if ($new_parent) {
                     $subject_dn = $newrdn . ',' . $new_parent;
                 } else {
@@ -1486,35 +1487,57 @@ class LDAP
                     $subject_dn = $newrdn . ',' . $old_parent_dn;
                 }
             }
-
+            else {
+                Log::trace("LDAP: S: " . ldap_error($this->conn));
+                Log::warning("LDAP: Failed to rename $olddn to $newrdn,$new_parent");
+                return false;
+            }
         }
 
         if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
-            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
-        }
+            Log::trace("LDAP: C: Mod-Replace $subject_dn: " . json_encode($attributes['replace']));
 
-        if (!$result) {
-            //console("Failed to replace the following attributes on subject " . $subject_dn, $attributes['replace']);
-            return false;
+            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
+
+            if ($result) {
+                Log::trace("LDAP: S: OK");            
+            }
+            else {
+                Log::trace("LDAP: S: " . ldap_error($this->conn));
+                Log::warning("LDAP: Failed to replace attributes on $subject_dn: " . json_encode($attributes['replace']));
+                return false;
+            }
         }
 
         if (is_array($attributes['del']) && !empty($attributes['del'])) {
-            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
-        }
+            Log::trace("LDAP: C: Mod-Delete $subject_dn: " . json_encode($attributes['del']));
 
-        if (!$result) {
-            //console("Failed to delete the following attributes", $attributes['del']);
-            return false;
+            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
+
+            if ($result) {
+                Log::trace("LDAP: S: OK");            
+            }
+            else {
+                Log::trace("LDAP: S: " . ldap_error($this->conn));
+                Log::warning("LDAP: Failed to delete attributes on $subject_dn: " . json_encode($attributes['del']));
+                return false;
+            }
         }
 
 
         if (is_array($attributes['add']) && !empty($attributes['add'])) {
-            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
-        }
+            Log::trace("LDAP: C: Mod-Add $subject_dn: " . json_encode($attributes['add']));
 
-        if (!$result) {
-            //console("Failed to add the following attributes", $attributes['add']);
-            return false;
+            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
+
+            if ($result) {
+                Log::trace("LDAP: S: OK");            
+            }
+            else {
+                Log::trace("LDAP: S: " . ldap_error($this->conn));
+                Log::warning("LDAP: Failed to add attributes on $subject_dn: " . json_encode($attributes['add']));
+                return false;
+            }
         }
 
         return true;
@@ -1522,15 +1545,14 @@ class LDAP
 
     private function parse_attribute_level_rights($attribute_value)
     {
-        $attribute_value = str_replace(", ", ",", $attribute_value);
+        $attribute_value  = str_replace(", ", ",", $attribute_value);
         $attribute_values = explode(",", $attribute_value);
-
-        $attribute_value = array();
+        $attribute_value  = array();
 
         foreach ($attribute_values as $access_right) {
             $access_right_components = explode(":", $access_right);
-            $access_attribute = strtolower(array_shift($access_right_components));
-            $access_value = array_shift($access_right_components);
+            $access_attribute        = strtolower(array_shift($access_right_components));
+            $access_value            = array_shift($access_right_components);
 
             $attribute_value[$access_attribute] = array();
 
@@ -1587,9 +1609,7 @@ class LDAP
 
         $this->_bind($conf->get('bind_dn'), $conf->get('bind_pw'));
 
-        $result = ldap_read($this->conn, "", "(objectclass=*)", array("supportedControl"));
-        $result = ldap_get_entries($this->conn, $result);
-        $result = self::normalize_result($result);
+        $result = $this->_read("", "(objectclass=*)", array("supportedControl"));
 
         return $result['']['supportedcontrol'];
     }
@@ -1629,7 +1649,7 @@ class LDAP
         if (!$base_dn)
             $base_dn = $conf->get('base_dn');
 
-        $filter  = $conf->get('user_filter');
+        $filter = $conf->get('user_filter');
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
@@ -1806,9 +1826,15 @@ class LDAP
             }
         }
 
+        Log::trace("LDAP: C: Add $entry_dn: " . json_encode($attributes));
+
         if (($add_result = ldap_add($this->conn, $entry_dn, $attributes)) == false) {
-            // Issue warning
+            Log::trace("LDAP: S: " . ldap_error($this->conn));
+            Log::warning("LDAP: Adding entry $entry_dn failed. " . ldap_error($this->conn));
             return false;
+        }
+        else {
+            Log::trace("LDAP: S: OK");            
         }
 
         return true;
@@ -1856,14 +1882,12 @@ class LDAP
 
         $dn = $domain_name_attribute . '=' . $domain_name . ',' . $domain_base_dn;
         $attrs = array(
-                'objectclass' => Array(
-                        'top',
-                        'domainrelatedobject'
-                    ),
-                $domain_name_attribute => array_unique(
-                        array_merge((array)($domain_name), $domain)
-                    ),
-            );
+            'objectclass' => Array(
+                'top',
+                'domainrelatedobject'
+            ),
+            $domain_name_attribute => array_unique(array_merge((array)($domain_name), $domain)),
+        );
 
         $this->_add($dn, $attrs);
 
@@ -1872,15 +1896,15 @@ class LDAP
 
         $dn = "cn=" . $cn . ",cn=mapping tree,cn=config";
         $attrs = array(
-                'objectclass' => Array(
-                        'top',
-                        'extensibleObject',
-                        'nsMappingTree',
-                    ),
-                'nsslapd-state' => 'backend',
-                'cn' => $inetdomainbasedn,
-                'nsslapd-backend' => str_replace('.', '_', $domain_name),
-            );
+            'objectclass' => Array(
+                'top',
+                'extensibleObject',
+                'nsMappingTree',
+            ),
+            'nsslapd-state' => 'backend',
+            'cn' => $inetdomainbasedn,
+            'nsslapd-backend' => str_replace('.', '_', $domain_name),
+        );
 
         $this->_add($dn, $attrs);
 
@@ -1893,10 +1917,7 @@ class LDAP
             $_base_dn = $this->_standard_root_dn($conf->get('kolab', 'primary_domain'));
         }
 
-        $result = @ldap_read($this->conn, "cn=" . str_replace('.', '_', $conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
-        $result = @ldap_get_entries($this->conn, $result);
-
-        $result = self::normalize_result($result);
+        $result = $this->_read("cn=" . str_replace('.', '_', $conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
 
         //console("Result normalized", $result);
 
@@ -1905,20 +1926,20 @@ class LDAP
 
         $dn = "cn=" . str_replace('.', '_', $domain_name) . ",cn=ldbm database,cn=plugins,cn=config";
         $attrs = Array(
-                'objectclass' => Array(
-                        'top',
-                        'extensibleobject',
-                        'nsbackendinstance',
-                    ),
-                'cn' => str_replace('.', '_', $domain_name),
-                'nsslapd-suffix' => $inetdomainbasedn,
-                'nsslapd-cachesize' => '-1',
-                'nsslapd-cachememsize' => '10485760',
-                'nsslapd-readonly' => 'off',
-                'nsslapd-require-index' => 'off',
-                'nsslapd-directory' => $directory,
-                'nsslapd-dncachememsize' => '10485760'
-            );
+            'objectclass' => Array(
+                'top',
+                'extensibleobject',
+                'nsbackendinstance',
+             ),
+            'cn' => str_replace('.', '_', $domain_name),
+            'nsslapd-suffix' => $inetdomainbasedn,
+            'nsslapd-cachesize' => '-1',
+            'nsslapd-cachememsize' => '10485760',
+            'nsslapd-readonly' => 'off',
+            'nsslapd-require-index' => 'off',
+            'nsslapd-directory' => $directory,
+            'nsslapd-dncachememsize' => '10485760'
+        );
 
         $this->_add($dn, $attrs);
 
@@ -1932,13 +1953,9 @@ class LDAP
             $_base_dn = $this->_standard_root_dn($conf->get('kolab', 'primary_domain'));
         }
 
-        $result = @ldap_read($this->conn, $_base_dn, '(objectclass=*)', array('aci'));
-        $result = @ldap_get_entries($this->conn, $result);
-
-        $result = self::normalize_result($result);
-
+        $result = $this->_read($_base_dn, '(objectclass=*)', array('aci'));
         $result = $result[key($result)];
-        $acis = $result['aci'];
+        $acis   = $result['aci'];
 
         foreach ($acis as $aci) {
             if (stristr($aci, "SIE Group") === FALSE) {
@@ -2072,14 +2089,14 @@ class LDAP
             return true;
         }
 
-        Log::debug("LDAP: Binding with $dn");
+        Log::debug("LDAP: C: Bind $dn");
 
         $this->bind_dn = $dn;
         $this->bind_pw = $pw;
 
-        if (($bind_ok = ldap_bind($this->conn, $dn, $pw)) == false) {
-            //console("LDAP Error: " . $this->_errstr());
-            // Issue error message
+        if (@ldap_bind($this->conn, $dn, $pw) === false) {
+            Log::trace("LDAP: S: " . ldap_error($this->conn));
+            Log::warning("LDAP: Binding $dn failed. " . ldap_error($this->conn));
             return false;
         }
 
@@ -2097,12 +2114,13 @@ class LDAP
 
         ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 9);
 
-        Log::debug("LDAP: Connecting to " . $this->_ldap_server . " on port " . $this->_ldap_port);
+        Log::debug("LDAP: Connect " . $this->_ldap_server . " on port " . $this->_ldap_port);
+
         $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
 
         if ($connection == false) {
             $this->conn = null;
-            Log::error("LDAP: Not connected: " . ldap_err2str() .  " (" . ldap_errno() . ")");
+            Log::error("LDAP: Could not connect to server. " . ldap_error());
             return false;
         }
 
@@ -2110,7 +2128,7 @@ class LDAP
 
         ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
 
-        Log::debug("LDAP: Connected!");
+        Log::debug("LDAP: Connected");
 
         return true;
     }
@@ -2123,14 +2141,42 @@ class LDAP
         // Always bind with the session credentials
         $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        if (($delete_result = ldap_delete($this->conn, $entry_dn)) == false) {
-            // Issue warning
+        Log::trace("LDAP: C: Delete $entry_dn");
+
+        if (ldap_delete($this->conn, $entry_dn) === false) {
+            Log::trace("LDAP: S: " . ldap_error($this->conn));
+            Log::warning("LDAP: Delete failed. " . ldap_error($this->conn));
             return false;
         }
-        else {
-            return true;
-        }
+
+        Log::trace("LDAP: S: OK");
+
+        return true;
     }
+
+    /**
+     * Shortcut for ldap_read()
+     */
+    private function _read($base_dn, $filter, $attributes)
+    {
+        Log::trace("LDAP: C: Read $filter " . json_encode($attributes));
+
+        $result = @ldap_read($this->conn, $base_dn, $filter, $attributes);
+
+        if ($result === false) {
+            Log::trace("LDAP: S: " . ldap_error($this->conn));
+            Log::warning("LDAP: Read failed. " . ldap_error($this->conn));
+        }
+        else {
+            Log::trace("LDAP: S: " . ldap_count_entries($this->conn, $result) . " record(s)");
+        }
+
+        $result = @ldap_get_entries($this->conn, $result);
+        $result = self::normalize_result($result);
+
+        return $result;
+    }
+
 
     /**
      * Shortcut to ldap_disconnect()
@@ -2152,20 +2198,6 @@ class LDAP
         return false;
     }
 
-    /**
-     * Shortcut to ldap_err2str() over ldap_errno()
-     */
-    private function _errstr()
-    {
-        if ($errno = @ldap_errno($this->conn)) {
-            if ($err2str = @ldap_err2str($errno)) {
-                return $err2str;
-            }
-        }
-
-        // Issue warning
-        return null;
-    }
 
     /**
      * Shortcut to ldap_get_entries() over ldap_list()
@@ -2179,18 +2211,23 @@ class LDAP
             return null;
         }
 
-        $ldap_entries = array( "count" => 0 );
+        Log::trace("LDAP: C: List $base_dn $filter");
 
-        if (($ldap_list = @ldap_list($this->conn, $base_dn, $filter)) == false) {
-            //message("LDAP Error: Could not search " . $base_dn . ": " . $this->_errstr() );
+        if (($result = @ldap_list($this->conn, $base_dn, $filter)) === false) {
+            Log::trace("LDAP: S: " . ldap_error($this->conn));
+            Log::warning("LDAP: Search failed. " . ldap_error($this->conn));
+            return null;
         }
         else {
-            if (($ldap_entries = @ldap_get_entries($this->conn, $ldap_list)) == false) {
-                //message("LDAP Error: No entries for " . $filter . " in " . $base_dn . ": " . $this->_errstr());
-            }
+            Log::trace("LDAP: S: " . ldap_count_entries($this->conn, $result) . " record(s)");        
         }
 
-        return $ldap_entries;
+        if (($entries = @ldap_get_entries($this->conn, $ldap_list)) === false) {
+            Log::warning("LDAP: Getting list result failed. " . ldap_error($this->conn));
+            return null;
+        }
+
+        return $entries;
     }
 
     /**
@@ -2201,7 +2238,7 @@ class LDAP
         $conf = Conf::get_instance();
 
         if (!$this->_connect()) {
-            return false;
+            return null;
         }
 
         $attributes = (array)($attributes);
@@ -2218,17 +2255,21 @@ class LDAP
             $attributes[] = $this->unique_attribute();
         }
 
-        if (($search_results = @ldap_search($this->conn, $base_dn, $search_filter, $attributes)) == false) {
-            //console("Could not search in " . __METHOD__ . " in " . __FILE__ . " on line " . __LINE__ . ": " . $this->_errstr());
-            return false;
+        Log::trace("LDAP: C: Search $base_dn $search_filter " . json_encode($attributes));
+
+        if (($result = @ldap_search($this->conn, $base_dn, $search_filter, $attributes)) === false) {
+            Log::trace("LDAP: S: " . ldap_error($this->conn));
+            Log::warning("LDAP: Search failed. " . ldap_error($this->conn));
+            return null;
+        }
+        else {
+            Log::trace("LDAP: S: " . ldap_count_entries($this->conn, $result) . " record(s)");        
         }
 
-        if (($entries = ldap_get_entries($this->conn, $search_results)) == false) {
-            //console("Could not get the results of the search: " . $this->_errstr());
-            return false;
+        if (($entries = @ldap_get_entries($this->conn, $result)) == false) {
+            Log::warning("LDAP: Getting search result failed. " . ldap_error($this->conn));
+            return null;
         }
-
-        //console("__search() entries:", $entries);
 
         return $entries;
     }
@@ -2293,7 +2334,16 @@ class LDAP
     {
         if ($yes && $really) {
             if ($this->conn) {
-                ldap_unbind($this->conn);
+                Log::trace("LDAP: C: Unbind");
+
+                $result = @ldap_unbind($this->conn);
+
+                if ($result) {
+                    Log::trace("LDAP: S: OK");
+                }
+                else {
+                    Log::trace("LDAP: S: " . ldap_error($this->conn));
+                }
             }
 
             $this->conn    = null;
@@ -2384,30 +2434,6 @@ class LDAP
         return "dc=" . implode(',dc=', explode('.', $relevant_associatedDomain));
     }
 
-    // @TODO: this function isn't used anymore
-    private function _get_group_dn($root_dn, $search_filter)
-    {
-        // TODO: Why does this use privileged credentials?
-        if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
-            $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
-        }
-
-        //console("Searching for a group dn in $root_dn, with search filter: $search_filter");
-
-        $search_results = ldap_search($this->conn, $root_dn, $search_filter);
-
-        if (ldap_count_entries($this->conn, $search_results) == 0) {
-            return false;
-        }
-
-        if (($first_entry = ldap_first_entry($this->conn, $search_results)) == false) {
-            return false;
-        }
-
-        $group_dn = ldap_get_dn($this->conn, $first_entry);
-        return $group_dn;
-    }
-
     private function _get_user_dn($root_dn, $search_filter)
     {
         // TODO: Why does this use privileged credentials?
@@ -2489,13 +2515,11 @@ class LDAP
         // Use the member attributes to return an array of member ldap objects
         // NOTE that the member attribute is supposed to contain a DN
         foreach ($members as $member) {
-            $result = @ldap_read($this->conn, $member, '(objectclass=*)');
+            $member_entry = $this->_read($member, '(objectclass=*)');
 
-            if (!$result) {
+            if (empty($member_entry)) {
                 continue;
             }
-
-            $member_entry = self::normalize_result(@ldap_get_entries($this->conn, $result));
 
             $group_members[$member] = array_pop($member_entry);
 
@@ -2530,13 +2554,12 @@ class LDAP
         }
 
         foreach ($uniquemembers as $member) {
-            $result = @ldap_read($this->conn, $member, '(objectclass=*)');
+            $member_entry = $this->_read($member, '(objectclass=*)');
 
-            if (!$result) {
+            if (empty($member_entry)) {
                 continue;
             }
 
-            $member_entry = self::normalize_result(@ldap_get_entries($this->conn, $result));
             $group_members[$member] = array_pop($member_entry);
 
             if ($recurse) {
