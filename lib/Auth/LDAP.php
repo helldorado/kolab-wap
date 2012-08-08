@@ -363,10 +363,10 @@ class LDAP
             $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
             $domain_filter         = "(&$domain_filter($domain_name_attribute=$domain))";
 
-            $result = self::normalize_result($this->_search($domain_base_dn, $domain_filter, $attributes));
+            $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
         }
         else {
-            $result = self::normalize_result($this->_search($domain_dn, '(objectclass=*)', $attributes));
+            $result = $this->_search($domain_dn, '(objectclass=*)', $attributes);
         }
 
         if (!$result) {
@@ -494,7 +494,6 @@ class LDAP
             "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
             ")");
 
-        $entries = self::normalize_result($entries);
         $groups  = array_keys($entries);
 
         return $groups;
@@ -503,7 +502,6 @@ class LDAP
     public function get_attribute($subject_dn, $attribute)
     {
         $result = $this->_search($subject_dn, '(objectclass=*)', (array)($attribute));
-        $result = self::normalize_result($result);
         $dn     = key($result);
         $attr   = key($result[$dn]);
 
@@ -513,7 +511,6 @@ class LDAP
     public function get_attributes($subject_dn, $attributes)
     {
         $result = $this->_search($subject_dn, '(objectclass=*)', $attributes);
-        $result = self::normalize_result($result);
 
         if (!empty($result)) {
             $result = array_pop($result);
@@ -604,7 +601,7 @@ class LDAP
             return false;
         }
 
-        return self::normalize_result($this->_search($group_dn, '(objectclass=*)', $attributes));
+        return $this->_search($group_dn, '(objectclass=*)', $attributes);
     }
 
     public function group_members_list($group, $recurse = true)
@@ -621,7 +618,6 @@ class LDAP
     public function list_domains()
     {
         $domains = $this->domains_list();
-        $domains = self::normalize_result($domains);
 
         return $domains;
     }
@@ -635,7 +631,6 @@ class LDAP
         }
 
         $groups = $this->groups_list($attributes, $search);
-        $groups = self::normalize_result($groups);
 
         if (!empty($params['sort_by'])) {
             $this->sort_result_key = $params['sort_by'];
@@ -666,7 +661,6 @@ class LDAP
         }
 
         $users = $this->users_list($attributes, $search);
-        $users = self::normalize_result($users);
 
         if (!empty($params['sort_by'])) {
             $this->sort_result_key = $params['sort_by'];
@@ -697,7 +691,6 @@ class LDAP
         }
 
         $resources = $this->resources_list($attributes, $search);
-        $resources = self::normalize_result($resources);
 
         if (!empty($params['sort_by'])) {
             $this->sort_result_key = $params['sort_by'];
@@ -720,7 +713,6 @@ class LDAP
         }
 
         $roles = $this->roles_list($attributes, $search);
-        $roles = self::normalize_result($roles);
 
         if (!empty($params['sort_by'])) {
             $this->sort_result_key = $params['sort_by'];
@@ -822,7 +814,7 @@ class LDAP
             return false;
         }
 
-        return self::normalize_result($this->_search($resource_dn, '(objectclass=*)', $attributes));
+        return $this->_search($resource_dn, '(objectclass=*)', $attributes);
     }
 
     public function resource_members_list($resource, $recurse = true)
@@ -882,7 +874,7 @@ class LDAP
             return false;
         }
 
-        return self::normalize_result($this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes));
+        return $this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes);
     }
 
     public function user_add($attrs, $typeid = null)
@@ -987,7 +979,7 @@ class LDAP
             return false;
         }
 
-        return self::normalize_result($this->_search($user_dn, '(objectclass=*)', $attributes));
+        return $this->_search($user_dn, '(objectclass=*)', $attributes);
     }
 
     public function user_find_by_attribute($attribute)
@@ -1023,13 +1015,7 @@ class LDAP
             $domain_name_attribute = 'associateddomain';
         }
 
-        $result = self::normalize_result(
-                $this->_search(
-                        $conf->get('domain_base_dn'),
-                        '(' . $domain_name_attribute . '=' . $domain . ')'
-                    )
-            );
-
+        $result = $this->_search($conf->get('domain_base_dn'), '(' . $domain_name_attribute . '=' . $domain . ')');
         $result = $result[key($result)];
         //console("intermediate result for domain_root_dn()", $result);
 
@@ -1075,7 +1061,7 @@ class LDAP
             $_base_dn = $base_dn;
         }
 
-        $result = self::normalize_result($this->_search($_base_dn, $search_filter, $attributes));
+        $result = $this->_search($_base_dn, $search_filter, $attributes);
         $result = array_keys($result);
 
         return $result;
@@ -1142,7 +1128,7 @@ class LDAP
             //console("Using base_dn from domain " . $this->domain . ": " . $base_dn);
         }
 
-        $result = self::normalize_result($this->_search($base_dn, $filter, array_keys($attribute)));
+        $result = $this->_search($base_dn, $filter, array_keys($attribute));
 
         if (count($result) > 0) {
             //console("Results found: " . implode(', ', array_keys($result)));
@@ -1260,7 +1246,7 @@ class LDAP
             'attributeLevelRights' => array(),
         );
 
-        $subject    = self::normalize_result($this->_search($subject_dn));
+        $subject    = $this->_search($subject_dn);
         $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
         $attributes = array_merge($attributes['may'], $attributes['must']);
 
@@ -1617,16 +1603,17 @@ class LDAP
 
     private function resources_list($attributes = array(), $search = array())
     {
-        $conf = Conf::get_instance();
-
+        $conf    = Conf::get_instance();
         $base_dn = $conf->get('resource_base_dn');
 
-        if (!$base_dn)
+        if (!$base_dn) {
             $base_dn = "ou=Resources," . $conf->get('base_dn');
+        }
 
         $filter  = $conf->get('resource_filter');
-        if (!$filter)
+        if (!$filter) {
             $filter = '(&(objectclass=*)(!(objectclass=organizationalunit)))';
+        }
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
@@ -1643,8 +1630,7 @@ class LDAP
 
     private function users_list($attributes = array(), $search = array())
     {
-        $conf = Conf::get_instance();
-
+        $conf    = Conf::get_instance();
         $base_dn = $conf->get('user_base_dn');
 
         if (!$base_dn) {
@@ -1854,8 +1840,8 @@ class LDAP
         // Get the parent
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $parent . ')' . $domain_filter . ')';
 
-        $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
-        $domain_dn = key($domain_entry);
+        $domain_entry = $this->_search($domain_base_dn, $domain_filter);
+        $domain_dn    = key($domain_entry);
 
         $_old_attr = array($domain_name_attribute => $domain_entry[$domain_dn][$domain_name_attribute]);
         if (is_array($domain)) {
@@ -1913,7 +1899,8 @@ class LDAP
 
         $domain_filter = $conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
-        $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
+        $domain_entry  = $this->_search($domain_base_dn, $domain_filter);
+
         if (in_array('inetdomainbasedn', $domain_entry)) {
             $_base_dn = $domain_entry['inetdomainbasedn'];
         } else {
@@ -1949,7 +1936,8 @@ class LDAP
         // Query the ACI for the primary domain
         $domain_filter = $conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
-        $domain_entry = self::normalize_result($this->_search($domain_base_dn, $domain_filter));
+        $domain_entry  = $this->_search($domain_base_dn, $domain_filter);
+
         if (in_array('inetdomainbasedn', $domain_entry)) {
             $_base_dn = $domain_entry['inetdomainbasedn'];
         } else {
@@ -2240,7 +2228,7 @@ class LDAP
     /**
      * Shortcut to ldap_search()
      */
-    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
+    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'), $normalize = true)
     {
         $conf = Conf::get_instance();
 
@@ -2276,6 +2264,10 @@ class LDAP
         if (($entries = @ldap_get_entries($this->conn, $result)) == false) {
             Log::warning("LDAP: Getting search result failed. " . ldap_error($this->conn));
             return null;
+        }
+
+        if ($normalize) {
+            $entries = self::normalize_result($entries);
         }
 
         return $entries;
@@ -2480,7 +2472,7 @@ class LDAP
             }
         }
 
-        $entry = self::normalize_result($this->_search($dn));
+        $entry = $this->_search($dn);
 
         //console("ENTRIES for \$dn $dn", $entry);
 
@@ -2593,7 +2585,7 @@ class LDAP
         foreach ((array)($memberurls) as $url) {
             $ldap_uri_components = $this->_parse_memberurl($url);
 
-            $entries = self::normalize_result($this->_search($ldap_uri_components[3], $ldap_uri_components[6]));
+            $entries = $this->_search($ldap_uri_components[3], $ldap_uri_components[6]);
 
             foreach ($entries as $entry_dn => $_entry) {
                 $group_members[$entry_dn] = $_entry;
