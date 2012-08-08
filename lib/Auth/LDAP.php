@@ -345,22 +345,19 @@ class LDAP
 
     public function domain_find_by_attribute($attribute)
     {
-        $conf = Conf::get_instance();
-        $base_dn = $conf->get('ldap', 'domain_base_dn');
+        $base_dn = $this->conf->get('ldap', 'domain_base_dn');
 
         return $this->entry_find_by_attribute($attribute, $base_dn);
     }
 
     public function domain_info($domain, $attributes = array('*'))
     {
-        $conf = Conf::get_instance();
-
         $domain_dn = $this->entry_dn($domain);
 
         if (!$domain_dn) {
-            $domain_base_dn        = $conf->get('ldap', 'domain_base_dn');
-            $domain_filter         = $conf->get('ldap', 'domain_filter');
-            $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
+            $domain_base_dn        = $this->conf->get('ldap', 'domain_base_dn');
+            $domain_filter         = $this->conf->get('ldap', 'domain_filter');
+            $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
             $domain_filter         = "(&$domain_filter($domain_name_attribute=$domain))";
 
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
@@ -394,15 +391,14 @@ class LDAP
             'entryLevelRights' => array(),
         );
 
-        $output = array();
-        $conf   = Conf::get_instance();
-
+        $output   = array();
         $entry_dn = $this->entry_dn($subject);
+
         if (!$entry_dn) {
-            $entry_dn = $conf->get($subject . "_base_dn");
+            $entry_dn = $this->conf->get($subject . "_base_dn");
         }
         if (!$entry_dn) {
-            $entry_dn = $conf->get("base_dn");
+            $entry_dn = $this->conf->get("base_dn");
         }
 
         //console("effective_rights for $subject resolves to $entry_dn");
@@ -1003,19 +999,17 @@ class LDAP
 
         //console("Searching for domain $domain");
         //console("From domain to root dn");
-        $conf = Conf::get_instance();
-
-        if (($this->_bind($conf->get('ldap', 'bind_dn'), $conf->get('ldap', 'bind_pw'))) == false) {
+        if (($this->_bind($this->conf->get('ldap', 'bind_dn'), $this->conf->get('ldap', 'bind_pw'))) == false) {
             //console("WARNING: Invalid Service bind credentials supplied");
-            $this->_bind($conf->manager_bind_dn, $conf->manager_bind_pw);
+            $this->_bind($this->conf->manager_bind_dn, $this->conf->manager_bind_pw);
         }
 
-        $domain_name_attribute = $conf->get('domain_name_attribute');
+        $domain_name_attribute = $this->conf->get('domain_name_attribute');
         if (empty($domain_name_attribute)) {
             $domain_name_attribute = 'associateddomain';
         }
 
-        $result = $this->_search($conf->get('domain_base_dn'), '(' . $domain_name_attribute . '=' . $domain . ')');
+        $result = $this->_search($this->conf->get('domain_base_dn'), '(' . $domain_name_attribute . '=' . $domain . ')');
         $result = $result[key($result)];
         //console("intermediate result for domain_root_dn()", $result);
 
@@ -1069,9 +1063,7 @@ class LDAP
 
     private function domains_list()
     {
-        $conf = Conf::get_instance();
-
-        $this->_bind($conf->get('bind_dn'), $conf->get('bind_pw'));
+        $this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'));
 
         $section = $this->conf->get('kolab', 'auth_mechanism');
         $base_dn = $this->conf->get($section, 'domain_base_dn');
@@ -1142,14 +1134,12 @@ class LDAP
 
     private function groups_list($attributes = array(), $search = array())
     {
-        $conf = Conf::get_instance();
-
-        $base_dn = $conf->get('group_base_dn');
+        $base_dn = $this->conf->get('group_base_dn');
 
         if (!$base_dn)
-            $base_dn = $conf->get('base_dn');
+            $base_dn = $this->conf->get('base_dn');
 
-        $filter  = $conf->get('group_filter');
+        $filter  = $this->conf->get('group_filter');
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
@@ -1165,8 +1155,6 @@ class LDAP
 
     private function init_schema()
     {
-        $conf = Conf::get_instance();
-
         $this->_ldap_uri    = $this->conf->get('ldap_uri');
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
         $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
@@ -1179,8 +1167,8 @@ class LDAP
             'port'   => $this->_ldap_port,
             'tls'    => false,
             'version' => 3,
-            'binddn' => $conf->get('bind_dn'),
-            'bindpw' => $conf->get('bind_pw')
+            'binddn' => $this->conf->get('bind_dn'),
+            'bindpw' => $this->conf->get('bind_pw')
         );
 
         $_ldap_schema_cache_cfg = array(
@@ -1196,7 +1184,7 @@ class LDAP
 
         // TODO: We should learn what LDAP tech. we're running against.
         // Perhaps with a scope base objectclass recognize rootdse entry
-        $schema_root_dn = $conf->get('schema_root_dn');
+        $schema_root_dn = $this->conf->get('schema_root_dn');
         if (!$schema_root_dn) {
             $_schema = $_ldap->schema();
         }
@@ -1572,9 +1560,7 @@ class LDAP
 
     private function roles_list($attributes = array(), $search = array())
     {
-        $conf = Conf::get_instance();
-
-        $base_dn = $conf->get('base_dn');
+        $base_dn = $this->conf->get('base_dn');
         // TODO: From config
         $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
 
@@ -1592,9 +1578,7 @@ class LDAP
 
     private function supported_controls()
     {
-        $conf = Conf::get_instance();
-
-        $this->_bind($conf->get('bind_dn'), $conf->get('bind_pw'));
+        $this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'));
 
         $result = $this->_read("", "(objectclass=*)", array("supportedControl"));
 
@@ -1603,14 +1587,13 @@ class LDAP
 
     private function resources_list($attributes = array(), $search = array())
     {
-        $conf    = Conf::get_instance();
-        $base_dn = $conf->get('resource_base_dn');
+        $base_dn = $this->conf->get('resource_base_dn');
 
         if (!$base_dn) {
-            $base_dn = "ou=Resources," . $conf->get('base_dn');
+            $base_dn = "ou=Resources," . $this->conf->get('base_dn');
         }
 
-        $filter  = $conf->get('resource_filter');
+        $filter  = $this->conf->get('resource_filter');
         if (!$filter) {
             $filter = '(&(objectclass=*)(!(objectclass=organizationalunit)))';
         }
@@ -1630,14 +1613,13 @@ class LDAP
 
     private function users_list($attributes = array(), $search = array())
     {
-        $conf    = Conf::get_instance();
-        $base_dn = $conf->get('user_base_dn');
+        $base_dn = $this->conf->get('user_base_dn');
 
         if (!$base_dn) {
-            $base_dn = $conf->get('base_dn');
+            $base_dn = $this->conf->get('base_dn');
         }
 
-        $filter = $conf->get('user_filter');
+        $filter = $this->conf->get('user_filter');
 
         if (empty($attributes) || !is_array($attributes)) {
             $attributes = array('*');
@@ -1657,8 +1639,7 @@ class LDAP
             return array();
         }
 
-        $conf    = Conf::get_instance();
-        $dn_attr = $conf->get($conf->get('kolab', 'auth_mechanism'), 'domain_name_attribute');
+        $dn_attr = $this->conf->get($this->conf->get('kolab', 'auth_mechanism'), 'domain_name_attribute');
         $result  = array();
 
         for ($x = 0; $x < $__result["count"]; $x++) {
@@ -1732,11 +1713,9 @@ class LDAP
      */
     private function _qualify_id($username)
     {
-        $conf = Conf::get_instance();
-
         $username_parts = explode('@', $username);
         if (count($username_parts) == 1) {
-            $domain_name = $conf->get('primary_domain');
+            $domain_name = $this->conf->get('primary_domain');
         }
         else {
             $domain_name = array_pop($username_parts);
@@ -1752,13 +1731,13 @@ class LDAP
 
         // If the user type does not exist, issue warning and continue with
         // the "All attributes" array.
-        if (!isset($conf->user_types[$type])) {
+        if (!isset($this->conf->user_types[$type])) {
             return array('*');
         }
 
         $attributes_filter = array();
 
-        foreach ($conf->user_types[$type]['attributes'] as $key => $value) {
+        foreach ($this->conf->user_types[$type]['attributes'] as $key => $value) {
             $attributes_filter[] = is_array($value) ? $key : $value;
         }
 
@@ -1776,13 +1755,13 @@ class LDAP
 
         // If the user type does not exist, issue warning and continue with
         // the "All" search filter.
-        if (!isset($conf->user_types[$type])) {
+        if (!isset($this->conf->user_types[$type])) {
             return "(objectClass=*)";
         }
 
         $search_filter = "(&";
         // We want from user_types[$type]['attributes']['objectClasses']
-        foreach ($conf->user_types[$type]['attributes']['objectClass'] as $key => $value) {
+        foreach ($this->conf->user_types[$type]['attributes']['objectClass'] as $key => $value) {
             $search_filter .= "(objectClass=" . $value . ")";
         }
 
@@ -1831,11 +1810,10 @@ class LDAP
 
     private function _domain_add_alias($domain, $parent)
     {
-        $conf = Conf::get_instance();
-        $domain_base_dn = $conf->get('ldap', 'domain_base_dn');
-        $domain_filter = $conf->get('ldap', 'domain_filter');
+        $domain_base_dn = $this->conf->get('ldap', 'domain_base_dn');
+        $domain_filter  = $this->conf->get('ldap', 'domain_filter');
 
-        $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
+        $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
 
         // Get the parent
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $parent . ')' . $domain_filter . ')';
@@ -1857,10 +1835,10 @@ class LDAP
     {
         //console("Auth::LDAP::_domain_add_new()", $domain);
 
-        $conf = Conf::get_instance();
         $auth = Auth::get_instance();
-        $domain_base_dn        = $conf->get('ldap', 'domain_base_dn');
-        $domain_name_attribute = $conf->get('ldap', 'domain_name_attribute');
+
+        $domain_base_dn        = $this->conf->get('ldap', 'domain_base_dn');
+        $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
 
         if (is_array($domain)) {
             $domain_name = array_shift($domain);
@@ -1897,22 +1875,22 @@ class LDAP
 
         $this->_add($dn, $attrs);
 
-        $domain_filter = $conf->get('ldap', 'domain_filter');
-        $domain_filter = '(&(' . $domain_name_attribute . '=' . $conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
+        $domain_filter = $this->conf->get('ldap', 'domain_filter');
+        $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
         $domain_entry  = $this->_search($domain_base_dn, $domain_filter);
 
         if (in_array('inetdomainbasedn', $domain_entry)) {
             $_base_dn = $domain_entry['inetdomainbasedn'];
         } else {
-            $_base_dn = $this->_standard_root_dn($conf->get('kolab', 'primary_domain'));
+            $_base_dn = $this->_standard_root_dn($this->conf->get('kolab', 'primary_domain'));
         }
 
-        $result = $this->_read("cn=" . str_replace('.', '_', $conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
+        $result = $this->_read("cn=" . str_replace('.', '_', $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
 
         //console("Result normalized", $result);
 
         $result = $result[key($result)];
-        $directory = str_replace(str_replace('.', '_', $conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
+        $directory = str_replace(str_replace('.', '_', $this->conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
 
         $dn = "cn=" . str_replace('.', '_', $domain_name) . ",cn=ldbm database,cn=plugins,cn=config";
         $attrs = array(
@@ -1934,14 +1912,14 @@ class LDAP
         $this->_add($dn, $attrs);
 
         // Query the ACI for the primary domain
-        $domain_filter = $conf->get('ldap', 'domain_filter');
-        $domain_filter = '(&(' . $domain_name_attribute . '=' . $conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
+        $domain_filter = $this->conf->get('ldap', 'domain_filter');
+        $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
         $domain_entry  = $this->_search($domain_base_dn, $domain_filter);
 
         if (in_array('inetdomainbasedn', $domain_entry)) {
             $_base_dn = $domain_entry['inetdomainbasedn'];
         } else {
-            $_base_dn = $this->_standard_root_dn($conf->get('kolab', 'primary_domain'));
+            $_base_dn = $this->_standard_root_dn($this->conf->get('kolab', 'primary_domain'));
         }
 
         $result = $this->_read($_base_dn, '(objectclass=*)', array('aci'));
@@ -1955,9 +1933,9 @@ class LDAP
             $_aci = $aci;
         }
 
-        $service_bind_dn = $conf->get('ldap', 'service_bind_dn');
+        $service_bind_dn = $this->conf->get('ldap', 'service_bind_dn');
         if (empty($service_bind_dn)) {
-            $service_bind_dn = $conf->get('ldap', 'bind_dn');
+            $service_bind_dn = $this->conf->get('ldap', 'bind_dn');
         }
 
         $dn = $inetdomainbasedn;
@@ -2230,20 +2208,18 @@ class LDAP
      */
     private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'), $normalize = true)
     {
-        $conf = Conf::get_instance();
-
         if (!$this->_connect()) {
             return null;
         }
 
-        $attributes = (array)($attributes);
+        $attributes = (array)$attributes;
 
         //console("Searching $base_dn with filter: $search_filter, attempting to get attributes", $attributes);
 
         if (!empty($_SESSION['user'])) {
             $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
         } else {
-            $this->_bind($conf->get('ldap', 'service_bind_dn'), $conf->get('ldap', 'service_bind_pw'));
+            $this->_bind($this->conf->get('ldap', 'service_bind_dn'), $this->conf->get('ldap', 'service_bind_pw'));
         }
 
         if (!in_array($this->unique_attribute(), $attributes)) {
@@ -2382,12 +2358,12 @@ class LDAP
 
         //console("User DN: " . $_SESSION['user']->user_bind_dn);
 
-        if (($bind_success = ldap_bind($tmpconn, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw)) == false) {
+        if (ldap_bind($tmpconn, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw) === false) {
             //message("LDAP Error: " . $this->_errstr());
             return false;
         }
 
-        if (($list_success = ldap_list($tmpconn, $entry_root_dn, '(objectClass=*)', array('*', 'aci'))) == false) {
+        if (($list_success = ldap_list($tmpconn, $entry_root_dn, '(objectClass=*)', array('*', 'aci'))) === false) {
             //message("LDAP Error: " . $this->_errstr());
             return false;
         }
@@ -2623,8 +2599,7 @@ class LDAP
      */
     private function unique_attribute()
     {
-        $conf        = Conf::get_instance();
-        $unique_attr = $conf->get('unique_attribute');
+        $unique_attr = $this->conf->get('unique_attribute');
 
         if (!$unique_attr) {
             $unique_attr = 'nsuniqueid';
