@@ -1633,7 +1633,7 @@ class LDAP
         return $this->_search($base_dn, $filter, $attributes);
     }
 
-    public static function normalize_result($__result)
+    public function normalize_result($__result)
     {
         if (!is_array($__result)) {
             return array();
@@ -2166,7 +2166,7 @@ class LDAP
         }
 
         $result = @ldap_get_entries($this->conn, $result);
-        $result = self::normalize_result($result);
+        $result = $this->normalize_result($result);
 
         return $result;
     }
@@ -2243,7 +2243,7 @@ class LDAP
         }
 
         if ($normalize) {
-            $entries = self::normalize_result($entries);
+            $entries = $this->normalize_result($entries);
         }
 
         return $entries;
