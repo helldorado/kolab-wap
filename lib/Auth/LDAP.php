@@ -408,12 +408,6 @@ class LDAP
             $moz_ldapsearch = "/usr/lib/mozldap/ldapsearch";
         }
 
-        $passwd = str_replace(
-            array('"',  '`'),
-            array('\"', '\`'),
-            $_SESSION['user']->user_bind_pw
-        );
-
         $command = array(
                 $moz_ldapsearch,
                 '-x',
@@ -422,20 +416,17 @@ class LDAP
                 '-p',
                 $this->_ldap_port,
                 '-b',
-                '"' . $entry_dn . '"',
+                escapeshellarg($entry_dn),
                 '-D',
-                '"' . $_SESSION['user']->user_bind_dn . '"',
+                escapeshellarg($_SESSION['user']->user_bind_dn),
                 '-w',
-                '"' . $passwd . '"',
+                escapeshellarg($_SESSION['user']->user_bind_pw),
                 '-J',
-                '"' . implode(
-                        ':',
-                        array(
-                                '1.3.6.1.4.1.42.2.27.9.5.2',            // OID
-                                'true',                                 // Criticality
-                                'dn:' . $_SESSION['user']->user_bind_dn // User DN
-                            )
-                    ) . '"',
+                escapeshellarg(implode(':', array(
+                    '1.3.6.1.4.1.42.2.27.9.5.2',            // OID
+                    'true',                                 // Criticality
+                    'dn:' . $_SESSION['user']->user_bind_dn // User DN
+                ))),
                 '-s',
                 'base',
                 '"(objectclass=*)"',
