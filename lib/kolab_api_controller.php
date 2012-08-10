@@ -308,6 +308,13 @@ class kolab_api_controller
 
         $auth = Auth::get_instance();
 
+        // Get the domain name attribute
+        $conf = Conf::get_instance();
+        $dna = $conf->get('ldap', 'domain_name_attribute');
+        if (empty($dna)) {
+            $dna = 'associateddomain';
+        }
+
         $this->domains = $auth->list_domains();
 
         $result = array();
@@ -323,9 +330,9 @@ class kolab_api_controller
 
         // add capabilities of all registered services
         foreach ($this->domains as $domain) {
-            // TODO: 'associateddomain' is very specific to 389ds based deployments, and this
-            // is supposed to be very generic.
-            $domain_name = is_array($domain) ? (is_array($domain['associateddomain']) ? $domain['associateddomain'][0] : $domain['associateddomain']) : $domain;
+
+            $domain_name = is_array($domain) ? (is_array($domain[$dna]) ? $domain[$dna][0] : $domain[$dna]) : $domain;
+
             // define our very own capabilities
             $actions = array(
                 'system.quit'      => array('type' => 'w'),
