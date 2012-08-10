@@ -282,7 +282,29 @@ class kolab_api_controller
         session_start();
 
         $_SESSION['user'] = new User();
-        $valid = $_SESSION['user']->authenticate($postdata['username'], $postdata['password'], $postdata['domain']);
+
+        if (empty($postdata['domain'])) {
+            Log::debug("No login domain specified. Attempting to derive from username.");
+            if (count(explode('@', $postdata['username'])) > 1) {
+                $login = explode('@', $postdata['username']);
+                $username = array_shift($login);
+                $domain = array_shift($login);
+            }
+            else {
+                Log::debug("No domain name space in the username, using the primary domain");
+                $conf = Conf::get_instance();
+                $domain = $conf->get('kolab', 'primary_domain');
+            }
+        }
+        else {
+            $domain = $postdata['domain'];
+        }
+
+        if (empty($username)) {
+            $username = $postdata['username'];
+        }
+
+        $valid = $_SESSION['user']->authenticate($username, $postdata['password'], $domain);
 
         // start new (PHP) session
         if ($valid) {

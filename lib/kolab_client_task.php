@@ -635,21 +635,7 @@ class kolab_client_task
 
         $auth = Auth::get_instance();
         $conf = Conf::get_instance();
-        $dna = $conf->get('domain_name_attribute');
         $auth->connect();
-
-        $domains = Array();
-        $_domains = $auth->list_domains();
-
-        foreach ($_domains as $domain_dn => $domain_attrs) {
-            if (is_array($domain_attrs[$dna])) {
-                $domain = array_shift($domain_attrs[$dna]);
-            } else {
-                $domain = $domain_attrs[$dna];
-            }
-
-            $domains[$domain] = $domain;
-        }
 
         $username = kolab_html::label(array(
                 'for'     => 'login_name',
@@ -670,15 +656,6 @@ class kolab_client_task
                 'name'  => 'login[password]',
                 'value' => ''));
 
-        $domain = kolab_html::label(array(
-                'for'   => 'login_domain',
-                'content' => $this->translate('login.domain')), true)
-            . kolab_html::select(array(
-                'type'  => 'select',
-                'id'    => 'login_domain',
-                'name'  => 'login[domain]',
-                'options' => $domains));
-
         $button = kolab_html::input(array(
             'type'  => 'submit',
             'id'    => 'login_submit',
@@ -691,7 +668,6 @@ class kolab_client_task
             'action' => '?'),
             kolab_html::span(array('content' => $username))
             . kolab_html::span(array('content' => $password))
-            . kolab_html::span(array('content' => $domain))
             . $button);
 
         return $form;
