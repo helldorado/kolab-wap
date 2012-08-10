@@ -408,6 +408,12 @@ class LDAP
             $moz_ldapsearch = "/usr/lib/mozldap/ldapsearch";
         }
 
+        $passwd = str_replace(
+            array('"',  '`'),
+            array('\"', '\`'),
+            $_SESSION['user']->user_bind_pw
+        );
+
         $command = array(
                 $moz_ldapsearch,
                 '-x',
@@ -420,7 +426,7 @@ class LDAP
                 '-D',
                 '"' . $_SESSION['user']->user_bind_dn . '"',
                 '-w',
-                '"' . $_SESSION['user']->user_bind_pw . '"',
+                '"' . $passwd . '"',
                 '-J',
                 '"' . implode(
                         ':',
@@ -442,7 +448,8 @@ class LDAP
 
         exec($command, $output, $return_code);
 
-        //console("Output", $output, "Return code: " . $return_code);
+        Log::trace("LDAP: Command output:" . var_export($output, true));
+        Log::trace("Return code: " . $return_code);
 
         $lines = array();
         foreach ($output as $line_num => $line) {
