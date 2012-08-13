@@ -131,7 +131,20 @@ function form_load(id)
     init_tabs(id);
 }
 
+// UI resize handler
+function ui_resize()
+{
+  var h = $('#content').height();
+  // resize UI elements
+  if (h > 100) {
+    $('#taskcontent').height(h - 22);
+  }
+}
+
+
 /**
  * UI Initialization
  */
 kadm.add_event_listener('form-load', form_load);
+kadm.add_event_listener('http-response', ui_resize);
+//$(window).resize(function() { ui_resize(); });

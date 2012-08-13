@@ -332,6 +332,8 @@ function kolab_admin()
     // if we get javascript code from server -> execute it
     if (response.exec)
       eval(response.exec);
+
+    this.trigger_event('http-response', response);
   };
 
   // handle HTTP request errors
