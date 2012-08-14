@@ -1,0 +1,8 @@
+[main]
+host = https://www.transifex.net
+
+[kolab.kolab-webadmin]
+file_filter = lib/locale/<lang>.php
+source_file = lib/locale/en_US.php
+source_lang = en_US
+
