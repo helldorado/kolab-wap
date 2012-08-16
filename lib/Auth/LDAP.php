@@ -2024,7 +2024,7 @@ class LDAP
 
         $this->_add($dn, $attrs);
 
-        $dn = 'cn=kolab-admin,ou=People,' . $inetdomainbasedn;
+        $dn = 'cn=kolab-admin,' . $inetdomainbasedn;
         $attrs = array(
             'objectclass' => array(
                 'top',
