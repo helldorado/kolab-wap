@@ -122,18 +122,23 @@ class kolab_client_task_signup extends kolab_client_task
     public function action_add_user() {
         $data = $this->get_input('data', 'POST');
 
-        // Check for valid CAPTCHA
-        $resp = recaptcha_check_answer(
-                    $this->config_get('recaptcha_private_key'),
-                    $_SERVER['REMOTE_ADDR'],
-                    $data['recaptcha_challenge_field'],
-                    $data['recaptcha_response_field']
-        );
+        $private_key = $this->config_get('recaptcha_private_key');
 
-        if (!$resp->is_valid) {
-            // What happens when the CAPTCHA was entered incorrectly
-            $this->output->command('display_message', "The reCAPTCHA wasn't entered correctly. Please reload and try it again.", 'error');
-            return;
+        if (!empty($private_key)) {
+            // Check for valid CAPTCHA
+            $resp = recaptcha_check_answer(
+                        $private_key,
+                        $_SERVER['REMOTE_ADDR'],
+                        $data['recaptcha_challenge_field'],
+                        $data['recaptcha_response_field']
+            );
+
+            if (!$resp->is_valid) {
+                // What happens when the CAPTCHA was entered incorrectly
+                $this->output->command('display_message', "The reCAPTCHA wasn't entered correctly. Please reload and try it again.", 'error');
+                return;
+            }
+
         }
 
         // Check again for user availability before adding user
