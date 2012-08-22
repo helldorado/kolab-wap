@@ -43,16 +43,17 @@ class Auth {
         if (empty($domain)) {
             if (!empty($_SESSION['user'])) {
                 $domain = $_SESSION['user']->get_domain();
-                //console("Auth::get_instance() using domain $domain from session");
+                Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": using domain $domain from session");
             } else {
                 $domain = $conf->get('primary_domain');
-                //console("Auth::get_instance() using default domain $domain");
+                Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": using default domain $domain");
             }
         } else {
-            //console("Auth::get_instance() using domain $domain");
+            Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": using domain $domain");
         }
 
         if (!isset(self::$instance[$domain])) {
+            Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": Creating new instance for $domain");
             self::$instance[$domain] = new Auth($domain);
         }
 
@@ -116,7 +117,7 @@ class Auth {
             // Case-sensitivity does not matter for strstr() on '@', which
             // has no case.
             $user_domain = substr(strstr($username, '@'), 1);
-            //console("Auth::authenticate(): User domain: " . $user_domain);
+            Log::trace("Auth::authenticate(): User domain: " . $user_domain);
 
             if (isset($this->_auth[$user_domain])) {
                 // We know this domain
@@ -128,7 +129,7 @@ class Auth {
                 //
                 // This will enable john@example.org to login using 'alias'
                 // domains as well, such as 'john@example.ch'.
-                //console("Attempting to find the primary domain name space for the user domain $user_domain");
+                Log::trace("Attempting to find the primary domain name space for the user domain $user_domain");
                 $associated_domain = $this->primary_for_valid_domain($user_domain);
 
                 if ($associated_domain) {
@@ -160,15 +161,15 @@ class Auth {
     {
         if (empty($domain)) {
             if (!empty($_SESSION['user'])) {
-                //console("Using domain from session");
+                Log::trace("Using domain from session");
                 $domain = $_SESSION['user']->get_domain();
             } else {
-                //console("Using primary_domain");
+                Log::trace("Using primary_domain");
                 $domain = $this->conf->get('primary_domain');
             }
-            //console("Domain to connect to not set, using primary domain $domain");
+            Log::trace("Domain to connect to not specified, connecting to $domain");
         } else {
-            //console("Domain to connect to set to $domain");
+            Log::trace("Domain to connect to set to $domain");
         }
 
         if ($domain) {
@@ -186,11 +187,11 @@ class Auth {
         }
 
         if (!isset($this->_auth[$domain])) {
+            Log::trace("Creating $auth_method for domain $domain");
             require_once 'Auth/' . $auth_method . '.php';
-            //console("Creating Auth for $domain");
             $this->_auth[$domain] = new $auth_method($domain);
-        //} else {
-            //console("Auth for $domain already available");
+        } else {
+            Log::trace("Auth for $domain already available");
         }
     }
 
@@ -201,16 +202,16 @@ class Auth {
     {
         if (empty($domain)) {
             if (!empty($_SESSION['user'])) {
-                //console("Using domain from session");
+                Log::trace("Using domain from session");
                 $domain = $_SESSION['user']->get_domain();
             } else {
-                //console("Using primary_domain");
+                Log::trace("Using primary_domain");
                 $domain = $this->conf->get('primary_domain');
             }
         }
 
         if (!isset($this->_auth[$domain])) {
-            $this->connect($domain);        
+            $this->connect($domain);
         }
 
         return $this->_auth[$domain];
@@ -221,7 +222,7 @@ class Auth {
     {
         $conf   = Conf::get_instance();
         $domain = $conf->get('kolab', 'primary_domain');
-        
+
         return $this->auth_instance($domain)->attribute_details((array)$attribute);
     }
 
@@ -269,14 +270,14 @@ class Auth {
         return $this->auth_instance()->find_user_groups($member_dn);
     }
 
-    public function get_attribute($subject, $attribute)
+    public function get_entry_attribute($subject, $attribute)
     {
-        return $this->auth_instance()->get_attribute($subject, $attribute);
+        return $this->auth_instance()->get_entry_attribute($subject, $attribute);
     }
 
-    public function get_attributes($subject, $attributes)
+    public function get_entry_attributes($subject, $attributes)
     {
-        return $this->auth_instance()->get_attributes($subject, $attributes);
+        return $this->auth_instance()->get_entry_attributes($subject, $attributes);
     }
 
     public function group_add($attributes, $typeid = null)
@@ -398,6 +399,11 @@ class Auth {
         return $this->auth_instance()->role_add($role);
     }
 
+    public function role_edit($role, $attributes, $typeid = null)
+    {
+        return $this->auth_instance()->role_edit($role, $attributes, $typeid);
+    }
+
     public function role_find_by_attribute($attribute)
     {
         return $this->auth_instance()->role_find_by_attribute($attribute);
@@ -410,7 +416,7 @@ class Auth {
 
     public function search()
     {
-        return $this->auth_instance()->search(func_get_args());
+        return call_user_func_array(Array($this->auth_instance(), search), func_get_args());
     }
 
     public function user_add($attributes, $typeid = null)
