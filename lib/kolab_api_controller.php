@@ -337,7 +337,8 @@ class kolab_api_controller
             $dna = 'associateddomain';
         }
 
-        $this->domains = $auth->list_domains();
+        $_domains = $auth->list_domains();
+        $this->domains = $_domains['list'];
 
         $result = array();
 
@@ -345,15 +346,12 @@ class kolab_api_controller
         // we should always return our own.
         if (count($this->domains) < 1) {
             //console("As there is but one domain, we insert our own");
-            $this->domains[] = $_SESSION['user']->get_domain();
+            $this->domains[] = Array($dna => $_SESSION['user']->get_domain());
         }
 
-        //console("\$this->domains:", $this->domains);
-
         // add capabilities of all registered services
-        foreach ($this->domains as $domain) {
-
-            $domain_name = is_array($domain) ? (is_array($domain[$dna]) ? $domain[$dna][0] : $domain[$dna]) : $domain;
+        foreach ($this->domains as $domain_dn => $domain_attrs) {
+            $domain_name = is_array($domain_attrs) ? (is_array($domain_attrs[$dna]) ? $domain_attrs[$dna][0] : $domain_attrs[$dna]) : $domain_attrs;
 
             // define our very own capabilities
             $actions = array(
@@ -368,15 +366,14 @@ class kolab_api_controller
                 }
             }
 
-            //console("api capabilities", $domain, $domain_name);
-
             $result[$domain_name] = array('actions' => $actions);
         }
 
         return array(
-            'list'  => $result,
-            'count' => count($result),
-        );
+                'list'  => $result,
+                'count' => count($result),
+            );
+
     }
 
     private function get_domain() {
