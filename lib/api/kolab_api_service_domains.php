@@ -29,6 +29,12 @@
 class kolab_api_service_domains extends kolab_api_service
 {
 
+    public $list_attribs = array(
+            'associatedomain',
+            'objectclass',
+            'entrydn',
+        );
+
     /**
      * Returns service capabilities.
      *
