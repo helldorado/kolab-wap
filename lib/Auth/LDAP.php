@@ -23,46 +23,35 @@
  +--------------------------------------------------------------------------+
 */
 
+require_once("Net/LDAP3.php");
+
 /**
  * Kolab LDAP handling abstraction class.
  */
-class LDAP
-{
-    public $_name = "LDAP";
-
-    private $conn;
-    private $bind_dn;
-    private $bind_pw;
-
-    private $attribute_level_rights_map = array(
-            "r" => "read",
-            "s" => "search",
-            "w" => "write",
-            "o" => "delete",
-            "c" => "compare",
-            "W" => "write",
-            "O" => "delete"
-        );
-
-    private $entry_level_rights_map = array(
-            "a" => "add",
-            "d" => "delete",
-            "n" => "modrdn",
-            "v" => "read"
-        );
-
-
-    // This is the default and should actually be set through Conf.
-    private $_ldap_uri = 'ldap://localhost:389/';
-
+class LDAP extends Net_LDAP3 {
     private $conf;
 
     /**
      * Class constructor
      */
-    public function __construct($domain = null)
-    {
+    public function __construct($domain = null) {
+        parent::__construct();
+
         $this->conf = Conf::get_instance();
+
+        // Causes nesting levels to be too deep...?
+        //$this->config_set('config_get_hook', Array($this, "_config_get"));
+
+        $this->config_set("debug", TRUE);
+        $this->config_set("log_hook", Array($this, "_log"));
+
+        //$this->config_set("vlv", FALSE);
+        $this->config_set("config_root_dn", "cn=config");
+
+        $this->config_set("service_bind_dn", $this->conf->get("service_bind_dn"));
+        $this->config_set("service_bind_pw", $this->conf->get("service_bind_pw"));
+
+        $this->config_set("root_dn", $this->conf->get("base_dn"));
 
         // See if we are to connect to any domain explicitly defined.
         if (empty($domain)) {
@@ -80,6 +69,7 @@ class LDAP
 
         // Continue and default to the primary domain.
         $this->domain       = $domain ? $domain : $this->conf->get('primary_domain');
+
         $this->_ldap_uri    = $this->conf->get('ldap_uri');
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
         $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
@@ -95,25 +85,11 @@ class LDAP
             }
         }
 
-        // We can also use the parse_url() to pass on the bind dn and pw:
-        //
-        // $ldap = new LDAP('ldap://uid=svc-kwap,ou=Services,ou=Accounts,dc=kanarip,dc=com:VerySecret@localhost/');
-        // and the following line uncommented:
-        //
-        // echo "<pre>"; print_r(parse_url($ldap_uri)); echo "</pre>";
-        //
-        // creates:
-        //
-        // array
-        // (
-        //    [scheme] => ldap
-        //    [host] => localhost
-        //    [user] => uid=svc-kwap,ou=Services,ou=Accounts,dc=kanarip,dc=com
-        //    [pass] => VerySecret
-        //    [path] => /
-        // )
-    }
+        $this->config_set("host", $this->_ldap_server);
+        $this->config_set("port", $this->_ldap_port);
 
+        parent::connect();
+    }
 
     /**********************************************************
      ***********          Public methods           ************
@@ -127,11 +103,10 @@ class LDAP
      *
      * @return bool|string User ID or False on failure
      */
-    public function authenticate($username, $password)
-    {
+    public function authenticate($username, $password) {
         Log::debug("LDAP: authentication request for $username");
 
-        if (!$this->_connect()) {
+        if (!$this->connect()) {
             return false;
         }
 
@@ -140,11 +115,9 @@ class LDAP
         // 'uid=admin'.
         $subject = $this->entry_dn($username);
 
-        //console($subject);
-
         if (!$subject) {
             list($this->userid, $this->domain) = $this->_qualify_id($username);
-            $root_dn = $this->domain_root_dn($this->domain);
+            $root_dn = $this->config_get("root_dn");
 
             // Compose a filter to find the subject dn.
             // Use the kolab_user_filter first, if configured, and the user_filter
@@ -162,7 +135,7 @@ class LDAP
 
             $auth_attrs = $this->conf->get_list('auth_attributes');
 
-            //console("Using authentication attributes", $auth_attrs);
+            console("Using authentication attributes", $auth_attrs);
             if (count($auth_attrs) > 0) {
                 $filter .= '(|';
 
@@ -179,14 +152,14 @@ class LDAP
 
             $filter .= ')';
 
-            //console("LDAP::authenticate() using filter " . $filter);
+            console("LDAP::authenticate() using filter " . $filter);
 
             $subject_dn = $this->_get_user_dn($root_dn, $filter);
         } else {
             $subject_dn = $subject;
         }
 
-        if ($this->_bind($subject_dn, $password)) {
+        if ($this->bind($subject_dn, $password)) {
 //            $this->_unbind();
 
             if (isset($_SESSION['user'])) {
@@ -208,95 +181,7 @@ class LDAP
         }
     }
 
-    public function attribute_details($attributes = array())
-    {
-        $_schema = $this->init_schema();
-
-        $attribs = $_schema->getAll('attributes');
-
-        $attributes_details = array();
-
-        foreach ($attributes as $attribute) {
-            if (array_key_exists($attribute, $attribs)) {
-                $attrib_details = $attribs[$attribute];
-
-                if (!empty($attrib_details['sup'])) {
-                    foreach ($attrib_details['sup'] as $super_attrib) {
-                        $_attrib_details = $attribs[$super_attrib];
-                        if (is_array($_attrib_details)) {
-                            $attrib_details = array_merge($_attrib_details, $attrib_details);
-                        }
-                    }
-                }
-            } else if (array_key_exists(strtolower($attribute), $attribs)) {
-                $attrib_details = $attribs[strtolower($attribute)];
-
-                if (!empty($attrib_details['sup'])) {
-                    foreach ($attrib_details['sup'] as $super_attrib) {
-                        $_attrib_details = $attribs[$super_attrib];
-                        if (is_array($_attrib_details)) {
-                            $attrib_details = array_merge($_attrib_details, $attrib_details);
-                        }
-                    }
-                }
-            } else {
-                Log::warning("LDAP: No schema details exist for attribute $attribute (which is strange)");
-            }
-
-            // The relevant parts only, please
-            $attributes_details[$attribute] = array(
-                'type' => (array_key_exists('single-value', $attrib_details) && $attrib_details['single-value']) ? "text" : "list",
-                'description' => $attrib_details['desc'],
-                'syntax' => $attrib_details['syntax'],
-                'max-length' => (array_key_exists('max_length', $attrib_details)) ? $attrib_details['max-length'] : false,
-            );
-        }
-
-        return $attributes_details;
-    }
-
-    public function allowed_attributes($objectclasses = array())
-    {
-        //console("Listing allowed_attributes for objectclasses", $objectclasses);
-
-        if (!is_array($objectclasses)) {
-            return false;
-        }
-
-        if (empty($objectclasses)) {
-            return false;
-        }
-
-        $schema       = $this->init_schema();
-        $may          = array();
-        $must         = array();
-        $superclasses = array();
-
-        foreach ($objectclasses as $objectclass) {
-            $superclass = $schema->superclass($objectclass);
-            if (!empty($superclass)) {
-                $superclasses = array_merge($superclass, $superclasses);
-            }
-
-            $_may = $schema->may($objectclass);
-            if (is_array($_may)) {
-                $may = array_merge($may, $_may);
-            } /* else {
-            } */
-            $_must = $schema->must($objectclass);
-            if (is_array($_must)) {
-                $must = array_merge($must, $_must);
-            } /* else {
-                var_dump($_must);
-            } */
-        }
-
-        return array('may' => $may, 'must' => $must, 'super' => $superclasses);
-
-    }
-
-    public function domain_add($domain, $parent_domain = false, $prepopulate = true)
-    {
+    public function domain_add($domain, $parent_domain = false, $prepopulate = true) {
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
             if (!$this->domain_info($parent_domain)) {
@@ -310,8 +195,7 @@ class LDAP
         }
     }
 
-    public function domain_edit($domain, $attributes, $typeid = null)
-    {
+    public function domain_edit($domain, $attributes, $typeid = null) {
         // Domain identifier
         $unique_attr = $this->unique_attribute();
 
@@ -333,7 +217,7 @@ class LDAP
         }
 
         if (!$_domain) {
-            //console("Could not find domain");
+            console("Could not find domain");
             return false;
         }
 
@@ -343,15 +227,13 @@ class LDAP
         return $this->modify_entry($_domain_dn, $_domain[$_domain_dn], $attributes);
     }
 
-    public function domain_find_by_attribute($attribute)
-    {
+    public function domain_find_by_attribute($attribute) {
         $base_dn = $this->conf->get('ldap', 'domain_base_dn');
 
         return $this->entry_find_by_attribute($attribute, $base_dn);
     }
 
-    public function domain_info($domain, $attributes = array('*'))
-    {
+    public function domain_info($domain, $attributes = array('*')) {
         $domain_dn = $this->entry_dn($domain);
 
         if (!$domain_dn) {
@@ -361,161 +243,48 @@ class LDAP
             $domain_filter         = "(&$domain_filter($domain_name_attribute=$domain))";
 
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
-        }
-        else {
-            $result = $this->_search($domain_dn, '(objectclass=*)', $attributes);
+        } else {
+            $result = $this->_read($domain_dn, '(objectclass=*)', $attributes);
         }
 
         if (!$result) {
             return false;
         }
 
-        //console("domain_info() result:", $result);
+        console("domain_info() result:", $result);
 
         return $result;
     }
 
-    public function effective_rights($subject)
-    {
-        $effective_rights_control_oid = "1.3.6.1.4.1.42.2.27.9.5.2";
+    /**
+     * Proxy to parent function in order to enable us to insert our
+     * configuration.
+     */
+    public function effective_rights($subject) {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $supported_controls = $this->supported_controls();
-
-        if (!in_array($effective_rights_control_oid, $supported_controls)) {
-            Log::debug("LDAP: No getEffectiveRights control in supportedControls");
-            return $this->legacy_rights($subject);
+        switch ($subject) {
+            case "domain":
+                $result = parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
+                return $result;
+                break;
+            case "group":
+                $result = parent::effective_rights($this->conf->get("ldap", "group_base_dn"));
+                return $result;
+                break;
+            case "user":
+                $result = parent::effective_rights($this->conf->get("ldap", "user_base_dn"));
+                return $result;
+                break;
+            default:
+                $result = parent::effective_rights($subject);
+                return $result;
+                break;
         }
 
-        $attributes = array(
-            'attributeLevelRights' => array(),
-            'entryLevelRights' => array(),
-        );
-
-        $output   = array();
-        $entry_dn = $this->entry_dn($subject);
-
-        if (!$entry_dn) {
-            $entry_dn = $this->conf->get($subject . "_base_dn");
-        }
-        if (!$entry_dn) {
-            $entry_dn = $this->conf->get("base_dn");
-        }
-
-        //console("effective_rights for $subject resolves to $entry_dn");
-
-        $moz_ldapsearch = "/usr/lib64/mozldap/ldapsearch";
-        if (!is_file($moz_ldapsearch)) {
-            $moz_ldapsearch = "/usr/lib/mozldap/ldapsearch";
-        }
-
-        $command = array(
-                $moz_ldapsearch,
-                '-x',
-                '-h',
-                $this->_ldap_server,
-                '-p',
-                $this->_ldap_port,
-                '-b',
-                escapeshellarg($entry_dn),
-                '-D',
-                escapeshellarg($_SESSION['user']->user_bind_dn),
-                '-w',
-                escapeshellarg($_SESSION['user']->user_bind_pw),
-                '-J',
-                escapeshellarg(implode(':', array(
-                    '1.3.6.1.4.1.42.2.27.9.5.2',            // OID
-                    'true',                                 // Criticality
-                    'dn:' . $_SESSION['user']->user_bind_dn // User DN
-                ))),
-                '-s',
-                'base',
-                '"(objectclass=*)"',
-                '"*"',
-            );
-
-        $command = implode(' ', $command);
-
-        Log::debug("LDAP: Executing command: $command");
-
-        exec($command, $output, $return_code);
-
-        Log::trace("LDAP: Command output:" . var_export($output, true));
-        Log::trace("Return code: " . $return_code);
-
-        $lines = array();
-        foreach ($output as $line_num => $line) {
-            if (substr($line, 0, 1) == " ") {
-                $lines[count($lines)-1] .= trim($line);
-            } else {
-                $lines[] = trim($line);
-            }
-        }
-
-        foreach ($lines as $line) {
-            $line_components = explode(':', $line);
-            $attribute_name = array_shift($line_components);
-            $attribute_value = trim(implode(':', $line_components));
-
-            switch ($attribute_name) {
-                case "attributeLevelRights":
-                    $attributes[$attribute_name] = $this->parse_attribute_level_rights($attribute_value);
-                    break;
-                case "dn":
-                    $attributes[$attribute_name] = $attribute_value;
-                    break;
-                case "entryLevelRights":
-                    $attributes[$attribute_name] = $this->parse_entry_level_rights($attribute_value);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        return $attributes;
     }
 
-    public function find_user_groups($member_dn)
-    {
-        //console(__FILE__ . "(" . __LINE__ . "): " .  $member_dn);
-
-        $groups  = array();
-        $root_dn = $this->domain_root_dn($this->domain);
-
-        // TODO: Do not query for both, it's either one or the other
-        $entries = $this->_search($root_dn, "(|" .
-            "(&(objectclass=groupofnames)(member=$member_dn))" .
-            "(&(objectclass=groupofuniquenames)(uniquemember=$member_dn))" .
-            ")");
-
-        $groups  = array_keys($entries);
-
-        return $groups;
-    }
-
-    public function get_attribute($subject_dn, $attribute)
-    {
-        $result = $this->_search($subject_dn, '(objectclass=*)', (array)($attribute));
-        $dn     = key($result);
-        $attr   = key($result[$dn]);
-
-        return $result[$dn][$attr];
-    }
-
-    public function get_attributes($subject_dn, $attributes)
-    {
-        $result = $this->_search($subject_dn, '(objectclass=*)', $attributes);
-
-        if (!empty($result)) {
-            $result = array_pop($result);
-            return $result;
-        }
-
-        return false;
-    }
-
-    public function group_add($attrs, $typeid = null)
-    {
+    public function group_add($attrs, $typeid = null) {
         if ($typeid == null) {
             $type_str = 'group';
         }
@@ -528,40 +297,28 @@ class LDAP
         // Check if the group_type has a specific base DN specified.
         $base_dn = $this->conf->get($type_str . "_group_base_dn");
         // If not, take the regular user_base_dn
-        if (!$base_dn)
+        if (!$base_dn) {
             $base_dn = $this->conf->get("group_base_dn");
+        }
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
-        return $this->_add($dn, $attrs);
+        return $this->add_entry($dn, $attrs);
     }
 
-    public function group_delete($group)
-    {
+    public function group_delete($group) {
         $group_dn = $this->entry_dn($group);
 
         if (!$group_dn) {
             return false;
         }
 
-        return $this->_delete($group_dn);
+        return $this->delete_entry($group_dn);
     }
 
-    public function group_edit($group, $attributes, $typeid = null)
-    {
-/*
-        // Get the type "key" string for the next few settings.
-        if ($typeid == null) {
-            $type_str = 'group';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-*/
+    public function group_edit($group, $attributes, $typeid = null) {
         // Group identifier
         $unique_attr = $this->unique_attribute();
         $attributes[$unique_attr] = $group;
@@ -571,7 +328,7 @@ class LDAP
         $_group = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
 
         if (!$_group) {
-            //console("Could not find group");
+            console("Could not find group");
             return false;
         }
 
@@ -582,24 +339,36 @@ class LDAP
         return $this->modify_entry($_group_dn, $_group[$_group_dn], $attributes);
     }
 
-    public function group_find_by_attribute($attribute)
-    {
+    public function group_find_by_attribute($attribute) {
         return $this->entry_find_by_attribute($attribute);
     }
 
-    public function group_info($group, $attributes = array('*'))
-    {
+    public function group_info($group, $attributes = array('*')) {
+        Log::trace("Auth::LDAP::group_info() for group " . var_export($group, TRUE));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
+        if (!in_array($unique_attr, $attributes)) {
+            $attributes[] = $unique_attr;
+        }
+
+        $this->config_set('return_attributes', $attributes);
+
         $group_dn = $this->entry_dn($group);
+
+        Log::trace("group_info() group_dn " . var_export($group_dn, TRUE));
 
         if (!$group_dn) {
             return false;
         }
 
-        return $this->_search($group_dn, '(objectclass=*)', $attributes);
+        $group_info = $this->_read($group_dn, $attributes);
+        Log::trace("Auth::LDAP::group_info() result: " . var_export($group_info, TRUE));
+        return $group_info;
+
     }
 
-    public function group_members_list($group, $recurse = true)
-    {
+    public function group_members_list($group, $recurse = true) {
         $group_dn = $this->entry_dn($group);
 
         if (!$group_dn) {
@@ -609,37 +378,15 @@ class LDAP
         return $this->_list_group_members($group_dn, null, $recurse);
     }
 
-    public function list_domains()
-    {
+    public function list_domains($attributes = array(), $search = array(), $params = array()) {
         $domains = $this->domains_list();
 
-        return $domains;
+        return $domains->entries(TRUE);
     }
 
-    public function list_groups($attributes = array(), $search = array(), $params = array())
-    {
-        if (!empty($params['sort_by'])) {
-            if (!in_array($params['sort_by'], $attributes)) {
-                $attributes[] = $params['sort_by'];
-            }
-        }
+    public function list_groups($attributes = array(), $search = array(), $params = array()) {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $groups = $this->groups_list($attributes, $search);
-
-        if (!empty($params['sort_by'])) {
-            $this->sort_result_key = $params['sort_by'];
-            uasort($groups, array($this, 'sort_result'));
-
-            if ($params['sort_order'] == 'DESC') {
-                $groups = array_reverse($groups, true);
-            }
-        }
-
-        return $groups;
-    }
-
-    public function list_users($attributes = array(), $search = array(), $params = array())
-    {
         if (!empty($params['sort_by'])) {
             if (is_array($params['sort_by'])) {
                 foreach ($params['sort_by'] as $attrib) {
@@ -654,22 +401,100 @@ class LDAP
             }
         }
 
-        $users = $this->users_list($attributes, $search);
+        if (!empty($params['page_size'])) {
+            $this->config_set('page_size', $params['page_size']);
+        }
+
+        if (!empty($params['page'])) {
+            $this->config_set('list_page', $params['page']);
+        }
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        $this->config_set('return_attributes', $attributes);
+
+        $base_dn = $this->conf->get('group_base_dn');
+        if (empty($base_dn)) {
+            $base_dn = $this->conf->get('base_dn');
+        }
+
+        $filter = $this->conf->get('group_filter');
+
+        $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
+
+        return Array(
+                'list' => $result->entries(TRUE),
+                'count' => $result->count()
+            );
+    }
+
+    public function list_users($attributes = array(), $search = array(), $params = array()) {
+        Log::trace("Auth::LDAP::list_users(" . var_export($attributes, TRUE) . ", " . var_export($search, TRUE) . ", " . var_export($params, TRUE));
+
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         if (!empty($params['sort_by'])) {
-            $this->sort_result_key = $params['sort_by'];
-            uasort($users, array($this, 'sort_result'));
-
-            if ($params['sort_order'] == 'DESC') {
-                $users = array_reverse($users, true);
+            if (is_array($params['sort_by'])) {
+                foreach ($params['sort_by'] as $attrib) {
+                    if (!in_array($attrib, $attributes)) {
+                        $attributes[] = $attrib;
+                    }
+                }
+            } else {
+                if (!in_array($params['sort_by'], $attributes)) {
+                    $attributes[] = $params['sort_by'];
+                }
             }
         }
 
-        return $users;
+        if (!empty($params['page_size'])) {
+            $this->config_set('page_size', $params['page_size']);
+        } else {
+            $this->config_get('page_size', 15);
+        }
+
+        if (!empty($params['page'])) {
+            $this->config_set('list_page', $params['page']);
+        } else {
+            $this->config_set('list_page', 1);
+        }
+
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
+        }
+
+        $this->config_set("return_attributes", $attributes);
+
+        $base_dn = $this->conf->get('user_base_dn');
+        if (empty($base_dn)) {
+            $base_dn = $this->conf->get('base_dn');
+        }
+
+        $filter = $this->conf->get('user_filter');
+
+        Log::trace("Auth::LDAP::list_users() searching entries in $base_dn with $filter, 'sub', NULL, " . var_export($search, TRUE));
+
+        $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
+
+        if (!empty($params) && is_array($params) && array_key_exists('sort_by', $params)) {
+            if (is_array($params['sort_by'])) {
+                $sort = array_shift($params['sort_by']);
+            } else {
+                $sort = $params['sort_by'];
+            }
+
+            $result->sort($sort);
+        }
+
+        return Array(
+                'list' => $result->entries(TRUE),
+                'count' => $result->count()
+            );
     }
 
-    public function list_resources($attributes = array(), $search = array(), $params = array())
-    {
+    public function list_resources($attributes = array(), $search = array(), $params = array()) {
         if (!empty($params['sort_by'])) {
             if (is_array($params['sort_by'])) {
                 foreach ($params['sort_by'] as $attrib) {
@@ -698,30 +523,40 @@ class LDAP
         return $resources;
     }
 
-    public function list_roles($attributes = array(), $search = array(), $params = array())
-    {
+    public function list_roles($attributes = array(), $search = array(), $params = array()) {
         if (!empty($params['sort_by'])) {
             if (!in_array($params['sort_by'], $attributes)) {
                 $attributes[] = $params['sort_by'];
             }
         }
 
-        $roles = $this->roles_list($attributes, $search);
+        $base_dn = $this->conf->get('base_dn');
+        // TODO: From config
+        $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
 
-        if (!empty($params['sort_by'])) {
-            $this->sort_result_key = $params['sort_by'];
-            uasort($roles, array($this, 'sort_result'));
-
-            if ($params['sort_order'] == 'DESC') {
-                $roles = array_reverse($roles, true);
-            }
+        if (empty($attributes) || !is_array($attributes)) {
+            $attributes = array('*');
         }
 
-        return $roles;
+        $unique_attr = $this->unique_attribute();
+        if (!in_array($unique_attr, $attributes)) {
+            $attributes[] = $unique_attr;
+        }
+
+        if ($s_filter = $this->search_filter($search)) {
+            // join search filter with objectClass filter
+            $filter = '(&' . $filter . $s_filter . ')';
+        }
+
+        $result = $this->_search($base_dn, $filter, $attributes);
+
+        return Array(
+                'list' => $result->entries(TRUE),
+                'count' => $result->count()
+            );
     }
 
-    public function resource_add($attrs, $typeid = null)
-    {
+    public function resource_add($attrs, $typeid = null) {
         if ($typeid == null) {
             $type_str = 'resource';
         }
@@ -742,44 +577,31 @@ class LDAP
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
-        return $this->_add($dn, $attrs);
+        return $this->add_entry($dn, $attrs);
     }
 
-    public function resource_delete($resource)
-    {
+    public function resource_delete($resource) {
         $resource_dn = $this->entry_dn($resource);
 
         if (!$resource_dn) {
             return false;
         }
 
-        return $this->_delete($resource_dn);
+        return $this->delete_entry($resource_dn);
     }
 
-    public function resource_edit($resource, $attributes, $typeid = null)
-    {
-/*
-        // Get the type "key" string for the next few settings.
-        if ($typeid == null) {
-            $type_str = 'resource';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM resource_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-*/
-        // Group identifier
+    public function resource_edit($resource, $attributes, $typeid = null) {
+        // Resource identifier
         $unique_attr = $this->unique_attribute();
         $attributes[$unique_attr] = $resource;
 
-        //console("\$this->domain: " . $this->domain);
+        console("\$this->domain: " . $this->domain);
         // Now that values have been re-generated where necessary, compare
         // the new resource attributes to the original resource attributes.
         $_resource = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
 
         if (!$_resource) {
-            //console("Could not find resource");
+            console("Could not find resource");
             return false;
         }
 
@@ -790,18 +612,11 @@ class LDAP
         return $this->modify_entry($_resource_dn, $_resource[$_resource_dn], $attributes);
     }
 
-    public function resource_find_by_attribute($attribute)
-    {
+    public function resource_find_by_attribute($attribute) {
         return $this->entry_find_by_attribute($attribute);
     }
 
-    /**
-     * Resource attributes
-     *
-     *
-     */
-    public function resource_info($resource, $attributes = array('*'))
-    {
+    public function resource_info($resource, $attributes = array('*')) {
         $resource_dn = $this->entry_dn($resource);
 
         if (!$resource_dn) {
@@ -811,8 +626,7 @@ class LDAP
         return $this->_search($resource_dn, '(objectclass=*)', $attributes);
     }
 
-    public function resource_members_list($resource, $recurse = true)
-    {
+    public function resource_members_list($resource, $recurse = true) {
         $resource_dn = $this->entry_dn($resource);
 
         if (!$resource_dn) {
@@ -822,8 +636,7 @@ class LDAP
         return $this->_list_resource_members($resource_dn, null, $recurse);
     }
 
-    public function role_add($attrs)
-    {
+    public function role_add($attrs) {
         if ($typeid == null) {
             $type_str = 'role';
         }
@@ -843,12 +656,33 @@ class LDAP
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
-        return $this->_add($dn, $attrs);
+        return $this->add_entry($dn, $attrs);
     }
 
-    public function role_find_by_attribute($attribute)
-    {
-        //console("Finding role by attribute", $attribute);
+    public function role_edit($role, $attributes, $typeid = null) {
+        // Resource identifier
+        $unique_attr = $this->unique_attribute();
+        $attributes[$unique_attr] = $role;
+
+        console("\$this->domain: " . $this->domain);
+        // Now that values have been re-generated where necessary, compare
+        // the new role attributes to the original role attributes.
+        $_role = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr], 'objectclass' => 'ldapsubentry'));
+
+        if (!$_role) {
+            console("Could not find role");
+            return false;
+        }
+
+        $_role_dn = key($_role);
+        $_role = $this->role_info($_role_dn, array_keys($attributes));
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($_role_dn, $_role[$_role_dn], $attributes);
+    }
+
+    public function role_find_by_attribute($attribute) {
+        console("Finding role by attribute", $attribute);
 
         $attribute['objectclass'] = 'ldapsubentry';
         $result = $this->entry_find_by_attribute($attribute);
@@ -860,19 +694,30 @@ class LDAP
         return false;
     }
 
-    public function role_info($role, $attributes = array('*'))
-    {
+    public function role_info($role, $attributes = array('*')) {
         $role_dn = $this->entry_dn($role);
 
         if (!$role_dn) {
             return false;
         }
 
-        return $this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes);
+        $unique_attr = $this->unique_attribute();
+        if (!in_array($unique_attr, $attributes)) {
+            $attributes[] = $unique_attr;
+        }
+
+        $result = $this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes);
+        Log::trace("Auth::LDAP::role_info() result: " . var_export($result, TRUE));
+        return $result->entries(TRUE);
     }
 
-    public function user_add($attrs, $typeid = null)
-    {
+    public function search($base_dn, $filter = '(objectclass=*)', $scope = 'sub', $sort = NULL, $search = Array()) {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        Log::trace("Relaying search to parent:" . var_export($base_dn, TRUE));
+        return parent::search($base_dn, $filter, $scope, $sort, $search);
+    }
+
+    public function user_add($attrs, $typeid = null) {
         if ($typeid == null) {
             $type_str = 'user';
         }
@@ -906,29 +751,20 @@ class LDAP
             $base_dn = $attrs['ou'];
         }
 
-        //console("Base DN now: $base_dn");
+        console("Base DN now: $base_dn");
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
 
-        return $this->_add($dn, $attrs);
+        return $this->add_entry($dn, $attrs);
     }
 
-    public function user_edit($user, $attributes, $typeid = null)
-    {
-/*
-        // Get the type "key" string for the next few settings.
-        if ($typeid == null) {
-            $type_str = 'user';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-*/
-        $unique_attr = $this->unique_attribute();
+    public function user_edit($user, $attributes, $typeid = null) {
+        Log::trace("user.edit() called for $user, attributes", $attributes);
+
+        $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
+
         $attributes[$unique_attr] = $user;
 
         // Now that values have been re-generated where necessary, compare
@@ -936,132 +772,106 @@ class LDAP
         $_user = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
 
         if (!$_user) {
-            //console("Could not find user");
+            console("Could not find user");
             return false;
         }
-
         $_user_dn = key($_user);
         $_user = $this->user_info($_user_dn, array_keys($attributes));
 
-        //console("Auth::LDAP::user_edit() existing \$_user info", $_user);
+        console("Auth::LDAP::user_edit() existing \$_user info", $_user);
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($_user_dn, $_user[$_user_dn], $attributes);
     }
 
-    public function user_delete($user)
-    {
+    public function user_delete($user) {
         $user_dn = $this->entry_dn($user);
 
         if (!$user_dn) {
             return false;
         }
 
-        return $this->_delete($user_dn);
+        return $this->delete_entry($user_dn);
     }
 
-    /**
-     * User attributes
-     *
-     *
-     */
-    public function user_info($user, $attributes = array('*'))
-    {
+    public function user_info($user, $attributes = array('*')) {
+        Log::trace("Auth::LDAP::user_info() for user " . var_export($user, TRUE));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
+        if (!in_array($unique_attr, $attributes)) {
+            $attributes[] = $unique_attr;
+        }
+
+        $this->config_set('return_attributes', $attributes);
+
         $user_dn = $this->entry_dn($user);
 
+        Log::trace("user_info() user_dn " . var_export($user_dn, TRUE));
         if (!$user_dn) {
             return false;
         }
 
-        return $this->_search($user_dn, '(objectclass=*)', $attributes);
+        return $this->_read($user_dn, $attributes);
     }
 
-    public function user_find_by_attribute($attribute)
-    {
+    public function user_find_by_attribute($attribute) {
         return $this->entry_find_by_attribute($attribute);
     }
 
-    /**
-     * Translate a domain name into it's corresponding root dn.
-     */
-    private function domain_root_dn($domain = '')
-    {
-        //console("Auth::LDAP::domain_root_dn(\$domain) called with \$domain", $domain);
-        if ($domain == '') {
-            return false;
-        }
+    public function _config_get($key, $default = NULL) {
+        $key_parts = explode("_", $key);
+        Log::trace(var_export($key_parts));
 
-        if (!$this->_connect()) {
-            return false;
-        }
-
-        //console("Searching for domain $domain");
-        //console("From domain to root dn");
-        if (($this->_bind($this->conf->get('ldap', 'bind_dn'), $this->conf->get('ldap', 'bind_pw'))) == false) {
-            //console("WARNING: Invalid Service bind credentials supplied");
-            $this->_bind($this->conf->manager_bind_dn, $this->conf->manager_bind_pw);
-        }
-
-        $domain_name_attribute = $this->conf->get('domain_name_attribute');
-        if (empty($domain_name_attribute)) {
-            $domain_name_attribute = 'associateddomain';
-        }
-
-        $result = $this->_search($this->conf->get('domain_base_dn'), '(' . $domain_name_attribute . '=' . $domain . ')');
-        $result = $result[key($result)];
-        //console("intermediate result for domain_root_dn()", $result);
-
-        if (is_array($result)) {
-            if (in_array('inetdomainbasedn', $result) && !empty($result['inetdomainbasedn'])) {
-                return $result['inetdomainbasedn'];
-            }
-            else {
-                if (is_array($result[$domain_name_attribute])) {
-                    return $this->_standard_root_dn($result[$domain_name_attribute][0]);
-                }
-                else {
-                    return $this->_standard_root_dn($result[$domain_name_attribute]);
-                }
-            }
-        }
-        else {
-            return $this->_standard_root_dn($domain);
-        }
-
-    }
-
-    public function search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'))
-    {
-        //console("Auth::LDAP::search", $base_dn);
-
-        // We may have been passed on func_get_arg()
-        if (is_array($base_dn)) {
-            $_base_dn = array_shift($base_dn);
-
-            if (count($base_dn) > 0) {
-                $search_filter = array_shift($base_dn);
+        while (!empty($key_parts)) {
+            $value = $this->conf->get(implode("_", $key_parts));
+            if (empty($value)) {
+                $_discard = array_shift($key_parts);
             } else {
-                $search_filter = '(objectclass=*)';
+                break;
             }
+        }
 
-            if (count($base_dn) > 0) {
-                $attributes = array_shift($base_dn);
-            } else {
-                $attributes = array('*');
-            }
+        if (empty($value)) {
+            return $default;
         } else {
-            $_base_dn = $base_dn;
+            return $value;
         }
 
-        $result = $this->_search($_base_dn, $search_filter, $attributes);
-        $result = array_keys($result);
-
-        return $result;
     }
 
-    private function domains_list()
-    {
-        $this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'));
+    public function _log($level, $msg) {
+        if (strstr($_SERVER["REQUEST_URI"], "/api/")) {
+            $str = "(api) ";
+        } else {
+            $str = "";
+        }
+
+        switch ($level) {
+            case LOG_DEBUG:
+                Log::debug($str . implode("\n", $msg));
+                break;
+            case LOG_ERR:
+                Log::error($str . implode("\n", $msg));
+                break;
+            case LOG_INFO:
+                Log::info($str . implode("\n", $msg));
+                break;
+            case LOG_WARNING:
+                Log::warning($str . implode("\n", $msg));
+                break;
+            case LOG_ALERT:
+            case LOG_CRIT:
+            case LOG_EMERG:
+            case LOG_NOTICE:
+            default:
+                Log::trace($str . implode("\n", $msg));
+                break;
+        }
+    }
+
+    private function domains_list() {
+        $this->bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'));
 
         $section = $this->conf->get('kolab', 'auth_mechanism');
         $base_dn = $this->conf->get($section, 'domain_base_dn');
@@ -1075,63 +885,7 @@ class LDAP
         return $this->_search($base_dn, $filter);
     }
 
-    private function entry_dn($subject)
-    {
-        //console("entry_dn on subject $subject");
-        $is_dn = ldap_explode_dn($subject, 1);
-        //console($is_dn);
-
-        if (is_array($is_dn) && array_key_exists("count", $is_dn) && $is_dn["count"] > 0) {
-            return $subject;
-        }
-
-        $unique_attr = $this->unique_attribute();
-        $subject     = $this->entry_find_by_attribute(array($unique_attr => $subject));
-
-        if (!empty($subject)) {
-            return key($subject);
-        }
-    }
-
-    private function entry_find_by_attribute($attribute, $base_dn = null)
-    {
-        //console("Auth::LDAP::entry_find_by_attribute(\$attribute, \$base_dn) called with base_dn", $base_dn);
-
-        if (empty($attribute) || !is_array($attribute)) {
-            return false;
-        }
-
-        if (empty($attribute[key($attribute)])) {
-            return false;
-        }
-
-        $filter = "(&";
-
-        foreach ($attribute as $key => $value) {
-            $filter .= "(" . $key . "=" . $value . ")";
-        }
-
-        $filter .= ")";
-
-        if (empty($base_dn)) {
-            $base_dn = $this->domain_root_dn($this->domain);
-            //console("Using base_dn from domain " . $this->domain . ": " . $base_dn);
-        }
-
-        $result = $this->_search($base_dn, $filter, array_keys($attribute));
-
-        if (count($result) > 0) {
-            //console("Results found: " . implode(', ', array_keys($result)));
-            return $result;
-        }
-        else {
-            //console("No result");
-            return false;
-        }
-    }
-
-    private function groups_list($attributes = array(), $search = array())
-    {
+    private function groups_list($attributes = array(), $search = array()) {
         $base_dn = $this->conf->get('group_base_dn');
 
         if (!$base_dn)
@@ -1143,7 +897,7 @@ class LDAP
             $attributes = array('*');
         }
 
-        if ($s_filter = $this->_search_filter($search)) {
+        if ($s_filter = $this->search_filter($search)) {
             // join search filter with objectClass filter
             $filter = '(&' . $filter . $s_filter . ')';
         }
@@ -1151,54 +905,14 @@ class LDAP
         return $this->_search($base_dn, $filter, $attributes);
     }
 
-    private function init_schema()
-    {
-        $this->_ldap_uri    = $this->conf->get('ldap_uri');
-        $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
-        $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
-        $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
-
-        require_once("Net/LDAP2.php");
-
-        $_ldap_cfg = array(
-            'host'   => $this->_ldap_server,
-            'port'   => $this->_ldap_port,
-            'tls'    => false,
-            'version' => 3,
-            'binddn' => $this->conf->get('bind_dn'),
-            'bindpw' => $this->conf->get('bind_pw')
-        );
-
-        $_ldap_schema_cache_cfg = array(
-            'path' => "/tmp/" . $this->_ldap_server . ":" . ($this->_ldap_port ? $this->_ldap_port : '389') . "-Net_LDAP2_Schema.cache",
-            'max_age' => 86400,
-        );
-
-        $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
-
-        $_ldap = Net_LDAP2::connect($_ldap_cfg);
-
-        $result = $_ldap->registerSchemaCache($_ldap_schema_cache);
-
-        // TODO: We should learn what LDAP tech. we're running against.
-        // Perhaps with a scope base objectclass recognize rootdse entry
-        $schema_root_dn = $this->conf->get('schema_root_dn');
-        if (!$schema_root_dn) {
-            $_schema = $_ldap->schema();
-        }
-
-        return $_schema;
-    }
-
-    private function legacy_rights($subject)
-    {
+    private function legacy_rights($subject) {
         $subject_dn    = $this->entry_dn($subject);
         $user_is_admin = false;
         $user_is_self  = false;
 
         // List group memberships
         $user_groups = $this->find_user_groups($_SESSION['user']->user_bind_dn);
-        //console("User's groups", $user_groups);
+        console("User's groups", $user_groups);
 
         foreach ($user_groups as $user_group_dn) {
             if ($user_is_admin)
@@ -1243,348 +957,12 @@ class LDAP
         return $rights;
     }
 
-    private function modify_entry($subject_dn, $old_attrs, $new_attrs)
-    {
-        //console("OLD ATTRIBUTES", $old_attrs);
-        //console("NEW ATTRIBUTES", $new_attrs);
-
-        // TODO: Get $rdn_attr - we have type_id in $new_attrs
-        $dn_components  = ldap_explode_dn($subject_dn, 0);
-        $rdn_components = explode('=', $dn_components[0]);
-
-        $rdn_attr = $rdn_components[0];
-
-        //console("Auth::LDAP::modify_entry() using rdn attribute: " . $rdn_attr);
-
-        $mod_array = array(
-            'add'       => array(), // For use with ldap_mod_add()
-            'del'       => array(), // For use with ldap_mod_del()
-            'replace'   => array(), // For use with ldap_mod_replace()
-            'rename'    => array(), // For use with ldap_rename()
-        );
-
-        // This is me cheating. Remove this special attribute.
-        if (array_key_exists('ou', $old_attrs) || array_key_exists('ou', $new_attrs)) {
-            $old_ou = $old_attrs['ou'];
-            $new_ou = $new_attrs['ou'];
-            unset($old_attrs['ou']);
-            unset($new_attrs['ou']);
-        } else {
-            $old_ou = null;
-            $new_ou = null;
-        }
-
-        // Compare each attribute value of the old attrs with the corresponding value
-        // in the new attrs, if any.
-        foreach ($old_attrs as $attr => $old_attr_value) {
-
-            if (array_key_exists($attr, $new_attrs)) {
-                if (is_array($old_attrs[$attr]) && is_array($new_attrs[$attr])) {
-                    $_sort1 = $new_attrs[$attr];
-                    sort($_sort1);
-                    $_sort2 = $old_attr_value;
-                    sort($_sort2);
-                } else {
-                    $_sort1 = true;
-                    $_sort2 = false;
-                }
-
-                if (!($new_attrs[$attr] === $old_attr_value) && !($_sort1 === $_sort2)) {
-                    //console("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
-                    if ($attr === $rdn_attr) {
-                        //console("This attribute is the RDN attribute. Let's see if it is multi-valued, and if the original still exists in the new value.");
-                        if (is_array($old_attrs[$attr])) {
-                            if (!is_array($new_attrs[$attr])) {
-                                if (in_array($new_attrs[$attr], $old_attrs[$attr])) {
-                                    // TODO: Need to remove all $old_attrs[$attr] values not equal to $new_attrs[$attr], and not equal to the current $rdn_attr value [0]
-
-                                    //console("old attrs. is array, new attrs. is not array. new attr. exists in old attrs.");
-
-                                    $rdn_attr_value = array_shift($old_attrs[$attr]);
-                                    $_attr_to_remove = array();
-
-                                    foreach ($old_attrs[$attr] as $value) {
-                                        if (strtolower($value) != strtolower($new_attrs[$attr])) {
-                                            $_attr_to_remove[] = $value;
-                                        }
-                                    }
-
-                                    //console("Adding to delete attribute $attr values:" . implode(', ', $_attr_to_remove));
-
-                                    $mod_array['delete'][$attr] = $_attr_to_remove;
-
-                                    if (strtolower($new_attrs[$attr]) !== strtolower($rdn_attr_value)) {
-                                        //console("new attrs is not the same as the old rdn value, issuing a rename");
-                                        $mod_array['rename']['dn'] = $subject_dn;
-                                        $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr][0];
-                                    }
-
-                                } else {
-                                    //console("new attrs is not the same as any of the old rdn value, issuing a full rename");
-                                    $mod_array['rename']['dn'] = $subject_dn;
-                                    $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
-                                }
-                            } else {
-                                // TODO: See if the rdn attr. value is still in $new_attrs[$attr]
-                                if (in_array($old_attrs[$attr][0], $new_attrs[$attr])) {
-                                    //console("Simply replacing attr $attr as rnd attr value is preserved.");
-                                    $mod_array['replace'][$attr] = $new_attrs[$attr];
-                                } else {
-                                    // TODO: This fails.
-                                    $mod_array['rename']['dn'] = $subject_dn;
-                                    $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr][0];
-                                    $mod_array['delete'][$attr] = $old_attrs[$attr][0];
-                                }
-                            }
-                        } else {
-                            if (!is_array($new_attrs[$attr])) {
-                                //console("Renaming " . $old_attrs[$attr] . " to " . $new_attrs[$attr]);
-                                $mod_array['rename']['dn'] = $subject_dn;
-                                $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$attr];
-                            } else {
-                                //console("Adding to replace");
-                                // An additional attribute value is being supplied. Just replace and continue.
-                                $mod_array['replace'][$attr] = $new_attrs[$attr];
-                                continue;
-                            }
-                        }
-
-                    } else {
-                        if (empty($new_attrs[$attr])) {
-                            switch ($attr) {
-                                case "userpassword":
-                                    break;
-                                default:
-                                    //console("Adding to del: $attr");
-                                    $mod_array['del'][$attr] = (array)($old_attr_value);
-                                    break;
-                            }
-                        } else {
-                            //console("Adding to replace: $attr");
-                            $mod_array['replace'][$attr] = (array)($new_attrs[$attr]);
-                        }
-                    }
-                } else {
-                    //console("Attribute $attr unchanged");
-                }
-            } else {
-                // TODO: Since we're not shipping the entire object back and forth, and only post
-                // part of the data... we don't know what is actually removed (think modifiedtimestamp, etc.)
-                //console("Group attribute $attr not mentioned in \$new_attrs..., but not explicitly removed... by assumption");
-            }
-        }
-
-        foreach ($new_attrs as $attr => $value) {
-            if (array_key_exists($attr, $old_attrs)) {
-                if (empty($value)) {
-                    if (!array_key_exists($attr, $mod_array['del'])) {
-                        switch ($attr) {
-                            case 'userpassword':
-                                break;
-                            default:
-                                //console("Adding to del(2): $attr");
-                                $mod_array['del'][$attr] = (array)($old_attrs[$attr]);
-                                break;
-                        }
-                    }
-                } else {
-                    if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
-                        if (!array_key_exists($attr, $mod_array['replace'])) {
-                            //console("Adding to replace(2): $attr");
-                            $mod_array['replace'][$attr] = $value;
-                        }
-                    }
-                }
-            } else {
-                if (!empty($value)) {
-                    $mod_array['add'][$attr] = $value;
-                }
-            }
-        }
-
-        if (empty($old_ou)) {
-            $subject_dn_components = ldap_explode_dn($subject_dn, 0);
-            unset($subject_dn_components["count"]);
-            $subject_rdn = array_shift($subject_dn_components);
-            $old_ou = implode(',', $subject_dn_components);
-        }
-
-        if (!(empty($old_ou) || empty($new_ou)) && !(strtolower($old_ou) === strtolower($new_ou))) {
-            $mod_array['rename']['new_parent'] = $new_ou;
-            if (empty($mod_array['rename']['dn']) || empty($mod_array['rename']['new_rdn'])) {
-                $mod_array['rename']['dn'] = $subject_dn;
-                $mod_array['rename']['new_rdn'] = $rdn_attr . '=' . $new_attrs[$rdn_attr];
-            }
-        }
-
-        //console($mod_array);
-
-        $result = $this->modify_entry_attributes($subject_dn, $mod_array);
-
-        if ($result) {
-            return $mod_array;
-        }
-
+    private function unique_attribute() {
+        $unique_attr = $this->conf->get("unique_attribute");
+        return empty($unique_attr) ? 'nsuniqueid' : $unique_attr;
     }
 
-    private function modify_entry_attributes($subject_dn, $attributes)
-    {
-        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
-        // Opportunities to set false include failed ldap commands.
-        $result = true;
-
-        if (is_array($attributes['rename']) && !empty($attributes['rename'])) {
-            $olddn = $attributes['rename']['dn'];
-            $newrdn = $attributes['rename']['new_rdn'];
-            if (!empty($attributes['rename']['new_parent'])) {
-                $new_parent = $attributes['rename']['new_parent'];
-            } else {
-                $new_parent = null;
-            }
-
-            Log::trace("LDAP: C: Rename $olddn to $newrdn,$new_parent");
-
-            $result = ldap_rename($this->conn, $olddn, $newrdn, $new_parent, true);
-
-            if ($result) {
-                Log::trace("LDAP: S: OK");
-
-                if ($new_parent) {
-                    $subject_dn = $newrdn . ',' . $new_parent;
-                } else {
-                    $old_parent_dn_components = ldap_explode_dn($olddn, 0);
-                    unset($old_parent_dn_components["count"]);
-                    $old_rdn = array_shift($old_parent_dn_components);
-                    $old_parent_dn = implode(",", $old_parent_dn_components);
-                    $subject_dn = $newrdn . ',' . $old_parent_dn;
-                }
-            }
-            else {
-                Log::trace("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to rename $olddn to $newrdn,$new_parent");
-                return false;
-            }
-        }
-
-        if (is_array($attributes['replace']) && !empty($attributes['replace'])) {
-            Log::trace("LDAP: C: Mod-Replace $subject_dn: " . json_encode($attributes['replace']));
-
-            $result = ldap_mod_replace($this->conn, $subject_dn, $attributes['replace']);
-
-            if ($result) {
-                Log::trace("LDAP: S: OK");            
-            }
-            else {
-                Log::trace("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to replace attributes on $subject_dn: " . json_encode($attributes['replace']));
-                return false;
-            }
-        }
-
-        if (is_array($attributes['del']) && !empty($attributes['del'])) {
-            Log::trace("LDAP: C: Mod-Delete $subject_dn: " . json_encode($attributes['del']));
-
-            $result = ldap_mod_del($this->conn, $subject_dn, $attributes['del']);
-
-            if ($result) {
-                Log::trace("LDAP: S: OK");            
-            }
-            else {
-                Log::trace("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to delete attributes on $subject_dn: " . json_encode($attributes['del']));
-                return false;
-            }
-        }
-
-
-        if (is_array($attributes['add']) && !empty($attributes['add'])) {
-            Log::trace("LDAP: C: Mod-Add $subject_dn: " . json_encode($attributes['add']));
-
-            $result = ldap_mod_add($this->conn, $subject_dn, $attributes['add']);
-
-            if ($result) {
-                Log::trace("LDAP: S: OK");            
-            }
-            else {
-                Log::trace("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to add attributes on $subject_dn: " . json_encode($attributes['add']));
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function parse_attribute_level_rights($attribute_value)
-    {
-        $attribute_value  = str_replace(", ", ",", $attribute_value);
-        $attribute_values = explode(",", $attribute_value);
-        $attribute_value  = array();
-
-        foreach ($attribute_values as $access_right) {
-            $access_right_components = explode(":", $access_right);
-            $access_attribute        = strtolower(array_shift($access_right_components));
-            $access_value            = array_shift($access_right_components);
-
-            $attribute_value[$access_attribute] = array();
-
-            for ($i = 0; $i < strlen($access_value); $i++) {
-                $method = $this->attribute_level_rights_map[substr($access_value, $i, 1)];
-
-                if (!in_array($method, $attribute_value[$access_attribute])) {
-                    $attribute_value[$access_attribute][] = $method;
-                }
-            }
-        }
-
-        return $attribute_value;
-    }
-
-    private function parse_entry_level_rights($attribute_value)
-    {
-        $_attribute_value = array();
-
-        for ($i = 0; $i < strlen($attribute_value); $i++) {
-            $method = $this->entry_level_rights_map[substr($attribute_value, $i, 1)];
-
-            if (!in_array($method, $_attribute_value)) {
-                $_attribute_value[] = $method;
-            }
-        }
-
-        return $_attribute_value;
-    }
-
-    private function roles_list($attributes = array(), $search = array())
-    {
-        $base_dn = $this->conf->get('base_dn');
-        // TODO: From config
-        $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        if ($s_filter = $this->_search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
-        }
-
-        return $this->_search($base_dn, $filter, $attributes);
-    }
-
-    private function supported_controls()
-    {
-        $this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'));
-
-        $result = $this->_read("", "(objectclass=*)", array("supportedControl"));
-
-        return $result['']['supportedcontrol'];
-    }
-
-    private function resources_list($attributes = array(), $search = array())
-    {
+    private function resources_list($attributes = array(), $search = array()) {
         $base_dn = $this->conf->get('resource_base_dn');
 
         if (!$base_dn) {
@@ -1600,105 +978,12 @@ class LDAP
             $attributes = array('*');
         }
 
-        if ($s_filter = $this->_search_filter($search)) {
+        if ($s_filter = $this->search_filter($search)) {
             // join search filter with objectClass filter
             $filter = '(&' . $filter . $s_filter . ')';
         }
 
         return $this->_search($base_dn, $filter, $attributes);
-    }
-
-
-    private function users_list($attributes = array(), $search = array())
-    {
-        $base_dn = $this->conf->get('user_base_dn');
-
-        if (!$base_dn) {
-            $base_dn = $this->conf->get('base_dn');
-        }
-
-        $filter = $this->conf->get('user_filter');
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        if ($s_filter = $this->_search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
-        }
-
-        return $this->_search($base_dn, $filter, $attributes);
-    }
-
-    public function normalize_result($__result)
-    {
-        if (!is_array($__result)) {
-            return array();
-        }
-
-        $dn_attr = $this->conf->get($this->conf->get('kolab', 'auth_mechanism'), 'domain_name_attribute');
-        $result  = array();
-
-        for ($x = 0; $x < $__result["count"]; $x++) {
-            $dn = $__result[$x]['dn'];
-            $result[$dn] = array();
-            for ($y = 0; $y < $__result[$x]["count"]; $y++) {
-                $attr = $__result[$x][$y];
-                if ($__result[$x][$attr]["count"] == 1) {
-                    switch ($attr) {
-                        case "objectclass":
-                            $result[$dn][$attr] = array(strtolower($__result[$x][$attr][0]));
-                            break;
-                        default:
-                            $result[$dn][$attr] = $__result[$x][$attr][0];
-                            break;
-                    }
-                }
-                else {
-                    $result[$dn][$attr] = array();
-                    for ($z = 0; $z < $__result[$x][$attr]["count"]; $z++) {
-                        // The first result in the array is the primary domain.
-                        if ($z == 0 && $attr == $dn_attr) {
-                            $result[$dn]['primary_domain'] = $__result[$x][$attr][$z];
-                        }
-
-                        switch ($attr) {
-                            case "objectclass":
-                                $result[$dn][$attr][] = strtolower($__result[$x][$attr][$z]);
-                                break;
-                            default:
-                                $result[$dn][$attr][] = $__result[$x][$attr][$z];
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Result sorting callback for uasort()
-     */
-    public function sort_result($a, $b)
-    {
-        if (is_array($this->sort_result_key)) {
-            foreach ($this->sort_result_key as $attrib) {
-                if (array_key_exists($attrib, $a) && !$str1) {
-                    $str1 = $a[$attrib];
-                }
-                if (array_key_exists($attrib, $b) && !$str2) {
-                    $str2 = $b[$attrib];
-                }
-            }
-        } else {
-            $str1 = $a[$this->sort_result_key];
-            $str2 = $b[$this->sort_result_key];
-        }
-
-        return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
     }
 
     /**
@@ -1709,8 +994,7 @@ class LDAP
      * username is 'kanarip', the domain name is to be assumed the
      * management domain name.
      */
-    private function _qualify_id($username)
-    {
+    private function _qualify_id($username) {
         $username_parts = explode('@', $username);
         if (count($username_parts) == 1) {
             $domain_name = $this->conf->get('primary_domain');
@@ -1722,92 +1006,11 @@ class LDAP
         return array(implode('@', $username_parts), $domain_name);
     }
 
-/*
-    public function user_type_attribute_filter($type = false)
-    {
-        global $conf;
-
-        // If the user type does not exist, issue warning and continue with
-        // the "All attributes" array.
-        if (!isset($this->conf->user_types[$type])) {
-            return array('*');
-        }
-
-        $attributes_filter = array();
-
-        foreach ($this->conf->user_types[$type]['attributes'] as $key => $value) {
-            $attributes_filter[] = is_array($value) ? $key : $value;
-        }
-
-        return $attributes_filter;
-    }
-
-    public function user_type_search_filter($type = false)
-    {
-        global $conf;
-
-        // TODO: If the user type has not been specified we should actually
-        // iterate and mix and match:
-        //
-        // (|(&(type1))(&(type2)))
-
-        // If the user type does not exist, issue warning and continue with
-        // the "All" search filter.
-        if (!isset($this->conf->user_types[$type])) {
-            return "(objectClass=*)";
-        }
-
-        $search_filter = "(&";
-        // We want from user_types[$type]['attributes']['objectClasses']
-        foreach ($this->conf->user_types[$type]['attributes']['objectClass'] as $key => $value) {
-            $search_filter .= "(objectClass=" . $value . ")";
-        }
-
-        $search_filter .= ")";
-
-        print "<li>" . $search_filter;
-
-        return $search_filter;
-    }
-*/
-
     /***********************************************************
      ************      Shortcut functions       ****************
      ***********************************************************/
 
-    /**
-     * Shortcut to ldap_add()
-     */
-    private function _add($entry_dn, $attributes)
-    {
-        // Always bind with the session credentials
-        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
-        //console("Entry DN", $entry_dn);
-        //console("Attributes", $attributes);
-
-        foreach ($attributes as $attr_name => $attr_value) {
-            if (empty($attr_value)) {
-                unset($attributes[$attr_name]);
-            }
-        }
-
-        Log::trace("LDAP: C: Add $entry_dn: " . json_encode($attributes));
-
-        if (($add_result = ldap_add($this->conn, $entry_dn, $attributes)) == false) {
-            Log::trace("LDAP: S: " . ldap_error($this->conn));
-            Log::warning("LDAP: Adding entry $entry_dn failed. " . ldap_error($this->conn));
-
-            return false;
-        }
-
-        Log::trace("LDAP: S: OK");            
-
-        return true;
-    }
-
-    private function _domain_add_alias($domain, $parent)
-    {
+    private function _domain_add_alias($domain, $parent) {
         $domain_base_dn = $this->conf->get('ldap', 'domain_base_dn');
         $domain_filter  = $this->conf->get('ldap', 'domain_filter');
 
@@ -1829,9 +1032,8 @@ class LDAP
         return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
     }
 
-    private function _domain_add_new($domain)
-    {
-        //console("Auth::LDAP::_domain_add_new()", $domain);
+    private function _domain_add_new($domain) {
+        console("Auth::LDAP::_domain_add_new()", $domain);
 
         $auth = Auth::get_instance();
 
@@ -1854,7 +1056,7 @@ class LDAP
             $domain_name_attribute => array_unique(array_merge((array)($domain_name), $domain)),
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $inetdomainbasedn = $this->_standard_root_dn($domain_name);
         $cn = str_replace(array(',', '='), array('\2C', '\3D'), $inetdomainbasedn);
@@ -1871,7 +1073,7 @@ class LDAP
             'nsslapd-backend' => str_replace('.', '_', $domain_name),
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
@@ -1885,7 +1087,7 @@ class LDAP
 
         $result = $this->_read("cn=" . str_replace('.', '_', $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
 
-        //console("Result normalized", $result);
+        console("Result normalized", $result);
 
         $result = $result[key($result)];
         $directory = str_replace(str_replace('.', '_', $this->conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
@@ -1907,7 +1109,7 @@ class LDAP
             'nsslapd-dncachememsize' => '10485760'
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         // Query the ACI for the primary domain
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
@@ -1968,7 +1170,7 @@ class LDAP
                     ),
             );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = "cn=Directory Administrators," . $inetdomainbasedn;
         $attrs = array(
@@ -1982,7 +1184,7 @@ class LDAP
             ),
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = "ou=Groups," . $inetdomainbasedn;
         $attrs = array(
@@ -1990,7 +1192,7 @@ class LDAP
             'ou' => 'Groups',
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = "ou=People," . $inetdomainbasedn;
         $attrs = array(
@@ -1998,7 +1200,7 @@ class LDAP
             'ou' => 'People',
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = "ou=Special Users," . $inetdomainbasedn;
         $attrs = array(
@@ -2006,7 +1208,7 @@ class LDAP
             'ou' => 'Special Users',
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = "ou=Resources," . $inetdomainbasedn;
         $attrs = array(
@@ -2014,7 +1216,7 @@ class LDAP
             'ou' => 'Resources',
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = "ou=Shared Folders," . $inetdomainbasedn;
         $attrs = array(
@@ -2022,7 +1224,7 @@ class LDAP
             'ou' => 'Shared Folders',
         );
 
-        $this->_add($dn, $attrs);
+        $this->add_entry($dn, $attrs);
 
         $dn = 'cn=kolab-admin,' . $inetdomainbasedn;
         $attrs = array(
@@ -2036,299 +1238,7 @@ class LDAP
             'cn' => 'kolab-admin'
         );
 
-        $this->_add($dn, $attrs);
-
-        return true;
-    }
-
-    /**
-     * Shortcut to ldap_bind()
-     */
-    private function _bind($dn, $pw)
-    {
-        $this->_connect();
-
-        if (!$this->conn || !$dn || !$pw) {
-            return false;
-        }
-
-        if ($dn == $this->bind_dn && $pw == $this->bind_pw) {
-            return true;
-        }
-
-        Log::debug("LDAP: C: Bind $dn");
-
-        $this->bind_dn = $dn;
-        $this->bind_pw = $pw;
-
-        if (@ldap_bind($this->conn, $dn, $pw) === false) {
-            Log::trace("LDAP: S: " . ldap_error($this->conn));
-            Log::warning("LDAP: Binding $dn failed. " . ldap_error($this->conn));
-
-            return false;
-        }
-
-        Log::trace("LDAP: S: OK");
-
-        return true;
-    }
-
-    /**
-     * Shortcut to ldap_connect()
-     */
-    private function _connect()
-    {
-        if ($this->conn) {
-            return true;
-        }
-
-        ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 9);
-
-        Log::debug("LDAP: Connect to " . $this->_ldap_server . ":" . $this->_ldap_port);
-
-        $connection = ldap_connect($this->_ldap_server, $this->_ldap_port);
-
-        if ($connection == false) {
-            $this->conn = null;
-            Log::error("LDAP: Could not connect to " . ldap_error());
-            return false;
-        }
-
-        $this->conn = $connection;
-
-        ldap_set_option($this->conn, LDAP_OPT_PROTOCOL_VERSION, 3);
-
-        Log::debug("LDAP: Connected");
-
-        return true;
-    }
-
-    /**
-     * Shortcut to ldap_disconnect()
-     */
-    private function _disconnect()
-    {
-        if (!$this->conn) {
-            return true;
-        }
-
-        if (ldap_close($this->conn)) {
-            $this->conn    = null;
-            $this->bind_dn = null;
-            $this->bind_pw = null;
-
-            Log::debug("LDAP: Disconnected");
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     *   Shortcut to ldap_delete()
-     */
-    private function _delete($entry_dn)
-    {
-        // Always bind with the session credentials
-        $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
-        Log::trace("LDAP: C: Delete $entry_dn");
-
-        if (ldap_delete($this->conn, $entry_dn) === false) {
-            Log::trace("LDAP: S: " . ldap_error($this->conn));
-            Log::warning("LDAP: Delete failed. " . ldap_error($this->conn));
-            return false;
-        }
-
-        Log::trace("LDAP: S: OK");
-
-        return true;
-    }
-
-    /**
-     * Shortcut for ldap_read()
-     */
-    private function _read($base_dn, $filter, $attributes)
-    {
-        Log::trace("LDAP: C: Read $filter " . json_encode($attributes));
-
-        $result = @ldap_read($this->conn, $base_dn, $filter, $attributes);
-
-        if ($result === false) {
-            Log::trace("LDAP: S: " . ldap_error($this->conn));
-            Log::warning("LDAP: Read failed. " . ldap_error($this->conn));
-        }
-        else {
-            Log::trace("LDAP: S: " . ldap_count_entries($this->conn, $result) . " record(s)");
-        }
-
-        $result = @ldap_get_entries($this->conn, $result);
-        $result = $this->normalize_result($result);
-
-        return $result;
-    }
-
-
-    /**
-     * Shortcut to ldap_get_entries() over ldap_list()
-     *
-     * Takes a $base_dn and $filter like ldap_list(), and returns an
-     * array obtained through ldap_get_entries().
-     */
-    private function _list($base_dn, $filter)
-    {
-        if (!$this->conn) {
-            return null;
-        }
-
-        Log::trace("LDAP: C: List $base_dn $filter");
-
-        if (($result = @ldap_list($this->conn, $base_dn, $filter)) === false) {
-            Log::trace("LDAP: S: " . ldap_error($this->conn));
-            Log::warning("LDAP: Search failed. " . ldap_error($this->conn));
-            return null;
-        }
-        else {
-            Log::trace("LDAP: S: " . ldap_count_entries($this->conn, $result) . " record(s)");        
-        }
-
-        if (($entries = @ldap_get_entries($this->conn, $ldap_list)) === false) {
-            Log::warning("LDAP: Getting list result failed. " . ldap_error($this->conn));
-            return null;
-        }
-
-        return $entries;
-    }
-
-    /**
-     * Shortcut to ldap_search()
-     */
-    private function _search($base_dn, $search_filter = '(objectClass=*)', $attributes = array('*'), $normalize = true)
-    {
-        if (!$this->_connect()) {
-            return null;
-        }
-
-        $attributes = (array)$attributes;
-
-        //console("Searching $base_dn with filter: $search_filter, attempting to get attributes", $attributes);
-
-        if (!empty($_SESSION['user'])) {
-            $this->_bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-        } else {
-            $this->_bind($this->conf->get('ldap', 'service_bind_dn'), $this->conf->get('ldap', 'service_bind_pw'));
-        }
-
-        if (!in_array($this->unique_attribute(), $attributes)) {
-            $attributes[] = $this->unique_attribute();
-        }
-
-        Log::trace("LDAP: C: Search $base_dn $search_filter " . json_encode($attributes));
-
-        if (($result = @ldap_search($this->conn, $base_dn, $search_filter, $attributes)) === false) {
-            Log::trace("LDAP: S: " . ldap_error($this->conn));
-            Log::warning("LDAP: Search failed. " . ldap_error($this->conn));
-            return null;
-        }
-        else {
-            Log::trace("LDAP: S: " . ldap_count_entries($this->conn, $result) . " record(s)");        
-        }
-
-        if (($entries = @ldap_get_entries($this->conn, $result)) == false) {
-            Log::warning("LDAP: Getting search result failed. " . ldap_error($this->conn));
-            return null;
-        }
-
-        if ($normalize) {
-            $entries = $this->normalize_result($entries);
-        }
-
-        return $entries;
-    }
-
-    /**
-     * Create LDAP search filter string according to defined parameters.
-     */
-    private function _search_filter($search)
-    {
-        if (empty($search) || !is_array($search) || empty($search['params'])) {
-            return null;
-        }
-
-        $filter = '';
-        foreach ((array) $search['params'] as $field => $param) {
-            switch ((string)$param['type']) {
-            case 'prefix':
-                $prefix = '';
-                $suffix = '*';
-                break;
-            case 'suffix':
-                $prefix = '*';
-                $suffix = '';
-                break;
-            case 'exact':
-                $prefix = '';
-                $suffix = '';
-                break;
-            case 'both':
-            default:
-                $prefix = '*';
-                $suffix = '*';
-                break;
-            }
-
-            if (is_array($param['value'])) {
-                $val_filter = array();
-                foreach ($param['value'] as $val) {
-                    $value = self::_quote_string($val);
-                    $val_filter[] = "($field=$prefix" . $value . "$suffix)";
-                }
-                $filter .= "(|" . implode($val_filter, '') . ")";
-            }
-            else {
-                $value = self::_quote_string($param['value']);
-                $filter .= "($field=$prefix" . $value . "$suffix)";
-            }
-        }
-
-        // join search parameters with specified operator ('OR' or 'AND')
-        if (count($search['params']) > 1) {
-            $filter = '(' . ($search['operator'] == 'AND' ? '&' : '|') . $filter . ')';
-        }
-
-        return $filter;
-    }
-
-    /**
-     * Shortcut to ldap_unbind()
-     */
-    private function _unbind($yes = false, $really = false)
-    {
-        if ($yes && $really) {
-            if ($this->conn) {
-                Log::trace("LDAP: C: Unbind");
-
-                $result = @ldap_unbind($this->conn);
-
-                if ($result) {
-                    Log::trace("LDAP: S: OK");
-                }
-                else {
-                    Log::trace("LDAP: S: " . ldap_error($this->conn));
-                }
-            }
-
-            $this->conn    = null;
-            $this->bind_dn = null;
-            $this->bind_pw = null;
-        }
-        else {
-            // What?
-            //
-            // - attempt bind as anonymous
-            // - in case of fail, bind as user
-        }
+        $this->add_entry($dn, $attrs);
 
         return true;
     }
@@ -2336,6 +1246,30 @@ class LDAP
     /*
         Utility functions
      */
+
+    private function _get_user_dn($root_dn, $search_filter) {
+        // TODO: Why does this use privileged credentials?
+        if (($this->bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
+            //message("WARNING: Invalid Service bind credentials supplied");
+            $this->bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
+        }
+
+        console("Searching for a user dn in $root_dn, with search filter: $search_filter");
+
+        $search_results = ldapsearch($this->conn, $root_dn, $search_filter);
+
+        if (!$search_results || ldap_count_entries($this->conn, $search_results) == 0) {
+            //message("No entries found for the user dn in " . __METHOD__);
+            return false;
+        }
+
+        if (($first_entry = ldap_first_entry($this->conn, $search_results)) == false) {
+            return false;
+        }
+
+        $user_dn = ldap_get_dn($this->conn, $first_entry);
+        return $user_dn;
+    }
 
     /**
      * Probe the root dn with the user credentials.
@@ -2346,15 +1280,14 @@ class LDAP
      * any results. If we don't, maybe this user is not authorized for the
      * domain at all?
      */
-    private function _probe_root_dn($entry_root_dn)
-    {
-        //console("Running for entry root dn: " . $entry_root_dn);
-        if (($tmpconn = ldap_connect($this->_ldap_server)) == false) {
+    private function _probe_root_dn($entry_root_dn) {
+        console("Running for entry root dn: " . $entry_root_dn);
+        if (($tmpconn = ldapconnect($this->_ldap_server)) == false) {
             //message("LDAP Error: " . $this->_errstr());
             return false;
         }
 
-        //console("User DN: " . $_SESSION['user']->user_bind_dn);
+        console("User DN: " . $_SESSION['user']->user_bind_dn);
 
         if (ldap_bind($tmpconn, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw) === false) {
             //message("LDAP Error: " . $this->_errstr());
@@ -2366,14 +1299,24 @@ class LDAP
             return false;
         }
 
-//        print_r(ldap_get_entries($tmpconn, $list_success));
-/*
-        if (ldap_count_entries($tmpconn, $list_success) == 0) {
-            echo "<li>Listed things, but got no results";
-            return false;
-        }
-*/
         return true;
+    }
+
+    private function _read($entry_dn, $attributes = Array('*')) {
+        $this->config_set('return_attributes', $attributes);
+
+        $result = $this->search($entry_dn, '(objectclass=*)', 'base');
+
+        Log::trace("Auth::LDAP::_read() result: " . var_export($result, TRUE));
+
+        return $result ? $result->entries(TRUE) : FALSE;
+    }
+
+    private function _search($base_dn, $filter = '(objectclass=*)', $attributes = Array('*')) {
+        $this->config_set('return_attributes', $attributes);
+        $result = $this->search($base_dn, $filter);
+        Log::trace("Auth::LDAP::_search on $base_dn with $filter for attributes: " . var_export($attributes, TRUE) . " with result: " . var_export($result, TRUE));
+        return $result;
     }
 
     /**
@@ -2388,8 +1331,7 @@ class LDAP
      *
      * @return string
      */
-    private function _standard_root_dn($associatedDomains)
-    {
+    private function _standard_root_dn($associatedDomains) {
         if (is_array($associatedDomains)) {
             // Usually, the associatedDomain in position 0 is the naming attribute associatedDomain
             if ($associatedDomains['count'] > 1) {
@@ -2405,246 +1347,6 @@ class LDAP
         }
 
         return "dc=" . implode(',dc=', explode('.', $relevant_associatedDomain));
-    }
-
-    private function _get_user_dn($root_dn, $search_filter)
-    {
-        // TODO: Why does this use privileged credentials?
-        if (($this->_bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
-            //message("WARNING: Invalid Service bind credentials supplied");
-            $this->_bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
-        }
-
-        //console("Searching for a user dn in $root_dn, with search filter: $search_filter");
-
-        $search_results = ldap_search($this->conn, $root_dn, $search_filter);
-
-        if (!$search_results || ldap_count_entries($this->conn, $search_results) == 0) {
-            //message("No entries found for the user dn in " . __METHOD__);
-            return false;
-        }
-
-        if (($first_entry = ldap_first_entry($this->conn, $search_results)) == false) {
-            return false;
-        }
-
-        $user_dn = ldap_get_dn($this->conn, $first_entry);
-        return $user_dn;
-    }
-
-
-    private function _list_group_members($dn, $entry = null, $recurse = true)
-    {
-        $group_members = array();
-
-        if (is_array($entry) && in_array('objectclass', $entry)) {
-            if (!in_array(array('groupofnames', 'groupofuniquenames', 'groupofurls'), $entry['objectclass'])) {
-                //console("Called _list_groups_members on a non-group!");
-            }
-            else {
-                //console("Called list_group_members(" . $dn . ")");
-            }
-        }
-
-        $entry = $this->_search($dn);
-
-        //console("ENTRIES for \$dn $dn", $entry);
-
-        foreach ($entry[$dn] as $attribute => $value) {
-            if ($attribute == "objectclass") {
-                foreach ($value as $objectclass) {
-                    switch (strtolower($objectclass)) {
-                        case "groupofnames":
-                        case "kolabgroupofnames":
-                            $group_members = array_merge($group_members, $this->_list_group_member($dn, $entry[$dn]['member'], $recurse));
-                            break;
-                        case "groupofuniquenames":
-                        case "kolabgroupofuniquenames":
-                            $group_members = array_merge($group_members, $this->_list_group_uniquemember($dn, $entry[$dn]['uniquemember'], $recurse));
-                            break;
-                        case "groupofurls":
-                            $group_members = array_merge($group_members, $this->_list_group_memberurl($dn, $entry[$dn]['memberurl'], $recurse));
-                            break;
-                    }
-                }
-            }
-        }
-
-        return array_filter($group_members);
-    }
-
-    private function _list_group_member($dn, $members, $recurse = true)
-    {
-        //console("Called _list_group_member(" . $dn . ")");
-
-        $group_members = array();
-
-        $members = (array)($members);
-
-        if (empty($members)) {
-            return $group_members;
-        }
-
-        // Use the member attributes to return an array of member ldap objects
-        // NOTE that the member attribute is supposed to contain a DN
-        foreach ($members as $member) {
-            $member_entry = $this->_read($member, '(objectclass=*)');
-
-            if (empty($member_entry)) {
-                continue;
-            }
-
-            $group_members[$member] = array_pop($member_entry);
-
-            if ($recurse) {
-                // Nested groups
-                $group_group_members = $this->_list_group_members($member, $member_entry);
-                if ($group_group_members) {
-                    $group_members = array_merge($group_group_members, $group_members);
-                }
-            }
-        }
-
-        return array_filter($group_members);
-    }
-
-    private function _list_group_uniquemember($dn, $uniquemembers, $recurse = true)
-    {
-        //console("Called _list_group_uniquemember(" . $dn . ")", $entry);
-
-        // Use the member attributes to return an array of member ldap objects
-        // NOTE that the member attribute is supposed to contain a DN
-        $group_members = array();
-        if (empty($uniquemembers)) {
-            return $group_members;
-        }
-
-        $uniquemembers = (array)($uniquemembers);
-
-        if (is_string($uniquemembers)) {
-            //console("uniquemember for entry is not an array");
-            $uniquemembers = (array)($uniquemembers);
-        }
-
-        foreach ($uniquemembers as $member) {
-            $member_entry = $this->_read($member, '(objectclass=*)');
-
-            if (empty($member_entry)) {
-                continue;
-            }
-
-            $group_members[$member] = array_pop($member_entry);
-
-            if ($recurse) {
-                // Nested groups
-                $group_group_members = $this->_list_group_members($member, $member_entry);
-                if ($group_group_members) {
-                    $group_members = array_merge($group_group_members, $group_members);
-                }
-            }
-        }
-
-        return array_filter($group_members);
-    }
-
-    private function _list_group_memberurl($dn, $memberurls, $recurse = true)
-    {
-        //console("Called _list_group_memberurl(" . $dn . ")");
-
-        // Use the member attributes to return an array of member ldap objects
-        // NOTE that the member attribute is supposed to contain a DN
-
-        $group_members = array();
-
-        foreach ((array)($memberurls) as $url) {
-            $ldap_uri_components = $this->_parse_memberurl($url);
-
-            $entries = $this->_search($ldap_uri_components[3], $ldap_uri_components[6]);
-
-            foreach ($entries as $entry_dn => $_entry) {
-                $group_members[$entry_dn] = $_entry;
-                //console("Found " . $entry_dn);
-
-                if ($recurse) {
-                    // Nested group
-                    $group_group_members = $this->_list_group_members($entry_dn, $_entry);
-                    if ($group_group_members) {
-                        $group_members = array_merge($group_members, $group_group_members);
-                    }
-                }
-            }
-        }
-
-        return array_filter($group_members);
-    }
-
-    /**
-     * memberUrl attribute parser
-     *
-     * @param string $url URL string
-     *
-     * @return array URL elements
-     */
-    private function _parse_memberurl($url)
-    {
-        //console("Parsing URL: " . $url);
-        preg_match('/(.*):\/\/(.*)\/(.*)\?(.*)\?(.*)\?(.*)/', $url, $matches);
-        return $matches;
-    }
-
-    /**
-     * Returns name of the unique attribute
-     */
-    private function unique_attribute()
-    {
-        $unique_attr = $this->conf->get('unique_attribute');
-
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-
-        return $unique_attr;
-    }
-
-    /**
-     * Quotes attribute value string
-     *
-     * @param string $str Attribute value
-     * @param bool   $dn  True if the attribute is a DN
-     *
-     * @return string Quoted string
-     */
-    private static function _quote_string($str, $dn=false)
-    {
-        // take firt entry if array given
-        if (is_array($str)) {
-            $str = reset($str);
-        }
-
-        if ($dn) {
-            $replace = array(
-                ',' => '\2c',
-                '=' => '\3d',
-                '+' => '\2b',
-                '<' => '\3c',
-                '>' => '\3e',
-                ';' => '\3b',
-                "\\"=> '\5c',
-                '"' => '\22',
-                '#' => '\23'
-            );
-        }
-        else {
-            $replace = array(
-                '*' => '\2a',
-                '(' => '\28',
-                ')' => '\29',
-                "\\" => '\5c',
-                '/' => '\2f'
-            );
-        }
-
-         return strtr($str, $replace);
     }
 
 }
