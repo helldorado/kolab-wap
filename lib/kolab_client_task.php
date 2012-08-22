@@ -480,7 +480,7 @@ class kolab_client_task
 
         $capabilities = $this->capabilities();
 
-        //console("Capabilities", $capabilities);
+        Log::trace("kolab_client_task::menu() capabilities:", $capabilities);
 
         foreach ($this->menu as $idx => $label) {
             //console("$task: $task, idx: $idx, label: $label");
@@ -584,7 +584,14 @@ class kolab_client_task
      */
     protected function capabilities()
     {
-        if (!isset($_SESSION['capabilities'])) {
+        $conf = Conf::get_instance();
+        $devel_mode = $conf->get('kolab_wap', 'devel_mode');
+
+        if (empty($devel_mode)) {
+            $devel_mode = FALSE;
+        }
+
+        if (!isset($_SESSION['capabilities']) || $devel_mode) {
             $result = $this->api->post('system.capabilities');
             $list   = $result->get('list');
 
