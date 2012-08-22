@@ -159,11 +159,20 @@ class Log
             $date, $sess_id ? "($sess_id)" : '', $prefix, $message);
 
         if (!empty($args)) {
-            if ($args['file']) {
-                $logline .= ' in ' . $args['file'];
+            if (is_array($args)) {
+                if (array_key_exists('file', $args)) {
+                    $logline .= ' in ' . $args['file'];
+                    unset($args['file']);
+                }
+
+                if (array_key_exists('line', $args)) {
+                    $logline .= ' on line ' . intval($args['line']);
+                    unset($args['line']);
+                }
             }
-            if ($args['line']) {
-                $logline .= ' on line ' . intval($args['line']);
+
+            if (!empty($args)) {
+                $logline .= var_export($args, TRUE);
             }
         }
 
