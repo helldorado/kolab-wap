@@ -122,8 +122,6 @@ class kolab_api_service_domain extends kolab_api_service
         $auth = Auth::get_instance();
         $conf = Conf::get_instance();
 
-        //console($getdata);
-
         if (!empty($getdata['domain'])) {
             $entry_dn = $getdata['domain'];
 
@@ -146,7 +144,6 @@ class kolab_api_service_domain extends kolab_api_service
         // first.
         $effective_rights = $auth->list_rights($entry_dn);
 
-        //console($effective_rights);
         return $effective_rights;
     }
 
