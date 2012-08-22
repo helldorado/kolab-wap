@@ -255,7 +255,16 @@ class kolab_client_task_domain extends kolab_client_task
         }
         // Edit mode
         else {
-            $title = $data['primary_domain'];
+            if (array_key_exists('primary_domain', $data)) {
+                $title = $data['primary_domain'];
+            }
+            // TODO: Domain name attribute.
+            else if (!is_array($data['associateddomain'])) {
+                $title = $data['associateddomain'];
+            }
+            else {
+                $title = $data['associateddomain'][0];
+            }
 
             // Add domain type name
             $fields['type_id_name'] = array(
