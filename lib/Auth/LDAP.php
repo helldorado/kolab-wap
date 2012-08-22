@@ -276,6 +276,14 @@ class LDAP extends Net_LDAP3 {
                 $result = parent::effective_rights($this->conf->get("ldap", "group_base_dn"));
                 return $result;
                 break;
+            case "resource":
+                $result = parent::effective_rights($this->conf->get("ldap", "resource_base_dn"));
+                return $result;
+                break;
+            case "role":
+                $result = parent::effective_rights($this->conf->get("ldap", "base_dn"));
+                return $result;
+                break;
             case "user":
                 $result = parent::effective_rights($this->conf->get("ldap", "user_base_dn"));
                 return $result;
