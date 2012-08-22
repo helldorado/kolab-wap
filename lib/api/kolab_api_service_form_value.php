@@ -737,7 +737,9 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function list_options_uniquemember($postdata, $attribs = array())
     {
-        return $this->_list_options_members($postdata, $attribs);
+        Log::trace("form_value.list_options for uniquemember attribute", $postdata, $attribs);
+        $result = $this->_list_options_members($postdata, $attribs);
+        return $result;
     }
 
     private function list_options_uniquemember_resource($postdata, $attribs = array())
@@ -766,12 +768,18 @@ class kolab_api_service_form_value extends kolab_api_service
         }
 
         if (!empty($postdata['id'])) {
-            $subject = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')');
-            $subject_dn = $subject[0];
-            $subject_dn_components = ldap_explode_dn($subject_dn, 0);
+            Log::trace("form_value.select_options_ou is going to search in base dn: " . var_export($base_dn, TRUE));
+            $subjects = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')')->entries(TRUE);
+            Log::trace("form_value.select_options_ou subjects: " . var_export($subjects, TRUE));
+            $subject = key($subjects);
+            Log::trace("form_value.select_options_ou subject: " . var_export($subject, TRUE));
+            $subject_dn_components = ldap_explode_dn($subject, 0);
+            Log::trace("form_value.select_options_ou subject dn components: " . var_export($subject_dn_components, TRUE));
             unset($subject_dn_components['count']);
             array_shift($subject_dn_components);
+            Log::trace("form_value.select_options_ou subject dn components: " . var_export($subject_dn_components, TRUE));
             $default = strtolower(implode(',', $subject_dn_components));
+            Log::trace("form_value.select_options_ou is using default $default");
         } else {
             $default = $base_dn;
         }
@@ -780,8 +788,8 @@ class kolab_api_service_form_value extends kolab_api_service
 
         $_ous = array();
 
-        foreach ($ous as $ou) {
-            $_ous[] = strtolower($ou);
+        foreach ($ous->entries(TRUE) as $ou_dn => $ou_attrs) {
+            $_ous[] = strtolower($ou_dn);
         }
 
         sort($_ous);
@@ -916,28 +924,37 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         // return specified records only, by exact DN attributes
         if (!empty($postdata['list'])) {
+            Log::trace("\$postdata['list'] not empty");
             $data['search'] = array(
-                'entrydn' => array(
-                    'value' => $postdata['list'],
-                    'type'  => 'exact',
-                ),
-            );
+                    'params' => array(
+                            'entrydn' => array(
+                                    'value' => $postdata['list'],
+                                    'type'  => 'exact',
+                                ),
+                        ),
+                    'operator' => 'OR'
+                );
         }
         // return records with specified string
         else {
-            $keyword = array('value' => $postdata['search']);
+            $keyword = array('value' => $postdata['search'], 'type' => 'both');
             $data['page_size'] = 15;
             $data['search']    = array(
-                'displayname' => $keyword,
-                'cn'          => $keyword,
-                'mail'        => $keyword,
-            );
+                    'params' => array(
+                            'displayname' => $keyword,
+                            'cn'          => $keyword,
+                            'mail'        => $keyword,
+                        ),
+                    'operator' => 'OR'
+                );
         }
 
         $data['attributes'] = array('displayname', 'cn', 'mail');
 
         $service = $this->controller->get_service('users');
+
         $result  = $service->users_list(null, $data);
+
         $list    = $result['list'];
 
         $data['attributes'] = array('cn', 'mail');

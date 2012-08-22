@@ -49,8 +49,6 @@ class kolab_api_service_domain extends kolab_api_service
 
         $effective_rights = $auth->list_rights($domain_base_dn);
 
-        //console("effective_rights", $effective_rights);
-
         $rights = array();
 
         if (in_array('add', $effective_rights['entryLevelRights'])) {
@@ -80,7 +78,6 @@ class kolab_api_service_domain extends kolab_api_service
 
     public function domain_add($getdata, $postdata)
     {
-        //console("api::domain_add(\$getdata, \$postdata)", $getdata, $postdata);
         $conf = Conf::get_instance();
         $dna = $conf->get('domain_name_attribute');
 
@@ -136,8 +133,6 @@ class kolab_api_service_domain extends kolab_api_service
                     array($unique_attr => $entry_dn)
                 );
 
-            //console($domain);
-
             if (!empty($domain)) {
                 $entry_dn = key($domain);
             }
@@ -146,8 +141,6 @@ class kolab_api_service_domain extends kolab_api_service
             $conf = Conf::get_instance();
             $entry_dn = $conf->get('ldap', 'domain_base_dn');
         }
-
-        //console("API/domain.effective_rights(); Using entry_dn: " . $entry_dn);
 
         // TODO: Fix searching the correct base_dn... Perhaps find the entry
         // first.

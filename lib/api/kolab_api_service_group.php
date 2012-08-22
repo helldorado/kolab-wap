@@ -159,6 +159,8 @@ class kolab_api_service_group extends kolab_api_service
         // normalize result
         $result = $this->parse_result_attributes('group', $result);
 
+        Log::trace("group_info() result: " . var_export($result, TRUE));
+
         if ($result) {
             return $result;
         }
@@ -176,6 +178,7 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function group_members_list($getdata, $postdata)
     {
+        Log::trace("group_members_list() for group " . $getdata['group']);
         $auth = Auth::get_instance();
 
         if (empty($getdata['group'])) {
@@ -184,6 +187,8 @@ class kolab_api_service_group extends kolab_api_service
         }
 
         $result = $auth->group_members_list($getdata['group'], false);
+
+        Log::trace("group_members_list() result: " . var_export($result, TRUE));
 
         return array(
             'list'  => $result,

@@ -170,8 +170,11 @@ class kolab_api_service_user extends kolab_api_service
         $auth   = Auth::get_instance();
         $result = $auth->user_info($getdata['user']);
 
+        Log::trace("user.info on " . $getdata['user'] . " result: " . var_export($result, TRUE));
         // normalize result
         $result = $this->parse_result_attributes('user', $result);
+
+        Log::trace("user.info on " . $getdata['user'] . " parsed result: " . var_export($result, TRUE));
 
         if ($result) {
             return $result;

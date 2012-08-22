@@ -84,23 +84,12 @@ class kolab_api_service_domains extends kolab_api_service
     {
         $auth = Auth::get_instance();
 
-        $domains = $auth->list_domains();
-        //console($domains);
-        $count   = count($domains);
+        $attributes = $this->parse_list_attributes($post);
+        $params = $this->parse_list_params($post);
+        $search = $this->parse_list_search($post);
 
-        // pagination
-        if (!empty($post['page_size']) && $count) {
-            $size   = (int) $post['page_size'];
-            $page   = !empty($post['page']) ? $post['page'] : 1;
-            $page   = max(1, (int) $page);
-            $offset = ($page - 1) * $size;
+        $domains = $auth->list_domains(null, $attributes, $search, $params);
 
-            $domains = array_slice($domains, $offset, $size, true);
-        }
-
-        return array(
-            'list'  => $domains,
-            'count' => $count,
-        );
+        return $domains;
     }
 }

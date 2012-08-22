@@ -29,19 +29,18 @@
 class kolab_api_service_users extends kolab_api_service
 {
     public $list_attribs = array(
-        'uid',
-        'cn',
-        'displayname',
-        'sn',
-        'givenname',
-        'mail',
-        'objectclass',
-        'uidnumber',
-        'gidnumber',
-        'mailhost',
-        'entrydn',
-    );
-
+            'uid',
+            'cn',
+            'displayname',
+            'sn',
+            'givenname',
+            'mail',
+            'objectclass',
+            'uidnumber',
+            'gidnumber',
+            'mailhost',
+            'entrydn',
+        );
 
     /**
      * Returns service capabilities.
@@ -69,81 +68,15 @@ class kolab_api_service_users extends kolab_api_service
     {
         $auth = Auth::get_instance();
 
-        // returned attributes
-        if (!empty($post['attributes']) && is_array($post['attributes'])) {
-            // get only supported attributes
-            $attributes = array_intersect($this->list_attribs, $post['attributes']);
-            // need to fix array keys
-            $attributes = array_values($attributes);
-        }
-        if (empty($attributes)) {
-            $attributes = (array)$this->list_attribs[0];
-        }
-
-        $search = array();
-        $params = array();
-
-        // searching
-        if (!empty($post['search']) && is_array($post['search'])) {
-            $params = $post['search'];
-
-            foreach ($params as $idx => $param) {
-                // get only supported attributes
-                if (!in_array($idx, $this->list_attribs)) {
-                    unset($params[$idx]);
-                    continue;
-                }
-
-                // search string
-                if (empty($param['value'])) {
-                    unset($params[$idx]);
-                    continue;
-                }
-            }
-
-            $search['params'] = $params;
-            if (!empty($post['search_operator'])) {
-                $search['operator'] = $post['search_operator'];
-            }
-        }
-
-        if (!empty($post['sort_by'])) {
-            if (is_array($post['sort_by'])) {
-                $params['sort_by'] = Array();
-                foreach ($post['sort_by'] as $attrib) {
-                    if (in_array($attrib, $this->list_attribs)) {
-                        $params['sort_by'][] = $attrib;
-                    }
-                }
-            } else {
-                // check if sort attribute is supported
-                if (in_array($post['sort_by'], $this->list_attribs)) {
-                    $params['sort_by'] = $post['sort_by'];
-                }
-            }
-        }
-
-        if (!empty($post['sort_order'])) {
-            $params['sort_order'] = $post['sort_order'] == 'DESC' ? 'DESC' : 'ASC';
-        }
+        $attributes = $this->parse_list_attributes($post);
+        $params = $this->parse_list_params($post);
+        $search = $this->parse_list_search($post);
 
         $users = $auth->list_users(null, $attributes, $search, $params);
-        $count = count($users);
 
-        // pagination
-        if (!empty($post['page_size']) && $count) {
-            $size   = (int) $post['page_size'];
-            $page   = !empty($post['page']) ? $post['page'] : 1;
-            $page   = max(1, (int) $page);
-            $offset = ($page - 1) * $size;
+        Log::trace("users.list result: " . var_export($users, TRUE));
 
-            $users = array_slice($users, $offset, $size, true);
-        }
-
-        return array(
-            'list'  => $users,
-            'count' => $count,
-        );
+        return $users;
     }
 
 }

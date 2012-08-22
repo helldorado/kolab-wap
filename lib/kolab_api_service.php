@@ -294,6 +294,68 @@ abstract class kolab_api_service
         return $result;
     }
 
+    protected function parse_list_attributes($post) {
+        $attributes = Array();
+        // Attributes to return
+        if (!empty($post['attributes']) && is_array($post['attributes'])) {
+            // get only supported attributes
+            $attributes = array_intersect($this->list_attribs, $post['attributes']);
+            // need to fix array keys
+            $attributes = array_values($attributes);
+        }
+
+        if (empty($attributes)) {
+            $attributes = (array)$this->list_attribs[0];
+        }
+
+        return $attributes;
+    }
+
+    protected function parse_list_params($post) {
+        $params = Array();
+        if (!empty($post['sort_by'])) {
+            if (is_array($post['sort_by'])) {
+                $params['sort_by'] = Array();
+                foreach ($post['sort_by'] as $attrib) {
+                    if (in_array($attrib, $this->list_attribs)) {
+                        $params['sort_by'][] = $attrib;
+                    }
+                }
+            } else {
+                // check if sort attribute is supported
+                if (in_array($post['sort_by'], $this->list_attribs)) {
+                    $params['sort_by'] = $post['sort_by'];
+                }
+            }
+        }
+
+        if (!empty($post['sort_order'])) {
+            $params['sort_order'] = $post['sort_order'] == 'DESC' ? 'DESC' : 'ASC';
+        }
+
+        if (!empty($post['page'])) {
+            $params['page'] = $post['page'];
+        }
+
+        if (!empty($post['page_size'])) {
+            $params['page_size'] = $post['page_size'];
+        }
+
+        return $params;
+    }
+
+    protected function parse_list_search($post) {
+        $search = Array();
+        // Search parameters
+        if (!empty($post['search']) && is_array($post['search'])) {
+            $search = $post['search'];
+            if (!empty($post['search_operator'])) {
+                $search['operator'] = $post['search_operator'];
+            }
+        }
+        return $search;
+    }
+
     /**
      * Parses result attributes
      *
@@ -352,7 +414,7 @@ abstract class kolab_api_service
 
         // Get extra attributes
         if (!empty($extra_attrs)) {
-            $extra_attrs = $auth->get_attributes($dn, $extra_attrs);
+            $extra_attrs = $auth->get_entry_attributes($dn, $extra_attrs);
             if (!empty($extra_attrs)) {
                 $attrs = array_merge($attrs, $extra_attrs);
             }
