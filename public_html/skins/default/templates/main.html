@@ -10,7 +10,7 @@
     <script src="{$skin_path}ui.js"></script>
 </head>
 <body>
-    <div id="logo"></div>
+    <div id="logo" onclick="document.location='.'"></div>
     <div id="topmenu">
         <span class="login">{$user.fullname}</span>
         <span class="logout link" title="{$engine->translate('Logout')}" onclick="kadm.main_logout()"></span>

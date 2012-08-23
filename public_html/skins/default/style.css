@@ -203,6 +203,7 @@ td.label {
   left: 10px;
   width: 198px;
   height: 74px;
+  cursor: pointer;
   background: url(images/logo.png) 0 0 no-repeat;
 }
 
@@ -810,6 +811,22 @@ fieldset.tabbed
 
 #main div.user span.image {
   background: url(images/users.png) center center no-repeat;
+}
+
+#main div.group span.image {
+  background: url(images/groups.png) center center no-repeat;
+}
+
+#main div.resource span.image {
+  background: url(images/resources.png) center center no-repeat;
+}
+
+#main div.domain span.image {
+  background: url(images/domains.png) center center no-repeat;
+}
+
+#main div.role span.image {
+  background: url(images/roles.png) center center no-repeat;
 }
 
 #main div span.label {
