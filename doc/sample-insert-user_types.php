@@ -13,6 +13,16 @@
 
     $attributes = Array(
             "auto_form_fields" => Array(
+                    // Note that this form field is marked as optional in
+                    // 'form_fields'.
+                    "alias" => Array(
+                            "type" => "list",
+                            "data" => Array(
+                                    "givenname",
+                                    "preferredlanguage",
+                                    "sn",
+                                ),
+                        ),
                     "cn" => Array(
                             "data" => Array(
                                     "givenname",
@@ -32,14 +42,9 @@
                                     "sn",
                                 ),
                         ),
-                    "mailalternateaddress" => Array(
-                            "data" => Array(
-                                    "givenname",
-                                    "preferredlanguage",
-                                    "sn",
-                                ),
-                            "optional" => true,
-                        ),
+                    // Using this form field to move a user to a different
+                    // server, or have the user be created on a specific server
+                    // is not yet supported.
                     "mailhost" => Array(
                             "optional" => true,
                         ),
@@ -55,12 +60,9 @@
                         ),
                 ),
             "form_fields" => Array(
-/*
-                    "c" => Array(
-                            "type" => "select",
+                    "alias" => Array(
                             "optional" => true,
                         ),
-*/
                     "givenname" => Array(),
                     "initials" => Array(
                             "optional" => true,
@@ -235,6 +237,13 @@
 
     $attributes = Array(
             "auto_form_fields" => Array(
+                    "alias" => Array(
+                            "data" => Array(
+                                    "givenname",
+                                    "preferredlanguage",
+                                    "sn",
+                                ),
+                        ),
                     "cn" => Array(
                             "data" => Array(
                                     "givenname",
@@ -264,14 +273,6 @@
                                     "sn",
                                 ),
                         ),
-                    "mailalternateaddress" => Array(
-                            "data" => Array(
-                                    "givenname",
-                                    "preferredlanguage",
-                                    "sn",
-                                ),
-                            "optional" => true,
-                        ),
                     "mailhost" => Array(
                             "optional" => true,
                         ),
@@ -288,12 +289,9 @@
                         ),
                 ),
             "form_fields" => Array(
-/*
-                    "c" => Array(
-                            "type" => "select",
+                    "alias" => Array(
                             "optional" => true,
                         ),
-*/
                     "givenname" => Array(),
                     "initials" => Array(
                             "optional" => true,
