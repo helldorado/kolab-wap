@@ -1110,6 +1110,7 @@ class kolab_api_service_form_value extends kolab_api_service
 
         $my_primary_domain = $_SESSION['user']->get_domain();
         $all_domains = $auth->list_domains();
+        $all_domains = $all_domains['list'];
 
         $valid_domains = array();
 
@@ -1121,6 +1122,9 @@ class kolab_api_service_form_value extends kolab_api_service
         } else {
             $email_domain = substr($mail_address, $at_index+1);
         }
+
+        Log::trace("_validate_email_address_in_any_of_mydomains(\$mail_address = " . var_export($mail_address, TRUE) . ")");
+        Log::trace("\$all_domains includes: " . var_export($all_domains, TRUE) . " (must include domain for \$mail_address)");
 
         foreach ($all_domains as $domain_id => $domain_attrs) {
             if (!is_array($domain_attrs[$dna])) {
