@@ -86,9 +86,14 @@ $LANG['resource.type_id'] = 'Type Middel';
 $LANG['resource.uniquemember'] = 'Middellen in Collectie';
 
 $LANG['role.add'] = 'Rol Toevoegen';
+$LANG['role.cn'] = 'Role Name';
+$LANG['role.description'] = 'Role Description';
+$LANG['role.edit.success'] = 'Role edited successfully';
 $LANG['role.list'] = 'Rollen Lijst';
 $LANG['role.list.records'] = '$1 tot $2 van $3';
 $LANG['role.norecords'] = 'Geen rollen gevonden!';
+$LANG['role.system'] = 'Details';
+$LANG['role.type_id'] = 'Role Type';
 
 $LANG['saving'] = 'Bezig data op te slaan...';
 

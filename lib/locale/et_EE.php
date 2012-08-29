@@ -86,9 +86,14 @@ $LANG['resource.type_id'] = 'Resource Type';
 $LANG['resource.uniquemember'] = 'Collection Members';
 
 $LANG['role.add'] = 'Add Role';
+$LANG['role.cn'] = 'Role Name';
+$LANG['role.description'] = 'Role Description';
+$LANG['role.edit.success'] = 'Role edited successfully';
 $LANG['role.list'] = 'Role List';
 $LANG['role.list.records'] = '$1 to $2 of $3';
 $LANG['role.norecords'] = 'No role records found!';
+$LANG['role.system'] = 'Details';
+$LANG['role.type_id'] = 'Role Type';
 
 $LANG['saving'] = 'Saving data...';
 
@@ -159,7 +164,7 @@ $LANG['user.list'] = 'Users List';
 $LANG['user.list.records'] = '$1 to $2 of $3';
 $LANG['user.loginshell'] = 'Shell';
 $LANG['user.mail'] = 'Peamine e-posti aadress';
-$LANG['user.mailalternateaddress'] = 'Secondary Email Address(es)';
+$LANG['user.mailalternateaddress'] = 'External Email Address(es)';
 $LANG['user.mailhost'] = 'Email Server';
 $LANG['user.mailquota'] = 'Quota';
 $LANG['user.mailquota.desc'] = 'Leave blank for unlimited';
