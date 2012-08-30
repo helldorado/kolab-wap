@@ -348,7 +348,11 @@ abstract class kolab_api_service
         $search = Array();
         // Search parameters
         if (!empty($post['search']) && is_array($post['search'])) {
-            $search = $post['search'];
+            if (array_key_exists('params', $post['search'])) {
+                $search = $post['search'];
+            } else {
+                $search['params'] = $post['search'];
+            }
             if (!empty($post['search_operator'])) {
                 $search['operator'] = $post['search_operator'];
             }
