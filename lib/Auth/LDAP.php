@@ -1315,7 +1315,7 @@ class LDAP extends Net_LDAP3 {
 
         console("Searching for a user dn in $root_dn, with search filter: $search_filter");
 
-        $search_results = ldapsearch($this->conn, $root_dn, $search_filter);
+        $search_results = ldap_search($this->conn, $root_dn, $search_filter);
 
         if (!$search_results || ldap_count_entries($this->conn, $search_results) == 0) {
             //message("No entries found for the user dn in " . __METHOD__);
