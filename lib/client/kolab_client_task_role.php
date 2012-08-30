@@ -38,8 +38,15 @@ class kolab_client_task_role extends kolab_client_task
         $this->output->set_object('content', 'role', true);
         $this->output->set_object('task_navigation', $this->menu());
 
+        // display form to add role if logged-in user has right to do so
+        $caps = $this->get_capability('actions');
+        if($caps['role.add']['type'] == 'w') {
+            $this->action_add();
+        } else {
+            $this->watermark('taskcontent');
+        }
+
         $this->action_list();
-        $this->action_add();
     }
 
     /**
