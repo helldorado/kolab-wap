@@ -39,6 +39,7 @@ class kolab_client_task_resource extends kolab_client_task
         $this->output->set_object('task_navigation', $this->menu());
 
         $this->action_list();
+        $this->action_add();
     }
 
     /**
@@ -159,7 +160,6 @@ class kolab_client_task_resource extends kolab_client_task
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
 
-        $this->watermark('taskcontent');
         $this->output->set_object('resourcelist', $table);
     }
 
