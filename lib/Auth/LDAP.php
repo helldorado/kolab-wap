@@ -104,81 +104,22 @@ class LDAP extends Net_LDAP3 {
      * @return bool|string User ID or False on failure
      */
     public function authenticate($username, $password) {
-        Log::debug("LDAP: authentication request for $username");
+        Log::debug("Auth::LDAP: authentication request for $username");
 
         if (!$this->connect()) {
             return false;
         }
 
-        // Attempt to explode the username to see if it is in fact a DN,
-        // such as would be the case for 'cn=Directory Manager' or
-        // 'uid=admin'.
-        $subject = $this->entry_dn($username);
+        $result = $this->login($username, $password);
 
-        if (!$subject) {
-            list($this->userid, $this->domain) = $this->_qualify_id($username);
-            $root_dn = $this->config_get("root_dn");
-
-            // Compose a filter to find the subject dn.
-            // Use the kolab_user_filter first, if configured, and the user_filter
-            // as a fallback.
-            // Use the auth_attrs configured.
-            $filter = '(&';
-
-            $user_filter = $this->conf->get('kolab_user_filter');
-
-            if (!$user_filter) {
-                $user_filter = $this->conf->get('user_filter');
-            }
-
-            $filter .= $user_filter;
-
-            $auth_attrs = $this->conf->get_list('auth_attributes');
-
-            console("Using authentication attributes", $auth_attrs);
-            if (count($auth_attrs) > 0) {
-                $filter .= '(|';
-
-                foreach ($auth_attrs as $attr) {
-                    $filter .= '(' . $attr . '=' . $this->userid . ')';
-                    $filter .= '(' . $attr . '=' . $this->userid . '@' . $this->domain . ')';
-                }
-
-                $filter .= ')';
-            } else {
-                // Default to uid.
-                $filter .= '(|(uid=' . $this->userid . '))';
-            }
-
-            $filter .= ')';
-
-            console("LDAP::authenticate() using filter " . $filter);
-
-            $subject_dn = $this->_get_user_dn($root_dn, $filter);
-        } else {
-            $subject_dn = $subject;
+        if (!$result) {
+            return FALSE;
         }
 
-        if ($this->bind($subject_dn, $password)) {
-//            $this->_unbind();
+        $_SESSION['user']->user_bind_dn = $result;
+        $_SESSION['user']->user_bind_pw = $password;
 
-            if (isset($_SESSION['user'])) {
-                $_SESSION['user']->user_root_dn = $root_dn;
-                $_SESSION['user']->user_bind_dn = $subject_dn;
-                $_SESSION['user']->user_bind_pw = $password;
-
-                Log::debug("LDAP: Successfully bound with User DN: " . $_SESSION['user']->user_bind_dn);
-            }
-            else {
-                Log::debug("LDAP: Successfully bound with User DN: $subject_dn but not saving it to the session");
-            }
-
-            // @TODO: return unique attribute
-            return $subject_dn;
-        }
-        else {
-            return false;
-        }
+        return $result;
     }
 
     public function domain_add($domain, $parent_domain = false, $prepopulate = true) {
@@ -810,7 +751,10 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function search($base_dn, $filter = '(objectclass=*)', $scope = 'sub', $sort = NULL, $search = Array()) {
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        if (isset($_SESSION['user']->user_bind_dn) && !empty($_SESSION['user']->user_bind_dn)) {
+            $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        }
+
         Log::trace("Relaying search to parent:" . var_export($base_dn, TRUE));
         return parent::search($base_dn, $filter, $scope, $sort, $search);
     }
@@ -1300,34 +1244,6 @@ class LDAP extends Net_LDAP3 {
         $this->add_entry($dn, $attrs);
 
         return true;
-    }
-
-    /*
-        Utility functions
-     */
-
-    private function _get_user_dn($root_dn, $search_filter) {
-        // TODO: Why does this use privileged credentials?
-        if (($this->bind($this->conf->get('bind_dn'), $this->conf->get('bind_pw'))) == false) {
-            //message("WARNING: Invalid Service bind credentials supplied");
-            $this->bind($this->conf->get('manager_bind_dn'), $this->conf->get('manager_bind_pw'));
-        }
-
-        console("Searching for a user dn in $root_dn, with search filter: $search_filter");
-
-        $search_results = ldap_search($this->conn, $root_dn, $search_filter);
-
-        if (!$search_results || ldap_count_entries($this->conn, $search_results) == 0) {
-            //message("No entries found for the user dn in " . __METHOD__);
-            return false;
-        }
-
-        if (($first_entry = ldap_first_entry($this->conn, $search_results)) == false) {
-            return false;
-        }
-
-        $user_dn = ldap_get_dn($this->conn, $first_entry);
-        return $user_dn;
     }
 
     /**
