@@ -373,8 +373,10 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
 
+        $entries = $this->sort_and_slice($result, $params);
+
         return Array(
-                'list' => $result->entries(TRUE),
+                'list' => $entries,
                 'count' => $result->count()
             );
     }
@@ -419,8 +421,10 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
 
+        $entries = $this->sort_and_slice($result, $params);
+
         return Array(
-                'list' => $result->entries(TRUE),
+                'list' => $entries,
                 'count' => $result->count()
             );
     }
@@ -482,18 +486,10 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
 
-        if (!empty($params) && is_array($params) && array_key_exists('sort_by', $params)) {
-            if (is_array($params['sort_by'])) {
-                $sort = array_shift($params['sort_by']);
-            } else {
-                $sort = $params['sort_by'];
-            }
-
-            $result->sort($sort);
-        }
+        $entries = $this->sort_and_slice($result, $params);
 
         return Array(
-                'list' => $result->entries(TRUE),
+                'list' => $entries,
                 'count' => $result->count()
             );
     }
@@ -525,8 +521,10 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->_search($base_dn, $filter, $attributes);
 
+        $entries = $this->sort_and_slice($result, $params);
+
         return Array(
-                'list' => $result->entries(TRUE),
+                'list' => $entries,
                 'count' => $result->count()
             );
     }
@@ -579,18 +577,10 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
 
-        if (!empty($params) && is_array($params) && array_key_exists('sort_by', $params)) {
-            if (is_array($params['sort_by'])) {
-                $sort = array_shift($params['sort_by']);
-            } else {
-                $sort = $params['sort_by'];
-            }
-
-            $result->sort($sort);
-        }
+        $entries = $this->sort_and_slice($result, $params);
 
         return Array(
-                'list' => $result->entries(TRUE),
+                'list' => $entries,
                 'count' => $result->count()
             );
     }
@@ -982,6 +972,39 @@ class LDAP extends Net_LDAP3 {
         }
 
         return $rights;
+    }
+
+    private function sort_and_slice(&$result, &$params) {
+        if (!empty($params) && is_array($params)) {
+            if (array_key_exists('sort_by', $params)) {
+                if (is_array($params['sort_by'])) {
+                    $sort = array_shift($params['sort_by']);
+                } else {
+                    $sort = $params['sort_by'];
+                }
+
+                $result->sort($sort);
+
+            }
+
+            if (array_key_exists('page_size', $params) && array_key_exists('page', $params)) {
+                $entries = $result->entries(TRUE);
+                if ($result->count() > $params['page_size']) {
+                    $entries = array_slice($entries, (($params['page'] - 1) * $params['page_size']), $params['page_size'], TRUE);
+                }
+
+            } else {
+                $entries = $result->entries(TRUE);
+            }
+
+            if (array_key_exists('sort_order', $params) && !empty($params['sort_order'])) {
+                if ($params['sort_order'] == "DESC") {
+                    $entries = array_reverse($entries, TRUE);
+                }
+            }
+        }
+
+        return $entries;
     }
 
     private function unique_attribute() {
