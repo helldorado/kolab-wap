@@ -125,7 +125,7 @@ class LDAP extends Net_LDAP3 {
     public function domain_add($domain, $parent_domain = false, $prepopulate = true) {
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
-            if (!$this->domain_info($parent_domain)) {
+            if ($this->domain_info($parent_domain)->count() < 1) {
                 $this->_domain_add_new($parent_domain, $prepopulate);
             }
 
@@ -1047,14 +1047,27 @@ class LDAP extends Net_LDAP3 {
         // Get the parent
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $parent . ')' . $domain_filter . ')';
 
-        $domain_entry = $this->_search($domain_base_dn, $domain_filter);
-        $domain_dn    = key($domain_entry);
+        $result = $this->_search($domain_base_dn, $domain_filter);
 
-        $_old_attr = array($domain_name_attribute => $domain_entry[$domain_dn][$domain_name_attribute]);
+        if ($result->count() < 1) {
+            Log::error("Attempt to add a domain alias for a non-existent parent domain.");
+            return false;
+        } else if ($result->count() > 1) {
+            Log::error("Attempt to add a domain alias for a parent domain which is found to have multiple entries.");
+            return false;
+        }
+
+        $entries = $result->entries(TRUE);
+
+        $domain_dn    = key($entries);
+        $domain_entry = $entries[$domain_dn];
+
+        $_old_attr = array($domain_name_attribute => $domain_entry[$domain_name_attribute]);
+
         if (is_array($domain)) {
-            $_new_attr = array($domain_name_attribute => array_unique(array_merge((array)($domain_entry[$domain_dn][$domain_name_attribute]), $domain)));
+            $_new_attr = array($domain_name_attribute => array_unique(array_merge((array)($domain_entry[$domain_name_attribute]), $domain)));
         } else {
-            $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_dn][$domain_name_attribute], $domain));
+            $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_name_attribute], $domain));
         }
 
         return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
@@ -1103,19 +1116,27 @@ class LDAP extends Net_LDAP3 {
 
         $this->add_entry($dn, $attrs);
 
+        //
+        // Use the information we find on the primary domain configuration for
+        // the new domain configuration.
+        //
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
-        $domain_entry  = $this->_search($domain_base_dn, $domain_filter);
+        $results  = $this->_search($domain_base_dn, $domain_filter);
+        $entries = $results->entries(TRUE);
+        $domain_entry = array_shift($entries);
 
+        // The root_dn for the parent domain is needed to find the ldbm
+        // database.
         if (in_array('inetdomainbasedn', $domain_entry)) {
             $_base_dn = $domain_entry['inetdomainbasedn'];
         } else {
             $_base_dn = $this->_standard_root_dn($this->conf->get('kolab', 'primary_domain'));
         }
 
-        $result = $this->_read("cn=" . str_replace('.', '_', $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), '(objectclass=*)', array('nsslapd-directory'));
+        $result = $this->_read("cn=" . str_replace('.', '_', $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), array('nsslapd-directory'));
 
-        console("Result normalized", $result);
+        Log::trace("Primary domain ldbm database configuration entry: " . var_export($result, TRUE));
 
         $result = $result[key($result)];
         $directory = str_replace(str_replace('.', '_', $this->conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
@@ -1142,7 +1163,9 @@ class LDAP extends Net_LDAP3 {
         // Query the ACI for the primary domain
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
-        $domain_entry  = $this->_search($domain_base_dn, $domain_filter);
+        $results  = $this->_search($domain_base_dn, $domain_filter);
+        $entries = $results->entries(TRUE);
+        $domain_entry = array_shift($entries);
 
         if (in_array('inetdomainbasedn', $domain_entry)) {
             $_base_dn = $domain_entry['inetdomainbasedn'];
@@ -1150,7 +1173,7 @@ class LDAP extends Net_LDAP3 {
             $_base_dn = $this->_standard_root_dn($this->conf->get('kolab', 'primary_domain'));
         }
 
-        $result = $this->_read($_base_dn, '(objectclass=*)', array('aci'));
+        $result = $this->_read($_base_dn, array('aci'));
         $result = $result[key($result)];
         $acis   = $result['aci'];
 
