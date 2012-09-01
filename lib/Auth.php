@@ -310,11 +310,9 @@ class Auth {
         return $this->auth_instance()->group_members_list($groupdata, $recurse);
     }
 
-    public function list_domains()
+    public function list_domains($attributes = array(), $search = array(), $params = array())
     {
-        // TODO: Consider a normal user does not have privileges on
-        // the base_dn where domain names and configuration is stored.
-        return $this->auth_instance($this->domain)->list_domains();
+        return $this->auth_instance()->list_domains($attributes, $search, $params);
     }
 
     public function list_rights($subject)
