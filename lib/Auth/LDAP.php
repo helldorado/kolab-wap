@@ -110,11 +110,6 @@ class LDAP extends Net_LDAP3 {
             return false;
         }
 
-        // We'll want to pass on a qualified username to Net_LDAP3::login()
-        if (!strpos($username, '@')) {
-            $username = $username . '@' . $this->domain;
-        }
-
         $result = $this->login($username, $password);
 
         if (!$result) {
