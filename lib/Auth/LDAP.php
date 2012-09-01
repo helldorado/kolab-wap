@@ -1002,6 +1002,8 @@ class LDAP extends Net_LDAP3 {
                     $entries = array_reverse($entries, TRUE);
                 }
             }
+        } else {
+            $entries = $result->entries(TRUE);
         }
 
         return $entries;
