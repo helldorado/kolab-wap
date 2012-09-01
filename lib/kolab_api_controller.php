@@ -270,7 +270,7 @@ class kolab_api_controller
      */
     private function authenticate($request, $postdata)
     {
-        Log::debug("Authenticating with postdata: " . json_encode($postdata));
+        Log::trace("Authenticating with postdata: " . json_encode($postdata));
 
         $valid = false;
 
