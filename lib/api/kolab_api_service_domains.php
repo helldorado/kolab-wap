@@ -30,7 +30,7 @@ class kolab_api_service_domains extends kolab_api_service
 {
 
     public $list_attribs = array(
-            'associatedomain',
+            'associateddomain',
             'objectclass',
             'entrydn',
         );
@@ -94,7 +94,7 @@ class kolab_api_service_domains extends kolab_api_service
         $params = $this->parse_list_params($post);
         $search = $this->parse_list_search($post);
 
-        $domains = $auth->list_domains(null, $attributes, $search, $params);
+        $domains = $auth->list_domains($attributes, $search, $params);
 
         return $domains;
     }
