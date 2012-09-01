@@ -38,15 +38,13 @@ class kolab_client_task_resource extends kolab_client_task
         $this->output->set_object('content', 'resource', true);
         $this->output->set_object('task_navigation', $this->menu());
 
+        $this->action_list();
+
         // display form to add resource if logged-in user has right to do so
         $caps = $this->get_capability('actions');
         if($caps['resource.add']['type'] == 'w') {
             $this->action_add();
-        } else {
-            $this->watermark('taskcontent');
         }
-
-        $this->action_list();
     }
 
     /**
@@ -167,6 +165,7 @@ class kolab_client_task_resource extends kolab_client_task
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
 
+        $this->watermark('taskcontent');
         $this->output->set_object('resourcelist', $table);
     }
 

@@ -1089,6 +1089,7 @@ function kolab_admin()
 
     this.display_message('domain.add.success');
     this.command('domain.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.domain_edit_response = function(response)
@@ -1098,6 +1099,7 @@ function kolab_admin()
 
     this.display_message('domain.edit.success');
     this.command('domain.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.user_info = function(id)
@@ -1135,6 +1137,7 @@ function kolab_admin()
 
     this.display_message('user.delete.success');
     this.command('user.list', {page: page});
+    this.set_watermark('taskcontent');
   };
 
   this.user_save = function(reload, section)
@@ -1174,6 +1177,7 @@ function kolab_admin()
 
     this.display_message('user.add.success');
     this.command('user.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.user_edit_response = function(response)
@@ -1183,6 +1187,7 @@ function kolab_admin()
 
     this.display_message('user.edit.success');
     this.command('user.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.group_info = function(id)
@@ -1220,6 +1225,7 @@ function kolab_admin()
 
     this.display_message('group.delete.success');
     this.command('group.list', {page: page});
+    this.set_watermark('taskcontent');
   };
 
   this.group_save = function(reload, section)
@@ -1251,6 +1257,7 @@ function kolab_admin()
 
     this.display_message('group.add.success');
     this.command('group.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.group_edit_response = function(response)
@@ -1260,6 +1267,7 @@ function kolab_admin()
 
     this.display_message('group.edit.success');
     this.command('group.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.resource_info = function(id)
@@ -1297,6 +1305,7 @@ function kolab_admin()
 
     this.display_message('resource.delete.success');
     this.command('resource.list', {page: page});
+    this.set_watermark('taskcontent');
   };
 
   this.resource_save = function(reload, section)
@@ -1328,6 +1337,7 @@ function kolab_admin()
 
     this.display_message('resource.add.success');
     this.command('resource.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.resource_edit_response = function(response)
@@ -1337,6 +1347,7 @@ function kolab_admin()
 
     this.display_message('resource.edit.success');
     this.command('resource.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.role_info = function(id)
@@ -1374,6 +1385,7 @@ function kolab_admin()
 
     this.display_message('role.delete.success');
     this.command('role.list', {page: page});
+    this.set_watermark('taskcontent');
   };
 
   this.role_save = function(reload, section)
@@ -1405,6 +1417,7 @@ function kolab_admin()
 
     this.display_message('role.add.success');
     this.command('role.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.role_edit_response = function(response)
@@ -1414,6 +1427,7 @@ function kolab_admin()
 
     this.display_message('role.edit.success');
     this.command('role.list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
   };
 
   this.generate_password = function(fieldname)

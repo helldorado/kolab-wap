@@ -48,7 +48,6 @@ class kolab_client_task
 
     protected static $translation = array();
 
-
     /**
      * Class constructor.
      */
