@@ -652,7 +652,7 @@ class LDAP extends Net_LDAP3 {
             return false;
         }
 
-        return $this->_search($resource_dn, '(objectclass=*)', $attributes);
+        return $this->_read($resource_dn, $attributes);
     }
 
     public function resource_members_list($resource, $recurse = true) {
