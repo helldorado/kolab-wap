@@ -38,22 +38,19 @@ class Auth {
      */
     static function get_instance($domain = NULL)
     {
+        Log::trace("Auth::get_instance(\$domain = " . var_export($domain, TRUE) . ")");
+
         $conf = Conf::get_instance();
 
         if (empty($domain)) {
             if (!empty($_SESSION['user'])) {
                 $domain = $_SESSION['user']->get_domain();
-                Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": using domain $domain from session");
             } else {
                 $domain = $conf->get('primary_domain');
-                Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": using default domain $domain");
             }
-        } else {
-            Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": using domain $domain");
         }
 
         if (!isset(self::$instance[$domain])) {
-            Log::trace(__CLASS__ . "::" . __FUNCTION__ . ": Creating new instance for $domain");
             self::$instance[$domain] = new Auth($domain);
         }
 
@@ -111,48 +108,11 @@ class Auth {
      */
     public function authenticate($username, $password)
     {
-        Log::info("Authentication request for $username");
-
-        if (strpos($username, '@')) {
-            // Case-sensitivity does not matter for strstr() on '@', which
-            // has no case.
-            $user_domain = substr(strstr($username, '@'), 1);
-            Log::trace("Auth::authenticate(): User domain: " . $user_domain);
-
-            if (isset($this->_auth[$user_domain])) {
-                // We know this domain
-                $domain = $user_domain;
-            }
-            else {
-                // Attempt to find the primary domain name space for the
-                // domain used in the authentication request.
-                //
-                // This will enable john@example.org to login using 'alias'
-                // domains as well, such as 'john@example.ch'.
-                Log::trace("Attempting to find the primary domain name space for the user domain $user_domain");
-                $associated_domain = $this->primary_for_valid_domain($user_domain);
-
-                if ($associated_domain) {
-                    $domain = $user_domain;
-                }
-                else {
-                    // It seems we do not know about this domain.
-                    $domain = FALSE;
-                }
-            }
-        }
-        else {
-            $domain = $this->conf->get('primary_domain');
-        }
+        Log::info("Authentication request for $username against " . $this->domain);
 
         // TODO: Debug logging for the use of a current or the creation of
         // a new authentication class instance.
-        if ($this->domain == $domain) {
-            $result = $this->_auth[$domain]->authenticate($username, $password);
-        }
-        else {
-            $result = Auth::get_instance($domain)->authenticate($username, $password);
-        }
+        $result = $this->_auth[$this->domain]->authenticate($username, $password);
 
         return $result;
     }
@@ -317,7 +277,7 @@ class Auth {
 
     public function list_rights($subject)
     {
-        return $this->auth_instance($this->domain)->effective_rights($subject);
+        return $this->auth_instance()->effective_rights($subject);
     }
 
     public function list_users($domain = NULL, $attributes = array(), $search = array(), $params = array())
