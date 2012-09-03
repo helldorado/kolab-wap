@@ -670,7 +670,7 @@ class LDAP extends Net_LDAP3 {
 
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $base_dn = $this->subject_base_dn('role');
+        $base_dn = $this->_subject_base_dn('role');
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -750,24 +750,10 @@ class LDAP extends Net_LDAP3 {
         }
 
         // Check if the user_type has a specific base DN specified.
-        $base_dn = $this->conf->get($this->domain, $type_str . "_user_base_dn");
-        // If not, take the regular user_base_dn
-        if (empty($base_dn))
-            $base_dn = $this->conf->get($this->domain, "user_base_dn");
-
-        // If no user_base_dn either, take the user type specific from the parent
-        // configuration
-        if (empty($base_dn))
-            $base_dn = $this->conf->get('ldap', $type_str . "_user_base_dn");
-
-        if (empty($base_dn))
-            $base_dn = $this->conf->get('ldap', "user_base_dn");
-
-        // If still no base dn to add the user to... use the toplevel dn
-        if (empty($base_dn))
-            $base_dn = $this->conf->get($this->domain, "base_dn");
-        if (empty($base_dn))
-            $base_dn = $this->conf->get('ldap', "base_dn");
+        $base_dn = $this->_subject_base_dn($type_str . "_user");
+        if (empty($base_dn)) {
+            $base_dn = $this->_subject_base_dn("user");
+        }
 
         if (!empty($attrs['ou'])) {
             $base_dn = $attrs['ou'];
