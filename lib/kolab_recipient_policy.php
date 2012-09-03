@@ -169,11 +169,12 @@ class kolab_recipient_policy {
                         );
                 }
             } else {
-                //console("Key " . $substrings[1][$x] . " does not exist in \$userdata");
+                Log::error("Recipient policy finds that key " . $substrings[1][$x] . " does not exist in \$userdata (primary_mail)");
             }
         }
 
-        return self::parse_email($primary_mail);
+        $parsed_email = self::parse_email($primary_mail);
+        return $parsed_email;
     }
 
     static function secondary_mail($userdata)

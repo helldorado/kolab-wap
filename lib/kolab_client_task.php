@@ -461,7 +461,8 @@ class kolab_client_task
             $type = kolab_utils::REQUEST_ANY;
         }
 
-        return kolab_utils::get_input($name, $type, $allow_html);
+        $result = kolab_utils::get_input($name, $type, $allow_html);
+        return $result;
     }
 
     /**
@@ -478,8 +479,6 @@ class kolab_client_task
         $task = $this->get_task();
 
         $capabilities = $this->capabilities();
-
-        Log::trace("kolab_client_task::menu() capabilities:", $capabilities);
 
         foreach ($this->menu as $idx => $label) {
             //console("$task: $task, idx: $idx, label: $label");
@@ -524,20 +523,30 @@ class kolab_client_task
      *
      * @return array List of user types
      */
-    protected function user_types()
+    protected function user_types($used_for = NULL)
     {
-        if (isset($_SESSION['user_types'])) {
+        if (isset($_SESSION['user_types']) && !$this->config_get('devel_mode')) {
             return $_SESSION['user_types'];
         }
 
+        $list = Array();
+
         $result = $this->api->post('user_types.list');
-        $list   = $result->get('list');
+        $_list   = $result->get('list');
+
+        if (!empty($used_for)) {
+            foreach ($_list as $user_type_id => $user_type_attrs) {
+                if (array_key_exists('used_for', $user_type_attrs) && $user_type_attrs['used_for'] == $used_for) {
+                    $list[$user_type_id] = $user_type_attrs;
+                }
+            }
+        } else {
+            $list = $_list;
+        }
 
         if (is_array($list) && !$this->config_get('devel_mode')) {
             $_SESSION['user_types'] = $list;
         }
-
-        //console("user_types() \$list", $list);
 
         return $list;
     }
@@ -792,13 +801,9 @@ class kolab_client_task
      *
      * @return array Fields list, Object types list, Current type ID
      */
-    protected function form_prepare($name, &$data, $extra_fields = array())
+    protected function form_prepare($name, &$data, $extra_fields = array(), $used_for = null)
     {
-        //console("Preparing form for $name with data", $data);
-
-        $types        = (array) $this->{$name . '_types'}();
-
-        //console("form_prepare types", $types);
+        $types        = (array) $this->{$name . '_types'}($used_for);
 
         $form_id      = $attribs['id'];
         $add_mode     = empty($data['id']);
@@ -1023,7 +1028,8 @@ class kolab_client_task
             );
         }
 
-        return array($fields, $types, $type);
+        $result = array($fields, $types, $type);
+        return $result;
     }
 
     /**
@@ -1166,8 +1172,10 @@ class kolab_client_task
                     if ($field['type'] && $field['type'] != kolab_form::INPUT_HIDDEN) {
                         $writeable++;
                     }
-                    if (!empty($field['required'])) {
-                        $req_fields[] = $idx;
+                    if ($idx != "userpassword2") {
+                        if (!empty($field['required'])) {
+                            $req_fields[] = $idx;
+                        }
                     }
                 }
 

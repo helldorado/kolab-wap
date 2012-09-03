@@ -84,14 +84,17 @@ class kolab_client_task_signup extends kolab_client_task
 
         // add captcha
         $publickey = $this->config_get('recaptcha_public_key');
-        // TODO find a less dirty way to add captcha into form
-        $form = preg_replace('/<div class="formbuttons">/', '<div id="recaptcha_div"></div><div class="formbuttons">', $form);
 
-        // load captcha
-        $form .= '
-            <script type="text/javascript">
-                Recaptcha.create("'.$publickey.'", "recaptcha_div", {theme: "red"});
-            </script>';
+        if (!empty($publickey)) {
+            // TODO find a less dirty way to add captcha into form
+            $form = preg_replace('/<div class="formbuttons">/', '<div id="recaptcha_div"></div><div class="formbuttons">', $form);
+
+            // load captcha
+            $form .= '
+                <script type="text/javascript">
+                    Recaptcha.create("'.$publickey.'", "recaptcha_div", {theme: "red"});
+                </script>';
+        }
 
         $this->output->assign('form', $form);
         $this->output->set_object('taskcontent', $form);
@@ -183,7 +186,7 @@ class kolab_client_task_signup extends kolab_client_task
         );
 
         // Prepare fields
-        list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2')); 
+        list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2'), 'hosted');
         
         // Show only required fields
         foreach ($fields as $field_name => $field_attrs) {
