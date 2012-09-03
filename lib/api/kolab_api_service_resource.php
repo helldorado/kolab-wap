@@ -150,7 +150,7 @@ class kolab_api_service_resource extends kolab_api_service
     public function resource_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights($getdata['resource']);
+        $effective_rights = $auth->list_rights(empty($getdata['resource']) ? 'resource' : $getdata['resource']);
         return $effective_rights;
     }
 

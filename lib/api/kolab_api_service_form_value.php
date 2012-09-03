@@ -62,6 +62,7 @@ class kolab_api_service_form_value extends kolab_api_service
         $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
 
         $attributes = (array) $postdata['attributes'];
+
         $result     = array();
 
         foreach ($attributes as $attr_name) {
@@ -72,17 +73,21 @@ class kolab_api_service_form_value extends kolab_api_service
             $method_name = 'generate_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
 
             if (!method_exists($this, $method_name)) {
-                //console("Method $method_name doesn't exist");
+                Log::trace("Method $method_name doesn't exist");
 
                 $method_name = 'generate_' . strtolower($attr_name);
 
                 if (!method_exists($this, $method_name)) {
+                    Log::trace("Method $method_name doesn't exist either");
                     continue;
                 }
             }
 
+            Log::trace("Executing method $method_name");
             $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
         }
+
+        Log::trace("Returning result: " . var_export($result, TRUE));
 
         return $result;
     }
@@ -206,7 +211,15 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            $result[$attr_name] = $this->{$method_name}($attr_value);
+            if (array_key_exists($attr_name, $attribs['form_fields']) && !empty($attribs['form_fields'][$attr_name]['optional']) && !$attribs['form_fields'][$attr_name]['optional']) {
+                $result[$attr_name] = $this->{$method_name}($attr_value);
+            } else {
+                try {
+                    $result[$attr_name] = $this->{$method_name}($attr_value);
+                } catch (Exception $e) {
+                    Log::debug("Attribute $attr_name did not validate, but it is not a required attribute. Not saving. (Error was: $e)");
+                }
+            }
         }
 
         return $result;
@@ -258,7 +271,7 @@ class kolab_api_service_form_value extends kolab_api_service
             while (($resource_found = $auth->resource_find_by_attribute(array('cn' => $cn)))) {
                 if (!empty($postdata['id'])) {
                     $resource_found_dn = key($resource_found);
-                    $resource_found_unique_attr = $auth->get_attribute($resource_found_dn, $unique_attr);
+                    $resource_found_unique_attr = $auth->get_entry_attribute($resource_found_dn, $unique_attr);
                     //console("resource with mail $mail found", $resource_found_unique_attr);
                     if ($resource_found_unique_attr == $postdata['id']) {
                         //console("that's us.");
@@ -432,7 +445,7 @@ class kolab_api_service_form_value extends kolab_api_service
             while (($resource_found = $auth->resource_find_by_attribute(array('mail' => $mail)))) {
                 if (!empty($postdata['id'])) {
                     $resource_found_dn = key($resource_found);
-                    $resource_found_unique_attr = $auth->get_attribute($resource_found_dn, $unique_attr);
+                    $resource_found_unique_attr = $auth->get_entry_attribute($resource_found_dn, $unique_attr);
                     //console("resource with mail $mail found", $resource_found_unique_attr);
                     if ($resource_found_unique_attr == $postdata['id']) {
                         //console("that's us.");
@@ -590,7 +603,7 @@ class kolab_api_service_form_value extends kolab_api_service
             while (($user_found = $auth->user_find_by_attribute(array('uid' => $uid)))) {
                 if (!empty($postdata['id'])) {
                     $user_found_dn = key($user_found);
-                    $user_found_unique_attr = $auth->get_attribute($user_found_dn, $unique_attr);
+                    $user_found_unique_attr = $auth->get_entry_attribute($user_found_dn, $unique_attr);
                     //console("user with uid $uid found", $user_found_unique_attr);
                     if ($user_found_unique_attr == $postdata['id']) {
                         //console("that's us.");
@@ -737,7 +750,6 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function list_options_uniquemember($postdata, $attribs = array())
     {
-        Log::trace("form_value.list_options for uniquemember attribute", $postdata, $attribs);
         $result = $this->_list_options_members($postdata, $attribs);
         return $result;
     }
@@ -768,18 +780,13 @@ class kolab_api_service_form_value extends kolab_api_service
         }
 
         if (!empty($postdata['id'])) {
-            Log::trace("form_value.select_options_ou is going to search in base dn: " . var_export($base_dn, TRUE));
             $subjects = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')')->entries(TRUE);
-            Log::trace("form_value.select_options_ou subjects: " . var_export($subjects, TRUE));
-            $subject = key($subjects);
-            Log::trace("form_value.select_options_ou subject: " . var_export($subject, TRUE));
-            $subject_dn_components = ldap_explode_dn($subject, 0);
-            Log::trace("form_value.select_options_ou subject dn components: " . var_export($subject_dn_components, TRUE));
+            $subject = array_shift($subjects);
+            $subject_dn = key($subject);
+            $subject_dn_components = ldap_explode_dn($subject_dn, 0);
             unset($subject_dn_components['count']);
             array_shift($subject_dn_components);
-            Log::trace("form_value.select_options_ou subject dn components: " . var_export($subject_dn_components, TRUE));
             $default = strtolower(implode(',', $subject_dn_components));
-            Log::trace("form_value.select_options_ou is using default $default");
         } else {
             $default = $base_dn;
         }
@@ -924,7 +931,6 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         // return specified records only, by exact DN attributes
         if (!empty($postdata['list'])) {
-            Log::trace("\$postdata['list'] not empty");
             $data['search'] = array(
                     'params' => array(
                             'entrydn' => array(
@@ -1138,6 +1144,12 @@ class kolab_api_service_form_value extends kolab_api_service
 
         if (in_array($email_domain, $valid_domains)) {
             $valid = true;
+        }
+
+        if ($valid) {
+            Log::trace("Found email address to be in one of my domains.");
+        } else {
+            Log::trace("Found email address to NOT be in one of my domains.");
         }
 
         return $valid;

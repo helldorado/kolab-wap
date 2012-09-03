@@ -52,7 +52,7 @@ class kolab_api_service_resources extends kolab_api_service
     }
 
     /**
-     * Users listing (with searching).
+     * Resources listing (with searching).
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters

@@ -135,7 +135,7 @@ class kolab_api_service_group extends kolab_api_service
     public function group_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights($getdata['group']);
+        $effective_rights = $auth->list_rights(empty($getdata['group']) ? 'group' : $getdata['group']);
         return $effective_rights;
     }
 
