@@ -675,27 +675,22 @@ class Net_LDAP3
 
     public function get_entry_attribute($subject_dn, $attribute)
     {
-        $this->config_set('return_attributes', $attributes);
-        $result = $this->search($subject_dn, '(objectclass=*)', 'base');
-        $dn     = key($result);
-        $attr   = key($result[$dn]);
+        $this->config_set('return_attributes', $attribute);
+        $entries = $this->search($subject_dn, '(objectclass=*)', 'base')->entries(TRUE);
+        $entry_dn = key($entries);
+        $entry = $entries[$entry_dn];
 
-        return $result[$dn][$attr];
+        return $entry[$attribute];
     }
 
     public function get_entry_attributes($subject_dn, $attributes)
     {
         $this->config_set('return_attributes', $attributes);
-        $entries = $this->search($subject_dn, '(objectclass=*)', 'base');
-        $entry = $entries->entries(TRUE);
-        $result = $entry[0];
+        $entries = $this->search($subject_dn, '(objectclass=*)', 'base')->entries(TRUE);
+        $entry_dn = key($entries);
+        $entry = $entries[$entry_dn];
 
-        if (!empty($result)) {
-            $result = array_pop($result);
-            return $result;
-        }
-
-        return FALSE;
+        return $entry;
     }
 
     /*
@@ -1899,11 +1894,16 @@ class Net_LDAP3
 
     private function supported_controls()
     {
+        if (!empty($this->supported_controls)) {
+            return $this->supported_controls;
+        }
+
         $this->_info("Obtaining supported controls");
         $this->return_attributes = Array("supportedcontrol");
         $result = $this->search("", "(objectclass=*)", 'base');
         $result = $result->entries(TRUE);
         $this->_info("Obtained " . count($result['']['supportedcontrol']) . " supported controls");
+        $this->supported_controls = $result['']['supportedcontrol'];
         return $result['']['supportedcontrol'];
     }
 
