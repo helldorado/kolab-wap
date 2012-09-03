@@ -45,7 +45,7 @@ class Log
     static function trace($message, $args = array())
     {
         if (self::mode() >= self::TRACE) {
-            self::log_message(self::TRACE, $message, $args);    
+            self::log_message(self::TRACE, $message, $args);
         }
     }
 
@@ -58,7 +58,7 @@ class Log
     static function debug($message, $args = array())
     {
         if (self::mode() >= self::DEBUG) {
-            self::log_message(self::DEBUG, $message, $args);    
+            self::log_message(self::DEBUG, $message, $args);
         }
     }
 
@@ -87,7 +87,7 @@ class Log
             self::log_message(self::WARNING, $message, $args);
         }
     }
-    
+
     /**
      * Logs error message
      *
@@ -227,7 +227,7 @@ class Log
         case 'WARNING':
             self::$mode = self::WARNING;
             break;
-        
+
         case self::ERROR:
         default:
             self::$mode = self::ERROR;
