@@ -51,8 +51,6 @@ class LDAP extends Net_LDAP3 {
         $this->config_set("service_bind_dn", $this->conf->get("service_bind_dn"));
         $this->config_set("service_bind_pw", $this->conf->get("service_bind_pw"));
 
-        $this->config_set("root_dn", $this->conf->get("base_dn"));
-
         // See if we are to connect to any domain explicitly defined.
         if (empty($domain)) {
             // If not, attempt to get the domain from the session.
@@ -89,6 +87,15 @@ class LDAP extends Net_LDAP3 {
         $this->config_set("port", $this->_ldap_port);
 
         parent::connect();
+
+        // Attempt to get the root dn from the configuration file.
+        $root_dn = $this->conf->get($this->domain, "base_dn");
+        if (empty($root_dn)) {
+            // Fall back to a root dn from LDAP, or the standard root dn
+            $root_dn = $this->domain_root_dn($this->domain);
+        }
+
+        $this->config_set("root_dn", $root_dn);
     }
 
     /**********************************************************
@@ -206,32 +213,29 @@ class LDAP extends Net_LDAP3 {
      * configuration.
      */
     public function effective_rights($subject) {
+        // Ensure we are bound with the user's credentials
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        Log::trace("Auth::LDAP::effective_rights(\$subject = '" . $subject . "')");
 
         switch ($subject) {
             case "domain":
-                $result = parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
-                return $result;
+                return parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
                 break;
             case "group":
-                $result = parent::effective_rights($this->conf->get("ldap", "group_base_dn"));
-                return $result;
+                return parent::effective_rights($this->_subject_base_dn("group"));
                 break;
             case "resource":
-                $result = parent::effective_rights($this->conf->get("ldap", "resource_base_dn"));
-                return $result;
+                return parent::effective_rights($this->_subject_base_dn("resource"));
                 break;
             case "role":
-                $result = parent::effective_rights($this->conf->get("ldap", "base_dn"));
-                return $result;
+                return parent::effective_rights($this->_subject_base_dn("role"));
                 break;
             case "user":
-                $result = parent::effective_rights($this->conf->get("ldap", "user_base_dn"));
-                return $result;
+                return parent::effective_rights($this->_subject_base_dn("user"));
                 break;
             default:
-                $result = parent::effective_rights($subject);
-                return $result;
+                return parent::effective_rights($subject);
                 break;
         }
 
@@ -412,11 +416,7 @@ class LDAP extends Net_LDAP3 {
 
         $this->config_set('return_attributes', $attributes);
 
-        $base_dn = $this->conf->get('group_base_dn');
-        if (empty($base_dn)) {
-            $base_dn = $this->conf->get('base_dn');
-        }
-
+        $base_dn = $this->_subject_base_dn("group");
         $filter = $this->conf->get('group_filter');
 
         $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
@@ -464,11 +464,7 @@ class LDAP extends Net_LDAP3 {
 
         $this->config_set("return_attributes", $attributes);
 
-        $base_dn = $this->conf->get('resource_base_dn');
-        if (!$base_dn) {
-            $base_dn = "ou=Resources," . $this->conf->get('base_dn');
-        }
-
+        $base_dn = $this->_subject_base_dn("resource");
         $filter  = $this->conf->get('resource_filter');
 
         if (!$filter) {
@@ -501,7 +497,8 @@ class LDAP extends Net_LDAP3 {
             }
         }
 
-        $base_dn = $this->conf->get('base_dn');
+        $base_dn = $this->_subject_base_dn("role");
+
         // TODO: From config
         $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
 
@@ -566,11 +563,7 @@ class LDAP extends Net_LDAP3 {
 
         $this->config_set("return_attributes", $attributes);
 
-        $base_dn = $this->conf->get('user_base_dn');
-        if (empty($base_dn)) {
-            $base_dn = $this->conf->get('base_dn');
-        }
-
+        $base_dn = $this->_subject_base_dn("user");
         $filter = $this->conf->get('user_filter');
 
         Log::trace("Auth::LDAP::list_users() searching entries in $base_dn with $filter, 'sub', NULL, " . var_export($search, TRUE));
@@ -675,11 +668,9 @@ class LDAP extends Net_LDAP3 {
             $type_str = $_key['key'];
         }
 
-        // Check if the user_type has a specific base DN specified.
-        $base_dn = $this->conf->get($this->domain, $type_str . "base_dn");
-        if (empty($base_dn)) {
-            $base_dn = $this->conf->get('ldap', "base_dn");
-        }
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $base_dn = $this->subject_base_dn('role');
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -693,13 +684,12 @@ class LDAP extends Net_LDAP3 {
         $unique_attr = $this->unique_attribute();
         $attributes[$unique_attr] = $role;
 
-        console("\$this->domain: " . $this->domain);
         // Now that values have been re-generated where necessary, compare
         // the new role attributes to the original role attributes.
         $_role = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr], 'objectclass' => 'ldapsubentry'));
 
         if (!$_role) {
-            console("Could not find role");
+            Log::error("Could not find role identified with $role.");
             return false;
         }
 
@@ -711,7 +701,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function role_find_by_attribute($attribute) {
-        console("Finding role by attribute", $attribute);
+        Log::trace("Finding role by attribute: " . var_export($attribute, TRUE));
 
         $attribute['objectclass'] = 'ldapsubentry';
         $result = $this->entry_find_by_attribute($attribute);
@@ -745,7 +735,7 @@ class LDAP extends Net_LDAP3 {
             $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
         }
 
-        Log::trace("Relaying search to parent:" . var_export($base_dn, TRUE));
+        Log::trace("Relaying search to parent:" . var_export(func_get_args(), TRUE));
         return parent::search($base_dn, $filter, $scope, $sort, $search);
     }
 
@@ -902,24 +892,29 @@ class LDAP extends Net_LDAP3 {
         }
     }
 
-    private function groups_list($attributes = array(), $search = array()) {
-        $base_dn = $this->conf->get('group_base_dn');
+    private function _subject_base_dn($subject) {
+        // Attempt to get a configured base_dn
+        $base_dn = $this->conf->get($this->domain, "base_dn");
 
-        if (!$base_dn)
-            $base_dn = $this->conf->get('base_dn');
-
-        $filter  = $this->conf->get('group_filter');
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
+        if (empty($base_dn)) {
+            $base_dn = $this->domain_root_dn($this->domain);
         }
 
-        if ($s_filter = $this->search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
+        Log::trace(__FILE__ . "::" . __FUNCTION__ . " using base_dn $base_dn");
+
+        if (empty($subject)) {
+            return $base_dn;
+        } else {
+            $subject_base_dn = $this->conf->get_raw($this->domain, $subject . "_base_dn");
+            if (empty($subject_base_dn)) {
+                $subject_base_dn = $this->conf->get_raw("ldap", $subject . "_base_dn");
+            }
+            $base_dn = $this->conf->expand($subject_base_dn, array("base_dn" => $base_dn));
         }
 
-        return $this->_search($base_dn, $filter, $attributes);
+        Log::trace("subject_base_dn for subject $subject results in $base_dn");
+
+        return $base_dn;
     }
 
     private function legacy_rights($subject) {
@@ -1292,6 +1287,70 @@ class LDAP extends Net_LDAP3 {
         $this->add_entry($dn, $attrs);
 
         return true;
+    }
+
+    /**
+     * Translate a domain name into it's corresponding root dn.
+     */
+    private function domain_root_dn($domain)
+    {
+        if (!empty($this->domain_root_dn)) {
+            return $this->domain_root_dn;
+        }
+
+        if (!$this->connect()) {
+            Log::trace("Could not connect");
+            return false;
+        }
+
+        $bind_dn = $this->config_get("service_bind_dn", $this->conf->get("service_bind_dn"));
+        $bind_pw = $this->config_get("service_bind_pw", $this->conf->get("service_bind_pw"));
+
+        if (!$this->bind($bind_dn, $bind_pw)) {
+            Log::trace("Could not connect");
+            return false;
+        }
+
+        Log::trace("Auth::LDAP::domain_root_dn(\$domain = $domain) called");
+        if (empty($domain)) {
+            return false;
+        }
+
+        $domain_base_dn        = $this->conf->get('ldap', 'domain_base_dn');
+        $domain_filter         = $this->conf->get('ldap', 'domain_filter');
+        $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
+
+        if (empty($domain_name_attribute)) {
+            $domain_name_attribute = 'associateddomain';
+        }
+
+        $domain_filter         = "(&" . $domain_filter . "(" . $domain_name_attribute . "=" . $domain . "))";
+
+        $result = $this->_search($domain_base_dn, $domain_filter);
+
+        $entries = $result->entries(TRUE);
+        $entry_dn = key($entries);
+        $entry_attrs = $entries[$entry_dn];
+
+        if (is_array($entry_attrs)) {
+            if (in_array('inetdomainbasedn', $entry_attrs) && !empty($entry_attrs['inetdomainbasedn'])) {
+                $this->domain_root_dn = $entry_attrs['inetdomainbasedn'];
+            }
+            else {
+                if (is_array($entry_attrs[$domain_name_attribute])) {
+                    $this->domain_root_dn = $this->_standard_root_dn($entry_attrs[$domain_name_attribute][0]);
+                }
+                else {
+                    $this->domain_root_dn = $this->_standard_root_dn($entry_attrs[$domain_name_attribute]);
+                }
+            }
+        }
+        else {
+            $this->domain_root_dn = $this->_standard_root_dn($domain);
+        }
+
+        return $this->domain_root_dn;
+
     }
 
     /**
