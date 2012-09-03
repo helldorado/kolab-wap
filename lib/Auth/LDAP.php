@@ -740,6 +740,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_add($attrs, $typeid = null) {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
         if ($typeid == null) {
             $type_str = 'user';
         }
