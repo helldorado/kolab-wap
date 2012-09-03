@@ -121,11 +121,11 @@ class Auth {
     {
         if (empty($domain)) {
             if (!empty($_SESSION['user'])) {
-                Log::trace("Using domain from session");
                 $domain = $_SESSION['user']->get_domain();
+                Log::trace("Using domain from session: $domain");
             } else {
-                Log::trace("Using primary_domain");
                 $domain = $this->conf->get('primary_domain');
+                Log::trace("Using primary_domain: " . $domain);
             }
             Log::trace("Domain to connect to not specified, connecting to $domain");
         } else {
@@ -162,11 +162,11 @@ class Auth {
     {
         if (empty($domain)) {
             if (!empty($_SESSION['user'])) {
-                Log::trace("Using domain from session");
                 $domain = $_SESSION['user']->get_domain();
+                Log::trace("Using domain from session: " . $domain);
             } else {
-                Log::trace("Using primary_domain");
                 $domain = $this->conf->get('primary_domain');
+                Log::trace("Using primary_domain: " . $domain);
             }
         }
 
