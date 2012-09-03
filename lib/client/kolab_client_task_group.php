@@ -162,8 +162,6 @@ class kolab_client_task_group extends kolab_client_task
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
-
-        $this->watermark('taskcontent');
         $this->output->set_object('grouplist', $table);
     }
 
