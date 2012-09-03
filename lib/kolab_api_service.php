@@ -28,9 +28,10 @@
  */
 abstract class kolab_api_service
 {
+    protected $cache = array();
+    protected $conf;
     protected $controller;
     protected $db;
-    protected $cache = array();
 
     /**
      * Class constructor.
@@ -39,9 +40,10 @@ abstract class kolab_api_service
      */
     public function __construct($ctrl)
     {
-        $this->db         = SQL::get_instance();
+        $this->conf       = Conf::get_instance();
         $this->controller = $ctrl;
-    }
+        $this->db         = SQL::get_instance();
+   }
 
     /**
      * Advertise this service's capabilities
@@ -239,8 +241,8 @@ abstract class kolab_api_service
     {
         $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
 
-        //console("parse_input_attributes", $type_attrs);
-        //console("called with \$attribs", $attribs);
+        Log::trace("kolab_api_service::parse_input_attributes for $object_name: " . var_export($type_attrs, TRUE));
+        Log::trace("called with \$attribs: " . var_export($attribs, TRUE));
 
         $form_service = $this->controller->get_service('form_value');
 
@@ -251,14 +253,14 @@ abstract class kolab_api_service
 
         if (isset($type_attrs['form_fields'])) {
             foreach ($type_attrs['form_fields'] as $key => $value) {
-                //console("Running parse input attributes for key $key");
+                Log::trace("Running parse input attributes for key $key");
 
                 if (empty($attribs[$key]) && empty($value['optional'])) {
-                    //console("\$attribs['" . $key . "'] is empty, and the field is not optional");
+                    Log::error("\$attribs['" . $key . "'] is empty, and the field is not optional");
                     throw new Exception("Missing input value for $key", 345);
                 }
                 else {
-                    //console("Either \$attribs['" . $key . "'] is empty or the field is optional");
+                    Log::trace("Either \$attribs['" . $key . "'] is empty or the field is optional");
                     $result[$key] = $attribs[$key];
                 }
             }
@@ -281,15 +283,23 @@ abstract class kolab_api_service
 
         if (isset($type_attrs['fields'])) {
             foreach ($type_attrs['fields'] as $key => $value) {
+                if (!is_array($value)) {
+                    $value2 = $this->conf->expand($value);
+                    if ($value !== $value2) {
+                        Log::trace("Made value " . var_export($value, TRUE) . " in to: " . var_export($value2, TRUE));
+                        $value = $value2;
+                    }
+                }
+
                 if (empty($attribs[$key])) {
-                    $result[$key] = $type_attrs['fields'][$key];
+                    $result[$key] = $type_attrs['fields'][$key] = $value;
                 } else {
-                    $result[$key] = $attribs[$key];
+                    $result[$key] = $attribs[$key] = $value;
                 }
             }
         }
 
-        //console("parse_input_attributes result", $result);
+        Log::trace("parse_input_attributes result", $result);
 
         return $result;
     }
