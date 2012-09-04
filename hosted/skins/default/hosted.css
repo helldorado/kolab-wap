@@ -16,3 +16,7 @@ body {
   margin: 10px;
   cursor: default;
 }
+
+td.label {
+  vertical-align: top;
+}

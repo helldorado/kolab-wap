@@ -87,7 +87,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         if (!empty($publickey)) {
             // TODO find a less dirty way to add captcha into form
-            $form = preg_replace('/<div class="formbuttons">/', '<div id="recaptcha_div"></div><div class="formbuttons">', $form);
+            $form = preg_replace('/<\/tbody>/', '<tr><td class="label">Captcha</td><td class="value"><div id="recaptcha_div"></div></td></tr></tbody>', $form);
 
             // load captcha
             $form .= '
