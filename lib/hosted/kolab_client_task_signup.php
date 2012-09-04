@@ -244,7 +244,6 @@ class kolab_client_task_signup extends kolab_client_task
         // Add password confirmation
         if (isset($fields['userpassword'])) {
             $fields['userpassword2'] = $fields['userpassword'];
-            $fields['userpassword']['onchange']  = 'password_match()';
             $fields['userpassword2']['onchange'] = 'password_match()';
         }
         
