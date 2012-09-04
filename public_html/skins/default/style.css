@@ -151,7 +151,7 @@ td.label {
 #task_navigation {
   margin: 0 15px;
   text-align: right;
-  height: 25px;
+  height: 21px;
   z-index: 2;
   white-space: nowrap;
 }
@@ -284,13 +284,13 @@ td.label {
 #task_navigation ul {
   list-style-type: none;
   margin: 0;
-  padding: 5px;
+  padding: 2px 0;
 }
 
 #task_navigation ul li {
   padding: 1px 0;
   display: inline;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   text-shadow: white 1px 1px;
 }
