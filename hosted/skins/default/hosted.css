@@ -17,6 +17,14 @@ body {
   cursor: default;
 }
 
+#content {
+  padding: 15px;
+}
+
+#taskcontent {
+  min-height: 100px;
+}
+
 td.label {
   vertical-align: top;
 }
