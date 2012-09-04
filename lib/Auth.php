@@ -106,13 +106,17 @@ class Auth {
      *
      * @return bool|string User ID or False on failure
      */
-    public function authenticate($username, $password)
+    public function authenticate($username, $password, $domain = null)
     {
         Log::info("Authentication request for $username against " . $this->domain);
 
+        if ($domain == NULL) {
+            $domain = $this->domain;
+        }
+
         // TODO: Debug logging for the use of a current or the creation of
         // a new authentication class instance.
-        $result = $this->_auth[$this->domain]->authenticate($username, $password);
+        $result = $this->_auth[$this->domain]->authenticate($username, $password, $domain);
 
         return $result;
     }

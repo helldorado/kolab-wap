@@ -525,7 +525,7 @@ class kolab_client_task
      */
     protected function user_types($used_for = NULL)
     {
-        if (isset($_SESSION['user_types']) && !$this->config_get('devel_mode')) {
+        if (isset($_SESSION['user_types']) && !empty($_SESSION['user_types']) && !$this->config_get('devel_mode')) {
             return $_SESSION['user_types'];
         }
 
@@ -547,6 +547,8 @@ class kolab_client_task
         if (is_array($list) && !$this->config_get('devel_mode')) {
             $_SESSION['user_types'] = $list;
         }
+
+        Log::trace("kolab_client_task::user_types() returns: " . var_export($list, TRUE));
 
         return $list;
     }

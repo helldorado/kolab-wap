@@ -110,14 +110,18 @@ class LDAP extends Net_LDAP3 {
      *
      * @return bool|string User ID or False on failure
      */
-    public function authenticate($username, $password) {
-        Log::debug("Auth::LDAP: authentication request for $username");
+    public function authenticate($username, $password, $domain = NULL) {
+        Log::debug("Auth::LDAP: authentication request for $username against domain $domain");
 
         if (!$this->connect()) {
             return false;
         }
 
-        $result = $this->login($username, $password);
+        if ($domain == NULL) {
+            $domain = $this->domain;
+        }
+
+        $result = $this->login($username, $password, $domain);
 
         if (!$result) {
             return FALSE;
@@ -184,7 +188,7 @@ class LDAP extends Net_LDAP3 {
     public function domain_info($domain, $attributes = array('*')) {
         $domain_dn = $this->entry_dn($domain);
 
-        Log::trace("Auth::LDAP::domain_info() \$domain_dn: " . $domain_dn . " and attributes: " . var_export($attributes, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() \$domain_dn: " . $domain_dn . " and attributes: " . var_export($attributes, TRUE));
 
         if (!$domain_dn) {
             $domain_base_dn        = $this->conf->get('ldap', 'domain_base_dn');
@@ -192,10 +196,10 @@ class LDAP extends Net_LDAP3 {
             $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
             $domain_filter         = "(&" . $domain_filter . "(" . $domain_name_attribute . "=" . $domain . "))";
 
-            Log::trace("Auth::LDAP::domain_info() uses _search()");
+            $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _search()");
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
         } else {
-            Log::trace("Auth::LDAP::domain_info() uses _read()");
+            $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _read()");
             $result = $this->_read($domain_dn, $attributes);
         }
 
@@ -203,7 +207,7 @@ class LDAP extends Net_LDAP3 {
             return false;
         }
 
-        Log::trace("Auth::LDAP::domain_info() result: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() result: " . var_export($result, TRUE));
 
         return $result;
     }
@@ -216,7 +220,7 @@ class LDAP extends Net_LDAP3 {
         // Ensure we are bound with the user's credentials
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        Log::trace("Auth::LDAP::effective_rights(\$subject = '" . $subject . "')");
+        $this->_log(LOG_DEBUG, "Auth::LDAP::effective_rights(\$subject = '" . $subject . "')");
 
         switch ($subject) {
             case "domain":
@@ -301,7 +305,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function group_info($group, $attributes = array('*')) {
-        Log::trace("Auth::LDAP::group_info() for group " . var_export($group, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() for group " . var_export($group, TRUE));
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
@@ -313,14 +317,14 @@ class LDAP extends Net_LDAP3 {
 
         $group_dn = $this->entry_dn($group);
 
-        Log::trace("group_info() group_dn " . var_export($group_dn, TRUE));
+        $this->_log(LOG_DEBUG, "group_info() group_dn " . var_export($group_dn, TRUE));
 
         if (!$group_dn) {
             return false;
         }
 
         $group_info = $this->_read($group_dn, $attributes);
-        Log::trace("Auth::LDAP::group_info() result: " . var_export($group_info, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() result: " . var_export($group_info, TRUE));
         return $group_info;
 
     }
@@ -527,7 +531,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function list_users($attributes = array(), $search = array(), $params = array()) {
-        Log::trace("Auth::LDAP::list_users(" . var_export($attributes, TRUE) . ", " . var_export($search, TRUE) . ", " . var_export($params, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_users(" . var_export($attributes, TRUE) . ", " . var_export($search, TRUE) . ", " . var_export($params, TRUE));
 
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
@@ -566,7 +570,7 @@ class LDAP extends Net_LDAP3 {
         $base_dn = $this->_subject_base_dn("user");
         $filter = $this->conf->get('user_filter');
 
-        Log::trace("Auth::LDAP::list_users() searching entries in $base_dn with $filter, 'sub', NULL, " . var_export($search, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_users() searching entries in $base_dn with $filter, 'sub', NULL, " . var_export($search, TRUE));
 
         $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
 
@@ -701,7 +705,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function role_find_by_attribute($attribute) {
-        Log::trace("Finding role by attribute: " . var_export($attribute, TRUE));
+        $this->_log(LOG_DEBUG, "Finding role by attribute: " . var_export($attribute, TRUE));
 
         $attribute['objectclass'] = 'ldapsubentry';
         $result = $this->entry_find_by_attribute($attribute);
@@ -726,7 +730,7 @@ class LDAP extends Net_LDAP3 {
         }
 
         $result = $this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes);
-        Log::trace("Auth::LDAP::role_info() result: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::role_info() result: " . var_export($result, TRUE));
         return $result->entries(TRUE);
     }
 
@@ -735,7 +739,7 @@ class LDAP extends Net_LDAP3 {
             $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
         }
 
-        Log::trace("Relaying search to parent:" . var_export(func_get_args(), TRUE));
+        $this->_log(LOG_DEBUG, "Relaying search to parent:" . var_export(func_get_args(), TRUE));
         return parent::search($base_dn, $filter, $scope, $sort, $search);
     }
 
@@ -770,7 +774,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_edit($user, $attributes, $typeid = null) {
-        Log::trace("user.edit() called for $user, attributes", $attributes);
+        $this->_log(LOG_DEBUG, "user.edit() called for $user, attributes", $attributes);
 
         $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
 
@@ -804,7 +808,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_info($user, $attributes = array('*')) {
-        Log::trace("Auth::LDAP::user_info() for user " . var_export($user, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::user_info() for user " . var_export($user, TRUE));
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
@@ -816,7 +820,7 @@ class LDAP extends Net_LDAP3 {
 
         $user_dn = $this->entry_dn($user);
 
-        Log::trace("user_info() user_dn " . var_export($user_dn, TRUE));
+        $this->_log(LOG_DEBUG, "user_info() user_dn " . var_export($user_dn, TRUE));
         if (!$user_dn) {
             return false;
         }
@@ -830,7 +834,7 @@ class LDAP extends Net_LDAP3 {
 
     public function _config_get($key, $default = NULL) {
         $key_parts = explode("_", $key);
-        Log::trace(var_export($key_parts));
+        $this->_log(LOG_DEBUG, var_export($key_parts));
 
         while (!empty($key_parts)) {
             $value = $this->conf->get(implode("_", $key_parts));
@@ -856,25 +860,29 @@ class LDAP extends Net_LDAP3 {
             $str = "";
         }
 
+        if (is_array($msg)) {
+            $msg = implode("\n", $msg);
+        }
+
         switch ($level) {
             case LOG_DEBUG:
-                Log::debug($str . implode("\n", $msg));
+                Log::debug($str . $msg);
                 break;
             case LOG_ERR:
-                Log::error($str . implode("\n", $msg));
+                Log::error($str . $msg);
                 break;
             case LOG_INFO:
-                Log::info($str . implode("\n", $msg));
+                Log::info($str . $msg);
                 break;
             case LOG_WARNING:
-                Log::warning($str . implode("\n", $msg));
+                Log::warning($str . $msg);
                 break;
             case LOG_ALERT:
             case LOG_CRIT:
             case LOG_EMERG:
             case LOG_NOTICE:
             default:
-                Log::trace($str . implode("\n", $msg));
+                Log::trace($str . $msg);
                 break;
         }
     }
@@ -887,7 +895,7 @@ class LDAP extends Net_LDAP3 {
             $base_dn = $this->domain_root_dn($this->domain);
         }
 
-        Log::trace(__FILE__ . "::" . __FUNCTION__ . " using base_dn $base_dn");
+        $this->_log(LOG_DEBUG, __FILE__ . "::" . __FUNCTION__ . " using base_dn $base_dn");
 
         if (empty($subject)) {
             return $base_dn;
@@ -899,7 +907,7 @@ class LDAP extends Net_LDAP3 {
             $base_dn = $this->conf->expand($subject_base_dn, array("base_dn" => $base_dn));
         }
 
-        Log::trace("subject_base_dn for subject $subject results in $base_dn");
+        $this->_log(LOG_DEBUG, "subject_base_dn for subject $subject results in $base_dn");
 
         return $base_dn;
     }
@@ -1118,7 +1126,7 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->_read("cn=" . str_replace('.', '_', $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), array('nsslapd-directory'));
 
-        Log::trace("Primary domain ldbm database configuration entry: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Primary domain ldbm database configuration entry: " . var_export($result, TRUE));
 
         $result = $result[key($result)];
         $directory = str_replace(str_replace('.', '_', $this->conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
@@ -1286,7 +1294,7 @@ class LDAP extends Net_LDAP3 {
         }
 
         if (!$this->connect()) {
-            Log::trace("Could not connect");
+            $this->_log(LOG_DEBUG, "Could not connect");
             return false;
         }
 
@@ -1294,11 +1302,11 @@ class LDAP extends Net_LDAP3 {
         $bind_pw = $this->config_get("service_bind_pw", $this->conf->get("service_bind_pw"));
 
         if (!$this->bind($bind_dn, $bind_pw)) {
-            Log::trace("Could not connect");
+            $this->_log(LOG_DEBUG, "Could not connect");
             return false;
         }
 
-        Log::trace("Auth::LDAP::domain_root_dn(\$domain = $domain) called");
+        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_root_dn(\$domain = $domain) called");
         if (empty($domain)) {
             return false;
         }
@@ -1376,7 +1384,7 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search($entry_dn, '(objectclass=*)', 'base');
 
-        Log::trace("Auth::LDAP::_read() result: " . var_export($result->entries(TRUE), TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::_read() result: " . var_export($result->entries(TRUE), TRUE));
 
         return $result ? $result->entries(TRUE) : FALSE;
     }
@@ -1384,7 +1392,7 @@ class LDAP extends Net_LDAP3 {
     private function _search($base_dn, $filter = '(objectclass=*)', $attributes = Array('*')) {
         $this->config_set('return_attributes', $attributes);
         $result = $this->search($base_dn, $filter);
-        Log::trace("Auth::LDAP::_search on $base_dn with $filter for attributes: " . var_export($attributes, TRUE) . " with result: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::_search on $base_dn with $filter for attributes: " . var_export($attributes, TRUE) . " with result: " . var_export($result, TRUE));
         return $result;
     }
 
