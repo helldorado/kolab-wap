@@ -502,7 +502,7 @@ class LDAP extends Net_LDAP3 {
         }
 
         $base_dn = $this->_subject_base_dn("role");
-
+        Log::trace("Auth::LDAP::list_roles() using \$base_dn: " . var_export($base_dn, TRUE));
         // TODO: From config
         $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
 
@@ -904,7 +904,9 @@ class LDAP extends Net_LDAP3 {
             if (empty($subject_base_dn)) {
                 $subject_base_dn = $this->conf->get_raw("ldap", $subject . "_base_dn");
             }
-            $base_dn = $this->conf->expand($subject_base_dn, array("base_dn" => $base_dn));
+            if (!empty($subject_base_dn)) {
+                $base_dn = $this->conf->expand($subject_base_dn, array("base_dn" => $base_dn));
+            }
         }
 
         $this->_log(LOG_DEBUG, "subject_base_dn for subject $subject results in $base_dn");
@@ -1384,9 +1386,12 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search($entry_dn, '(objectclass=*)', 'base');
 
-        $this->_log(LOG_DEBUG, "Auth::LDAP::_read() result: " . var_export($result->entries(TRUE), TRUE));
-
-        return $result ? $result->entries(TRUE) : FALSE;
+        if ($result) {
+            $this->_log(LOG_DEBUG, "Auth::LDAP::_read() result: " . var_export($result->entries(TRUE), TRUE));
+            return $result->entries(TRUE);
+        } else {
+            return FALSE;
+        }
     }
 
     private function _search($base_dn, $filter = '(objectclass=*)', $attributes = Array('*')) {
