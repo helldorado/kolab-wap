@@ -781,13 +781,21 @@ class kolab_api_service_form_value extends kolab_api_service
 
         if (!empty($postdata['id'])) {
             $subjects = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')')->entries(TRUE);
-            $subject = array_shift($subjects);
-            $subject_dn = key($subject);
-            $subject_dn_components = ldap_explode_dn($subject_dn, 0);
-            unset($subject_dn_components['count']);
-            array_shift($subject_dn_components);
-            $default = strtolower(implode(',', $subject_dn_components));
-        } else {
+
+            if ($subjects) {
+                $subject = array_shift($subjects);
+                $subject_dn = key($subject);
+                $subject_dn_components = ldap_explode_dn($subject_dn, 0);
+
+                if ($subject_dn_components) {
+                    unset($subject_dn_components['count']);
+                    array_shift($subject_dn_components);
+                    $default = strtolower(implode(',', $subject_dn_components));
+                }
+            }
+        }
+
+        if (empty($default)) {
             $default = $base_dn;
         }
 
