@@ -382,6 +382,8 @@ class kolab_api_controller
 
     /**
      * End the current user session
+     *
+     * @return bool
      */
     private function quit()
     {
@@ -389,14 +391,19 @@ class kolab_api_controller
         return true;
     }
 
-    private function select_domain($getdata) {
-        if (isset($getdata['domain'])) {
-            $_SESSION['user']->set_domain($getdata['domain']);
-            return true;
+    /**
+     * Session domain change
+     *
+     * @param array $request GET request parameters
+     *
+     * @return bool
+     */
+    private function select_domain($request) {
+        if (!empty($request['domain']) && is_string($request['domain'])) {
+            return $_SESSION['user']->set_domain($request['domain']);
         }
-        else {
-            return false;
-        }
+
+        return false;
     }
 
     /**
