@@ -122,12 +122,12 @@ class Conf {
         if (isset($_SESSION['user']) && method_exists($_SESSION['user'], 'get_domain')) {
             try {
                 $domain_section_name = $_SESSION['user']->get_domain();
-                if (isset($this->_conf[$domain_section_name][$key1])) {
+                if (isset($this->_conf[$domain_section_name]) && isset($this->_conf[$domain_section_name][$key1])) {
                     return $this->_conf[$domain_section_name][$key1];
                 }
             } catch (Exception $e) {
                 if ($domain_section_name = $this->_conf['kolab']['primary_domain']) {
-                    if (isset($this->_conf[$domain_section_name][$key1])) {
+                    if (isset($this->_conf[$domain_section_name]) && isset($this->_conf[$domain_section_name][$key1])) {
                         return $this->_conf[$domain_section_name][$key1];
                     }
                 }
