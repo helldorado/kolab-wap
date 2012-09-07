@@ -337,14 +337,14 @@ class kolab_client_task_resource extends kolab_client_task
      */
     public function resource_types()
     {
-        if (isset($_SESSION['resource_types'])) {
+        if (isset($_SESSION['resource_types']) && !$this->devel_mode) {
             return $_SESSION['resource_types'];
         }
 
         $result = $this->api->post('resource_types.list');
         $list   = $result->get('list');
 
-        if (is_array($list) && !$this->config_get('devel_mode')) {
+        if (is_array($list) && !$this->devel_mode) {
             $_SESSION['resource_types'] = $list;
         }
 

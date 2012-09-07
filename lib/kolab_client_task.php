@@ -45,6 +45,7 @@ class kolab_client_task
     protected $page_title = 'Kolab Admin Panel';
     protected $menu = array();
     protected $cache = array();
+    protected $devel_mode = false;
 
     protected static $translation = array();
 
@@ -54,6 +55,9 @@ class kolab_client_task
     public function __construct()
     {
         $this->config_init();
+
+        $this->devel_mode = $this->config_get('devel_mode', false, Conf::BOOL);
+
         $this->output_init();
         $this->api_init();
 
@@ -401,12 +405,13 @@ class kolab_client_task
      *
      * @param string $name      Option name
      * @param mixed  $fallback  Default value
+     * @param int    $type      Value type (one of Conf class constants)
      *
      * @return mixed Option value
      */
-    public function config_get($name, $fallback = null)
+    public function config_get($name, $fallback = null, $type = null)
     {
-        $value = $this->config->get('kolab_wap', $name);
+        $value = $this->config->get('kolab_wap', $name, $type);
         return $value !== null ? $value : $fallback;
     }
 
@@ -525,14 +530,13 @@ class kolab_client_task
      */
     protected function user_types($used_for = NULL)
     {
-        if (isset($_SESSION['user_types']) && !empty($_SESSION['user_types']) && !$this->config_get('devel_mode')) {
+        if (isset($_SESSION['user_types']) && !empty($_SESSION['user_types']) && !$this->devel_mode) {
             return $_SESSION['user_types'];
         }
 
-        $list = Array();
-
+        $list   = array();
         $result = $this->api->post('user_types.list');
-        $_list   = $result->get('list');
+        $_list  = $result->get('list');
 
         if (!empty($used_for)) {
             foreach ($_list as $user_type_id => $user_type_attrs) {
@@ -544,7 +548,7 @@ class kolab_client_task
             $list = $_list;
         }
 
-        if (is_array($list) && !$this->config_get('devel_mode')) {
+        if (is_array($list) && !$this->devel_mode) {
             $_SESSION['user_types'] = $list;
         }
 
@@ -562,7 +566,7 @@ class kolab_client_task
      */
     protected function user_name($dn)
     {
-        if (!$this->config_get('devel_mode', false)) {
+        if (!$this->devel_mode) {
             if (!empty($this->cache['user_names']) && isset($this->cache['user_names'][$dn])) {
                 return $this->cache['user_names'][$dn];
             }
@@ -580,7 +584,7 @@ class kolab_client_task
             }
         }
 
-        if (!$this->config_get('devel_mode', false)) {
+        if (!$this->devel_mode) {
             return $this->cache['user_names'][$dn] = $username;
         } else {
             return $username;
@@ -590,18 +594,13 @@ class kolab_client_task
     /**
      * Returns list of system capabilities.
      *
+     * @param bool $all If enabled capabilities for all domains will be returned
+     *
      * @return array List of system capabilities
      */
-    protected function capabilities()
+    protected function capabilities($all = false)
     {
-        $conf = Conf::get_instance();
-        $devel_mode = $conf->get('kolab_wap', 'devel_mode');
-
-        if (empty($devel_mode)) {
-            $devel_mode = FALSE;
-        }
-
-        if (!isset($_SESSION['capabilities']) || $devel_mode) {
+        if (!isset($_SESSION['capabilities']) || $this->devel_mode) {
             $result = $this->api->post('system.capabilities');
             $list   = $result->get('list');
 
@@ -614,7 +613,7 @@ class kolab_client_task
 
         $domain = $_SESSION['user']['domain'];
 
-        return $_SESSION['capabilities'][$domain];
+        return !$all ? $_SESSION['capabilities'][$domain] : $_SESSION['capabilities'];
     }
 
     /**
@@ -629,6 +628,18 @@ class kolab_client_task
         $caps = $this->capabilities();
 
         return $caps[$name];
+    }
+
+    /**
+     * Returns domains list (based on capabilities response)
+     *
+     * @return array List of domains
+     */
+    protected function get_domains()
+    {
+        $caps = $this->capabilities(true);
+
+        return is_array($caps) ? array_keys($caps) : array();
     }
 
     /**
@@ -911,7 +922,7 @@ class kolab_client_task
 
         // See if "administrators" (those who can delete and add back on the entry
         // level) may override the automatically generated contents of auto_form_fields.
-        $admin_auto_fields_rw = $this->config_get('admin_auto_fields_rw', false);
+        $admin_auto_fields_rw = $this->config_get('admin_auto_fields_rw', false, Conf::BOOL);
 
         foreach ($fields as $idx => $field) {
             if (!array_key_exists($idx, $attribute_rights)) {
@@ -975,7 +986,7 @@ class kolab_client_task
             }
 
             // Add debug information
-            if ($this->config_get('devel_mode')) {
+            if ($this->devel_mode) {
                 ksort($data);
                 $debug = kolab_html::escape(print_r($data, true));
                 $debug = preg_replace('/(^Array\n\(|\n*\)$|\t)/', '', $debug);

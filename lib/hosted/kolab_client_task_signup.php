@@ -264,7 +264,7 @@ class kolab_client_task_signup extends kolab_client_task
         return $form->output();
     }
 
-    private function get_domains() {
+    protected function get_domains() {
         // Get a list of domains ($domains again is a kolab_client_api_result instance)
         $domains_list = $this->api->get('domains.list')->get('list');
 
@@ -310,12 +310,16 @@ class kolab_client_task_signup extends kolab_client_task
      *
      * @param string $name      Option name
      * @param mixed  $fallback  Default value
+     * @param int    $type      Value type (one of Conf class constants)
      *
      * @return mixed Option value
      */
-    public function config_get($name, $fallback = null)
+    public function config_get($name, $fallback = null, $type = null)
     {
-        $value = $this->config->get('kolab_hosting', $name);
+        $value = $this->config->get('kolab_hosting', $name, $type);
+        if($value === null) {
+            $value = parent::config_get($name, $fallback, $type);
+        }
         return $value !== null ? $value : $fallback;
     }
 }

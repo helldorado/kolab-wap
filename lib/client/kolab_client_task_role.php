@@ -294,16 +294,14 @@ class kolab_client_task_role extends kolab_client_task
      */
     public function role_types()
     {
-        if (!$this->config_get('devel_mode', false)) {
-            if (isset($_SESSION['role_types'])) {
-                return $_SESSION['role_types'];
-            }
+        if (isset($_SESSION['role_types']) && !$this->devel_mode) {
+            return $_SESSION['role_types'];
         }
 
         $result = $this->api->post('role_types.list');
         $list   = $result->get('list');
 
-        if (is_array($list)) {
+        if (is_array($list) && !$this->devel_mode) {
             $_SESSION['role_types'] = $list;
         }
 
