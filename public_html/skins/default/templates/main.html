@@ -13,6 +13,15 @@
     <div id="logo" onclick="document.location='.'"></div>
     <div id="topmenu">
         <span class="login">{$user.fullname}</span>
+        <span id="domain-selector" class="domain">
+        {if count($engine->get_env('domains')) > 1}
+            <form id="domain-selector-form" method="post" style="display: inline">
+                <input data-type="select" name="domain" type="hidden" value="{$user.domain}" />
+            </form>
+        {else}
+            {$user.domain}
+        {/if}
+        </span>
         <span class="logout link" title="{$engine->translate('Logout')}" onclick="kadm.main_logout()"></span>
     </div>
     <div id="navigation">{$main_menu}</div>

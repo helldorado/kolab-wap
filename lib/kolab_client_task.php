@@ -181,8 +181,6 @@ class kolab_client_task
             if ($login['username']) {
                 $result = $this->api->login($login['username'], $login['password'], $login['domain']);
 
-                //console($result);
-
                 if ($token = $result->get('session_token')) {
                     $user = array(
                         'token'  => $token,
@@ -398,6 +396,18 @@ class kolab_client_task
         if (preg_match('/^kolab_client_task_([a-z]+)$/', $class_name, $m)) {
             return $m[1];
         }
+    }
+
+    /**
+     * Returns output environment variable value
+     *
+     * @param string $name Variable name
+     *
+     * @return mixed Variable value
+     */
+    public function get_env($name)
+    {
+        return $this->output->get_env($name);
     }
 
     /**
@@ -660,10 +670,6 @@ class kolab_client_task
     public function login_form()
     {
         $post = $this->get_input('login', 'POST');
-
-        $auth = Auth::get_instance();
-        $conf = Conf::get_instance();
-        $auth->connect();
 
         $username = kolab_html::label(array(
                 'for'     => 'login_name',

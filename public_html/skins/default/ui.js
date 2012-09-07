@@ -45,7 +45,7 @@ function search_init(task)
       if (this.value == kadm.t('search'))
         $(this).val('').removeClass('inactive');
     });
-}
+};
 
 function search_reset()
 {
@@ -54,7 +54,7 @@ function search_reset()
   input.val(kadm.t('search')).addClass('inactive');
 
   kadm.command(kadm.env.search_task + '.list', {search: ''});
-}
+};
 
 function search_details()
 {
@@ -64,7 +64,7 @@ function search_details()
     div.slideDown(200);
   else
     div.slideUp(200);
-}
+};
 
 /**
  * Fieldsets-to-tabs converter
@@ -110,7 +110,7 @@ function init_tabs(id, current)
     // add the tab to container
     tab.append(a).appendTo(tabs);
   });
-}
+};
 
 function show_tab(id, index)
 {
@@ -122,14 +122,30 @@ function show_tab(id, index)
     // Select/unselect tab
     $('#tab'+idx).toggleClass('tablink-selected', idx == index);
   });
-}
+};
+
+// Domain selector initializer
+function domain_selector()
+{
+  // domain selector
+  if (kadm.env.domains && kadm.env.domains.length > 1) {
+    var form = $('#domain-selector-form');
+
+    kadm.env.assoc_fields = {domain: kadm.env.domains};
+    kadm.form_init('domain-selector-form');
+
+    $('input[name="domain"]', form).change(function() {
+      window.location = '?domain=' + urlencode(this.value);
+    });
+  }
+};
 
 // Form "onload" handler
 function form_load(id)
 {
   if (id != 'search-form')
     init_tabs(id);
-}
+};
 
 // UI resize handler
 function ui_resize()
@@ -139,8 +155,13 @@ function ui_resize()
   if (h > 100) {
     $('#taskcontent').height(h - 22);
   }
-}
+};
 
+// UI loader
+function ui_load()
+{
+  domain_selector();
+}
 
 /**
  * UI Initialization
@@ -148,3 +169,4 @@ function ui_resize()
 kadm.add_event_listener('form-load', form_load);
 kadm.add_event_listener('http-response', ui_resize);
 //$(window).resize(function() { ui_resize(); });
+$(window).load(function() { ui_load(); });

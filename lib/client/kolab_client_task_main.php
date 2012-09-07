@@ -27,15 +27,27 @@ class kolab_client_task_main extends kolab_client_task
     protected $_menu = array(
         'user'      => 'users',
         'group'     => 'groups',
-        'resource'  => 'resources',
         'domain'    => 'domains',
         'role'      => 'roles',
+        'resource'  => 'resources',
         'about'     => 'about',
     );
 
 
     public function action_default()
     {
+        // handle domain change
+        if ($domain = $this->get_input('domain', 'GET')) {
+            $result = $this->api->get('system.select_domain', array('domain' => $domain));
+
+            if (!$result->get_error_code()) {
+                $_SESSION['user']['domain'] = $domain;
+            }
+            else {
+                $this->output->command('display_message', $this->translate('error.domainselect'), 'error');
+            }
+        }
+
         // assign token
         $this->output->set_env('token', $_SESSION['user']['token']);
 
@@ -50,7 +62,7 @@ class kolab_client_task_main extends kolab_client_task
         // @TODO: check capabilities
         $capabilities = $this->capabilities();
 
-        $this->menu = Array();
+        $this->menu = array();
 
         foreach ($this->_menu as $task => $api_task) {
             if ($task !== "about") {
@@ -64,9 +76,13 @@ class kolab_client_task_main extends kolab_client_task
         }
 
         $this->output->assign('tasks', $this->menu);
-
         $this->output->assign('main_menu', $this->menu());
         $this->output->assign('user', $_SESSION['user']);
-    }
 
+        // Domains list
+        if ($domains = $this->get_domains()) {
+            sort($domains, SORT_LOCALE_STRING);
+            $this->output->set_env('domains', $domains);
+        }
+    }
 }

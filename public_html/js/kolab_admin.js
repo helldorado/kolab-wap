@@ -413,6 +413,47 @@ function kolab_admin()
     }
   };
 
+  // position and display popup
+  this.popup_show = function(e, popup)
+  {
+    var popup = $(popup),
+      pos = this.mouse_pos(e),
+      win = $(window),
+      w = popup.width(),
+      h = popup.height(),
+      left = pos.left - w,
+      top = pos.top;
+
+    if (top + h > win.height())
+      top -= h;
+    if (left + w > win.width())
+      left -= w;
+
+    popup.css({left: left + 'px', top: top + 'px'}).show();
+    e.stopPropagation();
+  };
+
+  // Return absolute mouse position of an event
+  this.mouse_pos = function(e)
+  {
+    if (!e) e = window.event;
+
+    var mX = (e.pageX) ? e.pageX : e.clientX,
+      mY = (e.pageY) ? e.pageY : e.clientY;
+
+    if (document.body && document.all) {
+      mX += document.body.scrollLeft;
+      mY += document.body.scrollTop;
+    }
+
+    if (e._offset) {
+      mX += e._offset.left;
+      mY += e._offset.top;
+    }
+
+    return { left:mX, top:mY };
+  };
+
 
   /*********************************************************/
   /*********     keyboard autocomplete methods     *********/
@@ -682,7 +723,10 @@ function kolab_admin()
 
     // replace some textarea fields with pretty/smart input lists
     $('textarea[data-type="list"]', form)
-      .each(function() { kadm.form_element_wrapper(this); });
+      .each(function() { kadm.form_list_element_wrapper(this); });
+    // create smart select fields
+    $('input[data-type="select"]', form)
+      .each(function() { kadm.form_select_element_wrapper(this); });
   };
 
   // Form serialization
@@ -690,7 +734,7 @@ function kolab_admin()
   {
     var form = $(data.id);
 
-    // replace some textarea fields with pretty/smart input lists
+    // smart list fields
     $('textarea[data-type="list"]', form).not('disabled').each(function() {
       var i, v, value = [],
         re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9-]+\]$');
@@ -713,6 +757,11 @@ function kolab_admin()
       data.json[this.name] = value;
     });
 
+    // smart selects
+    $('input[data-type="select"]', form).each(function() {
+      delete data.json[this.name];
+    });
+
     return data;
   };
 
@@ -728,12 +777,12 @@ function kolab_admin()
       // remove old wrapper
       $('span[class="listarea"]', elem.parent()).remove();
       // insert new list element
-      this.form_element_wrapper(elem.get(0));
+      this.form_list_element_wrapper(elem.get(0));
     }
   };
 
-  // Replaces form element with smart element
-  this.form_element_wrapper = function(form_element)
+  // Replaces form element with smart list element
+  this.form_list_element_wrapper = function(form_element)
   {
     var i = 0, j = 0, list = [], elem, e = $(form_element),
       form = form_element.form,
@@ -746,7 +795,7 @@ function kolab_admin()
     e.hide();
 
     if (autocomplete)
-      list = this.env.assoc_fields[form_element.name];
+      list = this.env.assoc_fields ? this.env.assoc_fields[form_element.name] : [];
     else if (form_element.value)
       list = form_element.value.split("\n");
 
@@ -835,7 +884,7 @@ function kolab_admin()
     content = '<span class="listelement"><span class="actions">'
       + (!ac ? '<span title="" class="add"></span>' : ac && idx == -1 ? '<span title="" class="search"></span>' : '')
       + (!ac || idx >= 0 ? '<span title="" class="reset"></span>' : '')
-      + '</span><input></span>';
+      + '</span><input type="text" autocomplete="off"></span>';
 
     elem = $(content);
     input = $('input', elem);
@@ -926,6 +975,147 @@ function kolab_admin()
 
     // update field variable
     af[name][key] = val;
+  };
+
+  // Replaces form element with smart select element
+  this.form_select_element_wrapper = function(form_element)
+  {
+    var e = $(form_element),
+      form = form_element.form,
+      elem = $('<span class="link"></span>'),
+      area = $('<span class="listarea autocomplete select popup"></span>'),
+      content = $('<span class="listcontent"></span>');
+      list = this.env.assoc_fields ? this.env.assoc_fields[form_element.name] : [];
+
+    elem.text(e.val()).css({cursor: 'pointer'})
+      .click(function(e) {
+        var popup = $('span.listarea', this.parentNode);
+        kadm.popup_show(e, popup);
+        $('input', popup).val('').focus();
+        $('span.listcontent > span.listelement', popup).removeClass('selected').show();
+      })
+      .appendTo(form_element.parentNode);
+
+    if (list.length <= 1)
+      return;
+
+    if (form_element.type != 'hidden') e.hide();
+    area.hide();
+
+    elem = this.form_list_element(form, {
+      autocomplete: true,
+      element: e
+    }, -1);
+
+    elem.appendTo(area);
+    content.appendTo(area);
+
+    // popup events
+    $('input', area)
+      .click(function(e) {
+        // stop click on the popup
+        e.stopPropagation();
+      })
+      .keypress(function(e) {
+        // prevent form submission with Enter key
+        if (e.which == 13)
+          e.preventDefault();
+      })
+      .keyup(function(e) {
+        // filtering
+        var s = this.value,
+          options = $('span.listcontent > span.listelement', area);
+
+        // Enter key
+        if (e.which == 13) {
+          options.filter('.selected').click()
+          return;
+        }
+        // Escape
+        else if (e.which == 27) {
+          area.hide();
+          this.value = s = '';
+        }
+        // UP/Down arrows
+        else if (e.which == 38 || e.which == 40) {
+          options = options.not(':hidden');
+          var selected = options.filter('.selected');
+
+          if (!selected.length) {
+            if (e.which == 40) // Down key
+              options.first().addClass('selected').parent().get(0).scrollTop = 0;
+          }
+          else {
+            var focused = selected[e.which == 40 ? 'next' : 'prev']();
+
+            while (focused.length && focused.is(':hidden'))
+              focused = selected[e.which == 40 ? 'next' : 'prev']();
+
+            if (!focused.length)
+              focused = options[e.which == 40 ? 'first' : 'last']();
+
+            if (focused.length) {
+              selected.removeClass('selected');
+              focused.addClass('selected');
+
+              var parent = focused.parent(),
+                parent_height = parent.height(),
+                parent_top = parent.get(0).scrollTop,
+                top = focused.offset().top - parent.offset().top,
+                height = focused.height();
+
+              if (top < 0)
+                parent.get(0).scrollTop = 0;
+              else if (top >= parent_height)
+                parent.get(0).scrollTop = top - parent_height + height + parent_top;
+            }
+          }
+
+          return;
+        }
+
+        if (!s) {
+          options.show().removeClass('selected');
+          return;
+        }
+
+        options.each(function() {
+          var o = $(this), v = o.data('value');
+          o[v.indexOf(s) != -1 ? 'show' : 'hide']().removeClass('selected');
+        });
+
+        options = options.not(':hidden');
+        if (options.length == 1)
+          options.addClass('selected');
+      });
+
+    // add option rows
+    $.each(list, function(i, v) {
+      var elem = kadm.form_select_option_element(form, {value: v, key: v, element: e});
+      elem.appendTo(content);
+    });
+
+    area.appendTo(form_element.parentNode);
+  };
+
+  // Creates option element for smart select
+  this.form_select_option_element = function(form, data)
+  {
+    // build element content
+    var elem = $('<span class="listelement"></span>')
+      .data('value', data.key).text(data.value)
+      .click(function(e) {
+        var val = $(this).data('value'),
+          elem = $(data.element),
+          old_val = elem.val();
+
+        $('span.link', elem.parent()).text(val);
+        elem.val(val);
+        if (val != old_val)
+          elem.change();
+      });
+
+    return elem;
   };
 
 
@@ -1458,6 +1648,19 @@ RegExp.escape = function(str)
   return String(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
 };
 
+// make a string URL safe (and compatible with PHP's rawurlencode())
+function urlencode(str)
+{
+  if (window.encodeURIComponent)
+    return encodeURIComponent(str).replace('*', '%2A');
+
+  return escape(str)
+    .replace('+', '%2B')
+    .replace('*', '%2A')
+    .replace('/', '%2F')
+    .replace('@', '%40');
+};
+
 // Initialize application object (don't change var name!)
 var kadm = new kolab_admin();
 
@@ -1465,4 +1668,5 @@ var kadm = new kolab_admin();
 $(document).click(function() {
   // destroy autocompletion
   kadm.ac_stop();
+  $('.popup').hide();
 });

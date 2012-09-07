@@ -140,6 +140,12 @@ td.label {
   white-space: nowrap;
 }
 
+#topmenu > span {
+  color: #f8fcff;
+  font-size: 11px;
+  text-shadow: black 1px 1px;
+}
+
 #navigation {
   margin: 0 15px;
   text-align: right;
@@ -243,14 +249,20 @@ td.label {
 
 #topmenu .logout {
   background: url(images/logout.png) center 10px no-repeat;
-  padding: 9px 16px;
+  padding: 10px 16px;
   margin: 0px 5px 0px 10px;
 }
 
 #topmenu .login {
-  color: #f8fcff;
-  font-size: 11px;
-  text-shadow: black 1px 1px;
+  padding-left: 20px;
+  margin-right: 20px;
+  background: url(images/user_ico.png) 0 1px no-repeat;
+}
+
+#topmenu .domain {
+  padding-left: 20px;
+  margin-right: 10px;
+  background: url(images/domain_ico.png) 0 2px no-repeat;
 }
 
 #navigation ul {
@@ -515,6 +527,17 @@ pre.debug {
   overflow: auto;
 }
 
+.popup {
+  display: none;
+  position: absolute;
+  border: none;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px 0 #333;
+    -moz-box-shadow: 0 2px 6px 0 #333;
+    -webkit-box-shadow: 0 2px 6px 0 #333;
+    -o-box-shadow: 0 2px 6px 0 #333;
+}
+
 /********* Form smart inputs *********/
 
 span.listarea {
@@ -523,13 +546,16 @@ span.listarea {
   max-height: 209px;
   overflow-y: auto;
   overflow-x: hidden;
-  margin: 0 0 1px;
+  margin: 0;
   padding: 0;
   background-color: white;
   border: 1px solid #d0d0d0;
   border-radius: 3px;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
+  text-align: left;
+  text-shadow: none;
+  color: black;
 }
 
 span.listelement {
@@ -637,6 +663,39 @@ span.listarea.autocomplete span.listelement input.autocomplete {
 
 .autocomplete > span.listelement span.actions span.search:hover {
   background-color: #f0f0f0;
+}
+
+span.listarea.select {
+  width: 200px;
+}
+
+span.listarea.select > span.listelement input {
+  width: 180px;
+}
+
+span.listcontent {
+  display: block;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  max-height: 94px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-top: 1px solid #d0d0d0;
+  background-color: #f5f5f5;
+  cursor: default;
+}
+
+span.listcontent span.listelement {
+  padding-left: 3px;
+}
+
+span.listcontent span.listelement:hover {
+  background-color: #d6efff;
+}
+
+span.listcontent span.listelement.selected {
+  background-color: #d6efff;
 }
 
 /*****   autocomplete list   *****/
@@ -838,6 +897,11 @@ fieldset.tabbed
 #reqtime {
   white-space: nowrap;
   vertical-align: top;
+}
+
+#domain-selector span.link {
+  color: #1E90FF;
+  text-decoration: none;
 }
 
 /**** User/Group task elements ****/
