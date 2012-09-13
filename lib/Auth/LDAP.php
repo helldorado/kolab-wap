@@ -1127,11 +1127,29 @@ class LDAP extends Net_LDAP3 {
         }
 
         $result = $this->_read("cn=" . str_replace('.', '_', $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config"), array('nsslapd-directory'));
+        if (!$result) {
+            $result = $this->_read("cn=" . $this->conf->get('kolab', 'primary_domain') . ",cn=ldbm database,cn=plugins,cn=config", array('nsslapd-directory'));
+        }
+
+        if (!$result) {
+            $result = $this->_read("cn=userRoot,cn=ldbm database,cn=plugins,cn=config", array('nsslapd-directory'));
+        }
 
         $this->_log(LOG_DEBUG, "Primary domain ldbm database configuration entry: " . var_export($result, TRUE));
 
         $result = $result[key($result)];
+
+        $orig_directory = $result['nsslapd-directory'];
+
         $directory = str_replace(str_replace('.', '_', $this->conf->get('kolab', 'primary_domain')), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
+
+        if ($directory == $orig_directory) {
+            $directory = str_replace($this->conf->get('kolab', 'primary_domain'), str_replace('.','_',$domain_name), $result['nsslapd-directory']);
+        }
+
+        if ($directory == $orig_directory) {
+            $directory = str_replace("userRoot", str_replace('.','_',$domain_name), $result['nsslapd-directory']);
+        }
 
         $dn = "cn=" . str_replace('.', '_', $domain_name) . ",cn=ldbm database,cn=plugins,cn=config";
         $attrs = array(
