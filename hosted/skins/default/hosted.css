@@ -22,9 +22,19 @@ body {
 }
 
 #taskcontent {
-  min-height: 100px;
+  display: inline-block;
+  margin-top: 10px;
+  text-align: center;
+}
+
+form#signup-form {
+  padding-top: 10px;
 }
 
 td.label {
   vertical-align: top;
+}
+
+table.form td {
+    text-align: left;
 }
