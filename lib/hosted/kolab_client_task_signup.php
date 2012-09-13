@@ -114,7 +114,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         if($result->get('count') > 0) {
             // TODO make this message translatable
-            $this->output->command('update_user_info("User does already exist!", "uid")');
+            $this->output->command('update_user_info("User already exists!", "uid")');
             return false;
         }
 
