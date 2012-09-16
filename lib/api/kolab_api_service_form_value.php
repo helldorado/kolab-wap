@@ -340,7 +340,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 $highest_gidnumber = 999;
             }
 
-            foreach ($groups as $dn => $attributes) {
+            foreach ($groups['list'] as $dn => $attributes) {
                 if (!array_key_exists('gidnumber', $attributes)) {
                     continue;
                 }
@@ -641,7 +641,7 @@ class kolab_api_service_form_value extends kolab_api_service
                 $highest_uidnumber = 999;
             }
 
-            foreach ($users as $dn => $attributes) {
+            foreach ($users['list'] as $dn => $attributes) {
                 if (!array_key_exists('uidnumber', $attributes)) {
                     continue;
                 }
