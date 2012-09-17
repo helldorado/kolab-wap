@@ -1237,7 +1237,7 @@ class LDAP extends Net_LDAP3 {
                         $_aci,
 
                         // Search Access,
-                        "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "\");)",
+                        "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "??sub?(objectclass=*)\");)",
 
                         // Service Search Access
                         "(targetattr = \"*\") (version 3.0;acl \"Service Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $service_bind_dn . "\");)",
