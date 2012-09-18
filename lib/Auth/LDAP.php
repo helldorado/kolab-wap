@@ -967,26 +967,19 @@ class LDAP extends Net_LDAP3 {
     }
 
     private function sort_and_slice(&$result, &$params) {
+        $entries = $result->entries(TRUE);
+
         if (!empty($params) && is_array($params)) {
             if (array_key_exists('sort_by', $params)) {
-                if (is_array($params['sort_by'])) {
-                    $sort = array_shift($params['sort_by']);
-                } else {
-                    $sort = $params['sort_by'];
-                }
-
-                $result->sort($sort);
-
+                $this->sort_result_key = $params['sort_by'];
+                uasort($entries, array($this, 'sort_result'));
             }
 
             if (array_key_exists('page_size', $params) && array_key_exists('page', $params)) {
-                $entries = $result->entries(TRUE);
                 if ($result->count() > $params['page_size']) {
                     $entries = array_slice($entries, (($params['page'] - 1) * $params['page_size']), $params['page_size'], TRUE);
                 }
 
-            } else {
-                $entries = $result->entries(TRUE);
             }
 
             if (array_key_exists('sort_order', $params) && !empty($params['sort_order'])) {
@@ -994,11 +987,31 @@ class LDAP extends Net_LDAP3 {
                     $entries = array_reverse($entries, TRUE);
                 }
             }
-        } else {
-            $entries = $result->entries(TRUE);
         }
 
         return $entries;
+    }
+
+    /**
+     * Result sorting callback for uasort()
+     */
+    private function sort_result($a, $b)
+    {
+        if (is_array($this->sort_result_key)) {
+            foreach ($this->sort_result_key as $attrib) {
+                if (array_key_exists($attrib, $a) && !$str1) {
+                    $str1 = $a[$attrib];
+                }
+                if (array_key_exists($attrib, $b) && !$str2) {
+                    $str2 = $b[$attrib];
+                }
+            }
+        } else {
+            $str1 = $a[$this->sort_result_key];
+            $str2 = $b[$this->sort_result_key];
+        }
+
+        return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
     }
 
     private function unique_attribute() {
@@ -1224,7 +1237,7 @@ class LDAP extends Net_LDAP3 {
                         $_aci,
 
                         // Search Access,
-                        "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "\");)",
+                        "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "??sub?(objectclass=*)\");)",
 
                         // Service Search Access
                         "(targetattr = \"*\") (version 3.0;acl \"Service Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $service_bind_dn . "\");)",
