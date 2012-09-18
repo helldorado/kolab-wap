@@ -42,8 +42,11 @@ class kolab_client_task_domain extends kolab_client_task
 
         // display form to add domain if logged-in user has right to do so
         $caps = $this->get_capability('actions');
-        if($caps['domain.add']['type'] == 'w') {
+        if (!empty($caps['domain.add'])) {
             $this->action_add();
+        }
+        else {
+            $this->output->command('set_watermark', 'taskcontent');
         }
     }
 

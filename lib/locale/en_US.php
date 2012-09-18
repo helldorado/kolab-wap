@@ -60,6 +60,7 @@ $LANG['menu.kolab'] = 'Kolab';
 $LANG['menu.kolabsys'] = 'Kolab Systems';
 $LANG['menu.resources'] = 'Resources';
 $LANG['menu.roles'] = 'Roles';
+$LANG['menu.settings'] = 'Settings';
 $LANG['menu.technology'] = 'Technology';
 $LANG['menu.users'] = 'Users';
 

@@ -740,7 +740,6 @@ div.tabsbar
   border-bottom: 1px solid #d0d0d0;
   white-space: nowrap;
   margin: 10px 5px 0 5px;
-  background-color: #f0f0f0;
 }
 
 span.tablink,
@@ -878,6 +877,10 @@ fieldset.tabbed
 }
 
 #main div.resource span.image {
+  background: url(images/resources.png) center center no-repeat;
+}
+
+#main div.settings span.image {
   background: url(images/resources.png) center center no-repeat;
 }
 
