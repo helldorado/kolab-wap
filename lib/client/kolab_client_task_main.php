@@ -30,7 +30,8 @@ class kolab_client_task_main extends kolab_client_task
         'domain'    => 'domains',
         'role'      => 'roles',
         'resource'  => 'resources',
-        'about'     => 'about',
+        'settings'  => '',
+        'about'     => '',
     );
 
 
@@ -65,14 +66,12 @@ class kolab_client_task_main extends kolab_client_task
         $this->menu = array();
 
         foreach ($this->_menu as $task => $api_task) {
-            if ($task !== "about") {
-                if (!array_key_exists($api_task . '.list', $capabilities['actions'])) {
-                    //console("Skipping menu item $task for $api_task");
-                    continue;
-                }
+            if ($api_task && !array_key_exists($api_task . '.list', $capabilities['actions'])) {
+                //console("Skipping menu item $task for $api_task");
+                continue;
             }
 
-            $this->menu[$task . '.default'] = 'menu.' . $api_task;
+            $this->menu[$task . '.default'] = 'menu.' . ($api_task ? $api_task : $task);
         }
 
         $this->output->assign('tasks', $this->menu);

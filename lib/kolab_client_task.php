@@ -51,14 +51,16 @@ class kolab_client_task
 
     /**
      * Class constructor.
+     *
+     * @param kolab_client_output $output Optional output object
      */
-    public function __construct()
+    public function __construct($output = null)
     {
         $this->config_init();
 
         $this->devel_mode = $this->config_get('devel_mode', false, Conf::BOOL);
 
-        $this->output_init();
+        $this->output_init($output);
         $this->api_init();
 
         ini_set('session.use_cookies', 'On');
@@ -101,8 +103,13 @@ class kolab_client_task
     /**
      * Output initialization.
      */
-    private function output_init()
+    private function output_init($output = null)
     {
+        if ($output) {
+            $this->output = $output;
+            return;
+        }
+
         $skin = $this->config_get('skin', 'default');
         $this->output = new kolab_client_output($skin);
     }
@@ -491,16 +498,13 @@ class kolab_client_task
             return '';
         }
 
+        $menu = array();
         $task = $this->get_task();
-
-        $capabilities = $this->capabilities();
+        $caps = $this->capabilities();
 
         foreach ($this->menu as $idx => $label) {
-            //console("$task: $task, idx: $idx, label: $label");
-
             if (in_array($task, array('domain', 'group', 'resource', 'role', 'user'))) {
-                if (!array_key_exists($task . "." . $idx, $capabilities['actions'])) {
-                    //console("$task.$idx not in \$capabilities['actions'], skipping", $capabilities['actions']);
+                if (!array_key_exists($task . "." . $idx, $caps['actions'])) {
                     continue;
                 }
             }
@@ -519,10 +523,7 @@ class kolab_client_task
                 $class, $idx, $action, $this->translate($label));
         }
 
-        if (is_array($menu))
-            return '<ul>' . implode("\n", $menu) . '</ul>';
-        else
-            return '<ul>' . $menu . '</ul>';
+        return '<ul>' . implode("\n", $menu) . '</ul>';
     }
 
     /**
@@ -1230,6 +1231,5 @@ class kolab_client_task
 
         return $form;
     }
-
 
 }
