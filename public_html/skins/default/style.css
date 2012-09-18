@@ -698,6 +698,13 @@ span.listcontent span.listelement.selected {
   background-color: #d6efff;
 }
 
+span.form_error {
+  color: #FF0000;
+  font-weight: bold;
+  font-size: 90%;
+  padding-left: 5px;
+}
+
 /*****   autocomplete list   *****/
 
 #autocompletepane
