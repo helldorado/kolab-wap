@@ -89,7 +89,7 @@ kadm.update_user_info = function(msg, part)
     }
     else {
         // add span area and add message
-        $('input[name="'+part+'"]').after(' <span id="'+span_id+'" style="font-weight:bold;margin-left:1em;color:red;">' + msg + '</span>');
+        $('input[name="'+part+'"]').after(' <span id="'+span_id+'" class="form_error">' + msg + '</span>');
     }
 
     // enable/disable button
