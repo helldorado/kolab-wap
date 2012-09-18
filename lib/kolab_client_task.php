@@ -543,7 +543,7 @@ class kolab_client_task
      */
     protected function user_types($used_for = NULL)
     {
-        if (isset($_SESSION['user_types']) && !empty($_SESSION['user_types']) && !$this->devel_mode) {
+        if (!empty($_SESSION['user_types']) && !$this->devel_mode) {
             return $_SESSION['user_types'];
         }
 
