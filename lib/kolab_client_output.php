@@ -227,7 +227,7 @@ class kolab_client_output
     }
 
     /**
-     * Sets conntent of a HTML object.
+     * Sets content of a HTML object.
      *
      * @param string $name        Object's identifier (HTML ID attribute)
      * @param string $content     Object's content
@@ -240,6 +240,18 @@ class kolab_client_output
         }
 
         $this->objects[$name] = $content;
+    }
+
+    /**
+     * Returns content of a HTML object (set with set_object())
+     *
+     * @param string $name Object's identifier (HTML ID attribute)
+     *
+     * @return string Object content
+     */
+    public function get_object($name)
+    {
+        return $this->objects[$name];
     }
 
     /**

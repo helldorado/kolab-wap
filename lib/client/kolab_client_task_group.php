@@ -42,8 +42,11 @@ class kolab_client_task_group extends kolab_client_task
 
         // display form to add group if logged-in user has right to do so
         $caps = $this->get_capability('actions');
-        if($caps['group.add']['type'] == 'w') {
+        if (!empty($caps['group.add'])) {
             $this->action_add();
+        }
+        else {
+            $this->output->command('set_watermark', 'taskcontent');
         }
     }
 

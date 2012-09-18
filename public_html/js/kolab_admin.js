@@ -1376,8 +1376,11 @@ function kolab_admin()
       return;
 
     this.display_message('user.edit.success');
-    this.command('user.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+
+    if ($('#userlist').length) {
+      this.command('user.list', {page: this.env.list_page});
+      this.set_watermark('taskcontent');
+    }
   };
 
   this.group_info = function(id)
