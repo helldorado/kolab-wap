@@ -197,17 +197,19 @@ class kolab_client_task
 
                     $this->api->set_session_token($user['token']);
 
-                    // find user settings
-                    $res = $this->api->get('user.info', array('user' => $user['id']));
-                    $res = $res->get();
-
-                    if (is_array($res) && !empty($res)) {
-                        $user['language'] = $res['preferredlanguage'];
-                        $user['fullname'] = $res['cn'];
-                    }
-                    // @TODO: why user.info returns empty result for 'cn=Directory Manager' login?
-                    else if (preg_match('/^cn=([a-zA-Z ]+)/', $login['username'], $m)) {
+                    // Find user settings
+                    // Don't call API user.info for non-existing users (#1025)
+                    if (preg_match('/^cn=([a-z ]+)/i', $login['username'], $m)) {
                         $user['fullname'] = ucwords($m[1]);
+                    }
+                    else {
+                        $res = $this->api->get('user.info', array('user' => $user['id']));
+                        $res = $res->get();
+
+                        if (is_array($res) && !empty($res)) {
+                            $user['language'] = $res['preferredlanguage'];
+                            $user['fullname'] = $res['cn'];
+                        }
                     }
 
                     // Save user data
