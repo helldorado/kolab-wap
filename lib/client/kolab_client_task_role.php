@@ -307,7 +307,7 @@ class kolab_client_task_role extends kolab_client_task
             $_SESSION['role_types'] = $list;
         }
 
-        return $_SESSION['role_types'];
+        return $list;
     }
 
     /**

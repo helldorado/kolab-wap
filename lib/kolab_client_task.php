@@ -541,7 +541,7 @@ class kolab_client_task
      *
      * @return array List of user types
      */
-    protected function user_types($used_for = NULL)
+    protected function user_types($used_for = null)
     {
         if (!empty($_SESSION['user_types']) && !$this->devel_mode) {
             return $_SESSION['user_types'];
@@ -565,7 +565,7 @@ class kolab_client_task
             $_SESSION['user_types'] = $list;
         }
 
-        Log::trace("kolab_client_task::user_types() returns: " . var_export($list, TRUE));
+        Log::trace("kolab_client_task::user_types() returns: " . var_export($list, true));
 
         return $list;
     }
@@ -587,6 +587,7 @@ class kolab_client_task
 
         $result   = $this->api->get('user.info', array('user' => $dn));
         $username = $result->get('displayname');
+
         if (empty($username)) {
             $username = $result->get('cn');
         }
@@ -598,10 +599,10 @@ class kolab_client_task
         }
 
         if (!$this->devel_mode) {
-            return $this->cache['user_names'][$dn] = $username;
-        } else {
-            return $username;
+            $this->cache['user_names'][$dn] = $username;
         }
+
+        return $username;
     }
 
     /**
@@ -613,20 +614,21 @@ class kolab_client_task
      */
     protected function capabilities($all = false)
     {
-        if (!isset($_SESSION['capabilities']) || $this->devel_mode) {
+        if (isset($_SESSION['capabilities']) && !$this->devel_mode) {
+            $list = $_SESSION['capabilities'];
+        }
+        else {
             $result = $this->api->post('system.capabilities');
             $list   = $result->get('list');
 
-            //console("Capabilities obtained from the API", $list);
-
-            if (is_array($list)) {
+            if (is_array($list) && !$this->devel_mode) {
                 $_SESSION['capabilities'] = $list;
             }
         }
 
         $domain = $_SESSION['user']['domain'];
 
-        return !$all ? $_SESSION['capabilities'][$domain] : $_SESSION['capabilities'];
+        return !$all ? $list[$domain] : $list;
     }
 
     /**
