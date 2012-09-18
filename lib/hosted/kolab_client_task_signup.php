@@ -293,7 +293,13 @@ class kolab_client_task_signup extends kolab_client_task
                 $domain_name = $domain_attrs[$domain_name_attribute];
             }
 
-            $domain_names = array_merge($domain_names, $_domain_names);
+            $parent_domain_only = $this->config->get($domain_name, 'hosted_parent_domain_only');
+
+            if (!empty($parent_domain_only) && in_array(strtolower($parent_domain_only), array('1', 'yes', 'true'))) {
+                $domain_names = array_merge($domain_names, array($domain_name));
+            } else {
+                $domain_names = array_merge($domain_names, $_domain_names);
+            }
         }
 
         // prepare array with proper key ids for form building
