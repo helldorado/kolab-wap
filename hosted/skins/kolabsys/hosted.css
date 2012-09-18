@@ -1,0 +1,26 @@
+body {
+  background: #F3F3F3;
+  text-align: center;
+}
+
+#taskcontent {
+  width: 680px;
+  min-height: 100px;
+  max-height: 460px;
+}
+
+form#signup-form {
+  padding-top: 10px;
+}
+
+td.value input {
+    width: 250px;
+}
+
+td.label {
+  vertical-align: top;
+}
+
+table.form td {
+    text-align: left;
+}
