@@ -27,9 +27,9 @@ class kolab_client_task_about extends kolab_client_task
     protected $ajax_only = true;
 
     protected $menu = array(
-        'kolab'      => 'menu.kolab',
-        'kolabsys'   => 'menu.kolabsys',
-        'technology' => 'menu.technology',
+        'kolab'      => 'about.kolab',
+        'kolabsys'   => 'about.kolabsys',
+        'technology' => 'about.technology',
     );
 
     public function action_default()
