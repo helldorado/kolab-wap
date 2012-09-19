@@ -117,6 +117,22 @@ $LANG['servererror'] = 'Server Error!';
 
 $LANG['session.expired'] = 'Session has expired. Login again, please';
 
+$LANG['signup.headline'] = 'Sign Up for Hosted Kolab';
+$LANG['signup.intro1'] = 'Having an account on a Kolab server is way better than just simple Email. It also provides you with full groupware functionality including synchronization for shared addressbooks, calendars, tasks, journal and more.';
+$LANG['signup.intro2'] = 'You can sign up here now for an account.';
+$LANG['signup.formtitle'] = 'Sign Up';
+$LANG['signup.username'] = 'Username';
+$LANG['signup.domain'] = 'Domain';
+$LANG['signup.mailalternateaddress'] = 'Current Email Address';
+$LANG['signup.futuremail'] = 'Future Email Address';
+$LANG['signup.company'] = 'Company';
+$LANG['signup.captcha'] = 'CAPTCHA';
+$LANG['signup.userexists'] = 'User already exists!';
+$LANG['signup.usercreated'] = '<h3>Your account has been successfully added!</h3>Congratulations, you now have your own Kolab account.';
+$LANG['signup.wronguid'] = 'Invalid Username!';
+$LANG['signup.wrongmailalternateaddress'] = 'Please provide a valid Email Address!';
+$LANG['signup.footer'] = 'This is a service offered by <a href="http://kolabsys.com">Kolab Systems</a>.';
+
 $LANG['submit.button'] = 'Submit';
 
 $LANG['user.add'] = 'Add User';
