@@ -30,8 +30,8 @@ class kolab_client_task_main extends kolab_client_task
         'domain'    => 'domains',
         'role'      => 'roles',
         'resource'  => 'resources',
-        'settings'  => '',
-        'about'     => '',
+        'settings'  => 'settings',
+        'about'     => 'about',
     );
 
 
@@ -60,15 +60,15 @@ class kolab_client_task_main extends kolab_client_task
             'search', 'search.loading', 'search.acchars');
 
         // Create list of tasks for dashboard
-        // @TODO: check capabilities
         $capabilities = $this->capabilities();
-
-        $this->menu = array();
+        $this->menu   = array();
 
         foreach ($this->_menu as $task => $api_task) {
-            if ($api_task && !array_key_exists($api_task . '.list', $capabilities['actions'])) {
-                //console("Skipping menu item $task for $api_task");
-                continue;
+            if ($task != 'about' && !array_key_exists($api_task . '.list', $capabilities['actions'])) {
+                $task_class = 'kolab_client_task_' . $task;
+                if (!method_exists($task_class, 'is_enabled') || !$task_class::is_enabled($capabilities['actions'])) {
+                    continue;
+                }
             }
 
             $this->menu[$task . '.default'] = 'menu.' . ($api_task ? $api_task : $task);
