@@ -27,8 +27,8 @@ class kolab_client_task_settings extends kolab_client_task
     protected $ajax_only = true;
 
     protected $menu = array(
-//        'user.info'  => 'settings.info',
-        'type_list'  => 'type.list',
+        'type_list'  => 'types.list',
+        'type_add'   => 'type.add',
     );
 
     /**
@@ -39,13 +39,52 @@ class kolab_client_task_settings extends kolab_client_task
         $this->output->set_object('task_navigation', $this->menu());
 //        $this->output->set_object('content', 'settings', true);
 
-        $caps = $this->get_capability('actions');
-        if (!empty($caps['user.edit']) || !empty($caps['user.info'])) {
+        $caps_actions = $this->get_capability('actions');
+        if (self::can_edit_self($caps_actions)) {
             $this->action_info();
         }
         else {
             $this->output->command('set_watermark', 'content');
         }
+    }
+
+    /**
+     * Checks if it's possible to edit data of current user
+     */
+    public static function can_edit_self($caps_actions)
+    {
+        // Disable user form for directory manager (see #1025)
+        if (preg_match('/^cn=([a-z ]+)/i', $_SESSION['user']['id'])) {
+            return false;
+        }
+
+        if (empty($caps_actions['user.info'])) {
+            return false;
+        }
+
+        // If we can do user.info, we can at least display
+        // the form, effective rights will be checked later
+        // there's a very small chance that user cannot view his data
+        return true;
+    }
+
+    /**
+     * Check if any of task actions is accessible for current user
+     *
+     * @return bool
+     */
+    public static function is_enabled($caps_actions)
+    {
+        // User form
+        if (self::can_edit_self($caps_actions)) {
+            return true;
+        }
+
+        if (!empty($caps_actions['types.list'])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -85,12 +124,6 @@ class kolab_client_task_settings extends kolab_client_task
      */
     public function action_info()
     {
-        // Disable for directory manager (see #1025)
-        if (preg_match('/^cn=([a-z ]+)/i', $_SESSION['user']['id'])) {
-            $this->output->command('set_watermark', 'content');
-            return;
-        }
-
         $_POST['id'] = $_SESSION['user']['id'];
         $user_task    = new kolab_client_task_user($this->output);
         $user_task->action_info();

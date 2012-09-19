@@ -658,6 +658,36 @@ class kolab_client_task
     }
 
     /**
+     * Returns effective rights for the specified object
+     *
+     * @param string $type Object type
+     * @param string $id   Object identifier
+     *
+     * @return array Two element array with 'attribute' and 'entry' elements
+     */
+    protected function effective_rights($type, $id = null)
+    {
+        $caps = $this->get_capability('actions');
+
+        if (empty($caps[$type . '.effective_rights'])) {
+            return array(
+                'attribute' => array(),
+                'entry'     => array(),
+            );
+        }
+
+        // Get the rights on the entry and attribute level
+        $result = $this->api->get($type . '.effective_rights', array($type => $id));
+
+        $result = array(
+            'attribute' => $result->get('attributeLevelRights'),
+            'entry'     => $result->get('entryLevelRights'),
+        );
+
+        return $result;
+    }
+
+    /**
      * Returns execution time in seconds
      *
      * @param string Execution time
@@ -922,14 +952,9 @@ class kolab_client_task
         }
 
         // Get the rights on the entry and attribute level
-        $result = $this->api->get($name . ".effective_rights", array($name => $data['id']));
-        $attribute_rights = $result->get('attributeLevelRights');
-        $entry_rights     = $result->get('entryLevelRights');
-
-        $data['effective_rights'] = array(
-            'attribute' => $attribute_rights,
-            'entry'     => $entry_rights,
-        );
+        $data['effective_rights'] = $this->effective_rights($name, $data['id']);
+        $attribute_rights         = $data['effective_rights']['attribute'];
+        $entry_rights             = $data['effective_rights']['entry'];
 
         // See if "administrators" (those who can delete and add back on the entry
         // level) may override the automatically generated contents of auto_form_fields.
