@@ -565,6 +565,7 @@ span.listelement {
   height: 18px;
   overflow: hidden;
   border-top: 1px solid #d0d0d0;
+  white-space: nowrap;
 }
 
 span.listelement:first-child {
@@ -575,8 +576,7 @@ span.listelement input {
   border: none;
   background-color: transparent;
   padding-left: 2px;
-  /* FIXME: it should be 330px, but when listarea has scroller, input jumps below action buttons */
-  width: 314px;
+  width: 328px;
   height: 16px;
 }
 
@@ -649,8 +649,7 @@ span.listarea.autocomplete span.listelement input.autocomplete {
 }
 
 .autocomplete > span.listelement input {
-  /* FIXME: it should be 348px, but when listarea has scroller, input jumps below action buttons */
-  width: 332px;
+  width: 346px;
 }
 
 .autocomplete > span.listelement span.actions {
