@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Sign Up For Hosted Kolab</title>
+    <title>{$engine->translate('signup.headline')}</title>
     <link rel="stylesheet" href="{$skin_path}style.css" />
     <link rel="stylesheet" href="{$skin_path}hosted.css" />
     <link rel="shortcut icon" type="image/png" href="{$skin_path}images/favicon.png" />
@@ -20,13 +20,11 @@
 
         <div id="task_content" class="signup">
     
-        <h1>Sign Up For Hosted Kolab</h1>
-        <p>
-            Having an account on a Kolab server is way better than just simple Email. It also provides you with full groupware functionality including shared adressbooks, calendars, tasks and journal.
-        </p>
-        <p>
-            You can sign up here now for a personal account.
-        </p>
+        <h1>{$engine->translate('signup.headline')}</h1>
+
+        <p>{$engine->translate('signup.intro1')}</p>
+
+        <p>{$engine->translate('signup.intro2')}</p>
     
         <div id="taskcontent" class="signup">{$form}</div>
 
