@@ -27,7 +27,6 @@ $LANG['domain.system'] = 'System';
 $LANG['domain.type_id'] = 'Standard Domain';
 
 $LANG['error'] = 'Error';
-$LANG['error.domainselect'] = 'Unable to change domain!';
 
 $LANG['form.required.empty'] = 'Some of the required fields are empty!';
 $LANG['form.maxcount.exceeded'] = 'Maximum count of items exceeded!';
@@ -51,7 +50,6 @@ $LANG['group.uniquemember'] = 'Members';
 $LANG['info'] = 'Information';
 $LANG['internalerror'] = 'Internal system error!';
 $LANG['loading'] = 'Loading...';
-
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
 $LANG['login.domain'] = 'Domain:';

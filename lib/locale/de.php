@@ -1,8 +1,12 @@
 <?php
 
 $LANG['about.community'] = 'Dies ist die Community-Edition des <b>Kolab Servers</b>.';
-$LANG['about.warranty'] = 'Sie kommt mit <b>keinen Garantien</b> und wird normalerweise ohne professionelle Unterstützung eingesetzt. Hilfe und weitere Informationen finden Sie auf der <a href="http://kolab.org">Web-Seite</a> und im <a href="http://wiki.kolab.org">Wiki</a>.';
+$LANG['about.kolab'] = 'Kolab';
+$LANG['about.kolabsys'] = 'Kolab Systems';
 $LANG['about.support'] = 'Professionelle Unterstützung gibt es u.A. von <a href="http://kolabsys.com">Kolab Systems</a>.';
+$LANG['about.technology'] = 'Technologie';
+$LANG['about.warranty'] = 'Sie kommt mit <b>keinen Garantien</b> und wird normalerweise ohne professionelle Unterstützung eingesetzt. Hilfe und weitere Informationen finden Sie auf der <a href="http://kolab.org">Web-Seite</a> und im <a href="http://wiki.kolab.org">Wiki</a>.';
+
 $LANG['creatorsname'] = 'Erstellt von';
 $LANG['days'] = 'Tage';
 $LANG['debug'] = 'Debug Informationen';
@@ -56,11 +60,9 @@ $LANG['MB'] = 'MB';
 $LANG['menu.about'] = 'Über';
 $LANG['menu.domains'] = 'Domains';
 $LANG['menu.groups'] = 'Gruppen';
-$LANG['menu.kolab'] = 'Kolab';
-$LANG['menu.kolabsys'] = 'Kolab Systems';
 $LANG['menu.resources'] = 'Ressourcen';
 $LANG['menu.roles'] = 'Rollen';
-$LANG['menu.technology'] = 'Technologie';
+$LANG['menu.settings'] = 'Einstellungen';
 $LANG['menu.users'] = 'Benutzer';
 
 $LANG['modifiersname'] = 'Geändert von';
@@ -86,14 +88,14 @@ $LANG['resource.type_id'] = 'Ressourcentyp';
 $LANG['resource.uniquemember'] = 'Mitglieder der Sammlung';
 
 $LANG['role.add'] = 'Rolle hinzufügen';
-$LANG['role.cn'] = 'Role Name';
-$LANG['role.description'] = 'Role Description';
-$LANG['role.edit.success'] = 'Role edited successfully';
+$LANG['role.cn'] = 'Rollenname';
+$LANG['role.description'] = 'Rollenbeschreibung';
+$LANG['role.edit.success'] = 'Rolle erfolgreich bearbeitet';
 $LANG['role.list'] = 'Rollenliste';
 $LANG['role.list.records'] = '$1 zu $2 von $3';
 $LANG['role.norecords'] = 'Keine Rolleneinträge gefunden!';
 $LANG['role.system'] = 'Details';
-$LANG['role.type_id'] = 'Role Type';
+$LANG['role.type_id'] = 'Rollentyp';
 
 $LANG['saving'] = 'Speichere...';
 
@@ -116,7 +118,7 @@ $LANG['servererror'] = 'Server Fehler!';
 $LANG['session.expired'] = 'Die Sitzung ist ausgelaufen. Bitte wieder Anmelden';
 
 $LANG['signup.headline'] = 'Anmeldung für ein Kolab Konto';
-$LANG['signup.intro1'] = 'Ein Kolab E-Mail Adresse ist viel besser als eine normale E-Mail. Denn mit ihr kommen Möglichkeiten zur Syncronisation und der gemeinsamen Nutzung von Adressbüchern, Kalendern, Aufgaben, Notizen und vielem mehr.';
+$LANG['signup.intro1'] = 'Ein Kolab E-Mail Adresse ist viel besser als eine normale E-Mail. Denn mit ihr kommen Möglichkeiten zur Synchronisation und der gemeinsamen Nutzung von Adressbüchern, Kalendern, Aufgaben, Notizen und vielem mehr.';
 $LANG['signup.intro2'] = 'Sie können sich hier eine E-Mail Adresse registrieren.';
 $LANG['signup.formtitle'] = 'Anmelden';
 $LANG['signup.username'] = 'Benutzername';
@@ -139,7 +141,7 @@ $LANG['user.alias'] = 'Sekundäre Email-Adresse';
 $LANG['user.astaccountallowedcodec'] = 'Erlaubte(r) Codec(s)';
 $LANG['user.astaccountcallerid'] = 'Anrufer ID';
 $LANG['user.astaccountcontext'] = 'Konto-Kontext';
-$LANG['user.astaccountdeny'] = 'Account deny';
+$LANG['user.astaccountdeny'] = 'Account verweigern';
 $LANG['user.astaccounthost'] = 'Asterisk Server';
 $LANG['user.astaccountnat'] = 'Account benutzt NAT';
 $LANG['user.astaccountname'] = 'Asterisk Kontoname';
@@ -162,7 +164,7 @@ $LANG['user.delete.success'] = 'Benutzer erfolgreich gelöscht.';
 $LANG['user.displayname'] = 'Anzeigename';
 $LANG['user.edit.success'] = 'Benutzer erfolgreich bearbeitet';
 $LANG['user.fax'] = 'Faxnummer';
-$LANG['user.fbinterval'] = 'Free-Busy interval';
+$LANG['user.fbinterval'] = 'Frei-Beschäftigt Intervall';
 $LANG['user.fbinterval.desc'] = 'Leer lassen für Standardwert (60 Tage)';
 $LANG['user.gidnumber'] = 'Primäre Gruppennummer';
 $LANG['user.givenname'] = 'Nachname';
@@ -196,10 +198,10 @@ $LANG['user.orgunit'] = 'Organisationseinheit';
 $LANG['user.ou'] = 'Organisationseinheit';
 $LANG['user.pager'] = 'Pager Nummer';
 $LANG['user.password.mismatch'] = 'Passwörter stimmen nicht überein!';
-$LANG['user.personal'] = 'Personal';
+$LANG['user.personal'] = 'Persönlich';
 $LANG['user.phone'] = 'Telefonnummer';
 $LANG['user.postalcode'] = 'Postleitzahl';
-$LANG['user.postbox'] = 'Postal box';
+$LANG['user.postbox'] = 'Briefkasten';
 $LANG['user.postcode'] = 'Postleitzahl';
 $LANG['user.preferredlanguage'] = 'Muttersprache';
 $LANG['user.room'] = 'Zimmernummer';
@@ -207,9 +209,9 @@ $LANG['user.sn'] = 'Vorname';
 $LANG['user.street'] = 'Straße';
 $LANG['user.system'] = 'System';
 $LANG['user.telephonenumber'] = 'Telefonnummer';
-$LANG['user.title'] = 'Job Title';
+$LANG['user.title'] = 'Jobbezeichnung';
 $LANG['user.type_id'] = 'Kontotyp';
-$LANG['user.uid'] = 'Unique identity (UID)';
+$LANG['user.uid'] = 'Eindeutige Identifizierung (UID)';
 $LANG['user.userpassword'] = 'Passwort';
 $LANG['user.userpassword2'] = 'Passwort bestätigen';
 $LANG['user.uidnumber'] = 'Benutzer ID Nummer';
