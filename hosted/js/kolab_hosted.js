@@ -28,8 +28,7 @@ kadm.user_save = function(reload, section)
 
     // check email address
     if(typeof data.mailalternateaddress != 'undefined' && !isValidEmailAddress(data.mailalternateaddress)) {
-        // TODO use translatable error message
-        kadm.display_message('Please provide a valid email adress as this is where your password will be sent to.', 'error');
+        kadm.display_message('signup.wrongmailalternateaddress', 'error');
         kadm.form_value_error('mailalternateaddress');
         return;
     }
@@ -70,8 +69,7 @@ kadm.check_user_availability = function()
         // check if user with that email address already exists
         kadm.http_post('signup.check_user', {data: data});
     } else {
-        // TODO use translatable string
-        kadm.update_user_info('This will not produce a valid email address!', 'uid');
+        kadm.update_user_info('signup.wronguid', 'uid');
     }
 };
 
@@ -80,6 +78,10 @@ kadm.update_user_info = function(msg, part)
     var span_id = 'availability';
     if(!part.localeCompare('userpassword')) {
         span_id = 'pass_match';
+    }
+
+    if (msg) {
+        msg = kadm.t(msg);
     }
 
     // display message next to form field
@@ -104,11 +106,10 @@ kadm.update_user_info = function(msg, part)
 function password_match()
 {
     if($('input[name="userpassword"]').val().localeCompare($('input[name="userpassword2"]').val())) {
-        // TODO make message translatable
-        kadm.update_user_info("The passwords don't match!", 'userpassword');
+        kadm.update_user_info('user.password.mismatch', 'userpassword');
     }
     else {
-        kadm.update_user_info("", 'userpassword');
+        kadm.update_user_info('', 'userpassword');
     }
 }
 

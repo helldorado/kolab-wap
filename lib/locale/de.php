@@ -115,6 +115,22 @@ $LANG['servererror'] = 'Server Fehler!';
 
 $LANG['session.expired'] = 'Die Sitzung ist ausgelaufen. Bitte wieder Anmelden';
 
+$LANG['signup.headline'] = 'Anmeldung für ein Kolab Konto';
+$LANG['signup.intro1'] = 'Ein Kolab E-Mail Adresse ist viel besser als eine normale E-Mail. Denn mit ihr kommen Möglichkeiten zur Syncronisation und der gemeinsamen Nutzung von Adressbüchern, Kalendern, Aufgaben, Notizen und vielem mehr.';
+$LANG['signup.intro2'] = 'Sie können sich hier eine E-Mail Adresse registrieren.';
+$LANG['signup.formtitle'] = 'Anmelden';
+$LANG['signup.username'] = 'Benutzername';
+$LANG['signup.domain'] = 'Domain';
+$LANG['signup.mailalternateaddress'] = 'Aktuelle E-Mail Adresse';
+$LANG['signup.futuremail'] = 'Zukünftige E-Mail Adresse';
+$LANG['signup.company'] = 'Firma';
+$LANG['signup.captcha'] = 'CAPTCHA';
+$LANG['signup.userexists'] = 'Benutzer existiert bereits!';
+$LANG['signup.usercreated'] = '<h3>Ihre E-Mail Adresse wurde erfolgreich angelegt!</h3>Sie haben jetzt ein eigenes Kolab-Konto.';
+$LANG['signup.wronguid'] = 'Ungültiger Benutzername!';
+$LANG['signup.wrongmailalternateaddress'] = 'Bitte geben Sie eine gültige E-Mail Adresse an!';
+$LANG['signup.footer'] = 'Dieser Dienst wird von <a href="http://kolabsys.com">Kolab Systems</a> angeboten.';
+
 $LANG['submit.button'] = 'Abschicken';
 
 $LANG['user.add'] = 'Benutzer hinzufügen';

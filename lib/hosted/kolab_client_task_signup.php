@@ -87,7 +87,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         if (!empty($publickey)) {
             // TODO find a less dirty way to add captcha into form
-            $form = preg_replace('/<\/tbody>/', '<tr><td class="label">Captcha</td><td class="value"><div id="recaptcha_div"></div></td></tr></tbody>', $form);
+            $form = preg_replace('/<\/tbody>/', '<tr><td class="label">'.$this->translate('signup.captcha').'</td><td class="value"><div id="recaptcha_div"></div></td></tr></tbody>', $form);
 
             // load captcha
             $form .= '
@@ -113,8 +113,7 @@ class kolab_client_task_signup extends kolab_client_task
         $result = $this->api->post('users.list', null, $post);
 
         if($result->get('count') > 0) {
-            // TODO make this message translatable
-            $this->output->command('update_user_info("User already exists!", "uid")');
+            $this->output->command('update_user_info("signup.userexists", "uid")');
             return false;
         }
 
@@ -163,12 +162,10 @@ class kolab_client_task_signup extends kolab_client_task
         $result = $this->api->post('user.add', null, $data);
 
         if (array_key_exists('error_code', $result)) {
-            // TODO make this message translatable
-            $this->output->command('display_message', 'An Error occured. You could not be signed up. Please try again.', 'error');
+            $this->output->command('display_message', 'internalerror', 'error');
             return;
         } else {
-            // TODO make this message translatable
-            $this->output->set_object('taskcontent', '<h3>Your account has been successfully added!</h3>Congratulations, you now have your own Kolab account.');
+            $this->output->set_object('taskcontent', 'signup.usercreated');
         }
     }
 
@@ -248,18 +245,17 @@ class kolab_client_task_signup extends kolab_client_task
         }
         
         // Change field labels for hosted case
-        // TODO make translatable
-        $fields['uid']['label'] = "Username";
-        $fields['mail']['label'] = "Your Future Email Address";
-        if(isset($fields['mailalternateaddress'])) $fields['mailalternateaddress']['label'] = "Your Current Email Address";
-        $fields['domain']['label'] = "Domain";
+        $fields['uid']['label'] = 'signup.username';
+        $fields['mail']['label'] = 'signup.futuremail';
+        if(isset($fields['mailalternateaddress'])) $fields['mailalternateaddress']['label'] = 'signup.mailalternateaddress';
+        $fields['domain']['label'] = 'signup.domain';
 
         // Create form object and populate with fields
         $form = $this->form_create('user', $attribs, array('other'), $fields, $fields_map, $data, true);
 
-        $form->set_title(kolab_html::escape('Sign up'));
+        $form->set_title($this->translate('signup.formtitle'));
 
-        $this->output->add_translation('user.password.mismatch', 'user.add.success');
+        $this->output->add_translation('user.password.mismatch', 'user.add.success', 'signup.wronguid');
 
         return $form->output();
     }
