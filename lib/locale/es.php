@@ -1,8 +1,12 @@
 <?php
 
 $LANG['about.community'] = 'Esta es la edición Community de <b>Kolab Server</b>.';
-$LANG['about.warranty'] = 'Viene absolutamente <b>sin ninguna garantia</b> y normalmente se ejecuta sin ningun tipo de soporte. Puedes obetner ayuda y más información en el <a href="http://kolab.org">sitio web</a> de la comunidad y en el <a href="http://wiki.kolab.org">wiki</a>.';
+$LANG['about.kolab'] = 'Kolab';
+$LANG['about.kolabsys'] = 'Kolab Systems';
 $LANG['about.support'] = 'Professional support is available from <a href="http://kolabsys.com">Kolab Systems</a>.';
+$LANG['about.technology'] = 'Tecnología';
+$LANG['about.warranty'] = 'Viene absolutamente <b>sin ninguna garantia</b> y normalmente se ejecuta sin ningun tipo de soporte. Puedes obetner ayuda y más información en el <a href="http://kolab.org">sitio web</a> de la comunidad y en el <a href="http://wiki.kolab.org">wiki</a>.';
+
 $LANG['creatorsname'] = 'Creado por';
 $LANG['days'] = 'días';
 $LANG['debug'] = 'Información de depuración';
@@ -56,11 +60,9 @@ $LANG['MB'] = 'MB';
 $LANG['menu.about'] = 'Sobre Kolab';
 $LANG['menu.domains'] = 'Dominios';
 $LANG['menu.groups'] = 'Grupos';
-$LANG['menu.kolab'] = 'Kolab';
-$LANG['menu.kolabsys'] = 'Kolab Systems';
 $LANG['menu.resources'] = 'Recursos';
 $LANG['menu.roles'] = 'Roles';
-$LANG['menu.technology'] = 'Tecnología';
+$LANG['menu.settings'] = 'Servicios';
 $LANG['menu.users'] = 'Usuarios';
 
 $LANG['modifiersname'] = 'Modificado por';
@@ -114,6 +116,22 @@ $LANG['search.acchars'] = 'Son necesarios $min caracteres para el autocompletado
 $LANG['servererror'] = '¡Error del servidor!';
 
 $LANG['session.expired'] = 'La sesión ha finalizado. Por faovr, inicie la sesión de nuevo';
+
+$LANG['signup.headline'] = 'Sign Up for Hosted Kolab';
+$LANG['signup.intro1'] = 'Having an account on a Kolab server is way better than just simple Email. It also provides you with full groupware functionality including synchronization for shared addressbooks, calendars, tasks, journal and more.';
+$LANG['signup.intro2'] = 'You can sign up here now for an account.';
+$LANG['signup.formtitle'] = 'Sign Up';
+$LANG['signup.username'] = 'Username';
+$LANG['signup.domain'] = 'Dominio';
+$LANG['signup.mailalternateaddress'] = 'Current Email Address';
+$LANG['signup.futuremail'] = 'Future Email Address';
+$LANG['signup.company'] = 'Company';
+$LANG['signup.captcha'] = 'CAPTCHA';
+$LANG['signup.userexists'] = 'User already exists!';
+$LANG['signup.usercreated'] = '<h3>Your account has been successfully added!</h3>Congratulations, you now have your own Kolab account.';
+$LANG['signup.wronguid'] = 'Invalid Username!';
+$LANG['signup.wrongmailalternateaddress'] = 'Please provide a valid Email Address!';
+$LANG['signup.footer'] = 'This is a service offered by <a href="http://kolabsys.com">Kolab Systems</a>.';
 
 $LANG['submit.button'] = 'Enviar';
 

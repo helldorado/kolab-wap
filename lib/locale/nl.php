@@ -1,8 +1,12 @@
 <?php
 
 $LANG['about.community'] = 'Dit is de community editie van de <b>Kolab Server</b>';
-$LANG['about.warranty'] = 'Het komt <b>zonder enige garanties</b> en wordt typisch geheel zelf ondersteund. U kunt help & informatie vinden in de community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';
+$LANG['about.kolab'] = 'Kolab';
+$LANG['about.kolabsys'] = 'Kolab Systems';
 $LANG['about.support'] = 'Professionele ondersteuning is beschikbaar bij <a href="http://kolabsys.com">Kolab Systems</a>';
+$LANG['about.technology'] = 'Technologie';
+$LANG['about.warranty'] = 'Het komt <b>zonder enige garanties</b> en wordt typisch geheel zelf ondersteund. U kunt help & informatie vinden in de community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';
+
 $LANG['creatorsname'] = 'Gemaakt door';
 $LANG['days'] = 'dagen';
 $LANG['debug'] = 'Debug informatie';
@@ -56,11 +60,9 @@ $LANG['MB'] = 'MB';
 $LANG['menu.about'] = 'Over';
 $LANG['menu.domains'] = 'Domeinen';
 $LANG['menu.groups'] = 'Groepen';
-$LANG['menu.kolab'] = 'Kolab';
-$LANG['menu.kolabsys'] = 'Kolab Systems';
 $LANG['menu.resources'] = 'Middelen';
 $LANG['menu.roles'] = 'Rollen';
-$LANG['menu.technology'] = 'Technologie';
+$LANG['menu.settings'] = 'Settings';
 $LANG['menu.users'] = 'Gebruikers';
 
 $LANG['modifiersname'] = 'Laatst gewijzigd door';
@@ -86,14 +88,14 @@ $LANG['resource.type_id'] = 'Type Middel';
 $LANG['resource.uniquemember'] = 'Middellen in Collectie';
 
 $LANG['role.add'] = 'Rol Toevoegen';
-$LANG['role.cn'] = 'Role Name';
-$LANG['role.description'] = 'Role Description';
-$LANG['role.edit.success'] = 'Role edited successfully';
+$LANG['role.cn'] = 'Rol naam';
+$LANG['role.description'] = 'Rol uitleg';
+$LANG['role.edit.success'] = 'Rol succesvol gewijzigd';
 $LANG['role.list'] = 'Rollen Lijst';
 $LANG['role.list.records'] = '$1 tot $2 van $3';
 $LANG['role.norecords'] = 'Geen rollen gevonden!';
 $LANG['role.system'] = 'Details';
-$LANG['role.type_id'] = 'Role Type';
+$LANG['role.type_id'] = 'Rol Type';
 
 $LANG['saving'] = 'Bezig data op te slaan...';
 
@@ -114,6 +116,22 @@ $LANG['search.acchars'] = 'Tenminste $min karakters nodig voor autocompletion';
 $LANG['servererror'] = 'Server Fout!';
 
 $LANG['session.expired'] = 'Sessie verlopen. Log opnieuw in alstublieft.';
+
+$LANG['signup.headline'] = 'Sign Up for Hosted Kolab';
+$LANG['signup.intro1'] = 'Having an account on a Kolab server is way better than just simple Email. It also provides you with full groupware functionality including synchronization for shared addressbooks, calendars, tasks, journal and more.';
+$LANG['signup.intro2'] = 'You can sign up here now for an account.';
+$LANG['signup.formtitle'] = 'Sign Up';
+$LANG['signup.username'] = 'Username';
+$LANG['signup.domain'] = 'Domain';
+$LANG['signup.mailalternateaddress'] = 'Current Email Address';
+$LANG['signup.futuremail'] = 'Future Email Address';
+$LANG['signup.company'] = 'Company';
+$LANG['signup.captcha'] = 'CAPTCHA';
+$LANG['signup.userexists'] = 'User already exists!';
+$LANG['signup.usercreated'] = '<h3>Your account has been successfully added!</h3>Congratulations, you now have your own Kolab account.';
+$LANG['signup.wronguid'] = 'Invalid Username!';
+$LANG['signup.wrongmailalternateaddress'] = 'Please provide a valid Email Address!';
+$LANG['signup.footer'] = 'This is a service offered by <a href="http://kolabsys.com">Kolab Systems</a>.';
 
 $LANG['submit.button'] = 'Opslaan';
 
