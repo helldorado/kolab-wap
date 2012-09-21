@@ -64,6 +64,8 @@ class kolab_api_service_group extends kolab_api_service
             $rights['members_list'] = "r";
         }
 
+        $rights['effective_rights'] = "r";
+
         return $rights;
     }
 
