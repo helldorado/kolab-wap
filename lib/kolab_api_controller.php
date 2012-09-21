@@ -57,6 +57,7 @@ class kolab_api_controller
 
         // TODO: register services based on config or whatsoever
         $this->add_service('domain',            'kolab_api_service_domain');
+        $this->add_service('domain_types',      'kolab_api_service_domain_types');
         $this->add_service('domains',           'kolab_api_service_domains');
         $this->add_service('form_value',        'kolab_api_service_form_value');
         $this->add_service('group_types',       'kolab_api_service_group_types');
@@ -68,6 +69,7 @@ class kolab_api_controller
         $this->add_service('roles',             'kolab_api_service_roles');
         $this->add_service('role',              'kolab_api_service_role');
         $this->add_service('role_types',        'kolab_api_service_role_types');
+        $this->add_service('type',              'kolab_api_service_type');
         $this->add_service('user_types',        'kolab_api_service_user_types');
         $this->add_service('user',              'kolab_api_service_user');
         $this->add_service('users',             'kolab_api_service_users');
