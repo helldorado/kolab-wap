@@ -201,7 +201,7 @@ abstract class kolab_api_service
             $unique_attr = 'nsuniqueid';
         }
 
-        $sql_result   = $this->db->query("SELECT * FROM {$object_name}_types");
+        $sql_result   = $this->db->query("SELECT * FROM {$object_name}_types ORDER BY name");
         $object_types = array();
 
         while ($row = $this->db->fetch_assoc($sql_result)) {
