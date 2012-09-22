@@ -969,6 +969,10 @@ class LDAP extends Net_LDAP3 {
     private function sort_and_slice(&$result, &$params) {
         $entries = $result->entries(TRUE);
 
+        if ($this->vlv_active) {
+            return $entries;
+        }
+
         if (!empty($params) && is_array($params)) {
             if (array_key_exists('sort_by', $params)) {
                 $this->sort_result_key = $params['sort_by'];
