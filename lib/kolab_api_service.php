@@ -32,6 +32,8 @@ abstract class kolab_api_service
     protected $conf;
     protected $controller;
     protected $db;
+    protected $supported_types_db = array('group', 'resource', 'role', 'user');
+    protected $supported_types    = array('domain', 'group', 'resource', 'role', 'user');
 
     /**
      * Class constructor.
@@ -40,10 +42,10 @@ abstract class kolab_api_service
      */
     public function __construct($ctrl)
     {
-        $this->conf       = Conf::get_instance();
         $this->controller = $ctrl;
+        $this->conf       = Conf::get_instance();
         $this->db         = SQL::get_instance();
-   }
+    }
 
     /**
      * Advertise this service's capabilities
@@ -61,8 +63,7 @@ abstract class kolab_api_service
      */
     protected function object_type_attributes($object_name, $type_id, $required = true)
     {
-        $supported = array('domain', 'group', 'resource', 'role', 'user');
-        if (!$object_name || !in_array($object_name, $supported)) {
+        if (!$object_name || !in_array($object_name, $this->supported_types)) {
             return array();
         }
 
@@ -79,25 +80,23 @@ abstract class kolab_api_service
         if (empty($object_types[$type_id])) {
             if ($object_name == 'domain') {
                 $result = array(
-                        'auto_form_fields' => array(),
-                        'form_fields' => array(
-                                'associateddomain' => array(
-                                        'type' => 'list'
-                                    ),
-                            ),
-                        'fields' => array(
-                                'objectclass' => array(
-                                        'top',
-                                        'domainrelatedobject',
-                                    ),
-                            ),
-                    );
-
-                //console("object_type_attributes('domain', $type_id);", $result);
+                    'auto_form_fields' => array(),
+                    'form_fields' => array(
+                        'associateddomain' => array(
+                            'type' => 'list'
+                        ),
+                    ),
+                    'fields' => array(
+                        'objectclass' => array(
+                            'top',
+                            'domainrelatedobject',
+                        ),
+                    ),
+                );
 
                 return $result;
-
-            } else {
+            }
+            else {
                 throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
             }
         }
@@ -181,8 +180,7 @@ abstract class kolab_api_service
      */
     protected function object_types($object_name)
     {
-        $supported = array('group', 'resource', 'role', 'user');
-        if (!$object_name || !in_array($object_name, $supported)) {
+        if (!$object_name || !in_array($object_name, $this->supported_types_db)) {
             return array();
         }
 

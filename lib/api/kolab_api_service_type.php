@@ -91,20 +91,20 @@ class kolab_api_service_type extends kolab_api_service
      */
     public function type_delete($getdata, $postdata)
     {
-        //console("type_delete()", $getdata, $postdata);
-        if (!isset($postdata['type'])) {
+        if (empty($postdata['type']) || empty($postdata['id'])) {
             return false;
         }
 
-        // TODO: Input validation
-//        $auth   = Auth::get_instance();
-//        $result = $auth->type_delete($postdata['type']);
-
-        if ($result) {
-            return $result;
+        if (!in_array($postdata['type'], $this->supported_types_db)) {
+            return false;
         }
 
-        return false;
+        $object_name = $postdata['type'];
+        $object_id   = $postdata['id'];
+
+        $this->db->query("DELETE FROM {$object_name}_types WHERE id = ?", array($object_id));
+
+        return (bool) $this->db->affected_rows();
     }
 
     /**
