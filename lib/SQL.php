@@ -98,6 +98,11 @@ class SQL
         return mysql_fetch_assoc($result);
     }
 
+    public function affected_rows()
+    {
+        return mysql_affected_rows($this->conn);
+    }
+
     public function escape($str)
     {
         if ($str === null || is_array($str)) {
