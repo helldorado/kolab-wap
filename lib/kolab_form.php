@@ -136,7 +136,7 @@ class kolab_form
                     }
 
                     if ($element['type'] == self::INPUT_HIDDEN) {
-                        $hidden[] = $this->get_element($element);
+                        $hidden[] = self::get_element($element);
                         continue;
                     }
 
@@ -161,7 +161,7 @@ class kolab_form
             }
 
             if ($element['type'] == self::INPUT_HIDDEN) {
-                $hidden[] = $this->get_element($element);
+                $hidden[] = self::get_element($element);
                 continue;
             }
 
@@ -238,7 +238,7 @@ class kolab_form
                 ),
                 1 => array(
                     'class' => 'value',
-                    'body'  => $this->get_element($element),
+                    'body'  => self::get_element($element),
                 ),
             );
         }
@@ -249,7 +249,7 @@ class kolab_form
     /**
      * Builds an element of the form.
      */
-    private function get_element($attribs)
+    public static function get_element($attribs)
     {
         $type = isset($attribs['type']) ? $attribs['type'] : 0;
 
