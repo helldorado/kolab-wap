@@ -153,7 +153,6 @@ class kolab_api_service_form_value extends kolab_api_service
     public function select_options($getdata, $postdata)
     {
         //console("form_value.select_options postdata", $postdata);
-
         $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $attributes = (array) $postdata['attributes'];
         $result     = array();
@@ -762,6 +761,28 @@ class kolab_api_service_form_value extends kolab_api_service
     private function select_options_c($postdata, $attribs = array())
     {
         return $this->_select_options_from_db('c');
+    }
+
+    private function select_options_objectclass($postdata, $attribs = array())
+    {
+        // @TODO: get list from LDAP
+        // @TODO: filter by object type?
+        $classes = array(
+            'groupofuniquenames',
+            'inetorgperson',
+            'kolabgroupofuniquenames',
+            'kolabinetorgperson',
+            'kolabsharedfolder',
+            'mailrecipient',
+            'organizationalperson',
+            'organizationalunit',
+            'person',
+            'posixaccount',
+            'posixgroup',
+            'top',
+        );
+
+        return $classes;
     }
 
     private function select_options_ou($postdata, $attribs = array())
