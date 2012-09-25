@@ -27,16 +27,17 @@
  */
 class kolab_form
 {
-    const INPUT_TEXT = 1;
+    const INPUT_TEXT     = 1;
     const INPUT_PASSWORD = 2;
     const INPUT_TEXTAREA = 3;
     const INPUT_CHECKBOX = 4;
-    const INPUT_RADIO = 5;
-    const INPUT_BUTTON = 6;
-    const INPUT_SUBMIT = 7;
-    const INPUT_SELECT = 8;
-    const INPUT_HIDDEN = 9;
-    const INPUT_CUSTOM = 10;
+    const INPUT_RADIO    = 5;
+    const INPUT_BUTTON   = 6;
+    const INPUT_SUBMIT   = 7;
+    const INPUT_SELECT   = 8;
+    const INPUT_HIDDEN   = 9;
+    const INPUT_CUSTOM   = 10;
+    const INPUT_CONTENT  = 20;
 
     const TYPE_LIST = 1;
 
@@ -214,21 +215,32 @@ class kolab_form
      */
     private function form_row($element)
     {
-        $cells = array(
-            0 => array(
-                'class' => 'label',
-                'body' => $element['label'],
-            ),
-            1 => array(
-                'class' => 'value',
-                'body' => $this->get_element($element),
-            ),
-        );
-
-        $attrib = array('cells' => $cells);
+        $attrib = array();
 
         if (!empty($element['required']) && empty($element['readonly']) && empty($element['disabled'])) {
             $attrib['class'] = 'required';
+        }
+
+        if ($element['type'] == self::INPUT_CONTENT) {
+            $attrib['cells'] = array(
+                0 => array(
+                    'class'   => $element['class'],
+                    'colspan' => 2,
+                    'body'    => $element['content'],
+                ),
+            );
+        }
+        else {
+            $attrib['cells'] = array(
+                0 => array(
+                    'class' => 'label',
+                    'body'  => $element['label'],
+                ),
+                1 => array(
+                    'class' => 'value',
+                    'body'  => $this->get_element($element),
+                ),
+            );
         }
 
         return $attrib;
@@ -262,6 +274,11 @@ class kolab_form
                 $attribs['class'] = (!empty($attribs['class']) ? $attribs['class'] . ' ' : '') . 'maxsize';
             }
 
+            $content = kolab_html::input($attribs);
+            break;
+
+        case self::INPUT_CHECKBOX:
+            $attribs['type'] = 'checkbox';
             $content = kolab_html::input($attribs);
             break;
 
