@@ -103,6 +103,11 @@ class SQL
         return mysql_affected_rows($this->conn);
     }
 
+    public function last_insert_id()
+    {
+        return mysql_insert_id($this->conn);
+    }
+
     public function escape($str)
     {
         if ($str === null || is_array($str)) {
