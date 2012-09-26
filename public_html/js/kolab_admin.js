@@ -1412,7 +1412,7 @@ function kolab_admin()
 
     var page = this.env.list_page;
 
-    // goto previous page if last user on the current page has been deleted
+    // goto previous page if last record on the current page has been deleted
     if (this.env.list_count)
       page -= 1;
 
@@ -1492,7 +1492,7 @@ function kolab_admin()
 
     var page = this.env.list_page;
 
-    // goto previous page if last user on the current page has been deleted
+    // goto previous page if last record on the current page has been deleted
     if (this.env.list_count)
       page -= 1;
 
@@ -1572,7 +1572,7 @@ function kolab_admin()
 
     var page = this.env.list_page;
 
-    // goto previous page if last user on the current page has been deleted
+    // goto previous page if last record on the current page has been deleted
     if (this.env.list_count)
       page -= 1;
 
@@ -1621,6 +1621,105 @@ function kolab_admin()
     this.display_message('role.edit.success');
     this.command('role.list', {page: this.env.list_page});
     this.set_watermark('taskcontent');
+  };
+
+  this.settings_type_info = function(id)
+  {
+    this.http_post('settings.type_info', {id: id});
+  };
+
+  this.settings_type_add = function()
+  {
+    this.http_post('settings.type_add', {type: $('#type_list_filter').val()});
+  };
+
+  this.settings_type_list = function(props)
+  {
+    if (!props)
+      props = {};
+
+    if (props.search === undefined && this.env.search_request)
+      props.search_request = this.env.search_request;
+
+    props.type = $('#type_list_filter').val();
+
+    this.http_post('settings.type_list', props);
+  };
+
+  this.type_delete = function(id)
+  {
+    // @TODO:
+    return alert('Not implemented');
+
+    this.set_busy(true, 'deleting');
+    this.api_post('type.delete', this.type_id_parse(id), 'type_delete_response');
+  };
+
+  this.type_delete_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    var page = this.env.list_page;
+
+    // goto previous page if last record on the current page has been deleted
+    if (this.env.list_count)
+      page -= 1;
+
+    this.display_message('type.delete.success');
+    this.command('type.list', {page: page});
+    this.set_watermark('taskcontent');
+  };
+
+  this.type_save = function(reload, section)
+  {
+    // @TODO:
+    return alert('Not implemented');
+
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('type.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('type.' + action, data, 'type_' + action + '_response');
+  };
+
+  this.type_add_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('type.add.success');
+    this.command('settings.type_list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
+  };
+
+  this.type_edit_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message('type.edit.success');
+    this.command('settings.type_list', {page: this.env.list_page});
+    this.set_watermark('taskcontent');
+  };
+
+  this.type_id_parse = function(id)
+  {
+    var id = String(id).split(':');
+    return {type: id[0], id: id[1]};
   };
 
   this.generate_password = function(fieldname)

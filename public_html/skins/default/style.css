@@ -29,6 +29,10 @@ textarea {
   color: black;
 }
 
+select[multiple="multiple"] {
+  padding-left: 0;
+}
+
 table.list {
   border: 1px solid #d0d0d0;
   border-spacing: 0;
@@ -410,6 +414,12 @@ td.label {
 
 .searchdetails {
   display: none;
+}
+
+.searchfilter {
+  color: #909090;
+  font-weight: bold;
+  margin-top: 5px;
 }
 
 #search fieldset {

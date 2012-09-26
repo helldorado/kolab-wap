@@ -7,6 +7,12 @@ $LANG['about.support'] = 'Professional support is available from <a href="http:/
 $LANG['about.technology'] = 'Technology';
 $LANG['about.warranty'] = 'It comes with absolutely <b>no warranties</b> and is typically run entirely self supported. You can find help & information on the community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';
 
+$LANG['attribute.auto'] = 'Auto-generated';
+$LANG['attribute.static'] = 'Static value';
+$LANG['attribute.name'] = 'Attribute';
+$LANG['attribute.optional'] = 'Optional';
+$LANG['attribute.type'] = 'Field type';
+
 $LANG['creatorsname'] = 'Created by';
 $LANG['days'] = 'days';
 $LANG['debug'] = 'Debug info';
@@ -20,7 +26,6 @@ $LANG['domain.edit'] = 'Edit domain';
 $LANG['domain.edit.success'] = 'Domain updated';
 $LANG['domain.inetdomainbasedn'] = 'Custom Root DN(s)';
 $LANG['domain.list'] = 'Domains List';
-$LANG['domain.list.records'] = '$1 to $2 of $3';
 $LANG['domain.o'] = 'Organization';
 $LANG['domain.other'] = 'Other';
 $LANG['domain.system'] = 'System';
@@ -38,7 +43,6 @@ $LANG['group.delete.success'] = 'Group deleted successfully.';
 $LANG['group.edit.success'] = 'Group edited successfully.';
 $LANG['group.gidnumber'] = 'Primary group number';
 $LANG['group.list'] = 'Groups List';
-$LANG['group.list.records'] = '$1 to $2 of $3';
 $LANG['group.mail'] = 'Primary Email Address';
 $LANG['group.member'] = 'Member(s)';
 $LANG['group.norecords'] = 'No group records found!';
@@ -49,6 +53,9 @@ $LANG['group.uniquemember'] = 'Members';
 
 $LANG['info'] = 'Information';
 $LANG['internalerror'] = 'Internal system error!';
+
+$LANG['list.records'] = '$1 to $2 of $3';
+
 $LANG['loading'] = 'Loading...';
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
@@ -78,7 +85,6 @@ $LANG['resource.edit'] = 'Edit Resource';
 $LANG['resource.edit.success'] = 'Successfully updated Resource';
 $LANG['resource.kolabtargetfolder'] = 'Target Folder';
 $LANG['resource.list'] = 'Resource (Collection) List';
-$LANG['resource.list.records'] = '$1 to $2 of $3';
 $LANG['resource.mail'] = 'Mail Address';
 $LANG['resource.member'] = 'Collection Members';
 $LANG['resource.norecords'] = 'No resource record(s) found!';
@@ -92,7 +98,6 @@ $LANG['role.cn'] = 'Role Name';
 $LANG['role.description'] = 'Role Description';
 $LANG['role.edit.success'] = 'Role edited successfully';
 $LANG['role.list'] = 'Role List';
-$LANG['role.list.records'] = '$1 to $2 of $3';
 $LANG['role.norecords'] = 'No role records found!';
 $LANG['role.system'] = 'Details';
 $LANG['role.type_id'] = 'Role Type';
@@ -100,15 +105,17 @@ $LANG['role.type_id'] = 'Role Type';
 $LANG['saving'] = 'Saving data...';
 
 $LANG['search'] = 'Search';
-$LANG['search.criteria'] = 'Search criteria';
 $LANG['search.reset'] = 'Reset';
+$LANG['search.criteria'] = 'Search criteria';
 $LANG['search.field'] = 'Field:';
 $LANG['search.method'] = 'Method:';
 $LANG['search.contains'] = 'contains';
 $LANG['search.is'] = 'is';
+$LANG['search.key'] = 'key';
 $LANG['search.prefix'] = 'begins with';
 $LANG['search.name'] = 'name';
 $LANG['search.email'] = 'email';
+$LANG['search.description'] = 'description';
 $LANG['search.uid'] = 'UID';
 $LANG['search.loading'] = 'Searching...';
 $LANG['search.acchars'] = 'At least $min characters required for autocompletion';
@@ -134,6 +141,23 @@ $LANG['signup.wrongmailalternateaddress'] = 'Please provide a valid Email Addres
 $LANG['signup.footer'] = 'This is a service offered by <a href="http://kolabsys.com">Kolab Systems</a>.';
 
 $LANG['submit.button'] = 'Submit';
+
+$LANG['type.add'] = 'Add Object Type';
+$LANG['type.attributes'] = 'Attributes';
+$LANG['type.description'] = 'Description';
+$LANG['type.domain'] = 'Domain';
+$LANG['type.group'] = 'Group';
+$LANG['type.list'] = 'Object Types List';
+$LANG['type.key'] = 'Key';
+$LANG['type.name'] = 'Name';
+$LANG['type.norecords'] = 'No object type records found!';
+$LANG['type.objectclass'] = 'Object class';
+$LANG['type.object_type'] = 'Object type';
+$LANG['type.properties'] = 'Properties';
+$LANG['type.resource'] = 'Resource';
+$LANG['type.role'] = 'Role';
+$LANG['type.used_for'] = 'Hosted';
+$LANG['type.user'] = 'User';
 
 $LANG['user.add'] = 'Add User';
 $LANG['user.add.success'] = 'User created successfully.';
@@ -179,7 +203,6 @@ $LANG['user.kolabhomeserver'] = 'Email Server';
 $LANG['user.kolabinvitationpolicy'] = 'Invitation Handling Policy';
 $LANG['user.l'] = 'City, Region';
 $LANG['user.list'] = 'Users List';
-$LANG['user.list.records'] = '$1 to $2 of $3';
 $LANG['user.loginshell'] = 'Shell';
 $LANG['user.mail'] = 'Primary Email Address';
 $LANG['user.mailalternateaddress'] = 'External Email Address(es)';

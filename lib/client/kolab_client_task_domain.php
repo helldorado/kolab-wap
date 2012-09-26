@@ -118,7 +118,7 @@ class kolab_client_task_domain extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('domain.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
@@ -170,6 +170,7 @@ class kolab_client_task_domain extends kolab_client_task
             'foot'  => $foot,
         ));
 
+        $this->output->command('set_watermark', 'taskcontent');
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
@@ -288,44 +289,7 @@ class kolab_client_task_domain extends kolab_client_task
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('domain.add.success', 'domain.edit.success', 'domain.delete.success');
-
         return $form->output();
-    }
-
-    /**
-     * Returns list of domain types.
-     *
-     * @return array List of domain types
-     */
-    public function domain_types()
-    {
-        $result = array(
-                1 => array(
-                        'key' => 'standard',
-                        'name' => 'Standard domain',
-                        'description' => 'A standard domain name space',
-                        'attributes' => array(
-                                'auto_form_fields' => array(),
-                                'form_fields' => array(
-                                        'associateddomain' => array(
-                                                'type' => 'list',
-                                            ),
-                                        'inetdomainbasedn' => array(
-                                                'optional' => 'true',
-                                            ),
-                                    ),
-                                'fields' => array(
-                                        'objectclass' => array(
-                                                'top',
-                                                'domainrelatedobject',
-                                            ),
-                                    ),
-                            ),
-                    ),
-            );
-        //console("domain_types() \$result", $result);
-        return $result;
     }
 
     /**

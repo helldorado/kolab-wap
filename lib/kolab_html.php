@@ -198,8 +198,13 @@ class kolab_html
                 if (empty($option['value'])) {
                     $option['value'] = $idx;
                 }
-                if (!empty($attribs['value']) && $attribs['value'] == $option['value']) {
-                    $option['selected'] = true;
+                if (!empty($attribs['value'])) {
+                    if (is_array($attribs['value'])) {
+                        $option['selected'] = in_array($option['value'], $attribs['value']);
+                    }
+                    else if ($attribs['value'] == $option['value']) {
+                        $option['selected'] = true;
+                    }
                 }
                 // make a select really readonly by disabling options
                 else if (!empty($attribs['disabled']) || !empty($attribs['readonly'])) {

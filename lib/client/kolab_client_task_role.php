@@ -118,7 +118,7 @@ class kolab_client_task_role extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('role.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
@@ -162,6 +162,7 @@ class kolab_client_task_role extends kolab_client_task
             'foot'  => $foot,
         ));
 
+        $this->output->command('set_watermark', 'taskcontent');
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
@@ -264,8 +265,6 @@ class kolab_client_task_role extends kolab_client_task
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('role.add.success', 'role.edit.success', 'role.delete.success');
-
         return $form->output();
     }
 
@@ -284,27 +283,6 @@ class kolab_client_task_role extends kolab_client_task
             if (!empty($value['mail'])) {
                 $list[$idx] .= ' <' . $value['mail'] . '>';
             }
-        }
-
-        return $list;
-    }
-
-    /**
-     * Returns list of role types.
-     *
-     * @return array List of role types
-     */
-    public function role_types()
-    {
-        if (isset($_SESSION['role_types']) && !$this->devel_mode) {
-            return $_SESSION['role_types'];
-        }
-
-        $result = $this->api->post('role_types.list');
-        $list   = $result->get('list');
-
-        if (is_array($list) && !$this->devel_mode) {
-            $_SESSION['role_types'] = $list;
         }
 
         return $list;

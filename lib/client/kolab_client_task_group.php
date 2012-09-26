@@ -118,7 +118,7 @@ class kolab_client_task_group extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('group.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
@@ -162,6 +162,7 @@ class kolab_client_task_group extends kolab_client_task
             'foot'  => $foot,
         ));
 
+        $this->output->command('set_watermark', 'taskcontent');
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
@@ -264,8 +265,6 @@ class kolab_client_task_group extends kolab_client_task
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('group.add.success', 'group.edit.success', 'group.delete.success');
-
         return $form->output();
     }
 
@@ -287,27 +286,6 @@ class kolab_client_task_group extends kolab_client_task
         }
 
         return $list;
-    }
-
-    /**
-     * Returns list of group types.
-     *
-     * @return array List of group types
-     */
-    public function group_types()
-    {
-        if (!isset($_SESSION['group_types'])) {
-            $result = $this->api->post('group_types.list');
-            $list   = $result->get('list');
-
-            if (is_array($list)) {
-                $_SESSION['group_types'] = $list;
-            }
-        }
-
-        //console($_SESSION['group_types']);
-
-        return $_SESSION['group_types'];
     }
 
     /**
