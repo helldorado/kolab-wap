@@ -152,8 +152,8 @@ function ui_resize()
 {
   var h = $('#content').height();
   // resize UI elements
-  if (h > 100) {
-    $('#taskcontent').height(h - 22);
+  if (h - 22 > 380) {
+    $('#taskcontent').css({'min-height': h - 22});
   }
 };
 
