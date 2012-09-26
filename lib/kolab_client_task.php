@@ -566,7 +566,7 @@ class kolab_client_task
                 }
             }
 
-            $this->cache[$cache_idx] = empty($list) ? $list : array();
+            $this->cache[$cache_idx] = !empty($list) ? $list : array();
 
             Log::trace("kolab_client_task::${type}_types() returns: " . var_export($list, true));
         }
