@@ -24,7 +24,7 @@
 */
 
 /**
- * Service providing user data management
+ * Service providing object types management
  */
 class kolab_api_service_type extends kolab_api_service
 {
@@ -50,35 +50,64 @@ class kolab_api_service_type extends kolab_api_service
             $rights['edit'] = "w";
         }
 
+        $rights['info'] = "r";
         $rights['effective_rights'] = "r";
 
         return $rights;
     }
 
     /**
-     * Create user.
+     * Create type.
      *
-     * @param array $get   GET parameters
-     * @param array $post  POST parameters
+     * @param array $get  GET parameters
+     * @param array $post POST parameters
      *
-     * @return array|bool User attributes or False on error.
+     * @return array|bool Type attributes or False on error.
      */
     public function type_add($getdata, $postdata)
     {
-        //console("type_add()", $postdata);
-
-        $type_attributes = $this->parse_input_attributes('type', $postdata);
-
-        //console("type_add()", $type_attributes);
-
-//        $auth   = Auth::get_instance();
-//        $result = $auth->type_add($type_attributes, $postdata['type_id']);
-
-        if ($result) {
-            return $type_attributes;
+        if (!in_array($postdata['type'], $this->supported_types_db)) {
+            return false;
         }
 
-        return false;
+        if (empty($postdata['name']) || empty($postdata['key'])) {
+            return false;
+        }
+
+        if (empty($postdata['attributes']) || !is_array($postdata['attributes'])) {
+            return false;
+        }
+
+        // @TODO: check privileges
+
+        $type  = $postdata['type'];
+        $query = array(
+            'key'         => $postdata['key'],
+            'name'        => $postdata['name'],
+            'description' => $postdata['description'] ? $postdata['description'] : '',
+            'attributes'  => json_encode($postdata['attributes']),
+        );
+
+        if ($postdata['type'] == 'user') {
+            $query['used_for'] = $postdata['used_for'] == 'hosted' ? 'hosted' : null;
+        }
+
+        $query = array_map(array($this->db, 'escape'), $query);
+
+        $this->db->query("INSERT INTO {$type}_types"
+            . " (" . implode(',', array_keys($query)) . ")"
+            . " VALUES (" . implode(',', $query) . ")");
+
+        if (!($id = $this->db->last_insert_id())) {
+            return false;
+        }
+
+        // update cache
+        $this->cache['object_types'][$type][$id] = $postdata;
+
+        $postdata['id'] = $id;
+
+        return $postdata;
     }
 
     /**
@@ -102,6 +131,8 @@ class kolab_api_service_type extends kolab_api_service
         $object_name = $postdata['type'];
         $object_id   = $postdata['id'];
 
+        // @TODO: check privileges
+
         $this->db->query("DELETE FROM {$object_name}_types WHERE id = ?", array($object_id));
 
         return (bool) $this->db->affected_rows();
@@ -117,21 +148,49 @@ class kolab_api_service_type extends kolab_api_service
      */
     public function type_edit($getdata, $postdata)
     {
-        //console("\$postdata to type_edit()", $postdata);
-
-        $type_attributes = $this->parse_input_attributes('type', $postdata);
-        $type            = $postdata['id'];
-
-//        $auth   = Auth::get_instance();
-//        $result = $auth->type_edit($type, $type_attributes, $postdata['type_id']);
-
-        // Return the $mod_array
-        if ($result) {
-            return $result;
+        if (empty($postdata['type']) || empty($postdata['id'])) {
+            return false;
         }
 
-        return false;
+        if (empty($postdata['name']) || empty($postdata['key'])) {
+            return false;
+        }
 
+        if (empty($postdata['attributes']) || !is_array($postdata['attributes'])) {
+            return false;
+        }
+
+        // @TODO: check privileges
+
+        $type  = $postdata['type'];
+        $query = array(
+            'key'         => $postdata['key'],
+            'name'        => $postdata['name'],
+            'description' => $postdata['description'] ? $postdata['description'] : '',
+            'attributes'  => json_encode($postdata['attributes']),
+        );
+
+        if ($postdata['type'] == 'user') {
+            $query['used_for'] = $postdata['used_for'] == 'hosted' ? 'hosted' : null;
+        }
+
+        foreach ($query as $idx => $value) {
+            $query[$idx] = $idx . " = " . $this->db->escape($value);
+        }
+
+        $this->db->query("UPDATE {$type}_types SET "
+            . implode(', ', $query) . " WHERE id = ?", array($postdata['id']));
+
+        if (!($id = $this->db->last_insert_id())) {
+            return false;
+        }
+
+        // update cache
+        $this->cache['object_types'][$type][$id] = $postdata;
+
+        $postdata['id'] = $id;
+
+        return $postdata;
     }
 
     public function type_effective_rights($getdata, $postdata)
@@ -143,32 +202,27 @@ class kolab_api_service_type extends kolab_api_service
     }
 
     /**
-     * User information.
+     * Type information.
      *
      * @param array $get  GET parameters
      * @param array $post POST parameters
      *
-     * @return array|bool User attributes, False on error
+     * @return array|bool Type data, False on error
      */
     public function type_info($getdata, $postdata)
     {
-        if (!isset($getdata['type'])) {
+        if (empty($getdata['type']) || empty($getdata['id'])) {
             return false;
         }
 
-//        $auth   = Auth::get_instance();
-//        $result = $auth->type_info($getdata['type']);
-
-//        Log::trace("type.info on " . $getdata['type'] . " result: " . var_export($result, TRUE));
-        // normalize result
-//        $result = $this->parse_result_attributes('type', $result);
-
-//        Log::trace("type.info on " . $getdata['type'] . " parsed result: " . var_export($result, TRUE));
-
-        if ($result) {
-            return $result;
+        if (!in_array($getdata['type'], $this->supported_types_db)) {
+            return false;
         }
 
-        return false;
+        $object_name = $getdata['type'];
+        $object_id   = $getdata['id'];
+        $types       = $this->object_types($object_name);
+
+        return !empty($types[$object_id]) ? $types[$object_id] : false;
     }
 }
