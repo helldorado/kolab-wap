@@ -558,7 +558,7 @@ class kolab_client_task
             $result = $this->api->post($type . '_types.list');
             $list   = $result->get('list');
 
-            if (!empty($used_for)) {
+            if (!empty($used_for) && is_array($list)) {
                 foreach ($list as $type_id => $type_attrs) {
                     if ($type_attrs['used_for'] != $used_for) {
                         unset($list[$type_id]);
@@ -566,7 +566,7 @@ class kolab_client_task
                 }
             }
 
-            $this->cache[$cache_idx] = $list;
+            $this->cache[$cache_idx] = empty($list) ? $list : array();
 
             Log::trace("kolab_client_task::${type}_types() returns: " . var_export($list, true));
         }
