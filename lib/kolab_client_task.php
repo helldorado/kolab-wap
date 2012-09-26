@@ -46,8 +46,10 @@ class kolab_client_task
     protected $menu = array();
     protected $cache = array();
     protected $devel_mode = false;
+    protected $object_types = array('user', 'group', 'role', 'resource', 'domain');
 
     protected static $translation = array();
+
 
     /**
      * Class constructor.
@@ -537,37 +539,39 @@ class kolab_client_task
     }
 
     /**
-     * Returns list of user types.
+     * Returns list of object types.
+     *
+     * @para string  $type     Object type name
+     * @param string $used_for Used_for attribute of object type
      *
      * @return array List of user types
      */
-    protected function user_types($used_for = null)
+    protected function object_types($type, $used_for = null)
     {
-        if (!empty($_SESSION['user_types']) && !$this->devel_mode) {
-            return $_SESSION['user_types'];
+        if (empty($type) || !in_array($type, $this->object_types)) {
+            return array();
         }
 
-        $list   = array();
-        $result = $this->api->post('user_types.list');
-        $_list  = $result->get('list');
+        $cache_idx = $type . '_types' . ($used_for ? ":$used_for" : '');
 
-        if (!empty($used_for)) {
-            foreach ($_list as $user_type_id => $user_type_attrs) {
-                if (array_key_exists('used_for', $user_type_attrs) && $user_type_attrs['used_for'] == $used_for) {
-                    $list[$user_type_id] = $user_type_attrs;
+        if (!array_key_exists($cache_idx, $this->cache)) {
+            $result = $this->api->post($type . '_types.list');
+            $list   = $result->get('list');
+
+            if (!empty($used_for)) {
+                foreach ($list as $type_id => $type_attrs) {
+                    if ($type_attrs['used_for'] != $used_for) {
+                        unset($list[$type_id]);
+                    }
                 }
             }
-        } else {
-            $list = $_list;
+
+            $this->cache[$cache_idx] = $list;
+
+            Log::trace("kolab_client_task::${type}_types() returns: " . var_export($list, true));
         }
 
-        if (is_array($list) && !$this->devel_mode) {
-            $_SESSION['user_types'] = $list;
-        }
-
-        Log::trace("kolab_client_task::user_types() returns: " . var_export($list, true));
-
-        return $list;
+        return $this->cache[$cache_idx];
     }
 
     /**
@@ -784,6 +788,10 @@ class kolab_client_task
             }
             break;
 
+        case 'checkbox':
+            $result['type'] = kolab_form::INPUT_CHECKBOX;
+            break;
+
         case 'password':
             $result['type'] = kolab_form::INPUT_PASSWORD;
 
@@ -820,6 +828,7 @@ class kolab_client_task
         if (!isset($field['values'])) {
             $data['attributes'] = array($field['name']);
             $resp = $this->api->post('form_value.select_options', null, $data);
+
             unset($data['attributes']);
             $field['values'] = $resp->get($field['name']);
         }
@@ -857,17 +866,13 @@ class kolab_client_task
      */
     protected function form_prepare($name, &$data, $extra_fields = array(), $used_for = null)
     {
-        $types        = (array) $this->{$name . '_types'}($used_for);
-
-        $form_id      = $attribs['id'];
+        $types        = (array) $this->object_types($name, $used_for);
         $add_mode     = empty($data['id']);
-
         $event_fields = array();
         $auto_fields  = array();
         $form_fields  = array();
         $fields       = array();
         $auto_attribs = array();
-
         $extra_fields = array_flip($extra_fields);
 
         // Object type
@@ -1103,11 +1108,6 @@ class kolab_client_task
             if (!$field['section']) {
                 $fields[$idx]['section'] = isset($fields_map[$idx]) ? $fields_map[$idx] : 'other';
                 //console("Assigned field $idx to section " . $fields[$idx]['section']);
-/*
-            } else {
-                $fields[$idx]['section'] = 'other';
-                //console("Assigned field $idx to section " . $fields[$idx]['section']);
-*/
             }
         }
 
@@ -1256,7 +1256,8 @@ class kolab_client_task
         $this->output->set_env('form_id', $attribs['id']);
         $this->output->set_env('assoc_fields', $assoc_fields);
         $this->output->set_env('required_fields', $req_fields);
-        $this->output->add_translation('form.required.empty', 'form.maxcount.exceeded');
+        $this->output->add_translation('form.required.empty', 'form.maxcount.exceeded',
+            $name . '.add.success', $name . '.edit.success', $name . '.delete.success');
 
         return $form;
     }

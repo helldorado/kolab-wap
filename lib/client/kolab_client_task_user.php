@@ -118,7 +118,7 @@ class kolab_client_task_user extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('user.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
@@ -162,6 +162,7 @@ class kolab_client_task_user extends kolab_client_task
             'foot'  => $foot,
         ));
 
+        $this->output->command('set_watermark', 'taskcontent');
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
@@ -351,8 +352,7 @@ class kolab_client_task_user extends kolab_client_task
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('user.password.mismatch',
-            'user.add.success', 'user.edit.success', 'user.delete.success');
+        $this->output->add_translation('user.password.mismatch');
 
         return $form->output();
     }

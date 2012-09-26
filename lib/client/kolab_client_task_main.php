@@ -64,7 +64,7 @@ class kolab_client_task_main extends kolab_client_task
         $this->menu   = array();
 
         foreach ($this->_menu as $task => $api_task) {
-            if ($task != 'about' && !array_key_exists($api_task . '.list', $capabilities['actions'])) {
+            if ($task != 'about' && !array_key_exists($api_task . '.list', (array)$capabilities['actions'])) {
                 $task_class = 'kolab_client_task_' . $task;
                 if (!method_exists($task_class, 'is_enabled') || !$task_class::is_enabled($capabilities['actions'])) {
                     continue;

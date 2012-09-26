@@ -24,9 +24,9 @@
 /**
  * Search form events
  */
-function search_init(task)
+function search_init(command)
 {
-  kadm.env.search_task = task;
+  kadm.env.search_command = command;
 
   $('#searchinput').addClass('inactive')
     .blur(function() {
@@ -38,7 +38,7 @@ function search_init(task)
         var props = kadm.serialize_form('#search-form');
         props.search = this.value;
 
-        kadm.command(kadm.env.search_task + '.list', props);
+        kadm.command(kadm.env.search_command, props);
       }
     })
     .focus(function() {
@@ -53,7 +53,7 @@ function search_reset()
 
   input.val(kadm.t('search')).addClass('inactive');
 
-  kadm.command(kadm.env.search_task + '.list', {search: ''});
+  kadm.command(kadm.env.search_command, {search: ''});
 };
 
 function search_details()

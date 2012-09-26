@@ -120,7 +120,7 @@ class kolab_client_task_resource extends kolab_client_task
             $next  = $page < $pages ? $page + 1 : 0;
 
             $count_str = kolab_html::span(array(
-                'content' => $this->translate('resource.list.records', $start, $end, $count)), true);
+                'content' => $this->translate('list.records', $start, $end, $count)), true);
             $prev = kolab_html::a(array(
                 'class' => 'prev' . ($prev ? '' : ' disabled'),
                 'href'  => '#',
@@ -164,6 +164,7 @@ class kolab_client_task_resource extends kolab_client_task
             'foot'  => $foot,
         ));
 
+        $this->output->command('set_watermark', 'taskcontent');
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
@@ -292,8 +293,6 @@ class kolab_client_task_resource extends kolab_client_task
 
         $form->set_title(kolab_html::escape($title));
 
-        $this->output->add_translation('resource.add.success', 'resource.edit.success', 'resource.delete.success');
-
         return $form->output();
     }
 
@@ -331,26 +330,5 @@ class kolab_client_task_resource extends kolab_client_task
         ));
 
         return $form->output();
-    }
-
-    /**
-     * Returns list of resource types.
-     *
-     * @return array List of resource types
-     */
-    public function resource_types()
-    {
-        if (isset($_SESSION['resource_types']) && !$this->devel_mode) {
-            return $_SESSION['resource_types'];
-        }
-
-        $result = $this->api->post('resource_types.list');
-        $list   = $result->get('list');
-
-        if (is_array($list) && !$this->devel_mode) {
-            $_SESSION['resource_types'] = $list;
-        }
-
-        return $list;
     }
 }
