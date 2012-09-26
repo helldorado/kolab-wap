@@ -178,17 +178,15 @@ class kolab_api_service_type extends kolab_api_service
             $query[$idx] = $idx . " = " . $this->db->escape($value);
         }
 
-        $this->db->query("UPDATE {$type}_types SET "
+        $result = $this->db->query("UPDATE {$type}_types SET "
             . implode(', ', $query) . " WHERE id = ?", array($postdata['id']));
 
-        if (!($id = $this->db->last_insert_id())) {
+        if (!$result) {
             return false;
         }
 
         // update cache
         $this->cache['object_types'][$type][$id] = $postdata;
-
-        $postdata['id'] = $id;
 
         return $postdata;
     }
