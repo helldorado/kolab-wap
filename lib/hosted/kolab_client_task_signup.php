@@ -63,11 +63,11 @@ class kolab_client_task_signup extends kolab_client_task
     private function login($domain=NULL)
     {
         if(is_null($domain)) {
-            $domain = $this->config_get('primary_domain');
+            $this->domain = $this->config_get('primary_domain');
         }
 
         // Login ($result is a kolab_client_api_result instance)
-        $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $domain);
+        $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->domain);
 
         // Set the session token we got in the API client instance, so subsequent
         // API calls are made in the same session.

@@ -630,7 +630,7 @@ class kolab_client_task
             }
         }
 
-        $domain = $_SESSION['user']['domain'];
+        $domain = $this->domain ? $this->domain : $_SESSION['user']['domain'];
 
         return !$all ? $list[$domain] : $list;
     }
