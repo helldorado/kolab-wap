@@ -929,3 +929,18 @@ fieldset.tabbed
 #grouplist table {
   width: 100%;
 }
+
+/**** About pages ****/
+
+td.yes {
+  background-color: #B5FFAB;
+  font-style: italic;
+  text-align: center;
+}
+
+td.no {
+  background-color: #FF0000;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+}
