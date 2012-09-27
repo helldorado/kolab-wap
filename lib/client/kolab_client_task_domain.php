@@ -170,7 +170,10 @@ class kolab_client_task_domain extends kolab_client_task
             'foot'  => $foot,
         ));
 
-        $this->output->command('set_watermark', 'taskcontent');
+        if ($this->action == 'list') {
+            $this->output->command('set_watermark', 'taskcontent');
+        }
+
         $this->output->set_env('search_request', $search_request ? base64_encode(serialize($search_request)) : null);
         $this->output->set_env('list_page', $page);
         $this->output->set_env('list_count', $count);
