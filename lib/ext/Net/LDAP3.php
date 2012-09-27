@@ -1629,8 +1629,8 @@ class Net_LDAP3
                 'port'   => $port,
                 'tls'    => FALSE,
                 'version' => 3,
-                'binddn' => $this->config_get('bind_dn'),
-                'bindpw' => $this->config_get('bind_pw')
+                'binddn' => $this->config_get('service_bind_dn'),
+                'bindpw' => $this->config_get('service_bind_pw')
             );
 
             $_ldap_schema_cache_cfg = array(
