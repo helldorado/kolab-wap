@@ -304,7 +304,6 @@ class Net_LDAP3
         }
 
         return array('may' => $may, 'must' => $must, 'super' => $superclasses);
-
     }
 
     /**
@@ -1618,7 +1617,7 @@ class Net_LDAP3
 
     private function init_schema()
     {
-        $this->_ldap_uri    = $this->conf->get('ldap_uri');
+        $this->_ldap_uri    = $this->config_get('ldap_uri');
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
         $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
         $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
@@ -1630,8 +1629,8 @@ class Net_LDAP3
             'port'   => $this->_ldap_port,
             'tls'    => FALSE,
             'version' => 3,
-            'binddn' => $this->conf->get('bind_dn'),
-            'bindpw' => $this->conf->get('bind_pw')
+            'binddn' => $this->config_get('bind_dn'),
+            'bindpw' => $this->config_get('bind_pw')
         );
 
         $_ldap_schema_cache_cfg = array(
@@ -1647,7 +1646,7 @@ class Net_LDAP3
 
         // TODO: We should learn what LDAP tech. we're running against.
         // Perhaps with a scope base objectclass recognize rootdse entry
-        $schema_root_dn = $this->conf->get('schema_root_dn');
+        $schema_root_dn = $this->config_get('schema_root_dn');
         if (!$schema_root_dn) {
             $_schema = $_ldap->schema();
         }
