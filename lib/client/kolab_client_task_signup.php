@@ -23,7 +23,7 @@
  +--------------------------------------------------------------------------+
 */
 
-require_once('hosted/recaptchalib.php');
+require_once('recaptchalib.php');
 
 class kolab_client_task_signup extends kolab_client_task
 {

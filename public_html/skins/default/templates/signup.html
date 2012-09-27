@@ -16,24 +16,15 @@
     <div id="bodybox">
         <div id="logo"></div>
         <div id="content">
-
-
-        <div id="task_content" class="signup">
-    
-        <h1>{$engine->translate('signup.headline')}</h1>
-
-        <p>{$engine->translate('signup.intro1')}</p>
-
-        <p>{$engine->translate('signup.intro2')}</p>
-    
-        <div id="taskcontent" class="signup">{$form}</div>
-
-
-        </div>
-    
+            <div id="task_content" class="signup">
+                <h1>{$engine->translate('signup.headline')}</h1>
+                <p>{$engine->translate('signup.intro1')}</p>
+                <p>{$engine->translate('signup.intro2')}</p>
+                <div id="taskcontent" class="signup">{$form}</div>
+            </div>
         </div>
         <div id="footer">
-            {include file="footer.html"}
+            {include file="signup_footer.html"}
         </div>
     </div>
 {$script}
