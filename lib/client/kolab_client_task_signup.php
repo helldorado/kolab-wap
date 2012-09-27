@@ -167,7 +167,7 @@ class kolab_client_task_signup extends kolab_client_task
             $this->output->command('display_message', 'internalerror', 'error');
             return;
         } else {
-            $this->output->set_object('taskcontent', 'signup.usercreated');
+            $this->output->set_object('taskcontent', $this->translate('signup.usercreated'));
         }
     }
 
@@ -255,7 +255,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         $form->set_title($this->translate('signup.formtitle'));
 
-        $this->output->add_translation('user.password.mismatch', 'signup.wronguid');
+        $this->output->add_translation('user.password.mismatch', 'signup.wronguid', 'signup.userexists');
 
         return $form->output();
     }
