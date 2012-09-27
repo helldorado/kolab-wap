@@ -101,6 +101,7 @@ class kolab_client_task_signup extends kolab_client_task
         $this->output->assign('form', $form);
         $this->output->set_env('token', $this->token);
         $this->output->set_object('taskcontent', $form);
+        $this->output->command('check_user_availability()');
     }
 
     // check if user already exists
