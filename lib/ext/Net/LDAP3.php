@@ -1617,36 +1617,43 @@ class Net_LDAP3
 
     private function init_schema()
     {
-        $this->_ldap_uri    = $this->config_get('ldap_uri');
-        $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
-        $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
-        $this->_ldap_scheme = parse_url($this->_ldap_uri, PHP_URL_SCHEME);
-
         require_once("Net/LDAP2.php");
 
-        $_ldap_cfg = array(
-            'host'   => $this->_ldap_server,
-            'port'   => $this->_ldap_port,
-            'tls'    => FALSE,
-            'version' => 3,
-            'binddn' => $this->config_get('bind_dn'),
-            'bindpw' => $this->config_get('bind_pw')
-        );
+        $port = $this->config_get('port', 389);
 
-        $_ldap_schema_cache_cfg = array(
-            'path' => "/tmp/" . $this->_ldap_server . ":" . ($this->_ldap_port ? $this->_ldap_port : '389') . "-Net_LDAP2_Schema.cache",
-            'max_age' => 86400,
-        );
+        foreach ($this->config_get('hosts') as $host) {
+            $this->_debug("C: Connect [$host:$port]");
 
-        $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
+            $_ldap_cfg = array(
+                'host'   => $host,
+                'port'   => $port,
+                'tls'    => FALSE,
+                'version' => 3,
+                'binddn' => $this->config_get('bind_dn'),
+                'bindpw' => $this->config_get('bind_pw')
+            );
 
-        $_ldap = Net_LDAP2::connect($_ldap_cfg);
+            $_ldap_schema_cache_cfg = array(
+                'path' => "/tmp/" . $host . ":" . ($port ? $port : '389') . "-Net_LDAP2_Schema.cache",
+                'max_age' => 86400,
+            );
+
+            $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
+
+            if ($_ldap = Net_LDAP2::connect($_ldap_cfg)) {
+                $this->_debug("S: OK");
+                break;
+            }
+
+            $this->_debug("S: NOT OK");
+        }
 
         $result = $_ldap->registerSchemaCache($_ldap_schema_cache);
 
         // TODO: We should learn what LDAP tech. we're running against.
         // Perhaps with a scope base objectclass recognize rootdse entry
         $schema_root_dn = $this->config_get('schema_root_dn');
+
         if (!$schema_root_dn) {
             $_schema = $_ldap->schema();
         }
