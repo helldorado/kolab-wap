@@ -99,6 +99,7 @@ class kolab_client_task_signup extends kolab_client_task
         }
 
         $this->output->assign('form', $form);
+        $this->output->set_env('token', $this->token);
         $this->output->set_object('taskcontent', $form);
     }
 
@@ -158,8 +159,6 @@ class kolab_client_task_signup extends kolab_client_task
         // Remove domain from $data before adding user
         unset($data['domain']);
 
-        $data['cn'] = $this->api->post('form_value.generate', $data);
-
         // Add user
         $result = $this->api->post('user.add', null, $data);
 
@@ -179,6 +178,7 @@ class kolab_client_task_signup extends kolab_client_task
             'givenname'                 => 'other',
             'sn'                        => 'other',
             'cn'                        => 'other',
+            'org'                       => 'other',
             'mailalternateaddress'      => 'other',
             'uid'                       => 'other',
             'domain'                    => 'other',
@@ -190,13 +190,6 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Prepare fields
         list($fields, $types, $type) = $this->form_prepare('user', $data, array('userpassword2'), 'hosted');
-        
-        // Show only required fields
-        foreach ($fields as $field_name => $field_attrs) {
-            if(!array_key_exists('required', $field_attrs) or $field_attrs['required'] != 'true') {
-                unset($fields[$field_name]);
-            }
-        }
 
         // Add user type id selector
         $accttypes = array();
@@ -231,11 +224,8 @@ class kolab_client_task_signup extends kolab_client_task
 
         // Hide cn field
         if (isset($fields['cn'])) {
-            // TODO use type info from user types table
+            // TODO add "hidden":true to user_types attributes and use it
             $fields['cn']['type'] = kolab_form::INPUT_HIDDEN;
-
-            $fields['sn']['onchange'] = '';
-            $fields['givenname']['onchange'] = '';
         }
 
         // Add password confirmation
@@ -248,6 +238,7 @@ class kolab_client_task_signup extends kolab_client_task
         $fields['uid']['label'] = 'signup.username';
         $fields['mail']['label'] = 'signup.futuremail';
         if(isset($fields['mailalternateaddress'])) $fields['mailalternateaddress']['label'] = 'signup.mailalternateaddress';
+//        if(isset($fields['org'])) $fields['org']['label'] = 'signup.company';
         $fields['domain']['label'] = 'signup.domain';
 
         // Create form object and populate with fields
@@ -255,7 +246,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         $form->set_title($this->translate('signup.formtitle'));
 
-        $this->output->add_translation('user.password.mismatch', 'signup.wronguid', 'signup.userexists');
+        $this->output->add_translation('user.password.mismatch', 'signup.wronguid', 'signup.userexists', 'signup.wrongmailalternateaddress');
 
         return $form->output();
     }
