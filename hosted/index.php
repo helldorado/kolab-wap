@@ -26,16 +26,7 @@
 // environment initialization
 require_once '../lib/functions.php';
 
-// starting task
-$task = kolab_utils::get_input('task', kolab_utils::REQUEST_GET);
-
-if (!$task) {
-    $task = 'signup';
-}
-
-$class = "kolab_client_task_$task";
-
-$KADM = new $class;
+$KADM = new kolab_client_task_signup;
 
 // run actions and send output
 $KADM->run();

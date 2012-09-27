@@ -47,7 +47,6 @@ $include_path = INSTALL_PATH . PATH_SEPARATOR;
 $include_path .= INSTALL_PATH . '/client' . PATH_SEPARATOR;
 $include_path .= INSTALL_PATH . '/api' . PATH_SEPARATOR;
 $include_path .= INSTALL_PATH . '/ext' . PATH_SEPARATOR;
-$include_path .= INSTALL_PATH . '/hosted' . PATH_SEPARATOR;
 $include_path .= ini_get('include_path');
 
 if (set_include_path($include_path) === false) {

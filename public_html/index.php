@@ -29,7 +29,7 @@ require_once '../lib/functions.php';
 // starting task
 $task = kolab_utils::get_input('task', kolab_utils::REQUEST_GET);
 
-if (!$task) {
+if (!$task || $task == 'signup') {
     $task = 'main';
 }
 
