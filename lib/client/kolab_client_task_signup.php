@@ -64,6 +64,8 @@ class kolab_client_task_signup extends kolab_client_task
     {
         if(is_null($domain)) {
             $this->domain = $this->config_get('primary_domain');
+        } else {
+            $this->domain = $domain;
         }
 
         // Login ($result is a kolab_client_api_result instance)
