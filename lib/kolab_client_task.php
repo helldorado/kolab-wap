@@ -504,11 +504,11 @@ class kolab_client_task
 
         $menu = array();
         $task = $this->get_task();
-        $caps = $this->capabilities();
+        $caps = (array) $this->get_capability('actions');
 
         foreach ($this->menu as $idx => $label) {
             if (in_array($task, array('domain', 'group', 'resource', 'role', 'user'))) {
-                if (!array_key_exists($task . "." . $idx, $caps['actions'])) {
+                if (!array_key_exists($task . "." . $idx, $caps)) {
                     continue;
                 }
             }
