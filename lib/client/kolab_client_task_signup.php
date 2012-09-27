@@ -232,8 +232,6 @@ class kolab_client_task_signup extends kolab_client_task
             // TODO use type info from user types table
             $fields['cn']['type'] = kolab_form::INPUT_HIDDEN;
 
-            // TODO auto generate value again with indirect API call
-            $fields['cn']['value'] = 'temporary fake cn';
             $fields['sn']['onchange'] = '';
             $fields['givenname']['onchange'] = '';
         }
@@ -255,7 +253,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         $form->set_title($this->translate('signup.formtitle'));
 
-        $this->output->add_translation('user.password.mismatch', 'user.add.success', 'signup.wronguid');
+        $this->output->add_translation('user.password.mismatch', 'signup.wronguid');
 
         return $form->output();
     }
