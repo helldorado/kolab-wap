@@ -49,6 +49,11 @@ kadm.user_save = function(reload, section)
     kadm.http_post('signup.add_user', {data: data});
 };
 
+kadm.reload_captcha = function()
+{
+    Recaptcha.reload();
+};
+
 kadm.change_user_type = function()
 {
     var data = kadm.serialize_form('#'+this.env.form_id);

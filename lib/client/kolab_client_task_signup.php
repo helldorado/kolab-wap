@@ -141,7 +141,9 @@ class kolab_client_task_signup extends kolab_client_task
 
             if (!$resp->is_valid) {
                 // What happens when the CAPTCHA was entered incorrectly
-                $this->output->command('display_message', "The reCAPTCHA wasn't entered correctly. Please reload and try it again.", 'error');
+                $this->output->command('reload_captcha');
+                // TODO localise this error message
+                $this->output->command('display_message', "The reCAPTCHA wasn't entered correctly. Please try again.", 'error');
                 return;
             }
 
