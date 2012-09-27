@@ -785,6 +785,14 @@ class kolab_api_service_form_value extends kolab_api_service
         return $classes;
     }
 
+    private function select_options_attribute($postdata, $attribs = array())
+    {
+        $auth = Auth::get_instance();
+        $list = $auth->ldap_schema_attributes($postdata['classes']);
+
+        return $list;
+    }
+
     private function select_options_ou($postdata, $attribs = array())
     {
         $auth = Auth::get_instance();
