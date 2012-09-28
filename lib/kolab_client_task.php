@@ -828,14 +828,11 @@ class kolab_client_task
         if (!isset($field['values'])) {
             $data['attributes'] = array($field['name']);
             $resp = $this->api->post('form_value.select_options', null, $data);
-
+            $resp = $resp->get($field['name']);
             unset($data['attributes']);
-            $field['values'] = $resp->get($field['name']);
-        }
 
-        if (!empty($field['values']['default'])) {
-            $default = $field['values']['default'];
-            unset($field['values']['default']);
+            $default         = $resp['default'];
+            $field['values'] = $resp['list'];
         }
 
         if (!empty($field['values'])) {

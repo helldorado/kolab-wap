@@ -49,10 +49,16 @@ kadm.user_save = function(reload, section)
     kadm.http_post('signup.add_user', {data: data});
 };
 
+kadm.reload_captcha = function()
+{
+    Recaptcha.reload();
+};
+
 kadm.change_user_type = function()
 {
     var data = kadm.serialize_form('#'+this.env.form_id);
 
+    this.set_busy(true, 'loading');
     kadm.http_post('signup.default', {data: data});
 };
 
@@ -62,14 +68,16 @@ kadm.check_user_availability = function()
     var data = kadm.serialize_form('#signup-form');
     var mail = data['uid'] + '@' + data['domain'];
 
-    if(isValidEmailAddress(mail)) {
-        // update future mail form field
-        $('input[name="mail"]').val(mail);
+    if(data['uid'] != '') {
+        if(isValidEmailAddress(mail)) {
+            // update future mail form field
+            $('input[name="mail"]').val(mail);
 
-        // check if user with that email address already exists
-        kadm.http_post('signup.check_user', {data: data});
-    } else {
-        kadm.update_user_info('signup.wronguid', 'uid');
+            // check if user with that email address already exists
+            kadm.http_post('signup.check_user', {data: data});
+        } else {
+            kadm.update_user_info('signup.wronguid', 'uid');
+        }
     }
 };
 

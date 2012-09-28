@@ -60,9 +60,7 @@ class kolab_api_service_form_value extends kolab_api_service
     public function generate($getdata, $postdata)
     {
         $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
-
         $attributes = (array) $postdata['attributes'];
-
         $result     = array();
 
         foreach ($attributes as $attr_name) {
@@ -164,12 +162,18 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $method_name = 'select_options_' . strtolower($attr_name);
 
-            if (!method_exists($this, $method_name)) {
-                $result[$attr_name] = array();
-                continue;
+            if (method_exists($this, $method_name)) {
+                $res = $this->{$method_name}($postdata, $attribs);
+            }
+            else {
+                $res = array();
             }
 
-            $result[$attr_name] = $this->{$method_name}($postdata, $attribs);
+            if (!is_array($res['list'])) {
+                $res['list'] = array();
+            }
+
+            $result[$attr_name] = $res;
         }
 
         return $result;
@@ -782,7 +786,7 @@ class kolab_api_service_form_value extends kolab_api_service
             'top',
         );
 
-        return $classes;
+        return array('list' => $classes);
     }
 
     private function select_options_attribute($postdata, $attribs = array())
@@ -790,7 +794,10 @@ class kolab_api_service_form_value extends kolab_api_service
         $auth = Auth::get_instance();
         $list = $auth->ldap_schema_attributes($postdata['classes']);
 
-        return $list;
+        return array(
+            'list'     => $list['may'],
+            'required' => $list['must']
+        );
     }
 
     private function select_options_ou($postdata, $attribs = array())
@@ -809,7 +816,7 @@ class kolab_api_service_form_value extends kolab_api_service
         }
 
         if (!empty($postdata['id'])) {
-            $subjects = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')')->entries(TRUE);
+            $subjects = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')')->entries(true);
 
             if ($subjects) {
                 $subject = array_shift($subjects);
@@ -828,27 +835,27 @@ class kolab_api_service_form_value extends kolab_api_service
             $default = $base_dn;
         }
 
-        $ous = $auth->search($base_dn, '(objectclass=organizationalunit)');
-
+        $ous  = $auth->search($base_dn, '(objectclass=organizationalunit)');
         $_ous = array();
 
-        foreach ($ous->entries(TRUE) as $ou_dn => $ou_attrs) {
+        foreach ($ous->entries(true) as $ou_dn => $ou_attrs) {
             $_ous[] = strtolower($ou_dn);
         }
 
         sort($_ous);
 
-        $_ous['default'] = strtolower($default);
-
-        return $_ous;
+        return array(
+            'list'    => $_ous,
+            'default' => strtolower($default),
+        );
     }
 
     private function select_options_preferredlanguage($postdata, $attribs = array())
     {
         $options = $this->_select_options_from_db('preferredlanguage');
-
-        $conf = Conf::get_instance();
+        $conf    = Conf::get_instance();
         $default = $conf->get('default_locale');
+
         if (!$default) {
             $default = 'en_US';
         }
@@ -857,9 +864,10 @@ class kolab_api_service_form_value extends kolab_api_service
             $default = $postdata['preferredlanguage'];
         }
 
-        $options['default'] = $default;
-
-        return $options;
+        return array(
+            'list'    => $options,
+            'default' => $default,
+        );
     }
 
     private function validate_alias($value)
@@ -1075,21 +1083,15 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function _select_options_from_db($attribute)
     {
-
         if (empty($attribute)) {
             return false;
         }
 
-        $db = SQL::get_instance();
+        $db     = SQL::get_instance();
         $result = $db->fetch_assoc($db->query("SELECT option_values FROM options WHERE attribute = ?", $attribute));
-
         $result = json_decode($result['option_values']);
 
-        if (empty($result)) {
-            return false;
-        } else {
-            return $result;
-        }
+        return array('list' => $result);
     }
 
     private function _validate_email_address($mail_address) {
