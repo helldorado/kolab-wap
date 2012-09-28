@@ -995,7 +995,6 @@ class kolab_api_service_form_value extends kolab_api_service
         $data['attributes'] = array('displayname', 'cn', 'mail');
 
         $service = $this->controller->get_service('users');
-
         $result  = $service->users_list(null, $data);
 
         $list    = $result['list'];
@@ -1019,6 +1018,13 @@ class kolab_api_service_form_value extends kolab_api_service
             if (!empty($value['mail'])) {
                 $list[$idx] .= ' <' . $value['mail'] . '>';
             }
+        }
+
+        // Sort and slice
+        asort($list);
+
+        if (!empty($data['page_size'])) {
+            $list = array_slice($list, 0, $data['page_size']);
         }
 
         return $list;
