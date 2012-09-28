@@ -629,11 +629,11 @@ span.listelement span.actions span.reset {
 }
 
 span.listelement span.actions span.add {
-  background-position: -43px -2px;
+  background-position: -41px -2px;
 }
 
 span.listelement span.actions span.search {
-  background-position: -65px -1px;
+  background-position: -61px -1px;
   cursor: default;
 }
 
