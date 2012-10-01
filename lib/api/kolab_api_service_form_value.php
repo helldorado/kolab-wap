@@ -769,24 +769,12 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function select_options_objectclass($postdata, $attribs = array())
     {
-        // @TODO: get list from LDAP
-        // @TODO: filter by object type?
-        $classes = array(
-            'groupofuniquenames',
-            'inetorgperson',
-            'kolabgroupofuniquenames',
-            'kolabinetorgperson',
-            'kolabsharedfolder',
-            'mailrecipient',
-            'organizationalperson',
-            'organizationalunit',
-            'person',
-            'posixaccount',
-            'posixgroup',
-            'top',
-        );
+        $auth = Auth::get_instance();
+        $list = $auth->ldap_schema_classes();
 
-        return array('list' => $classes);
+        sort($list);
+
+        return array('list' => $list);
     }
 
     private function select_options_attribute($postdata, $attribs = array())
