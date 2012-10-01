@@ -303,6 +303,10 @@ class Net_LDAP3
             } */
         }
 
+        $may          = array_unique($may);
+        $must         = array_unique($must);
+        $superclasses = array_unique($superclasses);
+
         return array('may' => $may, 'must' => $must, 'super' => $superclasses);
     }
 
