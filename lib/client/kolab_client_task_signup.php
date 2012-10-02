@@ -170,7 +170,9 @@ class kolab_client_task_signup extends kolab_client_task
             return;
         } else {
             $this->output->set_object('taskcontent', $this->translate('signup.usercreated'));
+            // TODO catch errors
             $this->send_mail($data);
+            $this->add_to_openerp($data);
         }
     }
 
@@ -310,6 +312,7 @@ class kolab_client_task_signup extends kolab_client_task
             $headers['To']      = $this->config_get('mail_address');
             $headers['Subject'] = 'New Kolab Signup from ' . $data['mailalternateaddress'];
 
+            // TODO localize this
             $body = "{$data['cn']} <{$data['mailalternateaddress']}> from {$data['org']} just signed up for a Kolab account ({$data['mail']}).";
 
             Log::Debug("Send Mail to $recipients ...");
@@ -321,6 +324,59 @@ class kolab_client_task_signup extends kolab_client_task
             if(PEAR::isError($result)) {
                 Log::Error($result->toString());
             }
+        }
+    }
+
+    private function add_to_openerp($data)
+    {
+        $HOST = $this->config_get('openerp_host');
+        $PORT = $this->config_get('openerp_port');
+        $DB   = $this->config_get('openerp_db');
+        $USER = $this->config_get('openerp_user');
+        $PASS = $this->config_get('openerp_pass');
+
+        if($HOST && $PORT && $DB && $USER && $PASS) {
+            include_once('xmlrpc/xmlrpc.inc');
+
+            $sock = new xmlrpc_client("http://$HOST:$PORT/xmlrpc/common");
+            $msg = new xmlrpcmsg('login');
+            $msg->addParam(new xmlrpcval($DB,   "string"));
+            $msg->addParam(new xmlrpcval($USER, "string"));
+            $msg->addParam(new xmlrpcval($PASS, "string"));
+            $resp =  $sock->send($msg);
+            $val = $resp->value();
+            $uid = $val->scalarval();
+
+            Log::Trace("Logged in to OpenERP as $USER (uid:$uid)");
+
+            // Create a new lead
+            $arrayVal = array(
+                // TODO localize name string
+                'name' => new xmlrpcval("New Evaluation Signup by {$data['mailalternateaddress']}", "string"),
+                'contact_name' => new xmlrpcval($data['cn'], "string"),
+                'email_from' => new xmlrpcval($data['mailalternateaddress'], "string"),
+                'partner_name' => new xmlrpcval($data['org'], "string"),
+                'inventor_id' => new xmlrpcval($uid, "int"),
+            );
+
+            $client = new xmlrpc_client("http://$HOST:$PORT/xmlrpc/object");
+
+            $msg = new xmlrpcmsg('execute');
+            $msg->addParam(new xmlrpcval($DB, "string"));
+            $msg->addParam(new xmlrpcval($uid, "int"));
+            $msg->addParam(new xmlrpcval($PASS, "string"));
+            $msg->addParam(new xmlrpcval("crm.lead", "string"));
+            $msg->addParam(new xmlrpcval("create", "string"));
+            $msg->addParam(new xmlrpcval($arrayVal, "struct"));
+            $resp = $client->send($msg);
+
+            if ($resp->faultCode()) {
+                Log::Error($resp->faultString());
+            } else {
+                Log::Debug('Lead '.$resp->value()->scalarval().' created in OpenERP!');
+            }
+        } else {
+            Log::Debug('OpenERP settings in kolab.conf are incomplete.');
         }
     }
 
