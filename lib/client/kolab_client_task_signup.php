@@ -170,6 +170,7 @@ class kolab_client_task_signup extends kolab_client_task
             return;
         } else {
             $this->output->set_object('taskcontent', $this->translate('signup.usercreated'));
+            $this->send_mail($data);
         }
     }
 
@@ -298,6 +299,29 @@ class kolab_client_task_signup extends kolab_client_task
         }
 
         return $domain_form_names;
+    }
+
+    private function send_mail($data)
+    {
+        if($this->config_get('send_signup_mail', 'false', Conf::BOOL) && $this->config_get('mail_address')) {
+            $recipients = $this->config_get('mail_address');
+
+            $headers['From']    = 'Kolab Web Admin Signup <noreply@' . $this->config_get('primary_domain') . '>';
+            $headers['To']      = $this->config_get('mail_address');
+            $headers['Subject'] = 'New Kolab Signup from ' . $data['mailalternateaddress'];
+
+            $body = "{$data['cn']} <{$data['mailalternateaddress']}> from {$data['org']} just signed up for a Kolab account ({$data['mail']}).";
+
+            Log::Debug("Send Mail to $recipients ...");
+            Log::Trace($body);
+
+            $mail =& Mail::factory('sendmail');
+            $result = $mail->send($recipients, $headers, $body);
+
+            if(PEAR::isError($result)) {
+                Log::Error($result->toString());
+            }
+        }
     }
 
     /**
