@@ -161,7 +161,6 @@ class kolab_api_service_type extends kolab_api_service
         }
 
         // @TODO: check privileges
-
         $type  = $postdata['type'];
         $query = array(
             'key'         => $postdata['key'],
@@ -179,7 +178,7 @@ class kolab_api_service_type extends kolab_api_service
         }
 
         $result = $this->db->query("UPDATE {$type}_types SET "
-            . implode(', ', $query) . " WHERE id = ?", array($postdata['id']));
+            . implode(', ', $query) . " WHERE id = " . intval($postdata['id']));
 
         if (!$result) {
             return false;
