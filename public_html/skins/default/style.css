@@ -243,7 +243,7 @@ td.label {
   display: none;
   top: 2px;
   left: 15px;
-  width: 75px;
+  width: 150px;
   height: 18px;
   padding-left: 86px;
   color: #f8fcff;
@@ -251,6 +251,7 @@ td.label {
   text-shadow: black 1px 1px;
   z-index: 1;
   background: url(images/loading.gif) 0 3px no-repeat;
+  white-space: nowrap;
 }
 
 #topmenu .logout {
