@@ -122,6 +122,18 @@ class SQL
         return "'" . mysql_real_escape_string($str, $this->conn) . "'";
     }
 
+    public function escape_identifier($str)
+    {
+        $name = array();
+
+        foreach (explode('.', $str) as $elem) {
+            $elem = str_replace('`', '', $elem);
+            $name[] = '`' . $elem . '`';
+        }
+
+        return  implode($name, '.');
+    }
+
     private function _connect()
     {
         if (!$this->conn && !$this->conn_tried) {
