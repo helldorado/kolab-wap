@@ -192,10 +192,25 @@ class kolab_api_service_type extends kolab_api_service
 
     public function type_effective_rights($getdata, $postdata)
     {
-//        $auth = Auth::get_instance();
-//        $effective_rights = $auth->list_rights(empty($getdata['user']) ? 'user' : $getdata['user']);
-//        return $effective_rights;
-        return array();
+        $effective_rights = array();
+        // @TODO: set rights according to user group or sth
+        if ($_SESSION['user']->get_userid() == 'cn=Directory Manager') {
+            $attr_acl = array('read', 'write', 'delete');
+            $effective_rights = array(
+                'entryLevelRights' => array(
+                    'read', 'add', 'delete', 'write',
+                ),
+                'attributeLevelRights' => array(
+                    'key'         => $attr_acl,
+                    'name'        => $attr_acl,
+                    'description' => $attr_acl,
+                    'used_for'    => $attr_acl,
+                    'attributes'  => $attr_acl,
+                ),
+            );
+        }
+
+        return $effective_rights;
     }
 
     /**
