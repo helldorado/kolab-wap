@@ -279,10 +279,10 @@ class kolab_client_task
         // Run security checks
         $this->input_checks();
 
-        $action = $this->get_input('action', 'GET');
+        $this->action = $this->get_input('action', 'GET');
 
-        if ($action) {
-            $method = 'action_' . $action;
+        if ($this->action) {
+            $method = 'action_' . $this->action;
             if (method_exists($this, $method)) {
                 $this->$method();
             }
@@ -817,10 +817,11 @@ class kolab_client_task
      *
      * @param array $field Field attributes
      * @param array $data  Attribute values
+     * @param bool  $lc    Convert option values to lower-case
      *
      * @return array Options/Default definition
      */
-    protected function form_element_select_data($field, $data = array())
+    protected function form_element_select_data($field, $data = array(), $lc = false)
     {
         $options = array();
         $default = null;
@@ -836,7 +837,12 @@ class kolab_client_task
         }
 
         if (!empty($field['values'])) {
-            $options = array_combine($field['values'], $field['values']);
+            if ($lc) {
+                $options = array_combine(array_map('strtolower', $field['values']), $field['values']);
+            }
+            else {
+                $options = array_combine($field['values'], $field['values']);
+            }
 
             // Exceptions
             if ($field['name'] == 'ou') {
@@ -1237,7 +1243,7 @@ class kolab_client_task
 
         if ($writeable) {
             $form->add_button(array(
-                'value'   => kolab_html::escape($this->translate('submit.button')),
+                'value'   => kolab_html::escape($this->translate('button.submit')),
                 'onclick' => "kadm.{$name}_save()",
             ));
         }
@@ -1245,7 +1251,7 @@ class kolab_client_task
         if (!empty($data['id']) && in_array('delete', $data['effective_rights']['entry'])) {
             $id = $data['id'];
             $form->add_button(array(
-                'value'   => kolab_html::escape($this->translate('delete.button')),
+                'value'   => kolab_html::escape($this->translate('button.delete')),
                 'onclick' => "kadm.{$name}_delete('{$id}')",
             ));
         }

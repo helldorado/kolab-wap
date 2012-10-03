@@ -1648,9 +1648,6 @@ function kolab_admin()
 
   this.type_delete = function(id)
   {
-    // @TODO:
-    return alert('Not implemented');
-
     this.set_busy(true, 'deleting');
     this.api_post('type.delete', this.type_id_parse(id), 'type_delete_response');
   };
@@ -1667,16 +1664,14 @@ function kolab_admin()
       page -= 1;
 
     this.display_message('type.delete.success');
-    this.command('type.list', {page: page});
+    this.command('settings.type_list', {page: page});
     this.set_watermark('taskcontent');
   };
 
   this.type_save = function(reload, section)
   {
-    // @TODO:
-    return alert('Not implemented');
-
-    var data = this.serialize_form('#'+this.env.form_id),
+    var i, attr, request = {},
+      data = this.serialize_form('#'+this.env.form_id),
       action = data.id ? 'edit' : 'add';
 
     if (reload) {
@@ -1692,8 +1687,57 @@ function kolab_admin()
       return;
     }
 
+    if (data.key.match(/[^a-z_-]/)) {
+      this.display_message('attribute.key.invalid', 'error');
+      return;
+    }
+
+    request.id = data.id;
+    request.key = data.key;
+    request.name = data.name;
+    request.type = data.type;
+    request.description = data.description;
+    request.used_for = data.used_for;
+    request.attributes = {fields: {}, form_fields: {}, auto_form_fields: {}};
+    request.attributes.fields.objectclass = data.objectclass;
+
+    // Build attributes array compatible with the API format
+    // @TODO: use attr_table format
+    for (i in this.env.attr_table) {
+      attr = this.env.attr_table[i];
+      data = {};
+
+      if (attr.valtype == 'static') {
+        request.attributes.fields[i] = attr.data;
+        continue;
+      }
+
+      if (attr.type == 'list-autocomplete') {
+        data.type = 'list';
+        data.autocomplete = true;
+      }
+      else if (attr.type != 'text')
+        data.type = attr.type;
+
+      if ((attr.type == 'select' || attr.type == 'multiselect') && attr.values)
+        data.values = attr.values;
+
+      if (attr.optional)
+        data.optional = true;
+      if (attr.maxcount)
+        data.maxcount = attr.maxcount;
+
+      if (attr.valtype == 'normal' || attr.valtype == 'auto')
+        request.attributes.form_fields[i] = data;
+      if (attr.valtype == 'auto' || attr.valtype == 'auto-readonly') {
+        if (attr.data)
+          data.data = attr.data.split(/,/);
+        request.attributes.auto_form_fields[i] = data;
+      }
+    }
+
     this.set_busy(true, 'saving');
-    this.api_post('type.' + action, data, 'type_' + action + '_response');
+    this.api_post('type.' + action, request, 'type_' + action + '_response');
   };
 
   this.type_add_response = function(response)
@@ -1716,12 +1760,199 @@ function kolab_admin()
     this.set_watermark('taskcontent');
   };
 
+  /*********************************************************/
+  /*********       Various helper methods          *********/
+  /*********************************************************/
+
+  // Parses object type identifier
   this.type_id_parse = function(id)
   {
     var id = String(id).split(':');
     return {type: id[0], id: id[1]};
   };
 
+  // Removes attribute row
+  this.type_attr_delete = function(attr)
+  {
+    $('#attr_table_row_' + attr).remove();
+    $('select[name="attr_name"] > option[value="'+attr+'"]').show();
+
+    delete this.env.attr_table[attr];
+    this.type_attr_cancel();
+  };
+
+  // Displays attribute edition form
+  this.type_attr_edit = function(attr)
+  {
+    var form = $('#type_attr_form');
+
+    form.detach();
+    $('#attr_table_row_'+attr).after(form);
+    this.type_attr_form_init(attr);
+    form.slideDown(400);
+  };
+
+  // Displays attribute addition form
+  this.type_attr_add = function()
+  {
+    var form = $('#type_attr_form');
+
+    form.detach();
+    $('#type_attr_table > tbody').append(form);
+    this.type_attr_form_init();
+    form.slideDown(400);
+  };
+
+  // Saves attribute form, create/update attribute row
+  this.type_attr_save = function()
+  {
+    var attr, row, value = '', data = {},
+      form_data = this.serialize_form('#'+this.env.form_id),
+      name_select = $('select[name="attr_name"]');
+
+    // read attribute form data
+    data.type = form_data.attr_type;
+    data.valtype = form_data.attr_value;
+    data.optional = form_data.attr_optional;
+    data.data = data.valtype != 'normal' ? form_data.attr_data : null;
+    data.maxcount = data.type == 'list' || data.type == 'list-autocomplete' ? form_data.attr_maxcount : 0;
+    data.values = data.type == 'select' || data.type == 'multiselect' ? form_data.attr_options : [];
+
+    if (name_select.is(':visible')) {
+      // new attribute
+      attr = name_select.val();
+      row = $('<tr><td class="name"></td><td class="type"></td><td class="readonly"></td>'
+        +'<td class="optional"></td><td class="value"></td><td class="actions">'
+        +'<a class="button delete" title="delete" onclick="kadm.type_attr_delete(\''+attr+'\')" href="#delete"></a>'
+        +'<a class="button edit" title="edit" onclick="kadm.type_attr_edit(\''+attr+'\')" href="#edit"></a></td></tr>')
+        .attr('id', 'attr_table_row_' + attr).appendTo('#type_attr_table > tbody');
+    }
+    else {
+      // edited attribute
+      attr = $('span', name_select.parent()).text().toLowerCase();
+      row = $('#attr_table_row_' + attr);
+    }
+
+    if (data.valtype != 'normal') {
+      value = this.t('attribute.value.' + (data.valtype == 'static' ? 'static' : 'auto')) + ': ' + data.data;
+    }
+
+    // Update table row
+    $('td.name', row).text(this.env.attributes[attr]);
+    $('td.type', row).text(data.type);
+    $('td.readonly', row).text(data.valtype == 'auto-readonly' ? this.env.yes_label : this.env.no_label);
+    $('td.optional', row).text(data.optional ? this.env.yes_label : this.env.no_label);
+    $('td.value', row).text(value);
+
+    // Update env data
+    this.env.attr_table[attr] = data;
+
+    this.type_attr_cancel();
+  };
+
+  // Hide attribute form
+  this.type_attr_cancel = function()
+  {
+    $('#type_attr_form').hide();
+  };
+
+  this.type_attr_form_init = function(attr)
+  {
+    var name_select = $('select[name="attr_name"]'),
+      data = attr ? this.env.attr_table[attr] : {},
+      type = data.type ? data.type : 'text';
+
+    $('select[name="attr_type"]').val(type);
+    $('select[name="attr_value"]').val(attr ? data.valtype : 'normal');
+    $('input[name="attr_optional"]').attr('checked', attr ? data.optional : false);
+    $('input[name="attr_data"]').val(attr ? data.data : '');
+    $('input[name="attr_maxcount"]').val(data.maxcount ? data.maxcount : '');
+    $('textarea[name="attr_options"]').val(data.values ? data.values.join("\n") : '');
+    this.form_element_update({name: 'attr_options'});
+
+    $('span', name_select.parent()).remove();
+    this.type_attr_type_change('select[name="attr_type"]');
+    this.type_attr_value_change('select[name="attr_value"]');
+
+    if (attr) {
+      name_select.hide().val(attr);
+      $('<span></span>').text(this.env.attributes[attr] ? this.env.attributes[attr] : attr).appendTo(name_select.parent());
+      return;
+    }
+
+    this.type_attr_select_init();
+    name_select.show();
+  };
+
+  // Initialize attribute name selector
+  this.type_attr_select_init = function()
+  {
+    var select = $('select[name="attr_name"]'),
+      options = $('option', select);
+
+    options.each(function() {
+      if (kadm.env.attr_table[this.value])
+        $(this).attr('disabled', true);
+    });
+    options.not(':disabled').first().attr('selected', true);
+  };
+
+  // Update attribute form on value type change
+  this.type_attr_value_change = function(elem)
+  {
+    var type = $(elem).val();
+    $('input[name="attr_data"]')[type != 'normal' ? 'show' : 'hide']();
+    $('#attr_form_row_optional')[type != 'static' ? 'show' : 'hide']();
+    $('#attr_form_row_readonly')[type != 'static' ? 'show' : 'hide']();
+  };
+
+  // Update attribute form on type change
+  this.type_attr_type_change = function(elem)
+  {
+    var type = $(elem).val();
+    $('#attr_form_row_maxcount')[type == 'list' || type == 'list-autocomplete' ? 'show' : 'hide']();
+    $('#attr_form_row_options')[type == 'select' || type == 'multiselect' ? 'show' : 'hide']();
+  };
+
+  // Update attributes list on object classes change
+  this.type_attr_class_change = function(field)
+  {
+    var data = {attributes: 'attribute', classes: this.type_object_classes(field)};
+    this.api_post('form_value.select_options', data, 'type_attr_class_change_response');
+    this.type_attr_cancel();
+  };
+
+  // Update attributes list on object classes change - API response handler
+  this.type_attr_class_change_response = function(response)
+  {
+    if (!this.api_response(response))
+      return;
+
+    var i, lc, list = response.result.attribute.list,
+      required = response.result.attribute.required,
+      select = $('select[name="attr_name"]');
+
+    this.env.attributes = {};
+    select.empty();
+
+    for (i in list) {
+      lc = list[i].toLowerCase()
+      this.env.attributes[list[i].toLowerCase()] = list[i];
+      $('<option>').text(list[i]).val(lc).appendTo(select);
+    }
+  };
+
+  // Return selected objectclasses array
+  this.type_object_classes = function(field)
+  {
+    var classes = [];
+    $('option:selected', $(field)).each(function() {
+      classes.push(this.value);
+    });
+    return classes;
+  };
+
+  // Password generation - request
   this.generate_password = function(fieldname)
   {
     this.env.password_field = fieldname;
@@ -1730,6 +1961,7 @@ function kolab_admin()
     this.api_post('form_value.generate', {attributes: [fieldname]}, 'generate_password_response');
   };
 
+  // Password generation - response handler
   this.generate_password_response = function(response)
   {
     if (!this.api_response(response))

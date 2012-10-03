@@ -7,16 +7,29 @@ $LANG['about.support'] = 'Professional support is available from <a href="http:/
 $LANG['about.technology'] = 'Technology';
 $LANG['about.warranty'] = 'It comes with absolutely <b>no warranties</b> and is typically run entirely self supported. You can find help & information on the community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';
 
-$LANG['attribute.auto'] = 'Auto-generated';
+$LANG['attribute.add'] = 'Add attribute';
 $LANG['attribute.static'] = 'Static value';
 $LANG['attribute.name'] = 'Attribute';
 $LANG['attribute.optional'] = 'Optional';
+$LANG['attribute.maxcount'] = 'Max. count';
+$LANG['attribute.readonly'] = 'Read-only';
 $LANG['attribute.type'] = 'Field type';
+$LANG['attribute.value'] = 'Value';
+$LANG['attribute.value.auto'] = 'Generated';
+$LANG['attribute.value.auto-readonly'] = 'Generated (read-only)';
+$LANG['attribute.value.normal'] = 'Normal';
+$LANG['attribute.value.static'] = 'Static';
+$LANG['attribute.options'] = 'Options';
+$LANG['attribute.key.invalid'] = 'Type key contains forbidden characters!';
+
+$LANG['button.cancel'] = 'Cancel';
+$LANG['button.delete'] = 'Delete';
+$LANG['button.save'] = 'Save';
+$LANG['button.submit'] = 'Submit';
 
 $LANG['creatorsname'] = 'Created by';
 $LANG['days'] = 'days';
 $LANG['debug'] = 'Debug info';
-$LANG['delete.button'] = 'Delete';
 $LANG['deleting'] = 'Deleting data...';
 
 $LANG['domain.add'] = 'Add Domain';
@@ -140,12 +153,13 @@ $LANG['signup.wronguid'] = 'Invalid Username!';
 $LANG['signup.wrongmailalternateaddress'] = 'Please provide a valid Email Address!';
 $LANG['signup.footer'] = 'This is a service offered by <a href="http://kolabsys.com">Kolab Systems</a>.';
 
-$LANG['submit.button'] = 'Submit';
-
 $LANG['type.add'] = 'Add Object Type';
+$LANG['type.add.success'] = 'Object type created successfully.';
 $LANG['type.attributes'] = 'Attributes';
 $LANG['type.description'] = 'Description';
+$LANG['type.delete.success'] = 'Object type deleted successfully.';
 $LANG['type.domain'] = 'Domain';
+$LANG['type.edit.success'] = 'Object type updated successfully.';
 $LANG['type.group'] = 'Group';
 $LANG['type.list'] = 'Object Types List';
 $LANG['type.key'] = 'Key';
@@ -240,3 +254,5 @@ $LANG['user.userpassword2'] = 'Confirm password';
 $LANG['user.uidnumber'] = 'User ID number';
 
 $LANG['welcome'] = 'Welcome to the Kolab Groupware Server Maintenance';
+
+$LANG['yes'] = 'yes';

@@ -32,8 +32,9 @@ class kolab_client_task_settings extends kolab_client_task
     );
 
     protected $form_element_types = array(
-        'text', 'select', 'multiselect', 'list', 'checkbox', 'password'
+        'text', 'select', 'multiselect', 'list', 'list-autocomplete', 'checkbox', 'password'
     );
+
 
     /**
      * Default action.
@@ -382,9 +383,11 @@ class kolab_client_task_settings extends kolab_client_task
         $title    = $add_mode ? $this->translate('type.add') : $data['name'];
 
         // unset $data for correct form_create() run, we've got already data specified
+        $effective_rights = $data['effective_rights'];
+        $id = $data['id'] ? $data['type'].':'.$data['id'] : null;
         $data = array();
-        // enable delete button
-        $data['effective_rights']['entry'] = array('delete');
+        $data['effective_rights'] = $effective_rights;
+        $data['id'] = $id;
 
         // Create form object and populate with fields
         $form = $this->form_create('type', $attribs, $sections, $fields, $fields_map, $data, $add_mode);
@@ -431,6 +434,7 @@ class kolab_client_task_settings extends kolab_client_task
                 'multiple' => true,
                 'required' => true,
                 'value'    => $data['objectclass'],
+                'onchange' => "kadm.type_attr_class_change(this)",
             ),
             'used_for' => array(
                 'value'   => 'hosted',
@@ -447,7 +451,7 @@ class kolab_client_task_settings extends kolab_client_task
             unset($form_fields['used_for']);
         }
 
-/*
+
         // Get the rights on the entry and attribute level
         $data['effective_rights'] = $this->effective_rights($name, $data['id']);
         $attribute_rights         = $data['effective_rights']['attribute'];
@@ -455,7 +459,7 @@ class kolab_client_task_settings extends kolab_client_task
 
         // See if "administrators" (those who can delete and add back on the entry
         // level) may override the automatically generated contents of auto_form_fields.
-        $admin_auto_fields_rw = $this->config_get('admin_auto_fields_rw', false, Conf::BOOL);
+        //$admin_auto_fields_rw = $this->config_get('admin_auto_fields_rw', false, Conf::BOOL);
 
         foreach ($fields as $idx => $field) {
             if (!array_key_exists($idx, $attribute_rights)) {
@@ -481,7 +485,7 @@ class kolab_client_task_settings extends kolab_client_task
                 }
             }
         }
-*/
+
         // (Re-|Pre-)populate auto_form_fields
         if (!$add_mode) {
             // Add debug information
@@ -500,7 +504,7 @@ class kolab_client_task_settings extends kolab_client_task
         }
 
         // Get object classes
-        $sd = $this->form_element_select_data($fields['objectclass']);
+        $sd = $this->form_element_select_data($fields['objectclass'], null, true);
         $fields['objectclass'] = array_merge($fields['objectclass'], $sd);
 
         // Add entry identifier
@@ -521,38 +525,41 @@ class kolab_client_task_settings extends kolab_client_task
         return $fields;
     }
 
+    /**
+     * Type attributes table
+     */
     private function type_form_attributes($data)
     {
         $attributes = array();
         $rows       = array();
+        $attr_table = array();
         $table      = array(
+            'id'    => 'type_attr_table',
             'class' => 'list',
         );
         $cells      = array(
             'name' => array(
-                'class' => 'name',
                 'body'  => $this->translate('attribute.name'),
             ),
             'type' => array(
-                'class' => 'type',
                 'body'  => $this->translate('attribute.type'),
             ),
+            'readonly' => array(
+                'body'  => $this->translate('attribute.readonly'),
+            ),
             'optional' => array(
-                'class' => 'optional',
                 'body'  => $this->translate('attribute.optional'),
             ),
-            'auto' => array(
-                'class' => 'auto',
-                'body'  => $this->translate('attribute.auto'),
+            'value' => array(
+                'body'  => $this->translate('attribute.value'),
             ),
-            'static' => array(
-                'class' => 'default',
-                'body'  => $this->translate('attribute.static'),
+            'actions' => array(
             ),
-//            'actions' => array(
-//                'class' => 'actions',
-//            ),
         );
+
+        foreach ($cells as $idx => $cell) {
+            $cells[$idx]['class'] = $idx;
+        }
 
         // get attributes list from $data
         if (!empty($data) && count($data) > 1) {
@@ -565,40 +572,226 @@ class kolab_client_task_settings extends kolab_client_task
             $attributes = array_unique($attributes);
         }
 
+        // get all available attributes
+        $available = $this->type_attributes($data['objectclass']);
+
         // table header
         $table['head'] = array(array('cells' => $cells));
-/*
-        // attribute row elements
-        $cells['type']['element'] = array(
-            'type'    => kolab_form::INPUT_SELECT,
-            'options' => $this->form_element_types,
-        );
-        $cells['optional']['element'] = array(
-            'type'  => kolab_form::INPUT_CHECKBOX,
-            'value' => 1,
-        );
-*/
+
         $yes = $this->translate('yes');
+        $no  = '';
         // defined attributes
         foreach ($attributes as $attr) {
-            $row = $cells;
+            $row          = $cells;
+            $type         = $data['attributes']['form_fields'][$attr]['type'];
+            $optional     = $data['attributes']['form_fields'][$attr]['optional'];
+            $autocomplete = $data['attributes']['form_fields'][$attr]['autocomplete'];
+            $valtype      = 'normal';
+            $value        = '';
 
-            $type     = $data['attributes']['form_fields'][$attr]['type'];
-            $optional = $data['attributes']['form_fields'][$attr]['optional'];
+            if ($type == 'list' && $autocomplete) {
+                $type = 'list-autocomplete';
+            }
+
+            if ($data['attributes']['fields'][$attr]) {
+                $valtype = 'static';
+                $_data   = $data['attributes']['fields'][$attr];
+                $value   = $this->translate('attribute.value.static') . ': ' . kolab_html::escape($_data);
+            }
+            else if (isset($data['attributes']['auto_form_fields'][$attr])) {
+                $valtype = 'auto';
+                if (is_array($data['attributes']['auto_form_fields'][$attr]['data'])) {
+                    $_data = implode(',', $data['attributes']['auto_form_fields'][$attr]['data']);
+                }
+                else {
+                    $_data = '';
+                }
+                $value = $this->translate('attribute.value.auto') . ': ' . kolab_html::escape($_data);
+
+                if (empty($data['attributes']['form_fields'][$attr])) {
+                    $valtype = 'auto-readonly';
+                }
+            }
 
             // set cell content
-            $row['name']['body']     = $attr;
-            $row['static']['body']   = kolab_html::escape($data['attributes']['fields'][$attr]);
-            $row['auto']['body']     = isset($data['attributes']['fields'][$attr]) ? $yes : '';
+            $row['name']['body']     = !empty($available[$attr]) ? $available[$attr] : $attr;
             $row['type']['body']     = !empty($type) ? $type : 'text';
-            $row['optional']['body'] = $optional ? $yes : '';
+            $row['value']['body']    = $value;
+            $row['readonly']['body'] = $valtype == 'auto-readonly' ? $yes : $no;
+            $row['optional']['body'] = $optional ? $yes : $no;
+            $row['actions']['body']  = 
+                kolab_html::a(array('href' => '#delete', 'onclick' => "kadm.type_attr_delete('$attr')",
+                    'class' => 'button delete', 'title' => $this->translate('delete')))
+                . kolab_html::a(array('href' => '#edit', 'onclick' => "kadm.type_attr_edit('$attr')",
+                    'class' => 'button edit', 'title' => $this->translate('edit')));
 
-            $rows[] = array('cells' => $row);
+            $rows[] = array(
+                'id'    => 'attr_table_row_' . $attr,
+                'cells' => $row,
+            );
+
+            // data array for the UI
+            $attr_table[$attr] = array(
+                'type'     => !empty($type) ? $type : 'text',
+                'valtype'  => $valtype,
+                'optional' => $optional,
+                'maxcount' => $data['attributes']['form_fields'][$attr]['maxcount'],
+                'data'     => $_data,
+                'values'   => $data['attributes']['form_fields'][$attr]['values'],
+            );
         }
+
+        // edit form
+        $rows[] = array(
+            'cells' => array(
+                array(
+                    'body'    => $this->type_form_attributes_form($available),
+                    'colspan' => count($cells),
+                ),
+            ),
+            'id' => 'type_attr_form',
+        );
 
         $table['body'] = $rows;
 
+        // sort attr_table by attribute name
+        ksort($attr_table);
+
+        // set environment variables
+        $this->output->set_env('attr_table', $attr_table);
+        $this->output->set_env('yes_label', $yes);
+        $this->output->set_env('no_label', $no);
+        $this->output->add_translation('attribute.value.auto', 'attribute.value.static',
+            'attribute.key.invalid');
+
+        // Add attribute link
+        $link = kolab_html::a(array(
+            'href' => '#add_attr', 'class' => 'add_attr',
+            'onclick' => "kadm.type_attr_add()",
+            'content' =>  $this->translate('attribute.add')), true);
+
+        return kolab_html::table($table) . $link;
+    }
+
+    /**
+     * Attributes edit form
+     */
+    private function type_form_attributes_form($attributes)
+    {
+        // build form
+        $rows = array();
+        $form = array(
+            'name' => array(
+                'type' => kolab_form::INPUT_SELECT,
+                'options' => $attributes,
+            ),
+            'type' => array(
+                'type' => kolab_form::INPUT_SELECT,
+                'options' => array_combine($this->form_element_types, $this->form_element_types),
+                'onchange' => 'kadm.type_attr_type_change(this)',
+            ),
+            'options' => array(
+                'type'      => kolab_form::INPUT_TEXTAREA,
+                'data-type' => kolab_form::TYPE_LIST,
+            ),
+            'maxcount' => array(
+                'type' => kolab_form::INPUT_TEXT,
+                'size' => 5,
+            ),
+            'value' => array(
+                'type'  => kolab_form::INPUT_SELECT,
+                'options' => array(
+                    'normal'        => $this->translate('attribute.value.normal'),
+                    'auto'          => $this->translate('attribute.value.auto'),
+                    'auto-readonly' => $this->translate('attribute.value.auto-readonly'),
+                    'static'        => $this->translate('attribute.value.static'),
+                ),
+                'onchange' => 'kadm.type_attr_value_change(this)',
+            ),
+            'optional' => array(
+                'type'  => kolab_form::INPUT_CHECKBOX,
+                'value' => 1,
+            ),
+        );
+
+        foreach ($form as $idx => $element) {
+            $element['name'] = 'attr_' . $idx;
+            $body = kolab_form::get_element($element);
+
+            if ($idx == 'value') {
+                $body .= kolab_form::get_element(array(
+                    'name' => 'attr_data',
+                    'type' => kolab_form::INPUT_TEXT,
+                ));
+            }
+
+            $rows[] = array(
+                'id' => 'attr_form_row_' . $idx,
+                'cells' => array(
+                    array(
+                        'class' => 'label',
+                        'body'  => $this->translate('attribute.' . $idx),
+                    ),
+                    array(
+                        'class' => 'value',
+                        'body'  => $body,
+                    ),
+                ),
+            );
+        }
+
+        $rows[] = array(
+            'cells' => array(
+                array(
+                    'colspan' => 2,
+                    'class' => 'formbuttons',
+                    'body' => kolab_html::input(array(
+                        'type'    => 'button',
+                        'value'   => $this->translate('button.save'),
+                        'onclick' => "kadm.type_attr_save()",
+                    ))
+                    . kolab_html::input(array(
+                        'type'    => 'button',
+                        'value'   => $this->translate('button.cancel'),
+                        'onclick' => "kadm.type_attr_cancel()",
+                    )),
+                ),
+            ),
+        );
+
+        $table = array(
+            'class' => 'form',
+            'body'  => $rows,
+        );
+
         return kolab_html::table($table);
+    }
+
+    /**
+     * Returns list of LDAP attributes for specified opject classes.
+     */
+    public function type_attributes($object_class = null)
+    {
+        $post_data = array(
+            'attributes' => array('attribute'),
+            'classes'    => $object_class,
+        );
+
+        // get all available attributes
+        $response   = $this->api->post('form_value.select_options', null, $post_data);
+        $response   = $response->get('attribute');
+        $attributes = array();
+
+        // convert to hash array
+        if (!empty($response['list'])) {
+            $attributes = array_combine(array_map('strtolower', $response['list']), $response['list']);
+        }
+
+        $this->output->set_env('attributes', $attributes);
+        // @TODO: check if all required attributes are used
+//        $this->output->set_env('attributes_required', $attributes['required']);
+
+        return $attributes;
     }
 
     /**
