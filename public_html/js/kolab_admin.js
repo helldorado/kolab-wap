@@ -1274,22 +1274,12 @@ function kolab_admin()
 
   this.domain_add_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('domain.add.success');
-    this.command('domain.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'domain.add', 'domain.list');
   };
 
   this.domain_edit_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('domain.edit.success');
-    this.command('domain.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'domain.edit', 'domain.list');
   };
 
   this.user_info = function(id)
@@ -1299,35 +1289,13 @@ function kolab_admin()
 
   this.user_list = function(props)
   {
-    if (!props)
-      props = {};
-
-    if (props.search === undefined && this.env.search_request)
-      props.search_request = this.env.search_request;
-
-    this.http_post('user.list', props);
+    this.list_handler('user', props);
   };
 
   this.user_delete = function(userid)
   {
     this.set_busy(true, 'deleting');
     this.api_post('user.delete', {user: userid}, 'user_delete_response');
-  };
-
-  this.user_delete_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    var page = this.env.list_page;
-
-    // goto previous page if last user on the current page has been deleted
-    if (this.env.list_count)
-      page -= 1;
-
-    this.display_message('user.delete.success');
-    this.command('user.list', {page: page});
-    this.set_watermark('taskcontent');
   };
 
   this.user_save = function(reload, section)
@@ -1360,27 +1328,19 @@ function kolab_admin()
     this.api_post('user.' + action, data, 'user_' + action + '_response');
   };
 
+  this.user_delete_response = function(response)
+  {
+    this.response_handler(response, 'user.delete', 'user.list');
+  };
+
   this.user_add_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('user.add.success');
-    this.command('user.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'user.add', 'user.list');
   };
 
   this.user_edit_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('user.edit.success');
-
-    if ($('#userlist').length) {
-      this.command('user.list', {page: this.env.list_page});
-      this.set_watermark('taskcontent');
-    }
+    this.response_handler(response, 'user.edit', 'user.list');
   };
 
   this.group_info = function(id)
@@ -1390,35 +1350,13 @@ function kolab_admin()
 
   this.group_list = function(props)
   {
-    if (!props)
-      props = {};
-
-    if (props.search === undefined && this.env.search_request)
-      props.search_request = this.env.search_request;
-
-    this.http_post('group.list', props);
+    this.list_handler('group', props);
   };
 
   this.group_delete = function(groupid)
   {
     this.set_busy(true, 'deleting');
     this.api_post('group.delete', {group: groupid}, 'group_delete_response');
-  };
-
-  this.group_delete_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    var page = this.env.list_page;
-
-    // goto previous page if last record on the current page has been deleted
-    if (this.env.list_count)
-      page -= 1;
-
-    this.display_message('group.delete.success');
-    this.command('group.list', {page: page});
-    this.set_watermark('taskcontent');
   };
 
   this.group_save = function(reload, section)
@@ -1443,24 +1381,19 @@ function kolab_admin()
     this.api_post('group.' + action, data, 'group_' + action + '_response');
   };
 
+  this.group_delete_response = function(response)
+  {
+    this.response_handler(response, 'group.delete', 'group.list');
+  };
+
   this.group_add_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('group.add.success');
-    this.command('group.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'group.add', 'group.list');
   };
 
   this.group_edit_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('group.edit.success');
-    this.command('group.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'group.edit', 'group.list');
   };
 
   this.resource_info = function(id)
@@ -1470,35 +1403,13 @@ function kolab_admin()
 
   this.resource_list = function(props)
   {
-    if (!props)
-      props = {};
-
-    if (props.search === undefined && this.env.search_request)
-      props.search_request = this.env.search_request;
-
-    this.http_post('resource.list', props);
+    this.list_handler('resource', props);
   };
 
   this.resource_delete = function(resourceid)
   {
     this.set_busy(true, 'deleting');
     this.api_post('resource.delete', {resource: resourceid}, 'resource_delete_response');
-  };
-
-  this.resource_delete_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    var page = this.env.list_page;
-
-    // goto previous page if last record on the current page has been deleted
-    if (this.env.list_count)
-      page -= 1;
-
-    this.display_message('resource.delete.success');
-    this.command('resource.list', {page: page});
-    this.set_watermark('taskcontent');
   };
 
   this.resource_save = function(reload, section)
@@ -1523,24 +1434,19 @@ function kolab_admin()
     this.api_post('resource.' + action, data, 'resource_' + action + '_response');
   };
 
+  this.resource_delete_response = function(response)
+  {
+    this.response_handler(response, 'resource.delete', 'resource.list');
+  };
+
   this.resource_add_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('resource.add.success');
-    this.command('resource.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'resource.add', 'resource.list');
   };
 
   this.resource_edit_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('resource.edit.success');
-    this.command('resource.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'resource.edit', 'resource.list');
   };
 
   this.role_info = function(id)
@@ -1550,35 +1456,13 @@ function kolab_admin()
 
   this.role_list = function(props)
   {
-    if (!props)
-      props = {};
-
-    if (props.search === undefined && this.env.search_request)
-      props.search_request = this.env.search_request;
-
-    this.http_post('role.list', props);
+    this.list_handler('role', props);
   };
 
   this.role_delete = function(roleid)
   {
     this.set_busy(true, 'deleting');
     this.api_post('role.delete', {role: roleid}, 'role_delete_response');
-  };
-
-  this.role_delete_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    var page = this.env.list_page;
-
-    // goto previous page if last record on the current page has been deleted
-    if (this.env.list_count)
-      page -= 1;
-
-    this.display_message('role.delete.success');
-    this.command('role.list', {page: page});
-    this.set_watermark('taskcontent');
   };
 
   this.role_save = function(reload, section)
@@ -1603,24 +1487,19 @@ function kolab_admin()
     this.api_post('role.' + action, data, 'role_' + action + '_response');
   };
 
+  this.role_delete_response = function(response)
+  {
+    this.response_handler(response, 'role.delete', 'role.list');
+  };
+
   this.role_add_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('role.add.success');
-    this.command('role.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'role.add', 'role.list');
   };
 
   this.role_edit_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('role.edit.success');
-    this.command('role.list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'role.edit', 'role.list');
   };
 
   this.settings_type_info = function(id)
@@ -1650,22 +1529,6 @@ function kolab_admin()
   {
     this.set_busy(true, 'deleting');
     this.api_post('type.delete', this.type_id_parse(id), 'type_delete_response');
-  };
-
-  this.type_delete_response = function(response)
-  {
-    if (!this.api_response(response))
-      return;
-
-    var page = this.env.list_page;
-
-    // goto previous page if last record on the current page has been deleted
-    if (this.env.list_count)
-      page -= 1;
-
-    this.display_message('type.delete.success');
-    this.command('settings.type_list', {page: page});
-    this.set_watermark('taskcontent');
   };
 
   this.type_save = function(reload, section)
@@ -1740,29 +1603,58 @@ function kolab_admin()
     this.api_post('type.' + action, request, 'type_' + action + '_response');
   };
 
+  this.type_delete_response = function(response)
+  {
+    this.response_handler(response, 'type.delete', 'settings.type_list');
+  };
+
   this.type_add_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('type.add.success');
-    this.command('settings.type_list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'type.add', 'settings.type_list');
   };
 
   this.type_edit_response = function(response)
   {
-    if (!this.api_response(response))
-      return;
-
-    this.display_message('type.edit.success');
-    this.command('settings.type_list', {page: this.env.list_page});
-    this.set_watermark('taskcontent');
+    this.response_handler(response, 'type.edit', 'settings.type_list');
   };
 
   /*********************************************************/
   /*********       Various helper methods          *********/
   /*********************************************************/
+
+  // universal API response handler
+  this.response_handler = function(response, action, list)
+  {
+    if (!this.api_response(response))
+      return;
+
+    this.display_message(action + '.success');
+
+    var page = this.env.list_page,
+      list_id = list.replace(/[^a-z]/, '');
+
+    // if objects list exists
+    if ($('#'+list_id).length) {
+      // goto previous page if last record on the current page has been deleted
+      if (action.match(/\.delete/) && this.env.list_count)
+        page -= 1;
+
+      this.command(list, {page: page});
+      this.set_watermark('taskcontent');
+    }
+  };
+
+  // universal list request handler
+  this.list_handler = function(type, props)
+  {
+    if (!props)
+      props = {};
+
+    if (props.search === undefined && this.env.search_request)
+      props.search_request = this.env.search_request;
+
+    this.http_post(type + '.list', props);
+  };
 
   // Parses object type identifier
   this.type_id_parse = function(id)
