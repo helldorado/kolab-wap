@@ -1250,6 +1250,17 @@ function kolab_admin()
     this.http_post('domain.info', {id: id});
   };
 
+  this.domain_list = function(props)
+  {
+    this.list_handler('domain', props);
+  };
+
+  this.domain_delete = function(domainid)
+  {
+    this.set_busy(true, 'deleting');
+    this.api_post('domain.delete', {domain: domainid}, 'domain_delete_response');
+  };
+
   this.domain_save = function(reload, section)
   {
     var data = this.serialize_form('#'+this.env.form_id),
@@ -1270,6 +1281,11 @@ function kolab_admin()
 
     this.set_busy(true, 'saving');
     this.api_post('domain.' + action, data, 'domain_' + action + '_response');
+  };
+
+  this.domain_delete_response = function(response)
+  {
+    this.response_handler(response, 'domain.delete', 'domain.list');
   };
 
   this.domain_add_response = function(response)
