@@ -270,13 +270,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function group_delete($group) {
-        $group_dn = $this->entry_dn($group);
-
-        if (!$group_dn) {
-            return false;
-        }
-
-        return $this->delete_entry($group_dn);
+        return $this->entry_delete($group);
     }
 
     public function group_edit($group, $attributes, $typeid = null) {
@@ -607,13 +601,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function resource_delete($resource) {
-        $resource_dn = $this->entry_dn($resource);
-
-        if (!$resource_dn) {
-            return false;
-        }
-
-        return $this->delete_entry($resource_dn);
+        return $this->entry_delete($resource);
     }
 
     public function resource_edit($resource, $attributes, $typeid = null) {
@@ -702,6 +690,10 @@ class LDAP extends Net_LDAP3 {
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($_role_dn, $_role[$_role_dn], $attributes);
+    }
+
+    public function role_delete($role) {
+        return $this->entry_delete($role);
     }
 
     public function role_find_by_attribute($attribute) {
@@ -798,13 +790,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_delete($user) {
-        $user_dn = $this->entry_dn($user);
-
-        if (!$user_dn) {
-            return false;
-        }
-
-        return $this->delete_entry($user_dn);
+        return $this->entry_delete($user);
     }
 
     public function user_info($user, $attributes = array('*')) {
@@ -830,6 +816,16 @@ class LDAP extends Net_LDAP3 {
 
     public function user_find_by_attribute($attribute) {
         return $this->entry_find_by_attribute($attribute);
+    }
+
+    protected function entry_delete($entry) {
+        $entry_dn = $this->entry_dn($entry);
+
+        if (!$entry_dn) {
+            return false;
+        }
+
+        return $this->delete_entry($entry_dn);
     }
 
     public function _config_get($key, $default = NULL) {
