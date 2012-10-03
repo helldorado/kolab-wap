@@ -366,6 +366,11 @@ class Auth {
         return $this->auth_instance()->role_edit($role, $attributes, $typeid);
     }
 
+    public function role_delete($role)
+    {
+        return $this->auth_instance()->role_delete($role);
+    }
+
     public function role_find_by_attribute($attribute)
     {
         return $this->auth_instance()->role_find_by_attribute($attribute);
