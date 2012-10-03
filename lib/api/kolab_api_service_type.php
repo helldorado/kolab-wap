@@ -37,16 +37,16 @@ class kolab_api_service_type extends kolab_api_service
      */
     public function capabilities($domain)
     {
-        $auth = Auth::get_instance();
+        $effective_rights = $this->type_effective_rights();
+        $rights           = array();
 
-        //$effective_rights = $auth->list_rights('user');
-
-        $rights = array();
-
-        // @TODO: set rights according to user group or sth
-        if ($_SESSION['user']->get_userid() == 'cn=Directory Manager') {
+        if (in_array('add', (array)$effective_rights['entryLevelRights'])) {
             $rights['add'] = "w";
+        }
+        if (in_array('delete', (array)$effective_rights['entryLevelRights'])) {
             $rights['delete'] = "w";
+        }
+        if (in_array('modrdn', (array)$effective_rights['entryLevelRights'])) {
             $rights['edit'] = "w";
         }
 
@@ -78,7 +78,10 @@ class kolab_api_service_type extends kolab_api_service
             return false;
         }
 
-        // @TODO: check privileges
+        $effective_rights = $this->type_effective_rights();
+        if (!in_array('add', (array)$effective_rights['entryLevelRights'])) {
+            return false;
+        }
 
         $type  = $postdata['type'];
         $query = array(
@@ -128,10 +131,13 @@ class kolab_api_service_type extends kolab_api_service
             return false;
         }
 
-        $object_name = $postdata['type'];
-        $object_id   = $postdata['id'];
+        $object_name      = $postdata['type'];
+        $object_id        = $postdata['id'];
+        $effective_rights = $this->type_effective_rights();
 
-        // @TODO: check privileges
+        if (!in_array('delete', (array)$effective_rights['entryLevelRights'])) {
+            return false;
+        }
 
         $this->db->query("DELETE FROM {$object_name}_types WHERE id = " . intval($object_id));
 
@@ -160,7 +166,11 @@ class kolab_api_service_type extends kolab_api_service
             return false;
         }
 
-        // @TODO: check privileges
+        $effective_rights = $this->type_effective_rights();
+        if (!in_array('modrdn', (array)$effective_rights['entryLevelRights'])) {
+            return false;
+        }
+
         $type  = $postdata['type'];
         $query = array(
             'key'         => $postdata['key'],
@@ -190,7 +200,7 @@ class kolab_api_service_type extends kolab_api_service
         return $postdata;
     }
 
-    public function type_effective_rights($getdata, $postdata)
+    public function type_effective_rights($getdata = null, $postdata = null)
     {
         $effective_rights = array();
         // @TODO: set rights according to user group or sth
@@ -198,7 +208,7 @@ class kolab_api_service_type extends kolab_api_service
             $attr_acl = array('read', 'write', 'delete');
             $effective_rights = array(
                 'entryLevelRights' => array(
-                    'read', 'add', 'delete', 'write',
+                    'read', 'add', 'delete', 'modrdn',
                 ),
                 'attributeLevelRights' => array(
                     'key'         => $attr_acl,
