@@ -284,7 +284,7 @@ class kolab_client_task_settings extends kolab_client_task
         }
 
         $table = kolab_html::table(array(
-            'id'    => 'typelist',
+            'id'    => 'settingstypelist',
             'class' => 'list',
             'head'  => $head,
             'body'  => $rows,
