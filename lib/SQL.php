@@ -30,8 +30,9 @@ class SQL
     private $sql_uri = "mysql://username:password@hostname/database";
 
     /* Placeholder for the existing MySQL connection */
-    private $conn = FALSE;
+    private $conn = false;
 
+    private $conn_tried = false;
     private $sql_stats = array(
         'queries' => 0,
         'query_time' => 0,
@@ -114,12 +115,16 @@ class SQL
             return 'NULL';
         }
 
+        if (!$this->conn) {
+            $this->_connect();
+        }
+
         return "'" . mysql_real_escape_string($str, $this->conn) . "'";
     }
 
     private function _connect()
     {
-        if (!$this->conn) {
+        if (!$this->conn && !$this->conn_tried) {
             Log::debug("SQL: Connecting to " . $this->sql_uri);
 
             $_uri = parse_url($this->sql_uri);
@@ -127,6 +132,7 @@ class SQL
             $this->_password = $_uri['pass'];
             $this->_hostname = $_uri['host'];
             $this->_database = str_replace('/','',$_uri['path']);
+            $this->conn_tried = true;
 
             $this->conn = mysql_connect($this->_hostname, $this->_username, $this->_password);
             mysql_select_db($this->_database, $this->conn);
