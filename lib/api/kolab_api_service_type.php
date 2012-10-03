@@ -133,7 +133,7 @@ class kolab_api_service_type extends kolab_api_service
 
         // @TODO: check privileges
 
-        $this->db->query("DELETE FROM {$object_name}_types WHERE id = ?", array($object_id));
+        $this->db->query("DELETE FROM {$object_name}_types WHERE id = " . intval($object_id));
 
         return (bool) $this->db->affected_rows();
     }
