@@ -92,11 +92,11 @@ class kolab_api_service_type extends kolab_api_service
             $query['used_for'] = $postdata['used_for'] == 'hosted' ? 'hosted' : null;
         }
 
-        $query = array_map(array($this->db, 'escape'), $query);
+        $query   = array_map(array($this->db, 'escape'), $query);
+        $columns = array_map(array($this->db, 'escape_identifier'), array_keys($query));
 
         $this->db->query("INSERT INTO {$type}_types"
-            . " (" . implode(',', array_keys($query)) . ")"
-            . " VALUES (" . implode(',', $query) . ")");
+            . " (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $query) . ")");
 
         if (!($id = $this->db->last_insert_id())) {
             return false;
@@ -175,7 +175,7 @@ class kolab_api_service_type extends kolab_api_service
         }
 
         foreach ($query as $idx => $value) {
-            $query[$idx] = $idx . " = " . $this->db->escape($value);
+            $query[$idx] = $this->db->escape_identifier($idx) . " = " . $this->db->escape($value);
         }
 
         $result = $this->db->query("UPDATE {$type}_types SET "
