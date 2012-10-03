@@ -303,7 +303,24 @@ class Net_LDAP3
             } */
         }
 
+        $may          = array_unique($may);
+        $must         = array_unique($must);
+        $superclasses = array_unique($superclasses);
+
         return array('may' => $may, 'must' => $must, 'super' => $superclasses);
+    }
+
+    public function classes_allowed()
+    {
+        $schema  = $this->init_schema();
+        $list    = $schema->getAll('objectclasses');
+        $classes = array();
+
+        foreach ($list as $class) {
+            $classes[] = $class['name'];
+        }
+
+        return $classes;
     }
 
     /**

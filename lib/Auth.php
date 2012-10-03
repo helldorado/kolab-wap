@@ -410,4 +410,9 @@ class Auth {
     {
         return $this->auth_instance()->attributes_allowed($object_classes);
     }
+
+    public function ldap_schema_classes()
+    {
+        return $this->auth_instance()->classes_allowed();
+    }
 }
