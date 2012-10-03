@@ -117,11 +117,13 @@ table.form td {
 }
 
 table.form tr.required input,
+table.form tr.required select,
 table.form tr.required textarea {
   background-color: #f0f9ff;
 }
 
 table.form tr input.error,
+table.form tr select.error,
 table.form tr textarea.error {
   background-color: #f5e3e3;
 }
@@ -472,6 +474,7 @@ input.inactive {
 
 .formbuttons {
   text-align: center;
+  white-space: nowrap;
 }
 
 .formbuttons input {
@@ -546,6 +549,21 @@ pre.debug {
     -moz-box-shadow: 0 2px 6px 0 #333;
     -webkit-box-shadow: 0 2px 6px 0 #333;
     -o-box-shadow: 0 2px 6px 0 #333;
+}
+
+a.button {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: url(images/buttons.png) 0 0 no-repeat;
+}
+
+a.button.edit {
+  background-position: -81px 0;
+}
+
+a.button.delete {
+  background-position: -1px 0;
 }
 
 /********* Form smart inputs *********/
@@ -943,4 +961,41 @@ td.no {
   color: #FFFFFF;
   font-weight: bold;
   text-align: center;
+}
+
+/**** Settings ****/
+
+table.form table.list td {
+  padding: 2px 4px;
+}
+
+#type_attr_table td.actions {
+  width: 40px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+#type_attr_table thead td {
+  white-space: nowrap;
+}
+
+#type_attr_table tfoot span {
+  cursor: pointer;
+}
+
+#type_attr_table td.readonly {
+  color: #514949;
+}
+
+#type_attr_form {
+  display: none;
+}
+
+#type_attr_form table.form td {
+  border: none;
+}
+
+a.add_attr {
+  padding-left: 2px;
+  padding-top: 2px;
 }
