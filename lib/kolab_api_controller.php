@@ -198,6 +198,8 @@ class kolab_api_controller
         $request->setMethod($method == 'GET' ? HTTP_Request2::METHOD_GET : HTTP_Request2::METHOD_POST);
         $request->setHeader('X-Session-Token', kolab_utils::get_request_header('X-Session-Token'));
 
+        kolab_client_api::configure($request);
+
         if ($method == 'GET') {
             parse_str($_SERVER['QUERY_STRING'], $query);
             unset($query['service']);

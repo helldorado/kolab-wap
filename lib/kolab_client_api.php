@@ -60,7 +60,16 @@ class kolab_client_api
     public function init()
     {
         $this->request = new HTTP_Request2();
+        self::configure($this->request);
+    }
 
+    /**
+     * Configure HTTP_Request2 object
+     *
+     * @param HTTP_Request2 $request Request object
+     */
+    public static function configure($request)
+    {
         // Configure connection options
         $config  = Conf::get_instance();
         $options = array(
@@ -75,7 +84,7 @@ class kolab_client_api
         foreach ($options as $optname => $opttype) {
             if (($optvalue = $config->get('kolab_wap', $optname, $opttype)) !== null) {
                 try {
-                    $this->request->setConfig($optname, $optvalue);
+                    $request->setConfig($optname, $optvalue);
                 }
                 catch (Exception $e) {
                     Log::error("HTTP: " . $e->getMessage());
