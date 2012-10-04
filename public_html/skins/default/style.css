@@ -141,15 +141,15 @@ td.label {
 #topmenu {
   text-align: right;
   height: 20px;
-  padding: 0;
-  margin: 0 10px;
+  padding: 0 10px;
+  margin: 0;
   white-space: nowrap;
+  background: url(images/linen_header.jpg) 0 0 repeat-x;
 }
 
 #topmenu > span {
-  color: #f8fcff;
+  color: #aaa;
   font-size: 11px;
-  text-shadow: black 1px 1px;
 }
 
 #navigation {
@@ -246,18 +246,18 @@ td.label {
   width: 150px;
   height: 18px;
   padding-left: 86px;
-  color: #f8fcff;
+  color: #aaa;
   font-size: 11px;
-  text-shadow: black 1px 1px;
   z-index: 1;
   background: url(images/loading.gif) 0 3px no-repeat;
   white-space: nowrap;
 }
 
 #topmenu .logout {
-  background: url(images/logout.png) center 10px no-repeat;
-  padding: 10px 16px;
-  margin: 0px 5px 0px 10px;
+  background: url(images/buttons.png) -100px -1px no-repeat;
+  padding: 0 0 0 20px;
+  margin: 0 10px;
+  color: white;
 }
 
 #topmenu .login {
@@ -938,7 +938,7 @@ fieldset.tabbed
 }
 
 #domain-selector span.link {
-  color: #1E90FF;
+  color: white;
   text-decoration: none;
 }
 

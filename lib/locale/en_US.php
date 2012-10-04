@@ -71,6 +71,7 @@ $LANG['internalerror'] = 'Internal system error!';
 $LANG['list.records'] = '$1 to $2 of $3';
 
 $LANG['loading'] = 'Loading...';
+$LANG['logout'] = 'Logout';
 $LANG['login.username'] = 'Username:';
 $LANG['login.password'] = 'Password:';
 $LANG['login.domain'] = 'Domain:';
