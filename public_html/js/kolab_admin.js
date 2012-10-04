@@ -1652,7 +1652,7 @@ function kolab_admin()
     // if objects list exists
     if ($('#'+list_id).length) {
       // goto previous page if last record on the current page has been deleted
-      if (action.match(/\.delete/) && this.env.list_count)
+      if (this.env.list_page > 1 && this.env.list_size == 1 && action.match(/\.delete/))
         page -= 1;
 
       this.command(list, {page: page});
