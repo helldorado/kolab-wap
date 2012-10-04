@@ -219,6 +219,11 @@ class Auth {
         return $this->auth_instance()->domain_edit($domain, $attributes, $typeid);
     }
 
+    public function domain_delete($domain)
+    {
+        return $this->auth_instance()->domain_delete($domain);
+    }
+
     public function domain_find_by_attribute($attribute)
     {
         return $this->auth_instance()->domain_find_by_attribute($attribute);
