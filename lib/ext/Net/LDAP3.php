@@ -222,9 +222,13 @@ class Net_LDAP3
 
     public function attribute_details($attributes = array())
     {
-        $_schema = $this->init_schema();
+        $schema = $this->init_schema();
 
-        $attribs = $_schema->getAll('attributes');
+        if (!$schema) {
+            return array();
+        }
+
+        $attribs = $schema->getAll('attributes');
 
         $attributes_details = array();
 
@@ -272,14 +276,18 @@ class Net_LDAP3
         $this->_debug("Listing allowed_attributes for objectclasses", $objectclasses);
 
         if (!is_array($objectclasses)) {
-            return FALSE;
+            return false;
         }
 
         if (empty($objectclasses)) {
-            return FALSE;
+            return false;
         }
 
-        $schema       = $this->init_schema();
+        $schema = $this->init_schema();
+        if (!$schema) {
+            return false;
+        }
+
         $may          = array();
         $must         = array();
         $superclasses = array();
@@ -312,7 +320,11 @@ class Net_LDAP3
 
     public function classes_allowed()
     {
-        $schema  = $this->init_schema();
+        $schema = $this->init_schema();
+        if (!$schema) {
+            return false;
+        }
+
         $list    = $schema->getAll('objectclasses');
         $classes = array();
 
@@ -1655,17 +1667,24 @@ class Net_LDAP3
                 'max_age' => 86400,
             );
 
-            $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
+            $_ldap = Net_LDAP2::connect($_ldap_cfg);
 
-            if ($_ldap = Net_LDAP2::connect($_ldap_cfg)) {
+            if (!is_a($_ldap, 'Net_LDAP2_Error')) {
                 $this->_debug("S: OK");
                 break;
             }
 
             $this->_debug("S: NOT OK");
+            new PEAR_Error($_ldap->getMessage());
         }
 
-        $result = $_ldap->registerSchemaCache($_ldap_schema_cache);
+        if (is_a($_ldap, 'Net_LDAP2_Error')) {
+            return null;
+        }
+
+        $_ldap_schema_cache = new Net_LDAP2_SimpleFileSchemaCache($_ldap_schema_cache_cfg);
+
+        $_ldap->registerSchemaCache($_ldap_schema_cache);
 
         // TODO: We should learn what LDAP tech. we're running against.
         // Perhaps with a scope base objectclass recognize rootdse entry

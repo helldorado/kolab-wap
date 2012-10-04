@@ -772,7 +772,9 @@ class kolab_api_service_form_value extends kolab_api_service
         $auth = Auth::get_instance();
         $list = $auth->ldap_schema_classes();
 
-        sort($list);
+        if (is_array($list)) {
+            sort($list);
+        }
 
         return array('list' => $list);
     }
