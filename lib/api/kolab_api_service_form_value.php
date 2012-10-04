@@ -770,7 +770,7 @@ class kolab_api_service_form_value extends kolab_api_service
     private function select_options_objectclass($postdata, $attribs = array())
     {
         $auth = Auth::get_instance();
-        $list = $auth->ldap_schema_classes();
+        $list = $auth->schema_classes();
 
         if (is_array($list)) {
             sort($list);
@@ -782,7 +782,7 @@ class kolab_api_service_form_value extends kolab_api_service
     private function select_options_attribute($postdata, $attribs = array())
     {
         $auth = Auth::get_instance();
-        $list = $auth->ldap_schema_attributes($postdata['classes']);
+        $list = $auth->schema_attributes($postdata['classes']);
 
         if (is_array($list['may'])) {
             sort($list['may']);

@@ -416,12 +416,12 @@ class Auth {
         return $this->auth_instance()->user_info($userdata);
     }
 
-    public function ldap_schema_attributes($object_classes)
+    public function schema_attributes($object_classes)
     {
         return $this->auth_instance()->attributes_allowed($object_classes);
     }
 
-    public function ldap_schema_classes()
+    public function schema_classes()
     {
         return $this->auth_instance()->classes_allowed();
     }
