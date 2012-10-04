@@ -117,6 +117,31 @@ class kolab_api_service_domain extends kolab_api_service
         return false;
     }
 
+    /**
+     * Domain delete.
+     *
+     * @param array $get  GET parameters
+     * @param array $post POST parameters
+     *
+     * @return bool True on success, False on failure
+     */
+    public function domain_delete($getdata, $postdata)
+    {
+        if (empty($postdata['domain'])) {
+            return false;
+        }
+
+        // TODO: Input validation
+        $auth   = Auth::get_instance();
+        $result = $auth->domain_delete($postdata['domain']);
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
     public function domain_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();

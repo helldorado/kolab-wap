@@ -179,6 +179,10 @@ class LDAP extends Net_LDAP3 {
         return $this->modify_entry($_domain_dn, $_domain[$_domain_dn], $attributes);
     }
 
+    public function domain_delete($domain) {
+        return $this->entry_delete($domain);
+    }
+
     public function domain_find_by_attribute($attribute) {
         $base_dn = $this->conf->get('ldap', 'domain_base_dn');
 
