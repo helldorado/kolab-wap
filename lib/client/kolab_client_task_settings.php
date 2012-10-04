@@ -213,6 +213,38 @@ class kolab_client_task_settings extends kolab_client_task
         // get object types list
         $result = $this->object_types($type);
 
+        // Implement searching here, not in the API, we don't expect too many records
+        if (!empty($search_request)) {
+            foreach ($result as $idx => $record) {
+                $found = false;
+                foreach ($search_request as $key => $value) {
+                    if (!empty($record[$key])) {
+                        $s = mb_strtoupper($value['value']);
+                        $v = mb_strtoupper($record[$key]);
+                        switch ($value['type']) {
+                        case 'both':
+                            $res = $v === $s || strpos($v, $s) !== false;
+                            break;
+                        case 'exact':
+                            $res = $v === $s;
+                            break;
+                        case 'prefix':
+                            $res = strpos($v, $s) === 0;
+                            break;
+                        }
+
+                        if ($res) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!$found) {
+                    unset($result[$idx]);
+                }
+            }
+        }
+
         // assign ID
         foreach (array_keys($result) as $idx) {
             $result[$idx]['id'] = $idx;
