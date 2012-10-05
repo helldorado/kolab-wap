@@ -1248,7 +1248,7 @@ class kolab_client_task
             ));
         }
 
-        if (!empty($data['id']) && in_array('delete', $data['effective_rights']['entry'])) {
+        if (!empty($data['id']) && in_array('delete', (array) $data['effective_rights']['entry'])) {
             $id = $data['id'];
             $form->add_button(array(
                 'value'   => kolab_html::escape($this->translate('button.delete')),

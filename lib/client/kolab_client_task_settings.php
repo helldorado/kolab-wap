@@ -49,7 +49,6 @@ class kolab_client_task_settings extends kolab_client_task
         }
         // otherwise display object types list
         else if (self::can_edit_types($caps_actions)) {
-            $this->output->set_object('content', 'type', true);
             $this->action_type_list();
             unset($this->menu['type_list']);
 
@@ -202,6 +201,9 @@ class kolab_client_task_settings extends kolab_client_task
         if (!empty($search_request)) {
             $post['search']          = $search_request;
             $post['search_operator'] = 'OR';
+        }
+        else {
+            $this->output->set_object('content', 'type', true);
         }
 
         // object type
@@ -444,7 +446,11 @@ class kolab_client_task_settings extends kolab_client_task
             $data['objectclass'] = array('top');
         }
 
-        $name     = 'type';
+        // Get the rights on the entry and attribute level
+        $data['effective_rights'] = $this->effective_rights('type', $data['id']);
+        $attribute_rights         = (array) $data['effective_rights']['attribute'];
+        $entry_rights             = (array) $data['effective_rights']['entry'];
+
         $add_mode = empty($data['id']);
         $fields   = array(
             'key' => array(
@@ -483,12 +489,6 @@ class kolab_client_task_settings extends kolab_client_task
         if ($data['type'] != 'user') {
             unset($form_fields['used_for']);
         }
-
-
-        // Get the rights on the entry and attribute level
-        $data['effective_rights'] = $this->effective_rights($name, $data['id']);
-        $attribute_rights         = $data['effective_rights']['attribute'];
-        $entry_rights             = $data['effective_rights']['entry'];
 
         // See if "administrators" (those who can delete and add back on the entry
         // level) may override the automatically generated contents of auto_form_fields.
@@ -586,9 +586,11 @@ class kolab_client_task_settings extends kolab_client_task
             'value' => array(
                 'body'  => $this->translate('attribute.value'),
             ),
-            'actions' => array(
-            ),
         );
+
+        if (!empty($data['effective_rights']['entry'])) {
+            $cells['actions'] = array();
+        }
 
         foreach ($cells as $idx => $cell) {
             $cells[$idx]['class'] = $idx;
@@ -611,8 +613,10 @@ class kolab_client_task_settings extends kolab_client_task
         // table header
         $table['head'] = array(array('cells' => $cells));
 
-        $yes = $this->translate('yes');
-        $no  = '';
+        $rights = (array)$data['effective_rights']['attribute']['attributes'];
+        $yes    = $this->translate('yes');
+        $no     = '';
+
         // defined attributes
         foreach ($attributes as $attr) {
             $row          = $cells;
@@ -652,11 +656,22 @@ class kolab_client_task_settings extends kolab_client_task
             $row['value']['body']    = $value;
             $row['readonly']['body'] = $valtype == 'auto-readonly' ? $yes : $no;
             $row['optional']['body'] = $optional ? $yes : $no;
-            $row['actions']['body']  = 
-                kolab_html::a(array('href' => '#delete', 'onclick' => "kadm.type_attr_delete('$attr')",
-                    'class' => 'button delete', 'title' => $this->translate('delete')))
-                . kolab_html::a(array('href' => '#edit', 'onclick' => "kadm.type_attr_edit('$attr')",
-                    'class' => 'button edit', 'title' => $this->translate('edit')));
+
+            if (!empty($row['actions'])) {
+                $row['actions']['body']  = '';
+
+                if (in_array('delete', $rights)) {
+                    $row['actions']['body'] .= kolab_html::a(array(
+                        'href' => '#delete', 'onclick' => "kadm.type_attr_delete('$attr')",
+                        'class' => 'button delete', 'title' => $this->translate('delete')));
+                }
+
+                if (in_array('write', $rights)) {
+                    $row['actions']['body'] .= kolab_html::a(array(
+                        'href' => '#edit', 'onclick' => "kadm.type_attr_edit('$attr')",
+                        'class' => 'button edit', 'title' => $this->translate('edit')));
+                }
+            }
 
             $rows[] = array(
                 'id'    => 'attr_table_row_' . $attr,
@@ -698,10 +713,12 @@ class kolab_client_task_settings extends kolab_client_task
             'attribute.key.invalid', 'attribute.required.error');
 
         // Add attribute link
-        $link = kolab_html::a(array(
-            'href' => '#add_attr', 'class' => 'add_attr',
-            'onclick' => "kadm.type_attr_add()",
-            'content' =>  $this->translate('attribute.add')), true);
+        if (in_array('write', $rights)) {
+            $link = kolab_html::a(array(
+                'href' => '#add_attr', 'class' => 'add_attr',
+                'onclick' => "kadm.type_attr_add()",
+                'content' =>  $this->translate('attribute.add')), true);
+        }
 
         return kolab_html::table($table) . $link;
     }
