@@ -129,10 +129,9 @@ class kolab_api_service_user extends kolab_api_service
         //console("\$postdata to user_edit()", $postdata);
 
         $user_attributes = $this->parse_input_attributes('user', $postdata);
+        $user            = $postdata['id'];
 
         //console("\$user_attributes as result from parse_input_attributes", $user_attributes);
-
-        $user            = $postdata['id'];
 
         $auth   = Auth::get_instance();
         $result = $auth->user_edit($user, $user_attributes, $postdata['type_id']);

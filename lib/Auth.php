@@ -388,7 +388,7 @@ class Auth {
 
     public function search()
     {
-        return call_user_func_array(Array($this->auth_instance(), search), func_get_args());
+        return call_user_func_array(Array($this->auth_instance(), 'search'), func_get_args());
     }
 
     public function user_add($attributes, $typeid = null)
