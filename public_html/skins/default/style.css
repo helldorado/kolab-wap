@@ -512,12 +512,15 @@ input.inactive {
 }
 
 .disabled,
-.readonly {
+.readonly,
+.select.readonly option {
   color: #a0a0a0;
 }
 
 input.disabled,
 input.readonly,
+select.disabled,
+select.readonly,
 textarea.disabled,
 textarea.readonly {
   background-color: #f5f5f5;
