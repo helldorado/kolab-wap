@@ -785,6 +785,10 @@ class kolab_api_service_form_value extends kolab_api_service
         $list = $auth->schema_attributes($postdata['classes']);
 
         if (is_array($list['may'])) {
+            // return required + optional
+            if (is_array($list['must']) && !empty($list['must'])) {
+                $list['may'] = array_unique(array_merge($list['may'], $list['must']));
+            }
             sort($list['may']);
         }
 
