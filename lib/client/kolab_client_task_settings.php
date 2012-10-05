@@ -717,6 +717,7 @@ class kolab_client_task_settings extends kolab_client_task
             'name' => array(
                 'type' => kolab_form::INPUT_SELECT,
                 'options' => $attributes,
+                'onchange' => 'kadm.type_attr_name_change(this)',
             ),
             'type' => array(
                 'type' => kolab_form::INPUT_SELECT,

@@ -1793,20 +1793,22 @@ function kolab_admin()
     $('input[name="attr_data"]').val(attr ? data.data : '');
     $('input[name="attr_maxcount"]').val(data.maxcount ? data.maxcount : '');
     $('textarea[name="attr_options"]').val(data.values ? data.values.join("\n") : '');
-    this.form_element_update({name: 'attr_options'});
-
     $('span', name_select.parent()).remove();
-    this.type_attr_type_change('select[name="attr_type"]');
-    this.type_attr_value_change('select[name="attr_value"]');
 
     if (attr) {
       name_select.hide().val(attr);
-      $('<span></span>').text(this.env.attributes[attr] ? this.env.attributes[attr] : attr).appendTo(name_select.parent());
+      $('<span></span>').text(this.env.attributes[attr] ? this.env.attributes[attr] : attr)
+        .appendTo(name_select.parent());
       return;
     }
+    else {
+      this.type_attr_select_init();
+      name_select.show();
+    }
 
-    this.type_attr_select_init();
-    name_select.show();
+    this.form_element_update({name: 'attr_options'});
+    this.type_attr_type_change('select[name="attr_type"]');
+    this.type_attr_value_change('select[name="attr_value"]');
   };
 
   // Initialize attribute name selector
@@ -1822,13 +1824,28 @@ function kolab_admin()
     options.not(':disabled').first().attr('selected', true);
   };
 
+  // Update attribute form on attribute name change
+  this.type_attr_name_change = function(elem)
+  {
+    this.type_attr_value_change('select[name="attr_value"]');
+  };
+
   // Update attribute form on value type change
   this.type_attr_value_change = function(elem)
   {
-    var type = $(elem).val();
+    var type = $(elem).val(),
+      optional = $('#attr_form_row_optional'),
+      select = $('select[name="attr_name"]').val(),
+      attr_name = this.env.attributes[select],
+      // only non-static and non-required attributes can be marked as optional
+      opt = type != 'static' && $.inArray(attr_name, this.env.attributes_required) == -1;
+
     $('input[name="attr_data"]')[type != 'normal' ? 'show' : 'hide']();
-    $('#attr_form_row_optional')[type != 'static' ? 'show' : 'hide']();
     $('#attr_form_row_readonly')[type != 'static' ? 'show' : 'hide']();
+    optional[opt ? 'show' : 'hide']();
+
+    if (!opt)
+      $('input', optional).attr('checked', false);
   };
 
   // Update attribute form on type change
