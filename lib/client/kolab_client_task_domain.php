@@ -312,8 +312,7 @@ class kolab_client_task_domain extends kolab_client_task
             'name'    => 'field',
             'type'    => kolab_form::INPUT_SELECT,
             'options' => array(
-                'cn'   => kolab_html::escape($this->translate('search.name')),
-                'mail' => kolab_html::escape($this->translate('search.email')),
+                'associateddomain' => kolab_html::escape($this->translate('search.name')),
             ),
         ));
         $form->add_element(array(
