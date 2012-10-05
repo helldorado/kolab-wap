@@ -820,7 +820,10 @@ class kolab_client_task_settings extends kolab_client_task
         if (!empty($response['list'])) {
             // remove objectClass
             $attributes = array_diff($response['list'], array('objectClass'));
-            $attributes = array_combine(array_map('strtolower', $attributes), $attributes);
+            $attributes = array_map('strtolower', $attributes);
+            if (count($attributes)) {
+                $attributes = array_combine($attributes, $attributes);
+            }
         }
 
         $this->output->set_env('attributes', $attributes);
