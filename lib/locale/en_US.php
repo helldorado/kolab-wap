@@ -21,6 +21,7 @@ $LANG['attribute.value.normal'] = 'Normal';
 $LANG['attribute.value.static'] = 'Static';
 $LANG['attribute.options'] = 'Options';
 $LANG['attribute.key.invalid'] = 'Type key contains forbidden characters!';
+$LANG['attribute.required.error'] = 'Required attributes missing in attributes list ($1)!';
 
 $LANG['button.cancel'] = 'Cancel';
 $LANG['button.delete'] = 'Delete';

@@ -695,7 +695,7 @@ class kolab_client_task_settings extends kolab_client_task
         $this->output->set_env('yes_label', $yes);
         $this->output->set_env('no_label', $no);
         $this->output->add_translation('attribute.value.auto', 'attribute.value.static',
-            'attribute.key.invalid');
+            'attribute.key.invalid', 'attribute.required.error');
 
         // Add attribute link
         $link = kolab_html::a(array(
@@ -817,12 +817,13 @@ class kolab_client_task_settings extends kolab_client_task
 
         // convert to hash array
         if (!empty($response['list'])) {
-            $attributes = array_combine(array_map('strtolower', $response['list']), $response['list']);
+            // remove objectClass
+            $attributes = array_diff($response['list'], array('objectClass'));
+            $attributes = array_combine(array_map('strtolower', $attributes), $attributes);
         }
 
         $this->output->set_env('attributes', $attributes);
-        // @TODO: check if all required attributes are used
-//        $this->output->set_env('attributes_required', $attributes['required']);
+        $this->output->set_env('attributes_required', $response['required']);
 
         return $attributes;
     }

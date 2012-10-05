@@ -1549,9 +1549,10 @@ function kolab_admin()
 
   this.type_save = function(reload, section)
   {
-    var i, attr, request = {},
+    var i, n, attr, request = {},
       data = this.serialize_form('#'+this.env.form_id),
-      action = data.id ? 'edit' : 'add';
+      action = data.id ? 'edit' : 'add',
+      required = this.env.attributes_required || [];
 
     if (reload) {
       data.section = section;
@@ -1571,6 +1572,9 @@ function kolab_admin()
       return;
     }
 
+    // remove objectClass from required attributes list
+    required = $.map(required, function(a) { return a == 'objectClass' ? null : a; });
+
     request.id = data.id;
     request.key = data.key;
     request.name = data.name;
@@ -1583,6 +1587,14 @@ function kolab_admin()
     // Build attributes array compatible with the API format
     // @TODO: use attr_table format
     for (i in this.env.attr_table) {
+      // attribute doesn't exist in specified object classes set
+      if (!(n = this.env.attributes[i]))
+        continue;
+
+      // check required attributes
+      if (required.length)
+        required = $.map(required, function(a) { return a != n ? a : null; });
+
       attr = this.env.attr_table[i];
       data = {};
 
@@ -1613,6 +1625,11 @@ function kolab_admin()
           data.data = attr.data.split(/,/);
         request.attributes.auto_form_fields[i] = data;
       }
+    }
+
+    if (required.length) {
+      this.display_message(this.t('attribute.required.error').replace(/\$1/, required.join(',')), 'error');
+      return;
     }
 
     this.set_busy(true, 'saving');
@@ -1836,16 +1853,18 @@ function kolab_admin()
     if (!this.api_response(response))
       return;
 
-    var i, lc, list = response.result.attribute.list,
-      required = response.result.attribute.required,
+    var i, lc, list = response.result.attribute.list || [],
       select = $('select[name="attr_name"]');
 
     this.env.attributes = {};
+    this.env.attributes_required = response.result.attribute.required || [];
     select.empty();
 
     for (i in list) {
-      lc = list[i].toLowerCase()
-      this.env.attributes[list[i].toLowerCase()] = list[i];
+      if (i == 'objectClass')
+        continue;
+      lc = list[i].toLowerCase();
+      this.env.attributes[lc] = list[i];
       $('<option>').text(list[i]).val(lc).appendTo(select);
     }
   };
