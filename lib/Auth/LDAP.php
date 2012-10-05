@@ -270,6 +270,8 @@ class LDAP extends Net_LDAP3 {
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
+        $this->bind($_SESSION['user']->user_bind_dn,$_SESSION['user']->user_bind_pw);
+
         return $this->add_entry($dn, $attrs);
     }
 
