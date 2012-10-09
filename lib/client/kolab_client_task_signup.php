@@ -204,13 +204,18 @@ class kolab_client_task_signup extends kolab_client_task
                 $accttypes[$idx] = array('value' => $idx, 'content' => $elem['name']);
             }
         }
-
         $fields['type_id'] = array(
             'section'  => 'personal',
             'type'     => kolab_form::INPUT_SELECT,
             'options'  => $accttypes,
             'onchange' => "kadm.change_user_type()",
         );
+        // Hide user types selector if only one is available
+        if(count($accttypes) <= 1) {
+            $accctype = array_shift(array_values($accttypes));
+            $fields['type_id']['type'] = kolab_form::INPUT_HIDDEN;
+            $fields['type_id']['value'] = $accttype['value'];
+        }
         
         // Add object type field
         $fields['object_type'] = array(
@@ -219,11 +224,17 @@ class kolab_client_task_signup extends kolab_client_task
         );
  
         // Add available domains
+        $domains = $this->get_domains();
         $fields['domain'] = array(
             'type'     => kolab_form::INPUT_SELECT,
-            'options'  => $this->get_domains(),
+            'options'  => $domains,
             'onchange' => 'kadm.check_user_availability()',
         );
+        // Hide domains if only one is available
+        if(count($domains) <= 1) {
+            $fields['domain']['type'] = kolab_form::INPUT_HIDDEN;
+            $fields['domain']['value'] = array_shift(array_values($domains));
+        }
 
         // Check for user availability
         $fields['uid']['onchange'] = 'kadm.check_user_availability()';
