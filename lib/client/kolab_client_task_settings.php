@@ -903,7 +903,7 @@ class kolab_client_task_settings extends kolab_client_task
             'name'     => 'type',
             'id'       => 'type_list_filter',
             'options'  => $options,
-            'value'    => $this->type_selected ? $this->type_selected : 'user',
+            'value'    => !empty($_POST['type']) ? $_POST['type'] : 'user',
             'onchange' => "kadm.command('settings.type_list')",
         );
 
