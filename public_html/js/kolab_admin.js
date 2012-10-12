@@ -1785,7 +1785,7 @@ function kolab_admin()
   {
     var name_select = $('select[name="attr_name"]'),
       data = attr ? this.env.attr_table[attr] : {},
-      type = data.type ? data.type : 'text';
+      type = data.type || 'text';
 
     $('select[name="attr_type"]').val(type);
     $('select[name="attr_value"]').val(attr ? data.valtype : 'normal');
@@ -1799,7 +1799,6 @@ function kolab_admin()
       name_select.hide().val(attr);
       $('<span></span>').text(this.env.attributes[attr] ? this.env.attributes[attr] : attr)
         .appendTo(name_select.parent());
-      return;
     }
     else {
       this.type_attr_select_init();
