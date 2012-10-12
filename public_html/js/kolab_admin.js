@@ -1664,7 +1664,7 @@ function kolab_admin()
     this.display_message(action + '.success');
 
     var page = this.env.list_page,
-      list_id = list.replace(/[^a-z]/, '');
+      list_id = list.replace(/[^a-z]/g, '');
 
     // if objects list exists
     if ($('#'+list_id).length) {
