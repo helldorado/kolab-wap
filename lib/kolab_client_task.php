@@ -805,6 +805,16 @@ class kolab_client_task
             if (isset($field['maxlength'])) {
                 $result['maxlength'] = $field['maxlength'];
             }
+            if ($field['type'] && $field['type'] != 'text') {
+                $result['data-type'] = $field['type'];
+                if ($field['type'] == 'ldap_url') {
+                    $this->output->add_translation('ldap.one', 'ldap.sub', 'ldap.base',
+                        'ldap.host', 'ldap.basedn','ldap.scope', 'ldap.conditions',
+                        'ldap.filter_any', 'ldap.filter_both', 'ldap.filter_prefix', 'ldap.filter_suffix',
+                        'ldap.filter_exact'
+                    );
+                }
+            }
         }
 
         $result['required'] = empty($field['optional']);
@@ -1260,7 +1270,8 @@ class kolab_client_task
         $this->output->set_env('assoc_fields', $assoc_fields);
         $this->output->set_env('required_fields', $req_fields);
         $this->output->add_translation('form.required.empty', 'form.maxcount.exceeded',
-            $name . '.add.success', $name . '.edit.success', $name . '.delete.success');
+            $name . '.add.success', $name . '.edit.success', $name . '.delete.success',
+            'add', 'edit', 'delete');
 
         return $form;
     }

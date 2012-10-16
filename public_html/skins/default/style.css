@@ -150,6 +150,9 @@ td.label {
 #topmenu > span {
   color: #aaa;
   font-size: 11px;
+  padding-top: 2px;
+  display: inline-block;
+  height: 18px;
 }
 
 #navigation {
@@ -255,21 +258,21 @@ td.label {
 
 #topmenu .logout {
   background: url(images/buttons.png) -100px -1px no-repeat;
-  padding: 0 0 0 20px;
-  margin: 0 10px;
+  padding-left: 20px;
+  margin-right: 10px;
   color: white;
 }
 
 #topmenu .login {
   padding-left: 20px;
   margin-right: 20px;
-  background: url(images/user_ico.png) 0 1px no-repeat;
+  background: url(images/user_ico.png) 0 2px no-repeat;
 }
 
 #topmenu .domain {
   padding-left: 20px;
   margin-right: 10px;
-  background: url(images/domain_ico.png) 0 2px no-repeat;
+  background: url(images/domain_ico.png) 0 3px no-repeat;
 }
 
 #navigation ul {
@@ -564,6 +567,10 @@ a.button.edit {
   background-position: -81px 0;
 }
 
+a.button.add {
+  background-position: -41px 0;
+}
+
 a.button.delete {
   background-position: -1px 0;
 }
@@ -732,6 +739,59 @@ span.form_error {
   font-weight: bold;
   font-size: 90%;
   padding-left: 5px;
+}
+
+.ldap_url {
+  background-color: #F5F5F5;
+  border: 1px solid #D0D0D0;
+  border-radius: 3px 3px 3px 3px;
+}
+
+.ldap_url td, li {
+  white-space: nowrap;
+}
+
+.ldap_url ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ldap_url ul li {
+  padding: 0;
+  margin: 0;
+}
+
+.ldap_url ul li input {
+  width: 120px;
+  margin-right: 5px;
+}
+
+.ldap_url tr span {
+  padding: 0 5px;
+}
+
+.ldap_url tr.ldap_base td input,
+.ldap_url tr.ldap_scope td select {
+  width: 368px;
+}
+
+.ldap_url tr.ldap_host td input.ldap_host {
+  width: 290px;
+}
+
+table.form tr.required .ldap_url input,
+table.form tr.required .ldap_url select {
+  background-color: white;
+}
+
+table.form tr.required .ldap_url {
+  background-color: #F0F9FF;
+}
+
+.ldap_url a.button {
+  vertical-align: middle;
+  height: 22px;
 }
 
 /*****   autocomplete list   *****/
