@@ -7,6 +7,8 @@ $LANG['about.support'] = 'Professional support is available from <a href="http:/
 $LANG['about.technology'] = 'Technology';
 $LANG['about.warranty'] = 'It comes with absolutely <b>no warranties</b> and is typically run entirely self supported. You can find help & information on the community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';
 
+$LANG['add'] = 'Add';
+
 $LANG['attribute.add'] = 'Add attribute';
 $LANG['attribute.static'] = 'Static value';
 $LANG['attribute.name'] = 'Attribute';
@@ -31,6 +33,7 @@ $LANG['button.submit'] = 'Submit';
 $LANG['creatorsname'] = 'Created by';
 $LANG['days'] = 'days';
 $LANG['debug'] = 'Debug info';
+$LANG['delete'] = 'Delete';
 $LANG['deleting'] = 'Deleting data...';
 
 $LANG['domain.add'] = 'Add Domain';
@@ -47,6 +50,7 @@ $LANG['domain.other'] = 'Other';
 $LANG['domain.system'] = 'System';
 $LANG['domain.type_id'] = 'Standard Domain';
 
+$LANG['edit'] = 'Edit';
 $LANG['error'] = 'Error';
 
 $LANG['form.required.empty'] = 'Some of the required fields are empty!';
@@ -61,6 +65,7 @@ $LANG['group.gidnumber'] = 'Primary group number';
 $LANG['group.list'] = 'Groups List';
 $LANG['group.mail'] = 'Primary Email Address';
 $LANG['group.member'] = 'Member(s)';
+$LANG['group.memberurl'] = 'Members URL';
 $LANG['group.norecords'] = 'No group records found!';
 $LANG['group.other'] = 'Other';
 $LANG['group.system'] = 'System';
@@ -69,6 +74,19 @@ $LANG['group.uniquemember'] = 'Members';
 
 $LANG['info'] = 'Information';
 $LANG['internalerror'] = 'Internal system error!';
+
+$LANG['ldap.one'] = 'one: all entries one level under the base DN';
+$LANG['ldap.sub'] = 'sub: whole subtree starting with the base DN';
+$LANG['ldap.base'] = 'base: base DN only';
+$LANG['ldap.basedn'] = 'Base DN';
+$LANG['ldap.host'] = 'LDAP Server';
+$LANG['ldap.conditions'] = 'Conditions';
+$LANG['ldap.scope'] = 'Scope';
+$LANG['ldap.filter_any'] = 'is non-empty';
+$LANG['ldap.filter_both'] = 'contains';
+$LANG['ldap.filter_prefix'] = 'starts with';
+$LANG['ldap.filter_suffix'] = 'ends with';
+$LANG['ldap.filter_exact'] = 'is equal to';
 
 $LANG['list.records'] = '$1 to $2 of $3';
 

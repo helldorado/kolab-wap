@@ -284,7 +284,7 @@ function kolab_admin()
 
     return $.ajax({
       type: 'POST', url: url, data: postdata, dataType: 'json',
-      success: function(data) { kadm.http_response(data); },
+      success: function(response) { kadm.http_response(response); },
       error: function(o, status, err) { kadm.http_error(o, status, err); }
     });
   };
@@ -300,7 +300,8 @@ function kolab_admin()
 
     return $.ajax({
       type: 'POST', url: url, data: JSON.stringify(postdata), dataType: 'json',
-      success: function(data) { kadm[func](data); },
+      contentType: 'application/json; charset=utf-8',
+      success: function(response) { kadm[func](response); },
       error: function(o, status, err) { kadm.http_error(o, status, err); }
     });
   };
@@ -317,14 +318,14 @@ function kolab_admin()
     if (response.env)
       this.set_env(response.env);
 
+    // we have translation labels to add
+    if (typeof response.labels === 'object')
+      this.tdef(response.labels);
+
     // HTML page elements
     if (response.objects)
       for (i in response.objects)
         $('#'+i).html(response.objects[i]);
-
-    // we have translation labels to add
-    if (typeof response.labels === 'object')
-      this.tdef(response.labels);
 
     this.update_request_time();
     this.set_busy(false);
@@ -727,6 +728,9 @@ function kolab_admin()
     // create smart select fields
     $('input[data-type="select"]', form)
       .each(function() { kadm.form_select_element_wrapper(this); });
+    // create LDAP URL fields
+    $('input[data-type="ldap_url"]:not(:disabled):not([readonly])', form)
+      .each(function() { kadm.form_url_element_wrapper(this); });
   };
 
   // Form serialization
@@ -735,7 +739,7 @@ function kolab_admin()
     var form = $(data.id);
 
     // smart list fields
-    $('textarea[data-type="list"]', form).not('disabled').each(function() {
+    $('textarea[data-type="list"]:not(:disabled)', form).each(function() {
       var i, v, value = [],
         re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9-]+\]$');
 
@@ -760,6 +764,11 @@ function kolab_admin()
     // smart selects
     $('input[data-type="select"]', form).each(function() {
       delete data.json[this.name];
+    });
+
+    // LDAP URL fields
+    $('input[data-type="ldap_url"]:not(:disabled):not([readonly])', form).each(function() {
+      data.json = kadm.form_url_element_submit(this.name, data.json, form);
     });
 
     return data;
@@ -984,7 +993,7 @@ function kolab_admin()
       form = form_element.form,
       elem = $('<span class="link"></span>'),
       area = $('<span class="listarea autocomplete select popup"></span>'),
-      content = $('<span class="listcontent"></span>');
+      content = $('<span class="listcontent"></span>'),
       list = this.env.assoc_fields ? this.env.assoc_fields[form_element.name] : [];
 
     elem.text(e.val()).css({cursor: 'pointer'})
@@ -1118,6 +1127,125 @@ function kolab_admin()
     return elem;
   };
 
+  // Replaces form element with LDAP URL element
+  this.form_url_element_wrapper = function(form_element)
+  {
+    var i, e = $(form_element),
+      form = form_element.form,
+      name = form_element.name,
+      ldap = this.parse_ldap_url(e.val()) || {},
+      options = ['sub', 'one', 'base'],
+      div = $('<div class="ldap_url"><table></table></div>'),
+      host = $('<input type="text">').attr({name: 'ldap_host_'+name, size: 30, value: ldap.host, 'class': 'ldap_host'}),
+      port = $('<input type="text">').attr({name: 'ldap_port_'+name, size: 5, value: ldap.port || '389'}),
+      base = $('<input type="text">').attr({name: 'ldap_base_'+name, value: ldap.base}),
+      scope = $('<select>').attr({name: 'ldap_scope_'+name}),
+      filter = $('<ul>'),
+      row_host = $('<tr class="ldap_host"><td></td><td></td></tr>'),
+      row_base = $('<tr class="ldap_base"><td></td><td></td></tr>'),
+      row_scope = $('<tr class="ldap_scope"><td></td><td></td></tr>'),
+      row_filter = $('<tr class="ldap_filter"><td></td><td></td></tr>');
+
+    for (i in options)
+      $('<option>').val(options[i]).text(this.t('ldap.'+options[i])).appendTo(scope);
+    scope.val(ldap.scope);
+
+    for (i in ldap.filter)
+      filter.append(this.form_url_filter_element(name, i, ldap.filter[i]));
+    if (!$('li', filter).length)
+      filter.append(this.form_url_filter_element(name, 0, {}));
+
+    e.hide();
+
+    $('td:first', row_host).text(this.t('ldap.host'));
+    $('td:last', row_host).append(host).append($('<span>').text(':')).append(port);
+    $('td:first', row_base).text(this.t('ldap.basedn'));
+    $('td:last', row_base).append(base);
+    $('td:first', row_scope).text(this.t('ldap.scope'));
+    $('td:last', row_scope).append(scope);
+    $('td:first', row_filter).text(this.t('ldap.conditions'));
+    $('td:last', row_filter).append(filter);
+    $('table', div).append(row_host).append(row_base).append(row_scope).append(row_filter);
+    $(form_element).parent().append(div);
+  };
+
+  this.form_url_filter_element = function(name, idx, filter)
+  {
+    var options = ['any', 'both', 'prefix', 'suffix', 'exact'],
+      filter_type = $('<select>').attr({name: 'ldap_filter_type_'+name+'['+idx+']'}),
+      filter_name = $('<input type="text">').attr({name: 'ldap_filter_name_'+name+'['+idx+']'}),
+      filter_value = $('<input type="text">').attr({name: 'ldap_filter_value_'+name+'['+idx+']'}),
+      a_add = $('<a class="button add" href="#add"></a>').click(function() {
+        var dt = new Date().getTime();
+        $(this.parentNode.parentNode).append(kadm.form_url_filter_element(name, dt, {}));
+      }).attr({title: this.t('add')}),
+      a_del = $('<a class="button delete" href="#delete"></a>').click(function() {
+        if ($('li', this.parentNode.parentNode).length > 1)
+          $(this.parentNode).remove();
+        else {
+          $('input', this.parentNode).val('');
+          $('select', this.parentNode).val('any').change();
+        }
+      }).attr({title: this.t('delete')}),
+      li = $('<li>');
+
+    for (i in options)
+      $('<option>').val(options[i]).text(this.t('ldap.filter_'+options[i])).appendTo(filter_type);
+
+    if (filter.type)
+      filter_type.val(filter.type);
+    if (filter.name)
+      filter_name.val(filter.name);
+    if (filter.value)
+      filter_value.val(filter.value);
+
+    filter_type.change(function() {
+      filter_value.css({display: $(this).val() == 'any' ? 'none' : 'inline'});
+    }).change();
+
+    return li.append(filter_name).append(filter_type).append(filter_value)
+      .append(a_del).append(a_add);
+  };
+
+  // updates form data with LDAP URL (on form submit)
+  this.form_url_element_submit = function(name, data, form)
+  {
+    var i, rx = new RegExp('^ldap_(host|port|base|scope|filter_name|filter_type|filter_value)_'+name+'(\\[|$)');
+
+    for (i in data)
+      if (rx.test(i))
+        delete data[i];
+
+    data[name] = this.form_url_element_save(name, form);
+
+    return data;
+  };
+
+  // updates LDAP URL field
+  this.form_url_element_save = function(name, form)
+  {
+    var url, form = $(form), params = {
+      host: $('input[name="ldap_host_'+name+'"]', form).val(),
+      port: $('input[name="ldap_port_'+name+'"]', form).val(),
+      base: $('input[name="ldap_base_'+name+'"]', form).val(),
+      scope: $('select[name="ldap_scope_'+name+'"]', form).val(),
+      filter: []};
+
+    $('input[name^="ldap_filter_name_'+name+'"]', form).each(function() {
+      if (this.value && /\[([^\]]+)\]/.test(this.name)) {
+        var suffix = name + '[' + RegExp.$1 + ']',
+          type = $('select[name="ldap_filter_type_'+suffix+'"]', form).val(),
+          value = type == 'any' ? '' : $('input[name="ldap_filter_value_'+suffix+'"]', form).val();
+
+        params.filter.push({name: this.value, type: type, value: value, join: 'AND', level: 0});
+      }
+    });
+
+    url = this.build_ldap_url(params);
+    $('input[name="'+name+'"]').val(url);
+
+    return url;
+  };
 
   /*********************************************************/
   /*********                 Forms                 *********/
@@ -1914,6 +2042,150 @@ function kolab_admin()
 
     $('input[name="' + f + '"]').val(pass);
     $('input[name="' + f + '2"]').val(pass);
+  };
+
+  // LDAP URL parser
+  this.parse_ldap_url = function(url)
+  {
+    var result = {},
+      url_parser = /^([^:]+):\/\/([^\/]*)\/([^?]*)\?([^?]*)\?([^?]*)\?(.*)$/;
+      matches = url_parser.exec(url);
+
+    if (matches && matches[1])
+      return {
+        scheme: matches[1],
+        host: matches[2],
+        base: matches[3],
+        attrs: matches[4],
+        scope: matches[5],
+        filter: this.parse_ldap_filter(matches[6])
+      };
+  };
+
+  // LDAP filter parser
+  this.parse_ldap_filter = function(filter)
+  {
+    var chr, next, elem, pos = 0, join, level = -1, res = [],
+      len = filter ? filter.length : 0;
+
+    if (!filter.match(/^\(.*\)$/))
+      filter = '(' + filter + ')';
+
+    while (len > pos) {
+      chr = filter.charAt(pos);
+      if (chr == '&') {
+          join = 'AND';
+          level++;
+      }
+      else if (chr == '|') {
+          join = 'OR';
+          level++;
+      }
+      else if (chr == '(') {
+        next = filter.charAt(pos+1);
+        if (next != '&' && next != '|') {
+          next = filter.indexOf(')', pos);
+          if (next > 0) {
+            if (elem = this.parse_ldap_filter_entry(filter.substr(pos + 1, next - pos - 1))) {
+              elem.join = join;
+              elem.level = level;
+              res.push(elem);
+            }
+            pos = next;
+          }
+        }
+      }
+      else if (chr == ')')
+        level--;
+
+      pos++;
+    }
+
+    return res;
+  };
+
+  // LDAP filter-entry parser
+  this.parse_ldap_filter_entry = function(entry)
+  {
+    var type = 'exact', name, value;
+
+    if (entry.match(/^([a-zA-Z0-9_-]+)=(.*)$/)) {
+      name = RegExp.$1;
+      value = RegExp.$2;
+
+      if (value == '*') {
+        value = ''
+        type = 'any';
+      }
+      else if (value.match(/^\*(.+)\*$/)) {
+        value = RegExp.$1;
+        type = 'both';
+      }
+      else if (value.match(/^\*(.+)$/)) {
+        value = RegExp.$1;
+        type = 'suffix';
+      }
+      else if (value.match(/^(.+)\*$/)) {
+        value = RegExp.$1;
+        type = 'prefix';
+      }
+
+      return {name: name, type: type, value: value};
+    }
+  };
+
+  // Builds LDAP filter string from the defined structure
+  this.build_ldap_filter = function(filter)
+  {
+    var i, elem, str = '', last = -1, join = {'AND': '&', 'OR': '|'};
+
+    for (i=0; i<filter.length; i++) {
+      elem = filter[i];
+      if (elem.level > last)
+        str += (elem.join && filter.length > 1 ? join[elem.join] : '');
+      else if (elem.level < last)
+        str += ')';
+
+      str += '(' + elem.name + '=';
+
+      if (elem.type == 'any')
+        str += '*';
+      else if (elem.type == 'both')
+        str += '*' + elem.value + '*';
+      else if (elem.type == 'prefix')
+        str += elem.value + '*';
+      else if (elem.type == 'suffix')
+        str += '*' + elem.value;
+      else
+        str += elem.value;
+
+      str += ')';
+      last = elem.level;
+    }
+
+    if (filter.length > 1)
+      str = '(' + str + ')';
+
+    return str;
+  };
+
+  // Builds LDAP URL string from the defined structure
+  this.build_ldap_url = function(params)
+  {
+    var url = '';
+
+    if (!params.filter.length && !params.base)
+      return url;
+
+    url += (params.scheme ? params.scheme : 'ldap') + '://';
+    url += (params.host ? params.host + (params.port && params.port != 389 ? ':'+params.port : '') : '') + '/';
+    url += (params.base ? params.base : '') + '?';
+    url += (params.attrs ? params.attrs : '') + '?';
+    url += (params.scope ? params.scope : '') + '?';
+    if (params.filter)
+      url += this.build_ldap_filter(params.filter);
+
+    return url;
   };
 
 };
