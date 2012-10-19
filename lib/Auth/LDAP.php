@@ -270,9 +270,7 @@ class LDAP extends Net_LDAP3 {
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
-        $this->bind($_SESSION['user']->user_bind_dn,$_SESSION['user']->user_bind_pw);
-
-        return $this->add_entry($dn, $attrs);
+        return $this->entry_add($dn, $attrs);
     }
 
     public function group_delete($group) {
@@ -326,7 +324,6 @@ class LDAP extends Net_LDAP3 {
         $group_info = $this->_read($group_dn, $attributes);
         $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() result: " . var_export($group_info, TRUE));
         return $group_info;
-
     }
 
     public function group_members_list($group, $recurse = true) {
@@ -603,7 +600,7 @@ class LDAP extends Net_LDAP3 {
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
-        return $this->add_entry($dn, $attrs);
+        return $this->entry_add($dn, $attrs);
     }
 
     public function resource_delete($resource) {
@@ -666,15 +663,13 @@ class LDAP extends Net_LDAP3 {
             $type_str = $_key['key'];
         }
 
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
         $base_dn = $this->_subject_base_dn('role');
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
 
-        return $this->add_entry($dn, $attrs);
+        return $this->entry_add($dn, $attrs);
     }
 
     public function role_edit($role, $attributes, $typeid = null) {
@@ -742,7 +737,6 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_add($attrs, $typeid = null) {
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
         if ($typeid == null) {
             $type_str = 'user';
         }
@@ -762,13 +756,13 @@ class LDAP extends Net_LDAP3 {
             $base_dn = $attrs['ou'];
         }
 
-        console("Base DN now: $base_dn");
+        //console("Base DN now: $base_dn");
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
         $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
 
-        return $this->add_entry($dn, $attrs);
+        return $this->entry_add($dn, $attrs);
     }
 
     public function user_edit($user, $attributes, $typeid = null) {
@@ -824,7 +818,12 @@ class LDAP extends Net_LDAP3 {
         return $this->entry_find_by_attribute($attribute);
     }
 
+    /**
+     * delete_entry() wrapper with binding and DN resolving
+     */
     protected function entry_delete($entry) {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
         $entry_dn = $this->entry_dn($entry);
 
         if (!$entry_dn) {
@@ -832,6 +831,15 @@ class LDAP extends Net_LDAP3 {
         }
 
         return $this->delete_entry($entry_dn);
+    }
+
+    /**
+     * add_entry() wrapper with binding
+     */
+    protected function entry_add($entry_dn, $attrs) {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        return $this->add_entry($entry_dn, $attrs);
     }
 
     public function _config_get($key, $default = NULL) {
@@ -1397,13 +1405,13 @@ class LDAP extends Net_LDAP3 {
      * domain at all?
      */
     private function _probe_root_dn($entry_root_dn) {
-        console("Running for entry root dn: " . $entry_root_dn);
+        //console("Running for entry root dn: " . $entry_root_dn);
         if (($tmpconn = ldapconnect($this->_ldap_server)) == false) {
             //message("LDAP Error: " . $this->_errstr());
             return false;
         }
 
-        console("User DN: " . $_SESSION['user']->user_bind_dn);
+        //console("User DN: " . $_SESSION['user']->user_bind_dn);
 
         if (ldap_bind($tmpconn, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw) === false) {
             //message("LDAP Error: " . $this->_errstr());
