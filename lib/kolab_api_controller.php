@@ -30,6 +30,7 @@ class kolab_api_controller
 {
     public $output;
 
+    private $config;
     private $uid;
     private $request  = array();
     private $services = array();
@@ -39,6 +40,7 @@ class kolab_api_controller
     public function __construct()
     {
         $this->output = new kolab_json_output();
+        $this->config = Conf::get_instance();
 
         if (!empty($_GET['service'])) {
             if (!empty($_GET['method'])) {
@@ -128,10 +130,8 @@ class kolab_api_controller
      */
     public function dispatch($postdata)
     {
-        $config = Conf::get_instance();
-
         // Use proxy
-        if (empty($_GET['proxy']) && ($url = $config->get('kolab_wap', 'api_url'))) {
+        if (empty($_GET['proxy']) && ($url = $this->config->get('kolab_wap', 'api_url'))) {
             $this->proxy($postdata, $url);
             return;
         }
@@ -143,7 +143,7 @@ class kolab_api_controller
         Log::debug("Calling $service.$method");
 
         // validate user session
-        if ($service != 'system' || $method != 'authenticate') {
+        if (!in_array($method, array('quit', 'authenticate'))) {
             if (!$this->session_validate($postdata)) {
                 throw new Exception("Invalid session", 403);
             }
@@ -253,11 +253,20 @@ class kolab_api_controller
         session_id($sess_id);
         session_start();
 
-        if (isset($_SESSION['user']) && $_SESSION['user']->authenticated()) {
-            return true;
+        if (empty($_SESSION['user']) || !$_SESSION['user']->authenticated()) {
+            return false;
         }
 
-        return false;
+        // Session timeout
+        $timeout = $this->config->get('kolab_wap', 'session_timeout');
+        if ($timeout && $_SESSION['time'] && $_SESSION['time'] < time() - $timeout) {
+            return false;
+        }
+
+        // update session time
+        $_SESSION['time'] = time();
+
+        return true;
     }
 
 
@@ -296,8 +305,7 @@ class kolab_api_controller
             }
             else {
                 Log::debug("No domain name space in the username, using the primary domain");
-                $conf = Conf::get_instance();
-                $domain = $conf->get('kolab', 'primary_domain');
+                $domain = $this->config->get('kolab', 'primary_domain');
             }
         }
         else {
@@ -312,7 +320,7 @@ class kolab_api_controller
 
         // start new (PHP) session
         if ($valid) {
-            $_SESSION['start'] = time();
+            $_SESSION['time'] = time();
             return array(
                 'user'          => $_SESSION['user']->get_username(),
                 'userid'        => $_SESSION['user']->get_userid(),
@@ -335,8 +343,7 @@ class kolab_api_controller
         $auth = Auth::get_instance();
 
         // Get the domain name attribute
-        $conf = Conf::get_instance();
-        $dna = $conf->get('ldap', 'domain_name_attribute');
+        $dna = $this->config->get('ldap', 'domain_name_attribute');
         if (empty($dna)) {
             $dna = 'associateddomain';
         }
