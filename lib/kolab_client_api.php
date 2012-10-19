@@ -37,9 +37,6 @@ class kolab_client_api
      */
     private $base_url;
 
-    const STATUS_OK    = 0;
-    const STATUS_ERROR = 1;
-
     const ERROR_INTERNAL   = 100;
     const ERROR_CONNECTION = 200;
 
@@ -158,9 +155,9 @@ class kolab_client_api
     {
         $url = $this->build_url($action, $args);
 
-        $this->request->setMethod(HTTP_Request2::METHOD_GET);
+        Log::trace("Calling API GET: $url");
 
-        //console("GET", $url);
+        $this->request->setMethod(HTTP_Request2::METHOD_GET);
 
         return $this->get_response($url);
     }
@@ -177,6 +174,8 @@ class kolab_client_api
     public function post($action, $url_args = array(), $post = array())
     {
         $url = $this->build_url($action, $url_args);
+
+        Log::trace("Calling API POST: $url");
 
         $this->request->setMethod(HTTP_Request2::METHOD_POST);
         $this->request->setBody(@json_encode($post));
