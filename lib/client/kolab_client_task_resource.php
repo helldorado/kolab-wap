@@ -94,7 +94,7 @@ class kolab_client_task_resource extends kolab_client_task
         }
 
         // get resources list
-        $result = $this->api->post('resources.list', null, $post);
+        $result = $this->api_post('resources.list', null, $post);
         $count  = $result->get('count');
         $result = (array) $result->get('list');
 
@@ -192,7 +192,7 @@ class kolab_client_task_resource extends kolab_client_task
     public function action_info()
     {
         $id         = $this->get_input('id', 'POST');
-        $result     = $this->api->get('resource.info', array('resource' => $id));
+        $result     = $this->api_get('resource.info', array('resource' => $id));
         $resource   = $result->get();
 
         //console("action_info()", $resource);

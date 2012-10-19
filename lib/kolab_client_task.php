@@ -316,9 +316,9 @@ class kolab_client_task
     /**
      * Logout action.
      */
-    private function action_logout($sess_expired = false)
+    private function action_logout($sess_expired = false, $stop_sess = true)
     {
-        if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token'])) {
+        if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token']) && $stop_sess) {
             $this->api->logout();
         }
         $_SESSION = array();
@@ -328,6 +328,11 @@ class kolab_client_task
                 $args = array('error' => 'session.expired');
             }
             $this->output->command('main_logout', $args);
+
+            if ($sess_expired) {
+                $this->output->send();
+                exit;
+            }
         }
         else {
             $this->output->add_translation('loginerror', 'internalerror', 'session.expired');
@@ -539,6 +544,50 @@ class kolab_client_task
     }
 
     /**
+     * API GET request wrapper
+     */
+    protected function api_get($action, $get = array())
+    {
+        return $this->api_call('get', $action, $get);
+    }
+
+    /**
+     * API POST request wrapper
+     */
+    protected function api_post($action, $get = array(), $post = array())
+    {
+        return $this->api_call('post', $action, $get, $post);
+    }
+
+    /**
+     * API request wrapper with error handling
+     */
+    protected function api_call($type, $action, $get = array(), $post = array())
+    {
+        if ($type == 'post') {
+            $result = $this->api->get($action, $get);
+        }
+        else {
+            $result = $this->api->post($action, $get, $post);
+        }
+
+        // error handling
+        if ($code = $result->get_error_code()) {
+            // Invalid session, do logout
+            if ($code == 403) {
+                $this->action_logout(true, false);
+            }
+
+            // Log communication errors, other should be logged on API side
+            if ($code < 400) {
+                $this->raise_error($code, 'API Error: ' . $result->get_error_str());
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Returns list of object types.
      *
      * @para string  $type     Object type name
@@ -555,7 +604,7 @@ class kolab_client_task
         $cache_idx = $type . '_types' . ($used_for ? ":$used_for" : '');
 
         if (!array_key_exists($cache_idx, $this->cache)) {
-            $result = $this->api->post($type . '_types.list');
+            $result = $this->api_post($type . '_types.list');
             $list   = $result->get('list');
 
             if (!empty($used_for) && is_array($list)) {
@@ -589,7 +638,7 @@ class kolab_client_task
             }
         }
 
-        $result   = $this->api->get('user.info', array('user' => $dn));
+        $result   = $this->api_get('user.info', array('user' => $dn));
         $username = $result->get('displayname');
 
         if (empty($username)) {
@@ -622,7 +671,7 @@ class kolab_client_task
             $list = $_SESSION['capabilities'];
         }
         else {
-            $result = $this->api->post('system.capabilities');
+            $result = $this->api_post('system.capabilities');
             $list   = $result->get('list');
 
             if (is_array($list) && !$this->devel_mode) {
@@ -681,7 +730,7 @@ class kolab_client_task
         }
 
         // Get the rights on the entry and attribute level
-        $result = $this->api->get($type . '.effective_rights', array($type => $id));
+        $result = $this->api_get($type . '.effective_rights', array($type => $id));
 
         $result = array(
             'attribute' => $result->get('attributeLevelRights'),
@@ -838,7 +887,7 @@ class kolab_client_task
 
         if (!isset($field['values'])) {
             $data['attributes'] = array($field['name']);
-            $resp = $this->api->post('form_value.select_options', null, $data);
+            $resp = $this->api_post('form_value.select_options', null, $data);
             $resp = $resp->get($field['name']);
             unset($data['attributes']);
 
@@ -1012,7 +1061,7 @@ class kolab_client_task
         if ($add_mode) {
             if (!empty($auto_attribs)) {
                 $data['attributes'] = $auto_attribs;
-                $resp = $this->api->post('form_value.generate', null, $data);
+                $resp = $this->api_post('form_value.generate', null, $data);
                 $data = array_merge((array)$data, (array)$resp->get());
                 unset($data['attributes']);
             }
@@ -1078,7 +1127,7 @@ class kolab_client_task
                 );
 
                 // get options list
-                $result = $this->api->post('form_value.list_options', null, $post);
+                $result = $this->api_post('form_value.list_options', null, $post);
                 $result = $result->get('list');
 
                 $data[$fname] = $result;

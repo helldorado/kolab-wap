@@ -94,7 +94,7 @@ class kolab_client_task_user extends kolab_client_task
         }
 
         // get users list
-        $result = $this->api->post('users.list', null, $post);
+        $result = $this->api_post('users.list', null, $post);
         $count  = $result->get('count');
         $result = (array) $result->get('list');
 
@@ -179,7 +179,7 @@ class kolab_client_task_user extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api->get('user.info', array('user' => $id));
+        $result = $this->api_get('user.info', array('user' => $id));
         $user   = $result->get();
         $output = $this->user_form(null, $user);
 

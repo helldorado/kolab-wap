@@ -355,12 +355,11 @@ function kolab_admin()
     this.set_busy(false);
 
     if (!response || response.status != 'OK') {
-      var msg = response && response.reason ? response.reason : this.t('servererror');
-      this.display_message(msg, 'error');
-
       // Logout on invalid-session error
       if (response && response.code == 403)
         this.main_logout();
+      else
+        this.display_message(response && response.reason ? response.reason : this.t('servererror'), 'error');
 
       return false;
     }

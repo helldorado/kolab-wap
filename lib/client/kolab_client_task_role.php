@@ -94,7 +94,7 @@ class kolab_client_task_role extends kolab_client_task
         }
 
         // get roles list
-        $result = $this->api->post('roles.list', null, $post);
+        $result = $this->api_post('roles.list', null, $post);
         $count  = (int) $result->get('count');
         $result = (array) $result->get('list');
 
@@ -179,7 +179,7 @@ class kolab_client_task_role extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api->get('role.info', array('role' => $id));
+        $result = $this->api_get('role.info', array('role' => $id));
         $role  = $result->get();
         $output = $this->role_form(null, $role);
 
