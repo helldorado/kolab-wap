@@ -341,7 +341,7 @@ class kolab_client_task
         }
 
         if ($error) {
-            $this->output->command('display_message', $error, 'error');
+            $this->output->command('display_message', $error, 'error', 60000);
         }
 
         $this->output->send('login');
