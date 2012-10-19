@@ -565,10 +565,10 @@ class kolab_client_task
     protected function api_call($type, $action, $get = array(), $post = array())
     {
         if ($type == 'post') {
-            $result = $this->api->get($action, $get);
+            $result = $this->api->post($action, $get, $post);
         }
         else {
-            $result = $this->api->post($action, $get, $post);
+            $result = $this->api->get($action, $get);
         }
 
         // error handling
