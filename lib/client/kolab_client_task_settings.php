@@ -829,7 +829,7 @@ class kolab_client_task_settings extends kolab_client_task
         );
 
         // get all available attributes
-        $response   = $this->api->post('form_value.select_options', null, $post_data);
+        $response   = $this->api_post('form_value.select_options', null, $post_data);
         $response   = $response->get('attribute');
         $attributes = array();
 

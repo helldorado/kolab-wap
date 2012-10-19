@@ -39,7 +39,7 @@ class kolab_client_task_main extends kolab_client_task
     {
         // handle domain change
         if ($domain = $this->get_input('domain', 'GET')) {
-            $result = $this->api->get('system.select_domain', array('domain' => $domain));
+            $result = $this->api_get('system.select_domain', array('domain' => $domain));
 
             if (!$result->get_error_code()) {
                 $_SESSION['user']['domain'] = $domain;

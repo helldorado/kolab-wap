@@ -94,7 +94,7 @@ class kolab_client_task_domain extends kolab_client_task
         }
 
         // get domains list
-        $result = $this->api->post('domains.list', null, $post);
+        $result = $this->api_post('domains.list', null, $post);
         $count  = (int) $result->get('count');
         $result = (array) $result->get('list');
 
@@ -189,7 +189,7 @@ class kolab_client_task_domain extends kolab_client_task
         $id     = $this->get_input('id', 'POST');
         //console("action_info() on", $id);
 
-        $result = $this->api->get('domain.info', array('domain' => $id));
+        $result = $this->api_get('domain.info', array('domain' => $id));
         //console("action_info() \$result", $result);
 
         $domain  = $result->get();

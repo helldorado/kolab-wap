@@ -94,7 +94,7 @@ class kolab_client_task_group extends kolab_client_task
         }
 
         // get groups list
-        $result = $this->api->post('groups.list', null, $post);
+        $result = $this->api_post('groups.list', null, $post);
         $count  = (int) $result->get('count');
         $result = (array) $result->get('list');
 
@@ -179,7 +179,7 @@ class kolab_client_task_group extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api->get('group.info', array('group' => $id));
+        $result = $this->api_get('group.info', array('group' => $id));
         $group  = $result->get();
         $output = $this->group_form(null, $group);
 
