@@ -148,35 +148,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function domain_edit($domain, $attributes, $typeid = null) {
-        // Domain identifier
-        $unique_attr = $this->unique_attribute();
+        $domain = $this->domain_info($domain, array_keys($attributes));
 
-        // Now that values have been re-generated where necessary, compare
-        // the new domain attributes to the original domain attributes.
-        $_domain = $this->domain_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
-
-        if (empty($_domain)) {
-            $_domain = $this->entry_dn($domain);
-
-            if (empty($_domain)) {
-                return false;
-            }
-
-            $_domain_dn = $domain;
-        }
-        else {
-            $_domain_dn = key($_domain);
-        }
-
-        if (!$_domain) {
-            console("Could not find domain");
+        if (empty($domain)) {
             return false;
         }
 
-        $_domain = $this->domain_info($_domain_dn, array_keys($attributes));
+        $domain_dn = key($domain);
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_domain_dn, $_domain[$_domain_dn], $attributes);
+        return $this->modify_entry($domain_dn, $domain[$domain_dn], $attributes);
     }
 
     public function domain_delete($domain) {
@@ -250,21 +231,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function group_add($attrs, $typeid = null) {
-        if ($typeid == null) {
-            $type_str = 'group';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM group_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-
-        // Check if the group_type has a specific base DN specified.
-        $base_dn = $this->conf->get($type_str . "_group_base_dn");
-        // If not, take the regular user_base_dn
-        if (!$base_dn) {
-            $base_dn = $this->conf->get("group_base_dn");
-        }
+        $base_dn = $this->entry_base_dn('group', $typeid);
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -278,24 +245,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function group_edit($group, $attributes, $typeid = null) {
-        // Group identifier
-        $unique_attr = $this->unique_attribute();
-        $attributes[$unique_attr] = $group;
+        $group = $this->group_info($group, array_keys($attributes));
 
-        // Now that values have been re-generated where necessary, compare
-        // the new group attributes to the original group attributes.
-        $_group = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
-
-        if (!$_group) {
-            console("Could not find group");
+        if (empty($group)) {
             return false;
         }
 
-        $_group_dn = key($_group);
-        $_group = $this->group_info($_group_dn, array_keys($attributes));
+        $group_dn = key($group);
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_group_dn, $_group[$_group_dn], $attributes);
+        return $this->modify_entry($group_dn, $group[$group_dn], $attributes);
     }
 
     public function group_find_by_attribute($attribute) {
@@ -306,7 +265,7 @@ class LDAP extends Net_LDAP3 {
         $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() for group " . var_export($group, TRUE));
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
+        $unique_attr = $this->unique_attribute();
         if (!in_array($unique_attr, $attributes)) {
             $attributes[] = $unique_attr;
         }
@@ -580,21 +539,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function resource_add($attrs, $typeid = null) {
-        if ($typeid == null) {
-            $type_str = 'resource';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM resource_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-
-        // Check if the resource_type has a specific base DN specified.
-        $base_dn = $this->conf->get($type_str . "_resource_base_dn");
-        // If not, take the regular user_base_dn
-        if (!$base_dn) {
-            $base_dn = $this->conf->get("resource_base_dn");
-        }
+        $base_dn = $this->entry_base_dn('resource', $typeid);
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -608,25 +553,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function resource_edit($resource, $attributes, $typeid = null) {
-        // Resource identifier
-        $unique_attr = $this->unique_attribute();
-        $attributes[$unique_attr] = $resource;
+        $resource = $this->resource_info($resource, array_keys($attributes));
 
-        console("\$this->domain: " . $this->domain);
-        // Now that values have been re-generated where necessary, compare
-        // the new resource attributes to the original resource attributes.
-        $_resource = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
-
-        if (!$_resource) {
-            console("Could not find resource");
+        if (empty($resource)) {
             return false;
         }
 
-        $_resource_dn = key($_resource);
-        $_resource = $this->resource_info($_resource_dn, array_keys($attributes));
+        $resource_dn = key($resource);
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_resource_dn, $_resource[$_resource_dn], $attributes);
+        return $this->modify_entry($resource_dn, $resource[$resource_dn], $attributes);
     }
 
     public function resource_find_by_attribute($attribute) {
@@ -654,16 +590,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function role_add($attrs) {
-        if ($typeid == null) {
-            $type_str = 'role';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM role_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-
-        $base_dn = $this->_subject_base_dn('role');
+        $base_dn = $this->entry_base_dn('role', $typeid);
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -673,24 +600,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function role_edit($role, $attributes, $typeid = null) {
-        // Resource identifier
-        $unique_attr = $this->unique_attribute();
-        $attributes[$unique_attr] = $role;
+        $role = $this->role_info($role, array_keys($attributes));
 
-        // Now that values have been re-generated where necessary, compare
-        // the new role attributes to the original role attributes.
-        $_role = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr], 'objectclass' => 'ldapsubentry'));
-
-        if (!$_role) {
-            Log::error("Could not find role identified with $role.");
+        if (empty($role)) {
             return false;
         }
 
-        $_role_dn = key($_role);
-        $_role = $this->role_info($_role_dn, array_keys($attributes));
+        $role_dn = key($role);
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_role_dn, $_role[$_role_dn], $attributes);
+        return $this->modify_entry($role_dn, $role[$role_dn], $attributes);
     }
 
     public function role_delete($role) {
@@ -711,7 +630,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function role_info($role, $attributes = array('*')) {
-        $role_dn = $this->entry_dn($role);
+        $role_dn = $this->entry_dn($role, array('objectclass' => 'ldapsubentry'));
 
         if (!$role_dn) {
             return false;
@@ -737,26 +656,11 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_add($attrs, $typeid = null) {
-        if ($typeid == null) {
-            $type_str = 'user';
-        }
-        else {
-            $db   = SQL::get_instance();
-            $_key = $db->fetch_assoc($db->query("SELECT `key` FROM user_types WHERE id = ?", $typeid));
-            $type_str = $_key['key'];
-        }
-
-        // Check if the user_type has a specific base DN specified.
-        $base_dn = $this->_subject_base_dn($type_str . "_user");
-        if (empty($base_dn)) {
-            $base_dn = $this->_subject_base_dn("user");
-        }
+        $base_dn = $this->entry_base_dn('user', $typeid);
 
         if (!empty($attrs['ou'])) {
             $base_dn = $attrs['ou'];
         }
-
-        //console("Base DN now: $base_dn");
 
         // TODO: The rdn is configurable as well.
         // Use [$type_str . "_"]user_rdn_attr
@@ -766,27 +670,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function user_edit($user, $attributes, $typeid = null) {
-        $this->_log(LOG_DEBUG, "user.edit() called for $user, attributes", $attributes);
+        $user = $this->user_info($user, array_keys($attributes));
 
-        $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
-
-        $attributes[$unique_attr] = $user;
-
-        // Now that values have been re-generated where necessary, compare
-        // the new group attributes to the original group attributes.
-        $_user = $this->entry_find_by_attribute(array($unique_attr => $attributes[$unique_attr]));
-
-        if (!$_user) {
-            console("Could not find user");
+        if (empty($user)) {
             return false;
         }
-        $_user_dn = key($_user);
-        $_user = $this->user_info($_user_dn, array_keys($attributes));
 
-        console("Auth::LDAP::user_edit() existing \$_user info", $_user);
+        $user_dn = key($user);
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($_user_dn, $_user[$_user_dn], $attributes);
+        return $this->modify_entry($user_dn, $user[$user_dn], $attributes);
     }
 
     public function user_delete($user) {
@@ -797,7 +690,7 @@ class LDAP extends Net_LDAP3 {
         $this->_log(LOG_DEBUG, "Auth::LDAP::user_info() for user " . var_export($user, TRUE));
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
+        $unique_attr = $this->unique_attribute();
         if (!in_array($unique_attr, $attributes)) {
             $attributes[] = $unique_attr;
         }
@@ -840,6 +733,26 @@ class LDAP extends Net_LDAP3 {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         return $this->add_entry($entry_dn, $attrs);
+    }
+
+    /**
+     * Return base DN for specified object type
+     */
+    protected function entry_base_dn($type, $typeid = null)
+    {
+        if ($typeid) {
+            $db  = SQL::get_instance();
+            $sql = $db->fetch_assoc($db->query("SELECT `key` FROM {$type}_types WHERE id = ?", $typeid));
+
+            // Check if the type has a specific base DN specified.
+            $base_dn = $this->_subject_base_dn($sql['key'] . '_' . $type . '_base_dn');
+        }
+
+        if (empty($base_dn)) {
+            $base_dn = $this->_subject_base_dn($type . '_base_dn');
+        }
+
+        return $base_dn;
     }
 
     public function _config_get($key, $default = NULL) {
