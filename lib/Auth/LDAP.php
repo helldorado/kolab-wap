@@ -694,7 +694,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function role_delete($role) {
-        return $this->entry_delete($role);
+        return $this->entry_delete($role, array('objectclass' => 'ldapsubentry'));
     }
 
     public function role_find_by_attribute($attribute) {
@@ -821,10 +821,10 @@ class LDAP extends Net_LDAP3 {
     /**
      * delete_entry() wrapper with binding and DN resolving
      */
-    protected function entry_delete($entry) {
+    protected function entry_delete($entry, $attributes = array()) {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $entry_dn = $this->entry_dn($entry);
+        $entry_dn = $this->entry_dn($entry, $attributes);
 
         if (!$entry_dn) {
             return false;
