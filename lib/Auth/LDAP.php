@@ -296,35 +296,7 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function list_domains($attributes = array(), $search = array(), $params = array()) {
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
-        if (!empty($params['sort_by'])) {
-            if (is_array($params['sort_by'])) {
-                foreach ($params['sort_by'] as $attrib) {
-                    if (!in_array($attrib, $attributes)) {
-                        $attributes[] = $attrib;
-                    }
-                }
-            } else {
-                if (!in_array($params['sort_by'], $attributes)) {
-                    $attributes[] = $params['sort_by'];
-                }
-            }
-        }
-
-        if (!empty($params['page_size'])) {
-            $this->config_set('page_size', $params['page_size']);
-        }
-
-        if (!empty($params['page'])) {
-            $this->config_set('list_page', $params['page']);
-        }
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        $this->config_set('return_attributes', $attributes);
+        $this->list_prepare($params, $attributes);
 
         $section = $this->conf->get('kolab', 'auth_mechanism');
         $base_dn = $this->conf->get($section, 'domain_base_dn');
@@ -335,8 +307,7 @@ class LDAP extends Net_LDAP3 {
             $filter = $kolab_filter;
         }
 
-        $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-
+        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
         $entries = $this->sort_and_slice($result, $params);
 
         return Array(
@@ -346,41 +317,11 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function list_groups($attributes = array(), $search = array(), $params = array()) {
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        $this->list_prepare($params, $attributes);
 
-        if (!empty($params['sort_by'])) {
-            if (is_array($params['sort_by'])) {
-                foreach ($params['sort_by'] as $attrib) {
-                    if (!in_array($attrib, $attributes)) {
-                        $attributes[] = $attrib;
-                    }
-                }
-            } else {
-                if (!in_array($params['sort_by'], $attributes)) {
-                    $attributes[] = $params['sort_by'];
-                }
-            }
-        }
-
-        if (!empty($params['page_size'])) {
-            $this->config_set('page_size', $params['page_size']);
-        }
-
-        if (!empty($params['page'])) {
-            $this->config_set('list_page', $params['page']);
-        }
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        $this->config_set('return_attributes', $attributes);
-
-        $base_dn = $this->_subject_base_dn("group");
-        $filter = $this->conf->get('group_filter');
-
-        $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-
+        $base_dn = $this->_subject_base_dn('group');
+        $filter  = $this->conf->get('group_filter');
+        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
         $entries = $this->sort_and_slice($result, $params);
 
         return Array(
@@ -390,58 +331,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function list_resources($attributes = array(), $search = array(), $params = array()) {
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        $this->list_prepare($params, $attributes);
 
-        if (!empty($params['sort_by'])) {
-            if (is_array($params['sort_by'])) {
-                foreach ($params['sort_by'] as $attrib) {
-                    if (!in_array($attrib, $attributes)) {
-                        $attributes[] = $attrib;
-                    }
-                }
-            } else {
-                if (!in_array($params['sort_by'], $attributes)) {
-                    $attributes[] = $params['sort_by'];
-                }
-            }
-        }
-
-        if (!empty($params['page_size'])) {
-            $this->config_set('page_size', $params['page_size']);
-        } else {
-            $this->config_get('page_size', 15);
-        }
-
-        if (!empty($params['page'])) {
-            $this->config_set('list_page', $params['page']);
-        } else {
-            $this->config_set('list_page', 1);
-        }
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        $this->config_set("return_attributes", $attributes);
-
-        $base_dn = $this->_subject_base_dn("resource");
+        $base_dn = $this->_subject_base_dn('resource');
         $filter  = $this->conf->get('resource_filter');
 
         if (!$filter) {
             $filter = '(&(objectclass=*)(!(objectclass=organizationalunit)))';
         }
 
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        if ($s_filter = $this->search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
-        }
-
-        $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-
+        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
         $entries = $this->sort_and_slice($result, $params);
 
         return Array(
@@ -451,33 +350,16 @@ class LDAP extends Net_LDAP3 {
     }
 
     public function list_roles($attributes = array(), $search = array(), $params = array()) {
-        if (!empty($params['sort_by'])) {
-            if (!in_array($params['sort_by'], $attributes)) {
-                $attributes[] = $params['sort_by'];
-            }
+        $this->list_prepare($params, $attributes);
+
+        $base_dn = $this->_subject_base_dn('role');
+        $filter  = $this->conf->get('role_filter');
+
+        if (empty($filter)) {
+            $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
         }
 
-        $base_dn = $this->_subject_base_dn("role");
-        Log::trace("Auth::LDAP::list_roles() using \$base_dn: " . var_export($base_dn, TRUE));
-        // TODO: From config
-        $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
-
-        if (empty($attributes) || !is_array($attributes)) {
-            $attributes = array('*');
-        }
-
-        $unique_attr = $this->unique_attribute();
-        if (!in_array($unique_attr, $attributes)) {
-            $attributes[] = $unique_attr;
-        }
-
-        if ($s_filter = $this->search_filter($search)) {
-            // join search filter with objectClass filter
-            $filter = '(&' . $filter . $s_filter . ')';
-        }
-
-        $result = $this->_search($base_dn, $filter, $attributes);
-
+        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
         $entries = $this->sort_and_slice($result, $params);
 
         return Array(
@@ -489,6 +371,24 @@ class LDAP extends Net_LDAP3 {
     public function list_users($attributes = array(), $search = array(), $params = array()) {
         $this->_log(LOG_DEBUG, "Auth::LDAP::list_users(" . var_export($attributes, TRUE) . ", " . var_export($search, TRUE) . ", " . var_export($params, TRUE));
 
+        $this->list_prepare($params, $attributes);
+
+        $base_dn = $this->_subject_base_dn("user");
+        $filter  = $this->conf->get('user_filter');
+        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
+        $entries = $this->sort_and_slice($result, $params);
+
+        return Array(
+                'list' => $entries,
+                'count' => $result->count()
+            );
+    }
+
+    /**
+     * Prepare environment before search_entries() call
+     */
+    protected function list_prepare($params, $attributes)
+    {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         if (!empty($params['sort_by'])) {
@@ -521,21 +421,7 @@ class LDAP extends Net_LDAP3 {
             $attributes = array('*');
         }
 
-        $this->config_set("return_attributes", $attributes);
-
-        $base_dn = $this->_subject_base_dn("user");
-        $filter = $this->conf->get('user_filter');
-
-        $this->_log(LOG_DEBUG, "Auth::LDAP::list_users() searching entries in $base_dn with $filter, 'sub', NULL, " . var_export($search, TRUE));
-
-        $result = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-
-        $entries = $this->sort_and_slice($result, $params);
-
-        return Array(
-                'list' => $entries,
-                'count' => $result->count()
-            );
+        $this->config_set('return_attributes', $attributes);
     }
 
     public function resource_add($attrs, $typeid = null) {
