@@ -444,6 +444,10 @@ div.vsplitter {
 
 /**** Common classes ****/
 
+.nowrap {
+  white-space: nowrap;
+}
+
 .clear {
   clear: both;
 }

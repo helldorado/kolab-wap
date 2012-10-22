@@ -316,6 +316,7 @@ class kolab_client_task_user extends kolab_client_task
                     'content' => $this->translate('password.generate'),
                     'href'    => '#',
                     'onclick' => "kadm.generate_password('userpassword')",
+                    'class'   => 'nowrap',
                 ));
             }
         }
