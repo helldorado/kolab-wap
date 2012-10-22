@@ -166,7 +166,9 @@ class LDAP extends Net_LDAP3 {
 
     public function domain_delete($domain)
     {
-        return $this->entry_delete($domain);
+        $base_dn = $this->conf->get('ldap', 'domain_base_dn');
+
+        return $this->entry_delete($domain, array(), $base_dn);
     }
 
     public function domain_find_by_attribute($attribute)
@@ -181,10 +183,10 @@ class LDAP extends Net_LDAP3 {
         $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() for domain " . var_export($domain, true));
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $domain_dn = $this->entry_dn($domain);
+        $domain_base_dn = $this->conf->get('ldap', 'domain_base_dn');
+        $domain_dn      = $this->entry_dn($domain, array(), $domain_base_dn);
 
         if (!$domain_dn) {
-            $domain_base_dn        = $this->conf->get('ldap', 'domain_base_dn');
             $domain_filter         = $this->conf->get('ldap', 'domain_filter');
             $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
             $domain_filter         = "(&" . $domain_filter . "(" . $domain_name_attribute . "=" . $domain . "))";
@@ -624,11 +626,11 @@ class LDAP extends Net_LDAP3 {
     /**
      * delete_entry() wrapper with binding and DN resolving
      */
-    protected function entry_delete($entry, $attributes = array())
+    protected function entry_delete($entry, $attributes = array(), $base_dn = null)
     {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $entry_dn = $this->entry_dn($entry, $attributes);
+        $entry_dn = $this->entry_dn($entry, $attributes, $base_dn);
 
         if (!$entry_dn) {
             return false;
