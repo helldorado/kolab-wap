@@ -314,6 +314,10 @@ class LDAP extends Net_LDAP3 {
             $filter = $kolab_filter;
         }
 
+        if (!$filter) {
+            $filter = "(associateddomain=*)";
+        }
+
         return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
 
@@ -323,6 +327,10 @@ class LDAP extends Net_LDAP3 {
 
         $base_dn = $this->_subject_base_dn('group');
         $filter  = $this->conf->get('group_filter');
+
+        if (!$filter) {
+            $filter = "(|(objectclass=groupofuniquenames)(objectclass=groupofurls))";
+        }
 
         return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
@@ -335,7 +343,7 @@ class LDAP extends Net_LDAP3 {
         $filter  = $this->conf->get('resource_filter');
 
         if (!$filter) {
-            $filter = '(&(objectclass=*)(!(objectclass=organizationalunit)))';
+            $filter = "(&(objectclass=*)(!(objectclass=organizationalunit)))";
         }
 
         return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
@@ -361,6 +369,10 @@ class LDAP extends Net_LDAP3 {
 
         $base_dn = $this->_subject_base_dn('user');
         $filter  = $this->conf->get('user_filter');
+
+        if (empty($filter)) {
+            $filter  = "(objectclass=kolabinetorgperson)";
+        }
 
         return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
