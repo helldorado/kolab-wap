@@ -152,15 +152,13 @@ class kolab_api_service_domain extends kolab_api_service
 
             $unique_attr = $conf->get('ldap', 'unique_attribute');
 
-            $domain = $auth->domain_find_by_attribute(
-                    array($unique_attr => $entry_dn)
-                );
+            $domain = $auth->domain_find_by_attribute(array($unique_attr => $entry_dn));
 
             if (!empty($domain)) {
                 $entry_dn = key($domain);
             }
-
-        } else {
+        }
+        else {
             $conf = Conf::get_instance();
             $entry_dn = $conf->get('ldap', 'domain_base_dn');
         }
