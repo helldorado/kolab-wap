@@ -122,9 +122,17 @@ abstract class kolab_api_service
             return null;
         }
 
-        $object_class = array_map('strtolower', $object_class);
         $object_types = $this->object_types($object_name);
+
+        if (count($object_types) == 1) {
+            return key($object_types);
+        }
+
+        $object_class = array_map('strtolower', $object_class);
+        $object_keys  = array_keys($attributes);
+        $keys_count   = count($object_keys);
         $type_score   = -1;
+        $keys_score   = 0;
         $type_id      = null;
 
         //console("Data objectClasses: " . implode(", ", $object_class));
@@ -142,17 +150,30 @@ abstract class kolab_api_service
             $_object_class = array_diff($object_class, $ref_class);
             $_ref_class    = array_diff($ref_class, $object_class);
 
+            // Object classes score
             $differences   = count($_object_class) + count($_ref_class);
             $commonalities = count($object_class) - $differences;
             $elem_score    = $differences > 0 ? ($commonalities / $differences) : $commonalities;
 
+            // Attributes score
+            if ($keys_count) {
+                $ref_keys = array_unique(array_merge(
+                    array_keys((array) $elem['attributes']['auto_form_fields']),
+                    array_keys((array) $elem['attributes']['form_fields']),
+                    array_keys($elem['attributes']['fields'])
+                ));
+                $elem_keys_score = $keys_count - count(array_diff($object_keys, $ref_keys));
+            }
+
             //console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
             //console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
-            //console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ")");
+            //console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ") " . $elem_keys_score);
 
-            if ($elem_score > $type_score) {
+            // Compare last and current element score
+            if ($elem_score > $type_score || ($elem_score == $type_score && $elem_keys_score > $keys_score)) {
                 $type_id    = $idx;
                 $type_score = $elem_score;
+                $keys_score = $elem_keys_score;
             }
 
             // On the likely chance that the object is a resource (types of which likely have the same
@@ -297,7 +318,8 @@ abstract class kolab_api_service
         return $result;
     }
 
-    protected function parse_list_attributes($post) {
+    protected function parse_list_attributes($post)
+    {
         $attributes = Array();
         // Attributes to return
         if (!empty($post['attributes']) && is_array($post['attributes'])) {
@@ -314,7 +336,8 @@ abstract class kolab_api_service
         return $attributes;
     }
 
-    protected function parse_list_params($post) {
+    protected function parse_list_params($post)
+    {
         $params = Array();
         if (!empty($post['sort_by'])) {
             if (is_array($post['sort_by'])) {
@@ -347,7 +370,8 @@ abstract class kolab_api_service
         return $params;
     }
 
-    protected function parse_list_search($post) {
+    protected function parse_list_search($post)
+    {
         $search = Array();
         // Search parameters
         if (!empty($post['search']) && is_array($post['search'])) {
