@@ -666,13 +666,13 @@ class Net_LDAP3
             return FALSE;
         }
 
-        $filter = "(&";
+        $filter = count($attributes) ? "(&" : "";
 
         foreach ($attributes as $key => $value) {
             $filter .= "(" . $key . "=" . $value . ")";
         }
 
-        $filter .= ")";
+        $filter .= count($attributes) ? ")" : "";
 
         if (empty($base_dn)) {
             $base_dn = $this->config_get('root_dn');
@@ -1201,14 +1201,16 @@ class Net_LDAP3
         $this->_debug("Using function $function on scope $scope (\$ns_function is $ns_function)");
 
         if ($this->vlv_active) {
-            if (isset($this->additional_filter) && !empty($this->additional_filter)) {
+            if (!empty($this->additional_filter)) {
                 $filter = "(&" . $filter . $this->additional_filter . ")";
                 $this->_debug("C: (With VLV) Setting a filter (with additional filter) of " . $filter);
             } else {
                 $this->_debug("C: (With VLV) Setting a filter (without additional filter) of " . $filter);
             }
         } else {
-            $filter = "(&" . $filter . $this->additional_filter . ")";
+            if (!empty($this->additional_filter)) {
+                $filter = "(&" . $filter . $this->additional_filter . ")";
+            }
             $this->_debug("C: (Without VLV) Setting a filter of " . $filter);
         }
 
