@@ -34,18 +34,19 @@ class LDAP extends Net_LDAP3 {
     /**
      * Class constructor
      */
-    public function __construct($domain = null) {
+    public function __construct($domain = null)
+    {
         parent::__construct();
 
         $this->conf = Conf::get_instance();
 
         // Causes nesting levels to be too deep...?
-        //$this->config_set('config_get_hook', Array($this, "_config_get"));
+        //$this->config_set('config_get_hook', array($this, "_config_get"));
 
-        $this->config_set("debug", TRUE);
-        $this->config_set("log_hook", Array($this, "_log"));
+        $this->config_set("debug", true);
+        $this->config_set("log_hook", array($this, "_log"));
 
-        //$this->config_set("vlv", FALSE);
+        //$this->config_set("vlv", false);
         $this->config_set("config_root_dn", "cn=config");
 
         $this->config_set("service_bind_dn", $this->conf->get("service_bind_dn"));
@@ -110,7 +111,8 @@ class LDAP extends Net_LDAP3 {
      *
      * @return bool|string User ID or False on failure
      */
-    public function authenticate($username, $password, $domain = NULL) {
+    public function authenticate($username, $password, $domain = NULL)
+    {
         Log::debug("Auth::LDAP: authentication request for $username against domain $domain");
 
         if (!$this->connect()) {
@@ -124,7 +126,7 @@ class LDAP extends Net_LDAP3 {
         $result = $this->login($username, $password, $domain);
 
         if (!$result) {
-            return FALSE;
+            return false;
         }
 
         $_SESSION['user']->user_bind_dn = $result;
@@ -133,7 +135,8 @@ class LDAP extends Net_LDAP3 {
         return $result;
     }
 
-    public function domain_add($domain, $parent_domain = false, $prepopulate = true) {
+    public function domain_add($domain, $parent_domain = false, $prepopulate = true)
+    {
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
             if ($this->domain_info($parent_domain)->count() < 1) {
@@ -147,7 +150,8 @@ class LDAP extends Net_LDAP3 {
         }
     }
 
-    public function domain_edit($domain, $attributes, $typeid = null) {
+    public function domain_edit($domain, $attributes, $typeid = null)
+    {
         $domain = $this->domain_info($domain, array_keys($attributes));
 
         if (empty($domain)) {
@@ -160,20 +164,24 @@ class LDAP extends Net_LDAP3 {
         return $this->modify_entry($domain_dn, $domain[$domain_dn], $attributes);
     }
 
-    public function domain_delete($domain) {
+    public function domain_delete($domain)
+    {
         return $this->entry_delete($domain);
     }
 
-    public function domain_find_by_attribute($attribute) {
+    public function domain_find_by_attribute($attribute)
+    {
         $base_dn = $this->conf->get('ldap', 'domain_base_dn');
 
         return $this->entry_find_by_attribute($attribute, $base_dn);
     }
 
-    public function domain_info($domain, $attributes = array('*')) {
-        $domain_dn = $this->entry_dn($domain);
+    public function domain_info($domain, $attributes = array('*'))
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() for domain " . var_export($domain, true));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() \$domain_dn: " . $domain_dn . " and attributes: " . var_export($attributes, TRUE));
+        $domain_dn = $this->entry_dn($domain);
 
         if (!$domain_dn) {
             $domain_base_dn        = $this->conf->get('ldap', 'domain_base_dn');
@@ -192,7 +200,7 @@ class LDAP extends Net_LDAP3 {
             return false;
         }
 
-        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() result: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() result: " . var_export($result, true));
 
         return $result;
     }
@@ -201,7 +209,8 @@ class LDAP extends Net_LDAP3 {
      * Proxy to parent function in order to enable us to insert our
      * configuration.
      */
-    public function effective_rights($subject) {
+    public function effective_rights($subject)
+    {
         // Ensure we are bound with the user's credentials
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
@@ -230,7 +239,8 @@ class LDAP extends Net_LDAP3 {
 
     }
 
-    public function group_add($attrs, $typeid = null) {
+    public function group_add($attrs, $typeid = null)
+    {
         $base_dn = $this->entry_base_dn('group', $typeid);
 
         // TODO: The rdn is configurable as well.
@@ -240,11 +250,13 @@ class LDAP extends Net_LDAP3 {
         return $this->entry_add($dn, $attrs);
     }
 
-    public function group_delete($group) {
+    public function group_delete($group)
+    {
         return $this->entry_delete($group);
     }
 
-    public function group_edit($group, $attributes, $typeid = null) {
+    public function group_edit($group, $attributes, $typeid = null)
+    {
         $group = $this->group_info($group, array_keys($attributes));
 
         if (empty($group)) {
@@ -257,35 +269,29 @@ class LDAP extends Net_LDAP3 {
         return $this->modify_entry($group_dn, $group[$group_dn], $attributes);
     }
 
-    public function group_find_by_attribute($attribute) {
+    public function group_find_by_attribute($attribute)
+    {
         return $this->entry_find_by_attribute($attribute);
     }
 
-    public function group_info($group, $attributes = array('*')) {
-        $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() for group " . var_export($group, TRUE));
+    public function group_info($group, $attributes = array('*'))
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() for group " . var_export($group, true));
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
-        $unique_attr = $this->unique_attribute();
-        if (!in_array($unique_attr, $attributes)) {
-            $attributes[] = $unique_attr;
-        }
-
-        $this->config_set('return_attributes', $attributes);
-
         $group_dn = $this->entry_dn($group);
-
-        $this->_log(LOG_DEBUG, "group_info() group_dn " . var_export($group_dn, TRUE));
 
         if (!$group_dn) {
             return false;
         }
 
-        $group_info = $this->_read($group_dn, $attributes);
-        $this->_log(LOG_DEBUG, "Auth::LDAP::group_info() result: " . var_export($group_info, TRUE));
-        return $group_info;
+        $this->read_prepare($attributes);
+
+        return $this->_read($group_dn, $attributes);
     }
 
-    public function group_members_list($group, $recurse = true) {
+    public function group_members_list($group, $recurse = true)
+    {
         $group_dn = $this->entry_dn($group);
 
         if (!$group_dn) {
@@ -295,8 +301,9 @@ class LDAP extends Net_LDAP3 {
         return $this->_list_group_members($group_dn, null, $recurse);
     }
 
-    public function list_domains($attributes = array(), $search = array(), $params = array()) {
-        $this->list_prepare($params, $attributes);
+    public function list_domains($attributes = array(), $search = array(), $params = array())
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_domains(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
 
         $section = $this->conf->get('kolab', 'auth_mechanism');
         $base_dn = $this->conf->get($section, 'domain_base_dn');
@@ -307,31 +314,22 @@ class LDAP extends Net_LDAP3 {
             $filter = $kolab_filter;
         }
 
-        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-        $entries = $this->sort_and_slice($result, $params);
-
-        return Array(
-                'list' => $entries,
-                'count' => $result->count()
-            );
+        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
 
-    public function list_groups($attributes = array(), $search = array(), $params = array()) {
-        $this->list_prepare($params, $attributes);
+    public function list_groups($attributes = array(), $search = array(), $params = array())
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_groups(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
 
         $base_dn = $this->_subject_base_dn('group');
         $filter  = $this->conf->get('group_filter');
-        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-        $entries = $this->sort_and_slice($result, $params);
 
-        return Array(
-                'list' => $entries,
-                'count' => $result->count()
-            );
+        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
 
-    public function list_resources($attributes = array(), $search = array(), $params = array()) {
-        $this->list_prepare($params, $attributes);
+    public function list_resources($attributes = array(), $search = array(), $params = array())
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_resources(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
 
         $base_dn = $this->_subject_base_dn('resource');
         $filter  = $this->conf->get('resource_filter');
@@ -340,17 +338,12 @@ class LDAP extends Net_LDAP3 {
             $filter = '(&(objectclass=*)(!(objectclass=organizationalunit)))';
         }
 
-        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-        $entries = $this->sort_and_slice($result, $params);
-
-        return Array(
-                'list' => $entries,
-                'count' => $result->count()
-            );
+        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
 
-    public function list_roles($attributes = array(), $search = array(), $params = array()) {
-        $this->list_prepare($params, $attributes);
+    public function list_roles($attributes = array(), $search = array(), $params = array())
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_roles(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
 
         $base_dn = $this->_subject_base_dn('role');
         $filter  = $this->conf->get('role_filter');
@@ -359,35 +352,202 @@ class LDAP extends Net_LDAP3 {
             $filter  = "(&(objectclass=ldapsubentry)(objectclass=nsroledefinition))";
         }
 
-        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-        $entries = $this->sort_and_slice($result, $params);
-
-        return Array(
-                'list' => $entries,
-                'count' => $result->count()
-            );
+        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
 
-    public function list_users($attributes = array(), $search = array(), $params = array()) {
-        $this->_log(LOG_DEBUG, "Auth::LDAP::list_users(" . var_export($attributes, TRUE) . ", " . var_export($search, TRUE) . ", " . var_export($params, TRUE));
+    public function list_users($attributes = array(), $search = array(), $params = array())
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_users(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
 
-        $this->list_prepare($params, $attributes);
-
-        $base_dn = $this->_subject_base_dn("user");
+        $base_dn = $this->_subject_base_dn('user');
         $filter  = $this->conf->get('user_filter');
-        $result  = $this->search_entries($base_dn, $filter, 'sub', NULL, $search);
-        $entries = $this->sort_and_slice($result, $params);
 
-        return Array(
-                'list' => $entries,
-                'count' => $result->count()
-            );
+        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
+    }
+
+    public function resource_add($attrs, $typeid = null)
+    {
+        $base_dn = $this->entry_base_dn('resource', $typeid);
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->entry_add($dn, $attrs);
+    }
+
+    public function resource_delete($resource)
+    {
+        return $this->entry_delete($resource);
+    }
+
+    public function resource_edit($resource, $attributes, $typeid = null)
+    {
+        $resource = $this->resource_info($resource, array_keys($attributes));
+
+        if (empty($resource)) {
+            return false;
+        }
+
+        $resource_dn = key($resource);
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($resource_dn, $resource[$resource_dn], $attributes);
+    }
+
+    public function resource_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
+    }
+
+    public function resource_info($resource, $attributes = array('*'))
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::resource_info() for resource " . var_export($resource, true));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $resource_dn = $this->entry_dn($resource);
+
+        if (!$resource_dn) {
+            return false;
+        }
+
+        $this->read_prepare($attributes);
+
+        return $this->_read($resource_dn, $attributes);
+    }
+
+    public function resource_members_list($resource, $recurse = true)
+    {
+        $resource_dn = $this->entry_dn($resource);
+
+        if (!$resource_dn) {
+            return false;
+        }
+
+        return $this->_list_resource_members($resource_dn, null, $recurse);
+    }
+
+    public function role_add($attrs)
+    {
+        $base_dn = $this->entry_base_dn('role', $typeid);
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->entry_add($dn, $attrs);
+    }
+
+    public function role_edit($role, $attributes, $typeid = null)
+    {
+        $role = $this->role_info($role, array_keys($attributes));
+
+        if (empty($role)) {
+            return false;
+        }
+
+        $role_dn = key($role);
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($role_dn, $role[$role_dn], $attributes);
+    }
+
+    public function role_delete($role)
+    {
+        return $this->entry_delete($role, array('objectclass' => 'ldapsubentry'));
+    }
+
+    public function role_find_by_attribute($attribute)
+    {
+        $attribute['objectclass'] = 'ldapsubentry';
+        return $this->entry_find_by_attribute($attribute);
+    }
+
+    public function role_info($role, $attributes = array('*'))
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::role_info() for role " . var_export($role, true));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $role_dn = $this->entry_dn($role, array('objectclass' => 'ldapsubentry'));
+
+        if (!$role_dn) {
+            return false;
+        }
+
+        $this->read_prepare($attributes);
+
+        return $this->_read($role_dn, $attributes);
+    }
+
+    public function search($base_dn, $filter = '(objectclass=*)', $scope = 'sub', $sort = NULL, $search = array())
+    {
+        if (isset($_SESSION['user']->user_bind_dn) && !empty($_SESSION['user']->user_bind_dn)) {
+            $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+        }
+
+        $this->_log(LOG_DEBUG, "Relaying search to parent:" . var_export(func_get_args(), true));
+        return parent::search($base_dn, $filter, $scope, $sort, $search);
+    }
+
+    public function user_add($attrs, $typeid = null)
+    {
+        $base_dn = $this->entry_base_dn('user', $typeid);
+
+        if (!empty($attrs['ou'])) {
+            $base_dn = $attrs['ou'];
+        }
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
+
+        return $this->entry_add($dn, $attrs);
+    }
+
+    public function user_edit($user, $attributes, $typeid = null)
+    {
+        $user = $this->user_info($user, array_keys($attributes));
+
+        if (empty($user)) {
+            return false;
+        }
+
+        $user_dn = key($user);
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($user_dn, $user[$user_dn], $attributes);
+    }
+
+    public function user_delete($user)
+    {
+        return $this->entry_delete($user);
+    }
+
+    public function user_info($user, $attributes = array('*'))
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::user_info() for user " . var_export($user, true));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $user_dn = $this->entry_dn($user);
+
+        if (!$user_dn) {
+            return false;
+        }
+
+        $this->read_prepare($attributes);
+
+        return $this->_read($user_dn, $attributes);
+    }
+
+    public function user_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
     }
 
     /**
-     * Prepare environment before search_entries() call
+     * Wrapper for search_entries()
      */
-    protected function list_prepare($params, $attributes)
+    protected function _list($base_dn, $filter, $scope, $attributes, $search, $params)
     {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
@@ -422,185 +582,37 @@ class LDAP extends Net_LDAP3 {
         }
 
         $this->config_set('return_attributes', $attributes);
+
+        $result  = $this->search_entries($base_dn, $filter, $scope, null, $search);
+        $entries = $this->sort_and_slice($result, $params);
+
+        return array(
+            'list' => $entries,
+            'count' => $result->count()
+        );
     }
 
-    public function resource_add($attrs, $typeid = null) {
-        $base_dn = $this->entry_base_dn('resource', $typeid);
-
-        // TODO: The rdn is configurable as well.
-        // Use [$type_str . "_"]user_rdn_attr
-        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
-
-        return $this->entry_add($dn, $attrs);
-    }
-
-    public function resource_delete($resource) {
-        return $this->entry_delete($resource);
-    }
-
-    public function resource_edit($resource, $attributes, $typeid = null) {
-        $resource = $this->resource_info($resource, array_keys($attributes));
-
-        if (empty($resource)) {
-            return false;
+    /**
+     * Prepare environment before _read() call
+     */
+    protected function read_prepare(&$attributes)
+    {
+        // always return unique attribute
+        $unique_attr = $this->conf->get('unique_attribute');
+        if (empty($unique_attr)) {
+            $unique_attr = 'nsuniqueid';
         }
 
-        $resource_dn = key($resource);
-
-        // We should start throwing stuff over the fence here.
-        return $this->modify_entry($resource_dn, $resource[$resource_dn], $attributes);
-    }
-
-    public function resource_find_by_attribute($attribute) {
-        return $this->entry_find_by_attribute($attribute);
-    }
-
-    public function resource_info($resource, $attributes = array('*')) {
-        $resource_dn = $this->entry_dn($resource);
-
-        if (!$resource_dn) {
-            return false;
-        }
-
-        return $this->_read($resource_dn, $attributes);
-    }
-
-    public function resource_members_list($resource, $recurse = true) {
-        $resource_dn = $this->entry_dn($resource);
-
-        if (!$resource_dn) {
-            return false;
-        }
-
-        return $this->_list_resource_members($resource_dn, null, $recurse);
-    }
-
-    public function role_add($attrs) {
-        $base_dn = $this->entry_base_dn('role', $typeid);
-
-        // TODO: The rdn is configurable as well.
-        // Use [$type_str . "_"]user_rdn_attr
-        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
-
-        return $this->entry_add($dn, $attrs);
-    }
-
-    public function role_edit($role, $attributes, $typeid = null) {
-        $role = $this->role_info($role, array_keys($attributes));
-
-        if (empty($role)) {
-            return false;
-        }
-
-        $role_dn = key($role);
-
-        // We should start throwing stuff over the fence here.
-        return $this->modify_entry($role_dn, $role[$role_dn], $attributes);
-    }
-
-    public function role_delete($role) {
-        return $this->entry_delete($role, array('objectclass' => 'ldapsubentry'));
-    }
-
-    public function role_find_by_attribute($attribute) {
-        $this->_log(LOG_DEBUG, "Finding role by attribute: " . var_export($attribute, TRUE));
-
-        $attribute['objectclass'] = 'ldapsubentry';
-        $result = $this->entry_find_by_attribute($attribute);
-
-        if (is_array($result) && count($result) == 0) {
-            return key($result);
-        }
-
-        return false;
-    }
-
-    public function role_info($role, $attributes = array('*')) {
-        $role_dn = $this->entry_dn($role, array('objectclass' => 'ldapsubentry'));
-
-        if (!$role_dn) {
-            return false;
-        }
-
-        $unique_attr = $this->unique_attribute();
         if (!in_array($unique_attr, $attributes)) {
             $attributes[] = $unique_attr;
         }
-
-        $result = $this->_search($role_dn, '(objectclass=ldapsubentry)', $attributes);
-        $this->_log(LOG_DEBUG, "Auth::LDAP::role_info() result: " . var_export($result, TRUE));
-        return $result->entries(TRUE);
-    }
-
-    public function search($base_dn, $filter = '(objectclass=*)', $scope = 'sub', $sort = NULL, $search = Array()) {
-        if (isset($_SESSION['user']->user_bind_dn) && !empty($_SESSION['user']->user_bind_dn)) {
-            $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-        }
-
-        $this->_log(LOG_DEBUG, "Relaying search to parent:" . var_export(func_get_args(), TRUE));
-        return parent::search($base_dn, $filter, $scope, $sort, $search);
-    }
-
-    public function user_add($attrs, $typeid = null) {
-        $base_dn = $this->entry_base_dn('user', $typeid);
-
-        if (!empty($attrs['ou'])) {
-            $base_dn = $attrs['ou'];
-        }
-
-        // TODO: The rdn is configurable as well.
-        // Use [$type_str . "_"]user_rdn_attr
-        $dn = "uid=" . $attrs['uid'] . "," . $base_dn;
-
-        return $this->entry_add($dn, $attrs);
-    }
-
-    public function user_edit($user, $attributes, $typeid = null) {
-        $user = $this->user_info($user, array_keys($attributes));
-
-        if (empty($user)) {
-            return false;
-        }
-
-        $user_dn = key($user);
-
-        // We should start throwing stuff over the fence here.
-        return $this->modify_entry($user_dn, $user[$user_dn], $attributes);
-    }
-
-    public function user_delete($user) {
-        return $this->entry_delete($user);
-    }
-
-    public function user_info($user, $attributes = array('*')) {
-        $this->_log(LOG_DEBUG, "Auth::LDAP::user_info() for user " . var_export($user, TRUE));
-        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
-
-        $unique_attr = $this->unique_attribute();
-        if (!in_array($unique_attr, $attributes)) {
-            $attributes[] = $unique_attr;
-        }
-
-        $this->config_set('return_attributes', $attributes);
-
-        $user_dn = $this->entry_dn($user);
-
-        $this->_log(LOG_DEBUG, "user_info() user_dn " . var_export($user_dn, TRUE));
-        if (!$user_dn) {
-            return false;
-        }
-
-        return $this->_read($user_dn, $attributes);
-    }
-
-    public function user_find_by_attribute($attribute) {
-        return $this->entry_find_by_attribute($attribute);
     }
 
     /**
      * delete_entry() wrapper with binding and DN resolving
      */
-    protected function entry_delete($entry, $attributes = array()) {
+    protected function entry_delete($entry, $attributes = array())
+    {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         $entry_dn = $this->entry_dn($entry, $attributes);
@@ -615,7 +627,8 @@ class LDAP extends Net_LDAP3 {
     /**
      * add_entry() wrapper with binding
      */
-    protected function entry_add($entry_dn, $attrs) {
+    protected function entry_add($entry_dn, $attrs)
+    {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         return $this->add_entry($entry_dn, $attrs);
@@ -641,7 +654,8 @@ class LDAP extends Net_LDAP3 {
         return $base_dn;
     }
 
-    public function _config_get($key, $default = NULL) {
+    public function _config_get($key, $default = NULL)
+    {
         $key_parts = explode("_", $key);
         $this->_log(LOG_DEBUG, var_export($key_parts));
 
@@ -662,7 +676,8 @@ class LDAP extends Net_LDAP3 {
 
     }
 
-    public function _log($level, $msg) {
+    public function _log($level, $msg)
+    {
         if (strstr($_SERVER["REQUEST_URI"], "/api/")) {
             $str = "(api) ";
         } else {
@@ -696,7 +711,8 @@ class LDAP extends Net_LDAP3 {
         }
     }
 
-    private function _subject_base_dn($subject) {
+    private function _subject_base_dn($subject)
+    {
         // Attempt to get a configured base_dn
         $base_dn = $this->conf->get($this->domain, "base_dn");
 
@@ -723,7 +739,8 @@ class LDAP extends Net_LDAP3 {
         return $base_dn;
     }
 
-    private function legacy_rights($subject) {
+    private function legacy_rights($subject)
+    {
         $subject_dn    = $this->entry_dn($subject);
         $user_is_admin = false;
         $user_is_self  = false;
@@ -775,8 +792,9 @@ class LDAP extends Net_LDAP3 {
         return $rights;
     }
 
-    private function sort_and_slice(&$result, &$params) {
-        $entries = $result->entries(TRUE);
+    private function sort_and_slice(&$result, &$params)
+    {
+        $entries = $result->entries(true);
 
         if ($this->vlv_active) {
             return $entries;
@@ -790,14 +808,14 @@ class LDAP extends Net_LDAP3 {
 
             if (array_key_exists('page_size', $params) && array_key_exists('page', $params)) {
                 if ($result->count() > $params['page_size']) {
-                    $entries = array_slice($entries, (($params['page'] - 1) * $params['page_size']), $params['page_size'], TRUE);
+                    $entries = array_slice($entries, (($params['page'] - 1) * $params['page_size']), $params['page_size'], true);
                 }
 
             }
 
             if (array_key_exists('sort_order', $params) && !empty($params['sort_order'])) {
                 if ($params['sort_order'] == "DESC") {
-                    $entries = array_reverse($entries, TRUE);
+                    $entries = array_reverse($entries, true);
                 }
             }
         }
@@ -827,11 +845,6 @@ class LDAP extends Net_LDAP3 {
         return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
     }
 
-    private function unique_attribute() {
-        $unique_attr = $this->conf->get("unique_attribute");
-        return empty($unique_attr) ? 'nsuniqueid' : $unique_attr;
-    }
-
     /**
      * Qualify a username.
      *
@@ -840,7 +853,8 @@ class LDAP extends Net_LDAP3 {
      * username is 'kanarip', the domain name is to be assumed the
      * management domain name.
      */
-    private function _qualify_id($username) {
+    private function _qualify_id($username)
+    {
         $username_parts = explode('@', $username);
         if (count($username_parts) == 1) {
             $domain_name = $this->conf->get('primary_domain');
@@ -856,7 +870,8 @@ class LDAP extends Net_LDAP3 {
      ************      Shortcut functions       ****************
      ***********************************************************/
 
-    private function _domain_add_alias($domain, $parent) {
+    private function _domain_add_alias($domain, $parent)
+    {
         $domain_base_dn = $this->conf->get('ldap', 'domain_base_dn');
         $domain_filter  = $this->conf->get('ldap', 'domain_filter');
 
@@ -875,7 +890,7 @@ class LDAP extends Net_LDAP3 {
             return false;
         }
 
-        $entries = $result->entries(TRUE);
+        $entries = $result->entries(true);
 
         $domain_dn    = key($entries);
         $domain_entry = $entries[$domain_dn];
@@ -891,7 +906,8 @@ class LDAP extends Net_LDAP3 {
         return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
     }
 
-    private function _domain_add_new($domain) {
+    private function _domain_add_new($domain)
+    {
         console("Auth::LDAP::_domain_add_new()", $domain);
 
         $auth = Auth::get_instance();
@@ -941,7 +957,7 @@ class LDAP extends Net_LDAP3 {
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
         $results  = $this->_search($domain_base_dn, $domain_filter);
-        $entries = $results->entries(TRUE);
+        $entries = $results->entries(true);
         $domain_entry = array_shift($entries);
 
         // The root_dn for the parent domain is needed to find the ldbm
@@ -961,7 +977,7 @@ class LDAP extends Net_LDAP3 {
             $result = $this->_read("cn=userRoot,cn=ldbm database,cn=plugins,cn=config", array('nsslapd-directory'));
         }
 
-        $this->_log(LOG_DEBUG, "Primary domain ldbm database configuration entry: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Primary domain ldbm database configuration entry: " . var_export($result, true));
 
         $result = $result[key($result)];
 
@@ -1000,7 +1016,7 @@ class LDAP extends Net_LDAP3 {
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $this->conf->get('kolab', 'primary_domain') . ')' . $domain_filter . ')';
         $results  = $this->_search($domain_base_dn, $domain_filter);
-        $entries = $results->entries(TRUE);
+        $entries = $results->entries(true);
         $domain_entry = array_shift($entries);
 
         if (in_array('inetdomainbasedn', $domain_entry)) {
@@ -1014,7 +1030,7 @@ class LDAP extends Net_LDAP3 {
         $acis   = $result['aci'];
 
         foreach ($acis as $aci) {
-            if (stristr($aci, "SIE Group") === FALSE) {
+            if (stristr($aci, "SIE Group") === false) {
                 continue;
             }
             $_aci = $aci;
@@ -1169,7 +1185,7 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->_search($domain_base_dn, $domain_filter);
 
-        $entries = $result->entries(TRUE);
+        $entries = $result->entries(true);
         $entry_dn = key($entries);
         $entry_attrs = $entries[$entry_dn];
 
@@ -1203,7 +1219,8 @@ class LDAP extends Net_LDAP3 {
      * any results. If we don't, maybe this user is not authorized for the
      * domain at all?
      */
-    private function _probe_root_dn($entry_root_dn) {
+    private function _probe_root_dn($entry_root_dn)
+    {
         //console("Running for entry root dn: " . $entry_root_dn);
         if (($tmpconn = ldapconnect($this->_ldap_server)) == false) {
             //message("LDAP Error: " . $this->_errstr());
@@ -1225,23 +1242,25 @@ class LDAP extends Net_LDAP3 {
         return true;
     }
 
-    private function _read($entry_dn, $attributes = Array('*')) {
+    private function _read($entry_dn, $attributes = array('*'))
+    {
         $this->config_set('return_attributes', $attributes);
 
         $result = $this->search($entry_dn, '(objectclass=*)', 'base');
 
         if ($result) {
-            $this->_log(LOG_DEBUG, "Auth::LDAP::_read() result: " . var_export($result->entries(TRUE), TRUE));
-            return $result->entries(TRUE);
+            $this->_log(LOG_DEBUG, "Auth::LDAP::_read() result: " . var_export($result->entries(true), true));
+            return $result->entries(true);
         } else {
-            return FALSE;
+            return false;
         }
     }
 
-    private function _search($base_dn, $filter = '(objectclass=*)', $attributes = Array('*')) {
+    private function _search($base_dn, $filter = '(objectclass=*)', $attributes = array('*'))
+    {
         $this->config_set('return_attributes', $attributes);
         $result = $this->search($base_dn, $filter);
-        $this->_log(LOG_DEBUG, "Auth::LDAP::_search on $base_dn with $filter for attributes: " . var_export($attributes, TRUE) . " with result: " . var_export($result, TRUE));
+        $this->_log(LOG_DEBUG, "Auth::LDAP::_search on $base_dn with $filter for attributes: " . var_export($attributes, true) . " with result: " . var_export($result, true));
         return $result;
     }
 
@@ -1257,7 +1276,8 @@ class LDAP extends Net_LDAP3 {
      *
      * @return string
      */
-    private function _standard_root_dn($associatedDomains) {
+    private function _standard_root_dn($associatedDomains)
+    {
         if (is_array($associatedDomains)) {
             // Usually, the associatedDomain in position 0 is the naming attribute associatedDomain
             if ($associatedDomains['count'] > 1) {
