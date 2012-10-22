@@ -636,10 +636,11 @@ class Net_LDAP3
      *
      * @param string $subject    Entry string (e.g. entry DN or unique attribute value)
      * @param array  $attributes Additional attributes
+     * @param string $base_dn    Optional base DN
      *
      * @return string Entry DN string
      */
-    public function entry_dn($subject, $attributes = array())
+    public function entry_dn($subject, $attributes = array(), $base_dn = NULL)
     {
         $this->_debug("entry_dn on subject $subject");
         $is_dn = ldap_explode_dn($subject, 1);
@@ -651,7 +652,7 @@ class Net_LDAP3
 
         $unique_attr = $this->config_get('unique_attribute', 'nsuniqueid');
         $attributes  = array_merge(array($unique_attr => $subject), (array)$attributes);
-        $subject     = $this->entry_find_by_attribute($attributes);
+        $subject     = $this->entry_find_by_attribute($attributes, $base_dn);
 
         if (!empty($subject)) {
             return key($subject);
