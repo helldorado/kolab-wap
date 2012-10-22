@@ -191,6 +191,7 @@ class LDAP extends Net_LDAP3 {
 
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _search()");
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
+            $result = $result->entries(true);
         } else {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _read()");
             $result = $this->_read($domain_dn, $attributes);
@@ -794,6 +795,7 @@ class LDAP extends Net_LDAP3 {
         );
 
         $subject    = $this->_search($subject_dn);
+        $subject    = $subject->entries(true);
         $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
         $attributes = array_merge($attributes['may'], $attributes['must']);
 
