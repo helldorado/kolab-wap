@@ -660,7 +660,7 @@ class Net_LDAP3
 
     public function entry_find_by_attribute($attributes, $base_dn = NULL)
     {
-        $this->_debug("Auth::LDAP::entry_find_by_attribute(\$attributes, \$base_dn) called with base_dn", $base_dn, "and attributes", $attributes);
+        $this->_debug("Net_LDAP3::entry_find_by_attribute(\$attributes, \$base_dn) called with base_dn", $base_dn, "and attributes", $attributes);
 
         if (empty($attributes) || !is_array($attributes)) {
             return FALSE;
@@ -964,7 +964,7 @@ class Net_LDAP3
 
         $rdn_attr = $rdn_components[0];
 
-        $this->_debug("Auth::LDAP::modify_entry() using rdn attribute: " . $rdn_attr);
+        $this->_debug("Net_LDAP3::modify_entry() using rdn attribute: " . $rdn_attr);
 
         $mod_array = array(
             'add'       => array(), // For use with ldap_mod_add()
