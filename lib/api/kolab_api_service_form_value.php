@@ -862,10 +862,9 @@ class kolab_api_service_form_value extends kolab_api_service
             $default = $postdata['preferredlanguage'];
         }
 
-        return array(
-            'list'    => $options,
-            'default' => $default,
-        );
+        $options['default'] = $default;
+
+        return $options;
     }
 
     private function validate_alias($value)
