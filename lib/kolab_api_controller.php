@@ -398,7 +398,7 @@ class kolab_api_controller
      */
     private function quit()
     {
-        session_destroy();
+        @session_destroy();
         return true;
     }
 
