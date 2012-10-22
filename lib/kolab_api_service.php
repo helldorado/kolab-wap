@@ -194,11 +194,6 @@ abstract class kolab_api_service
             }
         }
 
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-
         $sql_result   = $this->db->query("SELECT * FROM {$object_name}_types ORDER BY name");
         $object_types = array();
 
