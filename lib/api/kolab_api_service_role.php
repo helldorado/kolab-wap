@@ -146,7 +146,11 @@ class kolab_api_service_role extends kolab_api_service
                 $unique_attr = 'nsuniqueid';
             }
 
-            $role_dn = $auth->role_find_by_attribute(Array($unique_attr => $getdata['role']));
+            $role = $auth->role_find_by_attribute(Array($unique_attr => $getdata['role']));
+
+            if (is_array($role) && count($role) == 1) {
+                $role_dn = key($role);
+            }
         }
 
         $effective_rights = $auth->list_rights(empty($role_dn) ? 'role' : $role_dn);
