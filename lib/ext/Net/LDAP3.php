@@ -125,7 +125,8 @@ class Net_LDAP3
      *                          that have in fact been set, use the config_set()
      *                          method after initialization.
      */
-    public function __construct($config = Array()) {
+    public function __construct($config = Array())
+    {
         Log::trace("Net_LDAP3 being constructed");
         if (!empty($config) && is_array($config)) {
             foreach ($config as $key => $value) {
@@ -139,7 +140,8 @@ class Net_LDAP3
     /**
      *  Add multiple entries to the directory information tree in one go.
      */
-    public function add_entries($entries, $attributes = Array()) {
+    public function add_entries($entries, $attributes = Array())
+    {
         // If $entries is an associative array, it's keys are DNs and it's
         // values are the attributes for that DN.
         //
@@ -385,7 +387,8 @@ class Net_LDAP3
      *  @param  string  $key        Configuration key
      *  @param  mixed   $default    Default value to return
      */
-    public function config_get($key, $default = NULL) {
+    public function config_get($key, $default = NULL)
+    {
         if (!empty($this->_config_get_hook)) {
             return call_user_func_array($this->_config_get_hook, Array($key, $value));
         } else if (method_exists($this, "config_get_{$key}")) {
@@ -403,7 +406,8 @@ class Net_LDAP3
      *  @param string  $key        Configuration key
      *  @param mixed   $value      Configuration value
      */
-    public function config_set($key, $value) {
+    public function config_set($key, $value)
+    {
         if (!empty($this->_config_set_hook)) {
             return call_user_func(
                     $this->_config_set_hook,
@@ -785,7 +789,8 @@ class Net_LDAP3
         return $this->result;
     }
 
-    public function login($username, $password, $domain = null) {
+    public function login($username, $password, $domain = null)
+    {
         $this->_debug("Net_LDAP3::login(\$username = '" . $username . "', \$password = '****', \$domain = '" . $domain . "')");
         $_bind_dn = $this->config_get('service_bind_dn');
         $_bind_pw = $this->config_get('service_bind_pw');
@@ -1429,7 +1434,8 @@ class Net_LDAP3
         return $result;
     }
 
-    public static function scopeint2str($scope) {
+    public static function scopeint2str($scope)
+    {
         switch ($scope) {
             case 2:
                 return 'sub';
@@ -1473,18 +1479,21 @@ class Net_LDAP3
         return $function;
     }
 
-    private function config_set_config_get_hook($callback) {
+    private function config_set_config_get_hook($callback)
+    {
         $this->_config_get_hook = $callback;
     }
 
-    private function config_set_config_set_hook($callback) {
+    private function config_set_config_set_hook($callback)
+    {
         $this->_config_set_hook = $callback;
     }
 
     /**
      * Sets the debug level both for this class and the ldap connection.
      */
-    private function config_set_debug($value) {
+    private function config_set_debug($value)
+    {
         if ($value === FALSE) {
             $this->config['debug'] = FALSE;
         } else {
@@ -1499,11 +1508,13 @@ class Net_LDAP3
     /**
      *  Sets a log hook that is called with every log message in this module.
      */
-    private function config_set_log_hook($callback) {
+    private function config_set_log_hook($callback)
+    {
         $this->_log_hook = $callback;
     }
 
-    private function config_set_return_attributes($attribute_names = Array('entrydn')) {
+    private function config_set_return_attributes($attribute_names = Array('entrydn'))
+    {
         $this->_debug("setting return attributes: " . var_export($attribute_names, TRUE));
         $this->return_attributes = (Array)($attribute_names);
     }
@@ -1511,7 +1522,8 @@ class Net_LDAP3
     /**
      * Find a matching VLV
      */
-    private function find_vlv($base_dn, $filter, $scope, $sort_attrs = NULL) {
+    private function find_vlv($base_dn, $filter, $scope, $sort_attrs = NULL)
+    {
         if (array_key_exists('vlv', $this->config) && $this->config['vlv'] === FALSE) {
             return FALSE;
         }
@@ -1567,7 +1579,8 @@ class Net_LDAP3
         Return VLV indexes and searches including necessary configuration
         details.
     */
-    private function find_vlv_indexes_and_searches($refresh = FALSE) {
+    private function find_vlv_indexes_and_searches($refresh = FALSE)
+    {
         if (!empty($this->config['vlv'])) {
             if ($this->config['vlv'] === FALSE) {
                 return Array();
@@ -1969,39 +1982,48 @@ class Net_LDAP3
         return $result['']['supportedcontrol'];
     }
 
-    private function _alert() {
+    private function _alert()
+    {
         $this->__log(LOG_ALERT, func_get_args());
     }
 
-    private function _critical() {
+    private function _critical()
+    {
         $this->__log(LOG_CRIT, func_get_args());
     }
 
-    private function _debug() {
+    private function _debug()
+    {
         $this->__log(LOG_DEBUG, func_get_args());
     }
 
-    private function _emergency() {
+    private function _emergency()
+    {
         $this->__log(LOG_EMERG, func_get_args());
     }
 
-    private function _error() {
+    private function _error()
+    {
         $this->__log(LOG_ERR, func_get_args());
     }
 
-    private function _info() {
+    private function _info()
+    {
         $this->__log(LOG_INFO, func_get_args());
     }
 
-    private function _notice() {
+    private function _notice()
+    {
         $this->__log(LOG_NOTICE, func_get_args());
     }
 
-    private function _warning() {
+    private function _warning()
+    {
         $this->__log(LOG_WARNING, func_get_args());
     }
 
-    private function _fuzzy_search_prefix() {
+    private function _fuzzy_search_prefix()
+    {
         switch ($this->config_get("fuzzy_search", 2)) {
             case 2:
                 return "*";
@@ -2014,7 +2036,8 @@ class Net_LDAP3
         }
     }
 
-    private function _fuzzy_search_suffix() {
+    private function _fuzzy_search_suffix()
+    {
         switch ($this->config_get("fuzzy_search", 2)) {
             case 2:
                 return "*";
@@ -2028,7 +2051,8 @@ class Net_LDAP3
         }
     }
 
-    private function _vlv_search($sort, $search) {
+    private function _vlv_search($sort, $search)
+    {
         if (!empty($this->additional_filter)) {
             $this->_debug("Not setting a VLV search filter because we already have a filter");
             return NULL;
@@ -2112,7 +2136,8 @@ class Net_LDAP3
      *  @param  string  $filter     Filter
      *  @param  string  $scope      Scope
      */
-    private function __result_current($base_dn, $filter, $scope) {
+    private function __result_current($base_dn, $filter, $scope)
+    {
         if (empty($this->result)) {
             return FALSE;
         }
