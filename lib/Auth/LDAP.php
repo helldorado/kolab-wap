@@ -530,7 +530,18 @@ class LDAP extends Net_LDAP3 {
         $user_dn = key($user);
 
         // We should start throwing stuff over the fence here.
-        return $this->modify_entry($user_dn, $user[$user_dn], $attributes);
+        $result = $this->modify_entry($user_dn, $user[$user_dn], $attributes);
+
+        // Handle modification of current user data
+        if (!empty($result) && $user_dn == $_SESSION['user']->user_bind_dn) {
+            // update session password
+            if (!empty($result['replace']) && !empty($result['replace']['userpassword'])) {
+                $pass = $result['replace']['userpassword'];
+                $_SESSION['user']->user_bind_pw = is_array($pass) ? implode($pass) : $pass;
+            }
+        }
+
+        return $result;
     }
 
     public function user_delete($user)
