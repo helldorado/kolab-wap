@@ -383,9 +383,9 @@ td.label {
   margin-left: -1px;
   height: 18px;
   width: 37px;
-  border: 1px solid #d0d0d0;
   background-color: #f0f0f0;
   cursor: pointer;
+  border-right: 1px solid #e0e0e0;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
   -moz-border-radius-topleft: 3px;
