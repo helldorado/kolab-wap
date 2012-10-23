@@ -959,7 +959,8 @@ class kolab_api_service_form_value extends kolab_api_service
         }
     }
 
-    private function _highest_of_two($one, $two) {
+    private function _highest_of_two($one, $two)
+    {
         if ($one > $two) {
             return $one;
         } elseif ($one == $two) {
@@ -1091,7 +1092,8 @@ class kolab_api_service_form_value extends kolab_api_service
         return array('list' => $result);
     }
 
-    private function _validate_email_address($mail_address) {
+    private function _validate_email_address($mail_address)
+    {
         $valid = true;
 
         $at_index = strrpos($mail_address, "@");
@@ -1150,26 +1152,28 @@ class kolab_api_service_form_value extends kolab_api_service
         return $valid;
     }
 
-    private function _validate_email_address_in_any_of_my_domains($mail_address) {
-        $valid = false;
-
-        $auth = Auth::get_instance();
-        $conf = Conf::get_instance();
-
-        $my_primary_domain = $_SESSION['user']->get_domain();
-        $all_domains = $auth->list_domains();
-        $all_domains = $all_domains['list'];
-
-        $valid_domains = array();
-
-        $dna = $conf->get('domain_name_attribute');
-
+    private function _validate_email_address_in_any_of_my_domains($mail_address)
+    {
         $at_index = strrpos($mail_address, "@");
         if (is_bool($at_index) && !$at_index) {
             throw new Exception("Invalid email address: No domain name space", 235);
         } else {
             $email_domain = substr($mail_address, $at_index+1);
         }
+
+        $my_primary_domain = $_SESSION['user']->get_domain();
+
+        if ($email_domain == $my_primary_domain) {
+            return true;
+        }
+
+        $auth          = Auth::get_instance();
+        $conf          = Conf::get_instance();
+        $all_domains   = $auth->list_domains();
+        $all_domains   = $all_domains['list'];
+        $valid_domains = array();
+        $dna           = $conf->get('domain_name_attribute');
+        $valid         = false;
 
         Log::trace("_validate_email_address_in_any_of_mydomains(\$mail_address = " . var_export($mail_address, TRUE) . ")");
         Log::trace("\$all_domains includes: " . var_export($all_domains, TRUE) . " (must include domain for \$mail_address)");
