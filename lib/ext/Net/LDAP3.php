@@ -127,7 +127,6 @@ class Net_LDAP3
      */
     public function __construct($config = Array())
     {
-        Log::trace("Net_LDAP3 being constructed");
         if (!empty($config) && is_array($config)) {
             foreach ($config as $key => $value) {
                 if (!isset($this->config[$key]) || empty($this->config[$key])) {
@@ -258,7 +257,7 @@ class Net_LDAP3
                     }
                 }
             } else {
-                Log::warning("LDAP: No schema details exist for attribute $attribute (which is strange)");
+                $this->_warning("LDAP: No schema details exist for attribute $attribute (which is strange)");
             }
 
             // The relevant parts only, please
@@ -434,8 +433,6 @@ class Net_LDAP3
      */
     public function connect()
     {
-        Log::trace("Net_LDAP3 connecting");
-
         if (!function_exists('ldap_connect')) {
             new PEAR_Error("No ldap support in this PHP installation", 100);
             return FALSE;
@@ -1874,7 +1871,7 @@ class Net_LDAP3
             }
             else {
                 $this->_debug("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to rename $olddn to $newrdn,$new_parent");
+                $this->_warning("LDAP: Failed to rename $olddn to $newrdn,$new_parent");
                 return FALSE;
             }
         }
@@ -1889,7 +1886,7 @@ class Net_LDAP3
             }
             else {
                 $this->_debug("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to replace attributes on $subject_dn: " . json_encode($attributes['replace']));
+                $this->_warning("LDAP: Failed to replace attributes on $subject_dn: " . json_encode($attributes['replace']));
                 return FALSE;
             }
         }
@@ -1904,7 +1901,7 @@ class Net_LDAP3
             }
             else {
                 $this->_debug("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to delete attributes on $subject_dn: " . json_encode($attributes['del']));
+                $this->_warning("LDAP: Failed to delete attributes on $subject_dn: " . json_encode($attributes['del']));
                 return FALSE;
             }
         }
@@ -1920,7 +1917,7 @@ class Net_LDAP3
             }
             else {
                 $this->_debug("LDAP: S: " . ldap_error($this->conn));
-                Log::warning("LDAP: Failed to add attributes on $subject_dn: " . json_encode($attributes['add']));
+                $this->_warning("LDAP: Failed to add attributes on $subject_dn: " . json_encode($attributes['add']));
                 return FALSE;
             }
         }
