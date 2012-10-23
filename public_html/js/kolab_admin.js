@@ -1737,7 +1737,7 @@ function kolab_admin()
       else if (attr.type != 'text')
         data.type = attr.type;
 
-      if ((attr.type == 'select' || attr.type == 'multiselect') && attr.values)
+      if ((attr.type == 'select' || attr.type == 'multiselect') && attr.values && attr.values.length)
         data.values = attr.values;
 
       if (attr.optional)
