@@ -105,7 +105,7 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         //console($postdata);
 
-        $attribs   = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+        $attribs   = $this->object_type_attributes($postdata['object_type'], $postdata['type_id'], true, $key_name);
         $attr_name = $postdata['attribute'];
         $result    = array(
             // return search value, so client can match response to request
@@ -117,6 +117,9 @@ class kolab_api_service_form_value extends kolab_api_service
             return $result;
         }
 
+        if ($key_name) {
+            $postdata['type_key'] = $key_name;
+        }
 
         $method_name = 'list_options_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
 
@@ -151,9 +154,13 @@ class kolab_api_service_form_value extends kolab_api_service
     public function select_options($getdata, $postdata)
     {
         //console("form_value.select_options postdata", $postdata);
-        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id'], true, $key_name);
         $attributes = (array) $postdata['attributes'];
         $result     = array();
+
+        if ($key_name) {
+            $postdata['type_key'] = $key_name;
+        }
 
         foreach ($attributes as $attr_name) {
             if (empty($attr_name)) {
@@ -407,11 +414,6 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_mail_resource($postdata, $attribs = array())
     {
-        $db = SQL::get_instance();
-        $result = $db->fetch_assoc($db->query("SELECT `key` FROM `resource_types` WHERE id = ?", $postdata['type_id']));
-
-        $object_type_key = $result['key'];
-
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['mail'])) {
             // Use Data Please
             foreach ($attribs['auto_form_fields']['mail']['data'] as $key) {
@@ -424,7 +426,7 @@ class kolab_api_service_form_value extends kolab_api_service
             //console("normalized resource data", $resourcedata);
 
             // TODO: Normalize $postdata
-            $mail_local  = 'resource-' . $object_type_key . '-' . strtolower($resourcedata['cn']);
+            $mail_local  = 'resource-' . $postdata['type_key'] . '-' . strtolower($resourcedata['cn']);
             $mail_domain = $_SESSION['user']->get_domain();
             $mail        = $mail_local . '@' . $mail_domain;
             $auth        = Auth::get_instance($_SESSION['user']->get_domain());
@@ -782,8 +784,15 @@ class kolab_api_service_form_value extends kolab_api_service
         $conf = Conf::get_instance();
 
         $unique_attr = $this->unique_attribute();
+        $object_type = $postdata['object_type'];
+        $object_key  = $postdata['type_key'];
 
-        $base_dn = $conf->get('user_base_dn');
+        if ($object_key && $object_type) {
+            $base_dn = $conf->get($object_key . '_' . $object_type . '_base_dn');
+        }
+        if (!$base_dn && $object_type) {
+            $base_dn = $conf->get($object_type . '_base_dn');
+        }
         if (!$base_dn) {
             $base_dn = $conf->get('base_dn');
         }
