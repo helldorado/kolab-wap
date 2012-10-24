@@ -138,9 +138,12 @@ class kolab_api_controller
 
         $service = $this->request['service'];
         $method  = $this->request['method'];
-        $postdata = @json_decode($postdata, true);
 
         Log::debug("Calling $service.$method");
+
+        // Decode request data
+        $postdata = @json_decode($postdata, true);
+        kolab_json_output::decode($postdata);
 
         // validate user session
         if (!in_array($method, array('quit', 'authenticate'))) {

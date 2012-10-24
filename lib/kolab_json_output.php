@@ -19,6 +19,7 @@
  | along with this program. If not, see <http://www.gnu.org/licenses/>      |
  +--------------------------------------------------------------------------+
  | Author: Jeroen van Meeuwen <vanmeeuwen@kolabsys.com>                     |
+ | Author: Aleksander Machniak <machniak@kolabsys.com>                      |
  +--------------------------------------------------------------------------+
 */
 
@@ -29,7 +30,9 @@ class kolab_json_output
 {
 
     /**
+     * Send success response
      *
+     * @param mixed $data Data
      */
     public function success($data)
     {
@@ -42,7 +45,9 @@ class kolab_json_output
 
 
     /**
+     * Send error response
      *
+     * @param mixed $data Data
      */
     public function error($errdata, $code = 400)
     {
@@ -55,13 +60,74 @@ class kolab_json_output
 
 
     /**
+     * Send response
      *
+     * @param mixed $data Data
      */
-    public function send($data)
+    protected function send($data)
     {
+        // Encode response
+        self::encode($data);
+
+        // Send response
         header("Content-Type: application/json");
         echo json_encode($data);
         exit;
+    }
+
+
+    /**
+     * Parse response and base64-encode non-UTF8/binary data
+     *
+     * @param mixed $data Data
+     *
+     * @return bool True if data was encoded
+     */
+    public static function encode(&$data)
+    {
+        if (is_array($data)) {
+            $encoded = array();
+            foreach (array_keys($data) as $key) {
+                if (self::encode($data[$key])) {
+                    $encoded[] = $key;
+                }
+            }
+            if (!empty($encoded)) {
+                $data['__encoded'] = $encoded;
+            }
+        }
+        else if (is_string($data) && $data !== '') {
+            $result = @json_encode($data);
+            // In case of invalid characters json_encode returns "null"
+            if (($result === 'null' && $data != 'null') || $result === false) {
+                $data = base64_encode($data);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Parse response and base64-decode encoded data
+     *
+     * @param mixed $data Data
+     */
+    public static function decode(&$data)
+    {
+        if (is_array($data)) {
+            $encoded = $data['__encoded'];
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    self::decode($data[$key]);
+                }
+                else if (is_string($value) && $encoded && in_array($key, $encoded)) {
+                    $data[$key] = base64_decode($value);
+                }
+            }
+            unset($data['__encoded']);
+        }
     }
 
 }
