@@ -260,15 +260,9 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            $auth = Auth::get_instance($_SESSION['user']->get_domain());
-            $conf = Conf::get_instance();
-
-            $unique_attr = $conf->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            $cn = $postdata['cn'];
+            $auth        = Auth::get_instance($_SESSION['user']->get_domain());
+            $unique_attr = $this->unique_attribute();
+            $cn          = $postdata['cn'];
 
             $x = 2;
             while (($resource_found = $auth->resource_find_by_attribute(array('cn' => $cn)))) {
@@ -430,19 +424,11 @@ class kolab_api_service_form_value extends kolab_api_service
             //console("normalized resource data", $resourcedata);
 
             // TODO: Normalize $postdata
-            $mail_local = 'resource-' . $object_type_key . '-' . strtolower($resourcedata['cn']);
+            $mail_local  = 'resource-' . $object_type_key . '-' . strtolower($resourcedata['cn']);
             $mail_domain = $_SESSION['user']->get_domain();
-            $mail = $mail_local . '@' . $mail_domain;
-
-            $orig_mail = $mail;
-
-            $auth = Auth::get_instance($_SESSION['user']->get_domain());
-            $conf = Conf::get_instance();
-
-            $unique_attr = $conf->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
+            $mail        = $mail_local . '@' . $mail_domain;
+            $auth        = Auth::get_instance($_SESSION['user']->get_domain());
+            $unique_attr = $this->unique_attribute();
 
             $x = 2;
             while (($resource_found = $auth->resource_find_by_attribute(array('mail' => $mail)))) {
@@ -461,8 +447,6 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             return $mail;
-
-
         }
     }
 
@@ -594,13 +578,8 @@ class kolab_api_service_form_value extends kolab_api_service
 
             $orig_uid = $uid;
 
-            $auth = Auth::get_instance($_SESSION['user']->get_domain());
-            $conf = Conf::get_instance();
-
-            $unique_attr = $conf->get('unique_attribute');
-            if (!$unique_attr) {
-                $unique_attr = 'nsuniqueid';
-            }
+            $auth        = Auth::get_instance($_SESSION['user']->get_domain());
+            $unique_attr = $this->unique_attribute();
 
             $x = 2;
             while (($user_found = $auth->user_find_by_attribute(array('uid' => $uid)))) {
@@ -625,18 +604,17 @@ class kolab_api_service_form_value extends kolab_api_service
     private function generate_uidnumber($postdata, $attribs = array())
     {
         if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['uidnumber'])) {
-            $auth = Auth::get_instance($_SESSION['user']->get_domain());
-            $conf = Conf::get_instance();
+            $search = array(
+                'params' => array(
+                    'objectclass' => array(
+                        'type'  => 'exact',
+                        'value' => 'posixaccount',
+                    ),
+                ),
+            );
 
-            $search = Array(
-                    'params' => Array(
-                            'objectclass' => Array(
-                                    'type' => 'exact',
-                                    'value' => 'posixaccount',
-                                ),
-                        ),
-                );
-
+            $auth  = Auth::get_instance($_SESSION['user']->get_domain());
+            $conf  = Conf::get_instance();
             $users = $auth->list_users(NULL, Array('uidnumber'), $search);
 
             $highest_uidnumber = $conf->get('uidnumber_lower_barrier');
@@ -803,10 +781,7 @@ class kolab_api_service_form_value extends kolab_api_service
         $auth = Auth::get_instance();
         $conf = Conf::get_instance();
 
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
+        $unique_attr = $this->unique_attribute();
 
         $base_dn = $conf->get('user_base_dn');
         if (!$base_dn) {
