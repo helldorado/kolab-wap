@@ -137,16 +137,11 @@ class kolab_api_service_role extends kolab_api_service
     public function role_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $conf = Conf::get_instance();
 
         // Roles are special in that they are ldapsubentries.
         if (!empty($getdata['role'])) {
-            $unique_attr = $conf->get('unique_attribute');
-            if (empty($unique_attr)) {
-                $unique_attr = 'nsuniqueid';
-            }
-
-            $role = $auth->role_find_by_attribute(Array($unique_attr => $getdata['role']));
+            $unique_attr = $this->unique_attribute();
+            $role        = $auth->role_find_by_attribute(Array($unique_attr => $getdata['role']));
 
             if (is_array($role) && count($role) == 1) {
                 $role_dn = key($role);

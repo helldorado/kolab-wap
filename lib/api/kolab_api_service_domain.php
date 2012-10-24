@@ -145,14 +145,11 @@ class kolab_api_service_domain extends kolab_api_service
     public function domain_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $conf = Conf::get_instance();
 
         if (!empty($getdata['domain'])) {
-            $entry_dn = $getdata['domain'];
-
-            $unique_attr = $conf->get('ldap', 'unique_attribute');
-
-            $domain = $auth->domain_find_by_attribute(array($unique_attr => $entry_dn));
+            $entry_dn    = $getdata['domain'];
+            $unique_attr = $this->unique_attribute();
+            $domain      = $auth->domain_find_by_attribute(array($unique_attr => $entry_dn));
 
             if (!empty($domain)) {
                 $entry_dn = key($domain);

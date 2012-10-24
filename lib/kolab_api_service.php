@@ -403,7 +403,6 @@ abstract class kolab_api_service
             return $attrs;
         }
 
-        $conf        = Conf::get_instance();
         $auth        = Auth::get_instance();
         $dn          = key($attrs);
         $attrs       = $attrs[$dn];
@@ -434,11 +433,7 @@ abstract class kolab_api_service
         }
 
         // Insert the persistent, unique attribute
-        $unique_attr = $conf->get('unique_attribute');
-        if (!$unique_attr) {
-            $unique_attr = 'nsuniqueid';
-        }
-
+        $unique_attr = $this->unique_attribute();
         if (!array_key_exists($unique_attr, $attrs)) {
             $extra_attrs[] = $unique_attr;
         }
@@ -458,4 +453,20 @@ abstract class kolab_api_service
         return $attrs;
     }
 
+    /**
+     * Returns name of unique attribute
+     *
+     * @return string Unique attribute name
+     */
+    protected function unique_attribute()
+    {
+        $conf        = Conf::get_instance();
+        $unique_attr = $conf->get('unique_attribute');
+
+        if (!$unique_attr) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        return $unique_attr;
+    }
 }
