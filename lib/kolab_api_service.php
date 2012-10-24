@@ -58,10 +58,11 @@ abstract class kolab_api_service
      * @param string $object_name  Name of the object (user, group, etc.)
      * @param int    $type_id      User type identifier
      * @param bool   $required     Throws exception on empty ID
+     * @param string $key_name     Reference to a variable which will be set to type key
      *
      * @return array User type attributes
      */
-    protected function object_type_attributes($object_name, $type_id, $required = true)
+    protected function object_type_attributes($object_name, $type_id, $required = true, &$key_name = null)
     {
         if (!$object_name || !in_array($object_name, $this->supported_types)) {
             return array();
@@ -100,6 +101,8 @@ abstract class kolab_api_service
                 throw new Exception($this->controller->translate($object_name . '.invalidtypeid'), 35);
             }
         }
+
+        $key_name = $object_types[$type_id]['key'];
 
         return $object_types[$type_id]['attributes'];
     }
