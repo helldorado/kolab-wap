@@ -159,16 +159,18 @@ class kolab_client_task_signup extends kolab_client_task
 
         $this->api->get('system.select_domain', array('domain', $data['domain']));
 
-        // Remove domain from $data before adding user
+        // Remove some useless data from $data before adding user
         unset($data['domain']);
+        unset($data['recaptcha_challenge_field']);
+        unset($data['recaptcha_response_field']);
 
         // Add user
         $result = $this->api->post('user.add', null, $data);
 
-        if (array_key_exists('error_code', $result)) {
+        if ($code = $result->get_error_code()) {
             $this->output->command('display_message', 'internalerror', 'error');
-            return;
-        } else {
+        }
+        else {
             $this->output->set_object('taskcontent', $this->translate('signup.usercreated'));
             // TODO catch errors
             $this->send_mail($data);
