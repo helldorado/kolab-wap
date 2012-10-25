@@ -101,7 +101,7 @@ class kolab_client_task_signup extends kolab_client_task
         $this->output->assign('form', $form);
         $this->output->set_env('token', $this->token);
         $this->output->set_object('taskcontent', $form);
-        $this->output->command('check_user_availability()');
+        $this->output->command('check_user_availability');
     }
 
     // check if user already exists
@@ -117,11 +117,11 @@ class kolab_client_task_signup extends kolab_client_task
         $result = $this->api->post('users.list', null, $post);
 
         if($result->get('count') > 0) {
-            $this->output->command('update_user_info("signup.userexists", "uid")');
+            $this->output->command('update_user_info', 'signup.userexists', 'uid');
             return false;
         }
 
-        $this->output->command('update_user_info("", "uid")');
+        $this->output->command('update_user_info', '', 'uid');
         return true;
     }
 
