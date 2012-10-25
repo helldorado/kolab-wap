@@ -241,12 +241,13 @@ class Auth {
 
     public function get_entry_attribute($subject, $attribute)
     {
-        return $this->auth_instance()->get_entry_attribute($subject, $attribute);
+        $entry = $this->auth_instance()->get_attributes($subject, (array)$attribute);
+        return $entry[$attribute];
     }
 
     public function get_entry_attributes($subject, $attributes)
     {
-        return $this->auth_instance()->get_entry_attributes($subject, $attributes);
+        return $this->auth_instance()->get_attributes($subject, $attributes);
     }
 
     public function group_add($attributes, $typeid = null)
