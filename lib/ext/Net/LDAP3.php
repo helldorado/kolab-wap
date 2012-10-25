@@ -714,10 +714,7 @@ class Net_LDAP3
 
     public function get_entry_attribute($subject_dn, $attribute)
     {
-        $this->config_set('return_attributes', $attribute);
-        $entries = $this->search($subject_dn, '(objectclass=*)', 'base')->entries(TRUE);
-        $entry_dn = key($entries);
-        $entry = $entries[$entry_dn];
+        $entry = $this->get_entry_attributes($subject_dn, (array)$attribute);
 
         return $entry[$attribute];
     }
@@ -725,9 +722,15 @@ class Net_LDAP3
     public function get_entry_attributes($subject_dn, $attributes)
     {
         $this->config_set('return_attributes', $attributes);
-        $entries = $this->search($subject_dn, '(objectclass=*)', 'base')->entries(TRUE);
+        $result = $this->search($subject_dn, '(objectclass=*)', 'base');
+
+        if (!$result) {
+            return array();
+        }
+
+        $entries  = $result->entries(true);
         $entry_dn = key($entries);
-        $entry = $entries[$entry_dn];
+        $entry    = $entries[$entry_dn];
 
         return $entry;
     }
