@@ -410,33 +410,35 @@ abstract class kolab_api_service
         $dn          = key($attrs);
         $attrs       = $attrs[$dn];
         $extra_attrs = array();
-
-        // add group type id to the result
-        $attrs['type_id'] = $this->object_type_id($object_name, $attrs);
-
-        if (empty($attrs['type_id'])) {
-            if ($object_name == 'domain') {
-                $attrs['type_id'] = 1;
-            }
-        }
+        $type_id     = $this->object_type_id($object_name, $attrs);
+        $unique_attr = $this->unique_attribute();
 
         // Search for attributes associated with the type_id that are not part
-        // of the results returned earlier. Example: nsrole / nsroledn / aci, etc.
+        // of the result returned earlier. Example: nsrole / nsroledn / aci, etc.
         // @TODO: this should go to LDAP class
-        if ($attrs['type_id']) {
-            $uta = $this->object_type_attributes($object_name, $attrs['type_id']);
+        if ($type_id) {
+            $uta = $this->object_type_attributes($object_name, $type_id);
 
-            foreach ((array)$uta as $field_type => $attributes) {
-                foreach ($attributes as $attribute => $data) {
-                    if (!array_key_exists($attribute, $attrs)) {
-                        $extra_attrs[] = $attribute;
-                    }
-                }
-            }
+            $attributes = array_merge(
+                array_keys((array) $uta['auto_form_fields']),
+                array_keys((array) $uta['form_fields']),
+                array_keys((array) $uta['fields'])
+            );
+            $attributes = array_filter($attributes);
+            $attributes = array_unique($attributes);
+
+            $object_attributes = array_keys($attrs);
+
+            // extra attributes
+            $extra_attrs = array_diff($attributes, $object_attributes);
+
+            // remove attributes not listed in object type definition
+            // @TODO: make this optional?
+            $attributes = array_flip(array_merge($attributes, array($unique_attr)));
+            $attrs = array_intersect_key($attrs, $attributes);
         }
 
         // Insert the persistent, unique attribute
-        $unique_attr = $this->unique_attribute();
         if (!array_key_exists($unique_attr, $attrs)) {
             $extra_attrs[] = $unique_attr;
         }
@@ -452,6 +454,9 @@ abstract class kolab_api_service
         // Replace unique attribute with 'id' key
         $attrs['id'] = $attrs[$unique_attr];
         unset($attrs[$unique_attr]);
+
+        // add object type id to the result
+        $attrs['type_id'] = $type_id;
 
         return $attrs;
     }
