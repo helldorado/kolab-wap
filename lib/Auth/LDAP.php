@@ -242,6 +242,14 @@ class LDAP extends Net_LDAP3 {
 
     }
 
+    public function get_attributes($subject_dn, $attributes)
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::get_attributes() for $subject_dn");
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        return $this->get_entry_attributes($subject_dn, $attributes);
+    }
+
     public function group_add($attrs, $typeid = null)
     {
         $base_dn = $this->entry_base_dn('group', $typeid);
