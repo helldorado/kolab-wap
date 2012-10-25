@@ -69,7 +69,7 @@ class kolab_client_task_signup extends kolab_client_task
         }
 
         // Login ($result is a kolab_client_api_result instance)
-        $result = $this->api_login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->domain);
+        $result = $this->api->login($this->config_get('bind_dn'), $this->config_get('bind_pw'), $this->domain);
 
         // Set the session token we got in the API client instance, so subsequent
         // API calls are made in the same session.
