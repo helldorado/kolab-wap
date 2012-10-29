@@ -275,16 +275,21 @@ class kolab_client_task_user extends kolab_client_task
             'astaccountallowedcodec'    => 'asterisk',
             'astaccountcallerid'        => 'asterisk',
             'astaccountcontext'         => 'asterisk',
+            'astaccountdefaultuser'     => 'asterisk',
             'astaccountdeny'            => 'asterisk',
             'astaccounthost'            => 'asterisk',
+            'astaccountmailbox'         => 'asterisk',
             'astaccountnat'             => 'asterisk',
             'astaccountname'            => 'asterisk',
             'astaccountqualify'         => 'asterisk',
             'astaccountrealmedpassword' => 'asterisk',
+            'astaccountregistrationexten'   => 'asterisk',
+            'astaccountregistrationcontext' => 'asterisk',
             'astaccountsecret'          => 'asterisk',
             'astaccounttype'            => 'asterisk',
             'astcontext'                => 'asterisk',
             'astextension'              => 'asterisk',
+            'astvoicemailpassword'      => 'asterisk',
         );
 
         // Prepare fields
