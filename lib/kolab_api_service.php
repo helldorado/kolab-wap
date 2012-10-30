@@ -264,7 +264,17 @@ abstract class kolab_api_service
         $form_service = $this->controller->get_service('form_value');
 
         // With the result, start validating the input
-        $form_service->validate(null, $attribs);
+        $validate_result = $form_service->validate(null, $attribs);
+
+        $special_attr_validate = Array();
+
+        foreach ($validate_result as $attr_name => $value) {
+            if (!empty($value) && $value !== "OK" && $value !== 0) {
+                $special_attr_validate[$attr_name] = $value;
+            }
+        }
+
+        Log::trace("kolab_api_service::parse_input_attributes() \$special_attr_validate: " . var_export($special_attr_validate, TRUE));
 
         $result       = array();
 
@@ -316,7 +326,9 @@ abstract class kolab_api_service
             }
         }
 
-        Log::trace("parse_input_attributes result", $result);
+        $result = array_merge($result, $special_attr_validate);
+
+        Log::trace("parse_input_attributes result (merge of \$result and \$special_attr_validate)", $result);
 
         return $result;
     }

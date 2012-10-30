@@ -198,10 +198,10 @@ class kolab_api_service_form_value extends kolab_api_service
      */
     public function validate($getdata, $postdata)
     {
-        //console("Executing validate() for \$getdata, \$postdata", $getdata, $postdata);
-
         $attribs = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
         $result  = array();
+
+        Log::trace("kolab_api_form_value::validate() \$postdata: " . var_export($postdata, TRUE));
 
         foreach ((array)$postdata as $attr_name => $attr_value) {
             if (empty($attr_name) || $attr_name == 'type_id' || $attr_name == 'object_type') {
@@ -222,15 +222,18 @@ class kolab_api_service_form_value extends kolab_api_service
             }
 
             if (array_key_exists($attr_name, $attribs['form_fields']) && !empty($attribs['form_fields'][$attr_name]['optional']) && !$attribs['form_fields'][$attr_name]['optional']) {
-                $result[$attr_name] = $this->{$method_name}($attr_value);
+                $result[$attr_name] = $this->{$method_name}($attr_value, $postdata);
             } else {
                 try {
-                    $result[$attr_name] = $this->{$method_name}($attr_value);
+                    $result[$attr_name] = $this->{$method_name}($attr_value, $postdata);
                 } catch (Exception $e) {
                     Log::debug("Attribute $attr_name did not validate, but it is not a required attribute. Not saving. (Error was: $e)");
                 }
             }
+
         }
+
+        Log::trace("kolab_api_form_value::validate() \$result: " . var_export($result, TRUE));
 
         return $result;
     }
@@ -238,6 +241,115 @@ class kolab_api_service_form_value extends kolab_api_service
     private function generate_alias($postdata, $attribs = array())
     {
         return $this->generate_secondary_mail($postdata, $attribs);
+    }
+
+    private function generate_astaccountcallerid($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['astaccountcallerid'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['astaccountcallerid']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            // TODO: Correct this with what is in 'data'...
+            return $this->generate_cn($postdata, $attribs);
+        }
+    }
+
+    private function generate_astaccountdefaultuser($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['astaccountdefaultuser'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['astaccountdefaultuser']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            return $this->generate_uid($postdata, $attribs);
+        }
+    }
+
+    private function generate_astaccountmailbox($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['astaccountmailbox'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['astaccountmailbox']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            return $this->generate_uid($postdata, $attribs);
+        }
+    }
+
+    private function generate_astaccountregistrationcontext($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['astaccountregistrationcontext'])) {
+            // Use Data Please
+            foreach ($attribs['auto_form_fields']['astaccountregistrationcontext']['data'] as $key) {
+                if (!isset($postdata[$key])) {
+                    throw new Exception("Key not set: " . $key, 12356);
+                }
+            }
+
+            return $this->generate_uid($postdata, $attribs);
+        }
+    }
+
+    private function generate_astaccountregistrationexten($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['astaccountregistrationexten'])) {
+            $search = array(
+                'params' => array(
+                    'objectclass' => array(
+                        'type'  => 'exact',
+                        'value' => 'asterisksipuser',
+                    ),
+                ),
+            );
+
+            $auth  = Auth::get_instance($_SESSION['user']->get_domain());
+            $conf  = Conf::get_instance();
+            $users = $auth->list_users(NULL, Array('astaccountregistrationexten'), $search);
+
+            $lower_astaccountregistrationexten = $conf->get('astaccountregistrationexten_lower_barrier');
+            if (!$lower_astaccountregistrationexten) {
+                $lower_astaccountregistrationexten = 200;
+            }
+
+            // Start at the lower barrier + 1
+            $lower_astaccountregistrationexten = ($lower_astaccountregistrationexten + 1);
+
+            $higher_astaccountregistrationexten = $conf->get('astaccountregistrationexten_higher_barrier');
+            if (!$higher_astaccountregistrationexten) {
+                $higher_astaccountregistrationexten = 300;
+            }
+
+            $astaccountregistrationextens = Array();
+
+            foreach ($users['list'] as $dn => $attributes) {
+                if (!array_key_exists('astaccountregistrationexten', $attributes)) {
+                    continue;
+                }
+
+                if ($attributes['astaccountregistrationexten'] > $highest_astaccountregistrationexten) {
+                    $astaccountregistrationextens[] = $attributes['astaccountregistrationexten'];
+                }
+            }
+
+            for ($i = $lower_astaccountregistrationexten; $i < $higher_astaccountregistrationexten; $i++) {
+                if (!in_array($i, $astaccountregistrationextens)) {
+                    $astaccountregistrationexten = $i;
+                    break;
+                }
+            }
+
+            return $astaccountregistrationexten;
+        }
     }
 
     private function generate_cn($postdata, $attribs = array())
@@ -890,6 +1002,19 @@ class kolab_api_service_form_value extends kolab_api_service
 
         return $value;
 
+    }
+
+    private function validate_astaccountrealmedpassword($value, $postdata)
+    {
+        if (!array_key_exists('uid', $postdata) || empty($postdata['uid'])) {
+            $postdata['uid'] = $this->generate_uid($postdata);
+        }
+
+        $str = $postdata['uid'] . ":" . $_SESSION['user']->get_domain() . ":" . $postdata['userpassword'];
+
+        Log::trace("Inserting astaccountrealmedpassword with value md5('" . $str . "');");
+
+        return md5($str);
     }
 
     private function validate_mail($value)
