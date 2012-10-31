@@ -270,6 +270,7 @@ class kolab_client_task_user extends kolab_client_task
             'kolabdelegate'             => 'config',
             'kolaballowsmtprecipient'   => 'config',
             'kolaballowsmtpsender'      => 'config',
+            'mailforwardingaddress'     => 'config',
 
             /* Asterisk Settings */
             'astaccountallowedcodec'    => 'asterisk',
