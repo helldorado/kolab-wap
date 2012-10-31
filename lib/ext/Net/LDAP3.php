@@ -1001,7 +1001,7 @@ class Net_LDAP3
                 }
 
                 if (!($new_attrs[$attr] === $old_attr_value) && !($_sort1 === $_sort2)) {
-                    $this->_debug("Attribute $attr changed from", $old_attr_value, "to", $new_attrs[$attr]);
+                    $this->_debug("Attribute $attr changed from " . var_export($old_attr_value, TRUE) . " to " . var_export($new_attrs[$attr], TRUE));
                     if ($attr === $rdn_attr) {
                         $this->_debug("This attribute is the RDN attribute. Let's see if it is multi-valued, and if the original still exists in the new value.");
                         if (is_array($old_attrs[$attr])) {
@@ -1087,6 +1087,16 @@ class Net_LDAP3
 
         foreach ($new_attrs as $attr => $value) {
             if (array_key_exists($attr, $old_attrs)) {
+                if (is_array($new_attrs[$attr]) && is_array($old_attrs[$attr])) {
+                    $_sort1 = $old_attrs[$attr];
+                    sort($_sort1);
+                    $_sort2 = $value;
+                    sort($_sort2);
+                } else {
+                    $_sort1 = TRUE;
+                    $_sort2 = FALSE;
+                }
+
                 if (empty($value)) {
                     if (!array_key_exists($attr, $mod_array['del'])) {
                         switch ($attr) {
@@ -1099,7 +1109,7 @@ class Net_LDAP3
                         }
                     }
                 } else {
-                    if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr)) {
+                    if (!($old_attrs[$attr] === $value) && !($attr === $rdn_attr) && !($_sort1 === $_sort2)) {
                         if (!array_key_exists($attr, $mod_array['replace'])) {
                             $this->_debug("Adding to replace(2): $attr");
                             $mod_array['replace'][$attr] = $value;
