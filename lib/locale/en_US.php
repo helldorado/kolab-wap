@@ -249,6 +249,7 @@ $LANG['user.list'] = 'Users List';
 $LANG['user.loginshell'] = 'Shell';
 $LANG['user.mail'] = 'Primary Email Address';
 $LANG['user.mailalternateaddress'] = 'External Email Address(es)';
+$LANG['user.mailforwardingaddress'] = 'Forward Mail To';
 $LANG['user.mailhost'] = 'Email Server';
 $LANG['user.mailquota'] = 'Quota';
 $LANG['user.mailquota.desc'] = 'Leave blank for unlimited';
