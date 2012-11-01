@@ -457,7 +457,7 @@ abstract class kolab_api_service
 
         // Get extra attributes
         if (!empty($extra_attrs)) {
-            $extra_attrs = $auth->get_entry_attributes($dn, $extra_attrs);
+            $extra_attrs = $auth->get_entry_attributes($dn, array_values($extra_attrs));
 
             if (!empty($extra_attrs)) {
                 $attrs = array_merge($attrs, $extra_attrs);
