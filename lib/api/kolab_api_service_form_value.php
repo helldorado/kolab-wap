@@ -223,6 +223,8 @@ class kolab_api_service_form_value extends kolab_api_service
 
             if (array_key_exists($attr_name, $attribs['form_fields']) && !empty($attribs['form_fields'][$attr_name]['optional']) && !$attribs['form_fields'][$attr_name]['optional']) {
                 $result[$attr_name] = $this->{$method_name}($attr_value, $postdata);
+            } elseif (array_key_exists($attr_name, $attribs['form_fields']) && !empty($attribs['form_fields'][$attr_name]['validate']) && !$attribs['form_fields'][$attr_name]['validate']) {
+                $result[$attr_name] = $attr_value;
             } else {
                 try {
                     $result[$attr_name] = $this->{$method_name}($attr_value, $postdata);
@@ -240,7 +242,29 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function generate_alias($postdata, $attribs = array())
     {
-        return $this->generate_secondary_mail($postdata, $attribs);
+        $rcpt_pol_aliases = $this->generate_secondary_mail($postdata, $attribs);
+
+        $service = $this->controller->get_service('user');
+        $user_attrs  = $service->user_info(Array( "user" => $postdata['id']), null);
+
+        if (!empty($user_attrs['alias'])) {
+            $cur_aliases = $user_attrs['alias'];
+        } else {
+            $cur_aliases = Array();
+        }
+
+        if (!is_array($cur_aliases)) {
+            $cur_aliases = (array)($cur_aliases);
+        }
+
+        sort($rcpt_pol_aliases);
+        sort($cur_aliases);
+
+        $form_aliases = array_unique(array_merge($rcpt_pol_aliases, $cur_aliases));
+
+        Log::trace("kolab_api_service_form_value::generate_alias() \$form_aliases: " . var_export($form_aliases, TRUE));
+
+        return array_values($form_aliases);
     }
 
     private function generate_astaccountcallerid($postdata, $attribs = array())
@@ -1006,6 +1030,10 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function validate_astaccountrealmedpassword($value, $postdata)
     {
+        if (!array_key_exists('userpassword', $postdata) || empty($postdata['userpassword'])) {
+            return $value;
+        }
+
         if (!array_key_exists('uid', $postdata) || empty($postdata['uid'])) {
             $postdata['uid'] = $this->generate_uid($postdata);
         }
@@ -1042,7 +1070,8 @@ class kolab_api_service_form_value extends kolab_api_service
 
     private function validate_mailquota($value)
     {
-        return (int)($value);
+        //return (int)($value);
+        return $value;
     }
 
     private function validate_mailalternateaddress($value)
