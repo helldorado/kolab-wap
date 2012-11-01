@@ -989,7 +989,21 @@ class Net_LDAP3
         // in the new attrs, if any.
         foreach ($old_attrs as $attr => $old_attr_value) {
 
+            if (is_array($old_attr_value)) {
+                if (count($old_attr_value) == 1) {
+                    $old_attrs[$attr] = $old_attr_value[0];
+                    $old_attr_value = $old_attrs[$attr];
+                }
+            }
+
             if (array_key_exists($attr, $new_attrs)) {
+
+                if (is_array($new_attrs[$attr])) {
+                    if (count($new_attrs[$attr]) == 1) {
+                        $new_attrs[$attr] = $new_attrs[$attr][0];
+                    }
+                }
+
                 if (is_array($old_attrs[$attr]) && is_array($new_attrs[$attr])) {
                     $_sort1 = $new_attrs[$attr];
                     sort($_sort1);
@@ -1086,7 +1100,21 @@ class Net_LDAP3
         }
 
         foreach ($new_attrs as $attr => $value) {
+            if (is_array($value)) {
+                if (count($value) == 1) {
+                    $new_attrs[$attr] = $value[0];
+                    $value = $new_attrs[$attr];
+                }
+            }
+
             if (array_key_exists($attr, $old_attrs)) {
+
+                if (is_array($old_attrs[$attr])) {
+                    if (count($old_attrs[$attr]) == 1) {
+                        $old_attrs[$attr] = $old_attrs[$attr][0];
+                    }
+                }
+
                 if (is_array($new_attrs[$attr]) && is_array($old_attrs[$attr])) {
                     $_sort1 = $old_attrs[$attr];
                     sort($_sort1);
