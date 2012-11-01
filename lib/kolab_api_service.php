@@ -138,7 +138,7 @@ abstract class kolab_api_service
         $keys_score   = 0;
         $type_id      = null;
 
-        //console("Data objectClasses: " . implode(", ", $object_class));
+        Log::trace("kolab_api_service::object_type_id objectClasses: " . implode(", ", $object_class));
 
         foreach ($object_types as $idx => $elem) {
             $ref_class = $elem['attributes']['fields']['objectclass'];
@@ -147,7 +147,7 @@ abstract class kolab_api_service
                 continue;
             }
 
-            //console("Reference objectclasses for " . $elem['key'] . ": " . implode(", ", $ref_class));
+            Log::trace("Reference objectclasses for " . $elem['key'] . ": " . implode(", ", $ref_class));
 
             // Eliminate the duplicates between the $data_ocs and $ref_ocs
             $_object_class = array_diff($object_class, $ref_class);
@@ -165,12 +165,24 @@ abstract class kolab_api_service
                     array_keys((array) $elem['attributes']['form_fields']),
                     array_keys($elem['attributes']['fields'])
                 ));
+
                 $elem_keys_score = $keys_count - count(array_diff($object_keys, $ref_keys));
             }
 
-            //console("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
-            //console("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
-            //console("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ") " . $elem_keys_score);
+            // Position in tree score
+            if (!empty($elem['attributes']['fields']['ou'])) {
+                if (!empty($attributes['ou'])) {
+                    if (strtolower($elem['attributes']['fields']['ou']) == strtolower($attributes['ou'])) {
+                        Log::trace("object_type " . $elem['key'] . " fields ou setting matches entry, bumping scores.");
+                        $elem_score += 2;
+                        $elem_keys_score += 10;
+                    }
+                }
+            }
+
+            Log::trace("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
+            Log::trace("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
+            Log::trace("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ") " . $elem_keys_score);
 
             // Compare last and current element score
             if ($elem_score > $type_score || ($elem_score == $type_score && $elem_keys_score > $keys_score)) {
