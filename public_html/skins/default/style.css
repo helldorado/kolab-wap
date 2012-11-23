@@ -257,7 +257,7 @@ td.label {
 }
 
 #topmenu .logout {
-  background: url(images/buttons.png) -100px -1px no-repeat;
+  background: url(images/buttons.png) -1px -100px no-repeat;
   padding-left: 20px;
   margin-right: 10px;
   color: white;
@@ -400,7 +400,7 @@ td.label {
   float: left;
   width: 18px;
   height: 18px;
-  background: url(images/buttons.png) 0 0 no-repeat;
+  background: url(images/buttons.png) -1px 0 no-repeat;
 }
 
 #search-reset:hover,
@@ -413,7 +413,7 @@ td.label {
 }
 
 #search-details {
-  background-position: -21px 0;
+  background-position: -1px -20px;
 }
 
 .searchdetails {
@@ -568,15 +568,15 @@ a.button {
 }
 
 a.button.edit {
-  background-position: -81px 0;
+  background-position: -1px -81px;
 }
 
 a.button.add {
-  background-position: -41px 0;
+  background-position: -1px -41px;
 }
 
 a.button.delete {
-  background-position: -1px 0;
+  background-position: -1px -1px;
 }
 
 /********* Form smart inputs *********/
@@ -660,11 +660,11 @@ span.listelement span.actions span.reset {
 }
 
 span.listelement span.actions span.add {
-  background-position: -41px -2px;
+  background-position: -2px -41px;
 }
 
 span.listelement span.actions span.search {
-  background-position: -61px -1px;
+  background-position: -1px -61px;
   cursor: default;
 }
 
@@ -916,11 +916,12 @@ fieldset.tabbed
   line-height: 24px;
   width: 330px;
   text-align: left;
+  white-space: nowrap;
 }
 
 #login_form label {
   display: block;
-  width: 80px;
+  width: 100px;
   text-align: right;
   float: left;
   margin-right: 10px;
