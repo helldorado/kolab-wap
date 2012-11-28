@@ -678,11 +678,11 @@ class LDAP extends Net_LDAP3 {
             $sql = $db->fetch_assoc($db->query("SELECT `key` FROM {$type}_types WHERE id = ?", $typeid));
 
             // Check if the type has a specific base DN specified.
-            $base_dn = $this->_subject_base_dn($sql['key'] . '_' . $type . '_base_dn');
+            $base_dn = $this->_subject_base_dn($sql['key'] . '_' . $type);
         }
 
         if (empty($base_dn)) {
-            $base_dn = $this->_subject_base_dn($type . '_base_dn');
+            $base_dn = $this->_subject_base_dn($type);
         }
 
         return $base_dn;
