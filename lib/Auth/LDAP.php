@@ -139,7 +139,8 @@ class LDAP extends Net_LDAP3 {
     {
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
-            if ($this->domain_info($parent_domain)->count() < 1) {
+            $domain_info = $this->domain_info($parent_domain);
+            if ($domain_info === false) {
                 $this->_domain_add_new($parent_domain, $prepopulate);
             }
 
