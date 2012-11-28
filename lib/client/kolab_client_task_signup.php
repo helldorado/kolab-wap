@@ -157,7 +157,7 @@ class kolab_client_task_signup extends kolab_client_task
             return;
         }
 
-        $this->api->get('system.select_domain', array('domain', $data['domain']));
+        $this->api->get('system.select_domain', array('domain' => $data['domain']));
 
         // Remove some useless data from $data before adding user
         unset($data['domain']);
