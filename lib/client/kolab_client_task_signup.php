@@ -271,7 +271,7 @@ class kolab_client_task_signup extends kolab_client_task
 
         $form->set_title($this->translate('signup.formtitle'));
 
-        $this->output->add_translation('user.password.mismatch', 'signup.wronguid', 'signup.userexists', 'signup.wrongmailalternateaddress', 'internalerror', 'servererror');
+        $this->output->add_translation('user.password.mismatch', 'signup.wronguid', 'signup.userexists', 'internalerror', 'servererror');
 
         return $form->output();
     }
