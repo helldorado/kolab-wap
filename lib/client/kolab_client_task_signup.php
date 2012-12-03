@@ -110,10 +110,16 @@ class kolab_client_task_signup extends kolab_client_task
 
         $this->login($data['domain']);
 
-        // Assemble mail attribute
-        $mail = $data['uid'].'@'.$data['domain'];
+        $post = array(
+            'attributes' =>  array('uid', 'mail'),
+            'search' => array('params' => array(
+                        'uid' => array('type' => 'exact', 'value' => $data['uid']),
+                        'mail' => array('type' => 'exact', 'value' => $data['uid'].'@'.$data['domain']),
+                    ),
+                'operator' => "OR"
+             )
+        );
 
-        $post = array('search' => array('mail' => array('value' => $mail) ) );
         $result = $this->api->post('users.list', null, $post);
 
         if($result->get('count') > 0) {
