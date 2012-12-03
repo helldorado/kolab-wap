@@ -221,9 +221,9 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            if (array_key_exists($attr_name, $attribs['form_fields']) && !empty($attribs['form_fields'][$attr_name]['optional']) && !$attribs['form_fields'][$attr_name]['optional']) {
+            if (array_key_exists($attr_name, $attribs['form_fields']) && empty($attribs['form_fields'][$attr_name]['optional'])) {
                 $result[$attr_name] = $this->{$method_name}($attr_value, $postdata);
-            } elseif (array_key_exists($attr_name, $attribs['form_fields']) && !empty($attribs['form_fields'][$attr_name]['validate']) && !$attribs['form_fields'][$attr_name]['validate']) {
+            } else if (array_key_exists($attr_name, $attribs['form_fields']) && empty($attribs['form_fields'][$attr_name]['validate'])) {
                 $result[$attr_name] = $attr_value;
             } else {
                 try {
@@ -232,7 +232,6 @@ class kolab_api_service_form_value extends kolab_api_service
                     Log::debug("Attribute $attr_name did not validate, but it is not a required attribute. Not saving. (Error was: $e)");
                 }
             }
-
         }
 
         Log::trace("kolab_api_form_value::validate() \$result: " . var_export($result, TRUE));
