@@ -679,7 +679,7 @@ class LDAP extends Net_LDAP3 {
             $sql = $db->fetch_assoc($db->query("SELECT `key` FROM {$type}_types WHERE id = ?", $typeid));
 
             // Check if the type has a specific base DN specified.
-            $base_dn = $this->_subject_base_dn($sql['key'] . '_' . $type);
+            $base_dn = $this->_subject_base_dn($sql['key'] . '_' . $type, true);
         }
 
         if (empty($base_dn)) {
@@ -746,8 +746,19 @@ class LDAP extends Net_LDAP3 {
         }
     }
 
-    private function _subject_base_dn($subject)
+    private function _subject_base_dn($subject, $strict = false)
     {
+        $subject_base_dn = $this->conf->get_raw($this->domain, $subject . "_base_dn");
+
+        if (empty($subject_base_dn)) {
+            $subject_base_dn = $this->conf->get_raw("ldap", $subject . "_base_dn");
+        }
+
+        if (empty($subject_base_dn) && $strict) {
+            $this->_log(LOG_DEBUG, "subject_base_dn for subject $subject not found");
+            return null;
+        }
+
         // Attempt to get a configured base_dn
         $base_dn = $this->conf->get($this->domain, "base_dn");
 
@@ -755,21 +766,11 @@ class LDAP extends Net_LDAP3 {
             $base_dn = $this->domain_root_dn($this->domain);
         }
 
-        $this->_log(LOG_DEBUG, __FILE__ . "::" . __FUNCTION__ . " using base_dn $base_dn");
-
-        if (empty($subject)) {
-            return $base_dn;
-        } else {
-            $subject_base_dn = $this->conf->get_raw($this->domain, $subject . "_base_dn");
-            if (empty($subject_base_dn)) {
-                $subject_base_dn = $this->conf->get_raw("ldap", $subject . "_base_dn");
-            }
-            if (!empty($subject_base_dn)) {
-                $base_dn = $this->conf->expand($subject_base_dn, array("base_dn" => $base_dn));
-            }
+        if (!empty($subject_base_dn)) {
+            $base_dn = $this->conf->expand($subject_base_dn, array("base_dn" => $base_dn));
         }
 
-        $this->_log(LOG_DEBUG, "subject_base_dn for subject $subject results in $base_dn");
+        $this->_log(LOG_DEBUG, "subject_base_dn for subject $subject is $base_dn");
 
         return $base_dn;
     }
