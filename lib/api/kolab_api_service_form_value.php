@@ -681,9 +681,60 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            $secondary_mail_addresses = kolab_recipient_policy::secondary_mail($postdata);
+            $_secondary_mail_addresses = kolab_recipient_policy::secondary_mail($postdata);
 
             // TODO: Check for uniqueness. Not sure what to do if not unique.
+            $secondary_mail_addresses = Array();
+
+            $auth = Auth::get_instance();
+            $conf = Conf::get_instance();
+
+            // Find the authentication mechanism in order to be able to fall back from a
+            // '[$domain]' section setting for the mail attributes list, to an '[$auth_mech]'
+            // section setting
+            $auth_mech = $conf->get($_SESSION['user']->get_domain(), 'auth_mechanism');
+            if (empty($auth_mech)) {
+                $auth_mech = $conf->get('kolab', 'auth_mechanism');
+            }
+            if (empty($auth_mech)) {
+                $auth_mech = 'ldap';
+            }
+
+            $mail_attrs = $conf->get_list($_SESSION['user']->get_domain(), 'mail_attributes');
+            if (empty($mail_attrs)) {
+                $mail_attrs = $conf->get_list($auth_mech, 'mail_attributes');
+            }
+            if (empty($mail_attrs)) {
+                $mail_attrs = array('mail', 'alias');
+            }
+
+            foreach ($_secondary_mail_addresses as $num => $alias) {
+                list($_local, $_domain) = explode("@", $alias);
+                $local = $_local;
+
+                $x = 2;
+                while (($user_found = $auth->find_recipient($local . "@" . $_domain))) {
+                    Log::trace(__FUNCTION__ . ": An entry with address " . $local . "@" . $_domain . " was found.");
+
+                    if (!empty($postdata['id'])) {
+                        $user_found_dn = key($user_found);
+                        $user_found_unique_attr = $auth->get_entry_attribute($user_found_dn, $unique_attr);
+                        if ($user_found_unique_attr == $postdata['id']) {
+                            Log::trace(__FUNCTION__ . ": Entry with address " . $local . "@" . $_domain . " is actually us.");
+                            break;
+                        }
+                    } // empty($postdata['id'])
+
+                    // Otherwise this is a new user and therefore the entry found with
+                    // this address is definitely not us
+
+                    $local = $_local . $x;
+                    $x++;
+                }
+
+                $secondary_mail_addresses[] = $local . "@" . $_domain;
+
+            }
 
             return $secondary_mail_addresses;
         }
