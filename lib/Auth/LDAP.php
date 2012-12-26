@@ -243,6 +243,35 @@ class LDAP extends Net_LDAP3 {
 
     }
 
+    public function find_recipient($address)
+    {
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $mail_attrs = $this->conf->get_list('mail_attributes', array('mail', 'alias'));
+
+        $search = array(
+                'params' => array(
+                        'type' => 'exact'
+                    ),
+                'operator' => "OR"
+            );
+
+        foreach ($mail_attrs as $num => $attr) {
+            $search['params'][$attr] = array(
+                        'type' => 'exact',
+                        'value' => $address,
+                );
+        }
+
+        $result = $this->search_entries($this->config_get('root_dn'), '(objectclass=*)', 'sub', null, $search);
+
+        if ($result->count() > 0) {
+            return $result->entries(TRUE);
+        } else {
+            return FALSE;
+        }
+    }
+
     public function get_attributes($subject_dn, $attributes)
     {
         $this->_log(LOG_DEBUG, "Auth::LDAP::get_attributes() for $subject_dn");

@@ -234,6 +234,11 @@ class Auth {
         return $this->auth_instance()->domain_info($domaindata);
     }
 
+    public function find_recipient($address)
+    {
+        return $this->auth_instance()->find_recipient($address);
+    }
+
     public function find_user_groups($member_dn)
     {
         return $this->auth_instance()->find_user_groups($member_dn);
