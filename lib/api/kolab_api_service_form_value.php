@@ -736,6 +736,12 @@ class kolab_api_service_form_value extends kolab_api_service
 
             }
 
+            if (in_array($postdata['mail'], $secondary_mail_addresses)) {
+                Log::trace("Found primary mail as part of the secondary mail addresses");
+
+                unset($secondary_mail_addresses[array_search($postdata['mail'], $secondary_mail_addresses)]);
+            }
+
             return $secondary_mail_addresses;
         }
     }
