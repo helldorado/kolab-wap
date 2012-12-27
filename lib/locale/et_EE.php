@@ -7,7 +7,7 @@ $LANG['about.support'] = 'Professional support is available from <a href="http:/
 $LANG['about.technology'] = 'Tehnoloogia';
 $LANG['about.warranty'] = 'It comes with absolutely <b>no warranties</b> and is typically run entirely self supported. You can find help & information on the community <a href="http://kolab.org">web site</a> & <a href="http://wiki.kolab.org">wiki</a>.';
 
-$LANG['add'] = 'Add';
+$LANG['add'] = 'Lisa';
 
 $LANG['attribute.add'] = 'Add attribute';
 $LANG['attribute.static'] = 'Static value';
@@ -26,14 +26,14 @@ $LANG['attribute.key.invalid'] = 'Type key contains forbidden characters!';
 $LANG['attribute.required.error'] = 'Required attributes missing in attributes list ($1)!';
 
 $LANG['button.cancel'] = 'Cancel';
-$LANG['button.delete'] = 'Delete';
-$LANG['button.save'] = 'Save';
+$LANG['button.delete'] = 'Kustuta';
+$LANG['button.save'] = 'Salvesta';
 $LANG['button.submit'] = 'Submit';
 
 $LANG['creatorsname'] = 'Created by';
 $LANG['days'] = 'days';
 $LANG['debug'] = 'Debug info';
-$LANG['delete'] = 'Delete';
+$LANG['delete'] = 'Kustuta';
 $LANG['deleting'] = 'Deleting data...';
 
 $LANG['domain.add'] = 'Add Domain';
@@ -182,12 +182,12 @@ $LANG['type.add.success'] = 'Object type created successfully.';
 $LANG['type.attributes'] = 'Attributes';
 $LANG['type.description'] = 'Description';
 $LANG['type.delete.success'] = 'Object type deleted successfully.';
-$LANG['type.domain'] = 'Domain';
+$LANG['type.domain'] = 'Domeen';
 $LANG['type.edit.success'] = 'Object type updated successfully.';
 $LANG['type.group'] = 'Group';
 $LANG['type.list'] = 'Object Types List';
 $LANG['type.key'] = 'Key';
-$LANG['type.name'] = 'Name';
+$LANG['type.name'] = 'Nimi';
 $LANG['type.norecords'] = 'No object type records found!';
 $LANG['type.objectclass'] = 'Object class';
 $LANG['type.object_type'] = 'Object type';

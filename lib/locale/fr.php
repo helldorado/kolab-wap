@@ -1,0 +1,288 @@
+<?php
+
+$LANG['about.community'] = 'Ceci est l\'Edition Communautaire de <b>Kolab Server</b>.';
+$LANG['about.kolab'] = 'Kolab';
+$LANG['about.kolabsys'] = 'Kolab Systems';
+$LANG['about.support'] = 'Un support professionnel est disponible au près de <a href="http://kolabsys.com">Kolab Systems</a>.';
+$LANG['about.technology'] = 'Technologie';
+$LANG['about.warranty'] = 'Il est livré <b>sans aucune garantie</b> et généralement exécuté sous votre responsabilité. Vous pouvez trouver de l\'aide et des informations sur <a href="http://kolab.org">le site web communautaire</a> et sur <a href="http://wiki.kolab.org">le wiki</a>.';
+
+$LANG['add'] = 'Ajouter';
+
+$LANG['attribute.add'] = 'Ajouter un attribut';
+$LANG['attribute.static'] = 'Valeure statique';
+$LANG['attribute.name'] = 'Attribut';
+$LANG['attribute.optional'] = 'Optionel';
+$LANG['attribute.maxcount'] = 'Nombre maximum';
+$LANG['attribute.readonly'] = 'Lecture Seule';
+$LANG['attribute.type'] = 'Type de champ';
+$LANG['attribute.value'] = 'Valeur';
+$LANG['attribute.value.auto'] = 'Automatique';
+$LANG['attribute.value.auto-readonly'] = 'Automatique (lecture seule)';
+$LANG['attribute.value.normal'] = 'Normal';
+$LANG['attribute.value.static'] = 'Statique';
+$LANG['attribute.options'] = 'Options';
+$LANG['attribute.key.invalid'] = 'La clé contient des caractères invalides!';
+$LANG['attribute.required.error'] = 'Certains attributs obligatoires manquent dans la liste ($1)!';
+
+$LANG['button.cancel'] = 'Annuler';
+$LANG['button.delete'] = 'Supprimer';
+$LANG['button.save'] = 'Enregistrer';
+$LANG['button.submit'] = 'Envoyer';
+
+$LANG['creatorsname'] = 'Créé par';
+$LANG['days'] = 'jours';
+$LANG['debug'] = 'Debug info';
+$LANG['delete'] = 'Supprimer';
+$LANG['deleting'] = 'Suppression des données...';
+
+$LANG['domain.add'] = 'Ajouter un domaine';
+$LANG['domain.add.success'] = 'Domaine créé.<br/> N\'oubliez pas d\'ajouter le nouveau domaine dans /etc/kolab/kolab.conf<br/>Voir chapitre 11 dans le Guide de l\'Administrateur.';
+$LANG['domain.associateddomain'] = 'Nom du(des) domaine(s)';
+$LANG['domain.delete.success'] = 'Domaine supprimé.';
+$LANG['domain.edit'] = 'Modifier le Domaine';
+$LANG['domain.edit.success'] = 'Domaine modifié.';
+$LANG['domain.inetdomainbasedn'] = 'Racine personnalisée (DN)';
+$LANG['domain.list'] = 'Liste des Domaines';
+$LANG['domain.norecords'] = 'Pas de domaine trouvé!';
+$LANG['domain.o'] = 'Organisation';
+$LANG['domain.other'] = 'Autre';
+$LANG['domain.system'] = 'Système';
+$LANG['domain.type_id'] = 'Domaine Standard';
+
+$LANG['edit'] = 'Modifier';
+$LANG['error'] = 'Erreur';
+
+$LANG['form.required.empty'] = 'Certains champs obligatoires sont vides!';
+$LANG['form.maxcount.exceeded'] = 'Le nombre maximum d\'objet est dépassé!';
+
+$LANG['group.add'] = 'Ajouter  Groupe';
+$LANG['group.add.success'] = 'Groupe créé.';
+$LANG['group.cn'] = 'Nom';
+$LANG['group.delete.success'] = 'Groupe supprimé.';
+$LANG['group.edit.success'] = 'Group modifié.';
+$LANG['group.gidnumber'] = 'Numéro de groupe principal';
+$LANG['group.list'] = 'Liste des Groups';
+$LANG['group.mail'] = 'Adresse courriel principale';
+$LANG['group.member'] = 'Membre(s)';
+$LANG['group.memberurl'] = 'Membees URL';
+$LANG['group.norecords'] = 'Pas de groupes trouvés!';
+$LANG['group.other'] = 'Autre';
+$LANG['group.system'] = 'Système';
+$LANG['group.type_id'] = 'Type de groupe';
+$LANG['group.uniquemember'] = 'Membre';
+
+$LANG['info'] = 'Information';
+$LANG['internalerror'] = 'Erreur système interne!';
+
+$LANG['ldap.one'] = 'one: Toutes les entrées de niveau 1 à la base du DN';
+$LANG['ldap.sub'] = 'sub: Tous les sous-ensembles commençant à la base du DN';
+$LANG['ldap.base'] = 'base: base DN seulement';
+$LANG['ldap.basedn'] = 'Base DN';
+$LANG['ldap.host'] = 'LDAP Serveur';
+$LANG['ldap.conditions'] = 'Conditions';
+$LANG['ldap.scope'] = 'Champ';
+$LANG['ldap.filter_any'] = 'n\'est pas vide';
+$LANG['ldap.filter_both'] = 'contient';
+$LANG['ldap.filter_prefix'] = 'commence par';
+$LANG['ldap.filter_suffix'] = 'finit par';
+$LANG['ldap.filter_exact'] = 'est égal à';
+
+$LANG['list.records'] = '$1 to $2 of $3';
+
+$LANG['loading'] = 'Chargement...';
+$LANG['logout'] = 'Déconnexion';
+$LANG['login.username'] = 'Nom d\'Utilisateur:';
+$LANG['login.password'] = 'Mot de passe:';
+$LANG['login.domain'] = 'Domaine:';
+$LANG['login.login'] = 'Se connecter';
+$LANG['loginerror'] = 'Nom d\'utilisateur ou mot de passe incorrect!';
+$LANG['MB'] = 'MB';
+
+$LANG['menu.about'] = 'A propos';
+$LANG['menu.domains'] = 'Domaines';
+$LANG['menu.groups'] = 'Groupes';
+$LANG['menu.resources'] = 'Ressources';
+$LANG['menu.roles'] = 'Rôles';
+$LANG['menu.settings'] = 'Paramètres';
+$LANG['menu.users'] = 'Utilisateurs';
+
+$LANG['modifiersname'] = 'Modifié par';
+$LANG['password.generate'] = 'Generer un mot de passe';
+$LANG['reqtime'] = 'Délais: $1 sec.';
+
+$LANG['resource.add'] = 'Ajouter une Ressource';
+$LANG['resource.add.success'] = 'Ressource crée.';
+$LANG['resource.cn'] = 'Nom';
+$LANG['resource.delete'] = 'Supprimer une Ressource';
+$LANG['resource.delete.success'] = 'Ressource supprimée.';
+$LANG['resource.edit'] = 'Modifier une Ressource';
+$LANG['resource.edit.success'] = 'Ressource modifiée.';
+$LANG['resource.kolabtargetfolder'] = 'Dossier cible';
+$LANG['resource.list'] = 'Liste des Ressources';
+$LANG['resource.mail'] = 'Courriel ';
+$LANG['resource.member'] = 'Ensemble des Membres';
+$LANG['resource.norecords'] = 'Pas de Ressource trouvée!';
+$LANG['resource.other'] = 'Autre';
+$LANG['resource.system'] = 'Système';
+$LANG['resource.type_id'] = 'Type de Ressource';
+$LANG['resource.uniquemember'] = 'Membre';
+
+$LANG['role.add'] = 'Ajouter un Rôle';
+$LANG['role.add.success'] = 'Rôle créé.';
+$LANG['role.cn'] = 'Nom du rôle';
+$LANG['role.delete.success'] = 'Rôle supprimé.';
+$LANG['role.description'] = 'Description du Rôle';
+$LANG['role.edit.success'] = 'Rôle modifié';
+$LANG['role.list'] = 'Liste des Rôles';
+$LANG['role.norecords'] = 'Pas de Rôle trouvé!';
+$LANG['role.system'] = 'Détails';
+$LANG['role.type_id'] = 'Type de Rôle';
+
+$LANG['saving'] = 'Enregistrer...';
+
+$LANG['search'] = 'Chercher';
+$LANG['search.reset'] = 'Réinitialiser';
+$LANG['search.criteria'] = 'Critères de recherche';
+$LANG['search.field'] = 'Champ:';
+$LANG['search.method'] = 'Méthode:';
+$LANG['search.contains'] = 'Contient';
+$LANG['search.is'] = 'est';
+$LANG['search.key'] = 'clé';
+$LANG['search.prefix'] = 'commence par';
+$LANG['search.name'] = 'nom';
+$LANG['search.email'] = 'courriel';
+$LANG['search.description'] = 'description';
+$LANG['search.uid'] = 'UID';
+$LANG['search.loading'] = 'Cherche...';
+$LANG['search.acchars'] = 'Au moins $min charactères nécessaires pour l\'autocomplétion';
+
+$LANG['servererror'] = 'Erreur du Serveur!';
+
+$LANG['session.expired'] = 'Votre session a expiré. Reconnecter vous, svp.';
+
+$LANG['signup.headline'] = 'Connectez vous pour un Kolab hébergé';
+$LANG['signup.intro1'] = 'Avoir un compte sur un serveur Kolab, c\'est bien plus qu\'avoir une simple messagerie. Kolab vous fourni également toutes les fonctionnalités d\'n logiciel collaboratif incluant la synchronisation des annuaires partagés, agendas, tâches, journaux et bien plus.';
+$LANG['signup.intro2'] = 'Vous pouvez vous enregistrer ici pour vous créer un compte.';
+$LANG['signup.formtitle'] = 'Enregistrement';
+$LANG['signup.username'] = 'Nom d\'utilisateur';
+$LANG['signup.domain'] = 'Domaine';
+$LANG['signup.mailalternateaddress'] = 'Courriel existant';
+$LANG['signup.futuremail'] = 'Nouveau Courriel';
+$LANG['signup.company'] = 'Société';
+$LANG['signup.captcha'] = 'CAPTCHA';
+$LANG['signup.userexists'] = 'Utilisateur déjà existant!';
+$LANG['signup.usercreated'] = '<h3>Votre compte a été créé!</h3>Félicitation, vous avez désormais votre propre compte Kolab.';
+$LANG['signup.wronguid'] = 'Nom d\'utilisateur invalide!';
+$LANG['signup.wrongmailalternateaddress'] = 'Merci de fournir une adresse valide!';
+$LANG['signup.footer'] = 'Ce service vous est offer par <a href="http://kolabsys.com">Kolab Systems</a>.';
+
+$LANG['type.add'] = 'Ajouter un type d\'objet';
+$LANG['type.add.success'] = 'Type d\'objet ajouté.';
+$LANG['type.attributes'] = 'Attributs';
+$LANG['type.description'] = 'Description';
+$LANG['type.delete.success'] = 'Type d\'objet supprimé.';
+$LANG['type.domain'] = 'Domaine';
+$LANG['type.edit.success'] = 'Type d\'object modifié.';
+$LANG['type.group'] = 'Groupe';
+$LANG['type.list'] = 'Liste des Types d\'objet';
+$LANG['type.key'] = 'Clé';
+$LANG['type.name'] = 'Nom';
+$LANG['type.norecords'] = 'Pas de type d\'objet trouvé!';
+$LANG['type.objectclass'] = 'Classe d\'Object';
+$LANG['type.object_type'] = 'Type d\'Object ';
+$LANG['type.properties'] = 'Propriétés';
+$LANG['type.resource'] = 'Ressource';
+$LANG['type.role'] = 'Rôle';
+$LANG['type.used_for'] = 'Hébergé';
+$LANG['type.user'] = 'Utilisateur';
+
+$LANG['user.add'] = 'Ajouter un utilisateur';
+$LANG['user.add.success'] = 'Utilisateur créé.';
+$LANG['user.alias'] = 'Courriel(s) secondaire(s)';
+$LANG['user.astaccountallowedcodec'] = 'Codec(s) autorisé(s)';
+$LANG['user.astaccountcallerid'] = 'Caller ID';
+$LANG['user.astaccountcontext'] = 'Account Context';
+$LANG['user.astaccountdefaultuser'] = 'Compte Utilisateur par défaut Asterisk';
+$LANG['user.astaccountdeny'] = 'Compte non autorisé';
+$LANG['user.astaccounthost'] = 'Serveur Asterisk';
+$LANG['user.astaccountmailbox'] = 'Boite Mail';
+$LANG['user.astaccountnat'] = 'Account uses NAT';
+$LANG['user.astaccountname'] = 'Nom du compte Asterisk';
+$LANG['user.astaccountqualify'] = 'Qualification du compte';
+$LANG['user.astaccountrealmedpassword'] = 'Mot de Passe du Domaine';
+$LANG['user.astaccountregistrationexten'] = 'Extension';
+$LANG['user.astaccountregistrationcontext'] = 'Contexte d\'enregistrement';
+$LANG['user.astaccountsecret'] = 'Mot de passe';
+$LANG['user.astaccounttype'] = 'Type de compte';
+$LANG['user.astcontext'] = 'Contexte Asterisk';
+$LANG['user.asterisk'] = 'Asterisk SIP';
+$LANG['user.astextension'] = 'Numéro Asterisk';
+$LANG['user.astvoicemailpassword'] = 'Identifiant boite vocale(PIN)';
+$LANG['user.c'] = 'Pays';
+$LANG['user.city'] = 'Ville';
+$LANG['user.cn'] = 'Nom';
+$LANG['user.config'] = 'Configuration';
+$LANG['user.contact'] = 'Contact';
+$LANG['user.contact_info'] = 'Information du Contact';
+$LANG['user.country'] = 'Pays';
+$LANG['user.country.desc'] = '2 lettres selon la norme ISO 3166-1';
+$LANG['user.delete.success'] = 'Utilisateur supprimé.';
+$LANG['user.displayname'] = 'Nom affiché';
+$LANG['user.edit.success'] = 'Utilisateur modifié.';
+$LANG['user.fax'] = 'Numéro de Fax';
+$LANG['user.fbinterval'] = 'Interval Libre/Occupé';
+$LANG['user.fbinterval.desc'] = 'Laisser vide pour la valeur par défaut (60 jours)';
+$LANG['user.gidnumber'] = 'Numéro de groupe principal';
+$LANG['user.givenname'] = 'Prénom';
+$LANG['user.homedirectory'] = 'Répertoire Personnel';
+$LANG['user.homephone'] = 'Téléphone personnel';
+$LANG['user.initials'] = 'Initiales';
+$LANG['user.invitation-policy'] = 'Règles d\'invitation';
+$LANG['user.kolaballowsmtprecipient'] = 'Liste d\'accès destinataire(s)';
+$LANG['user.kolaballowsmtpsender'] = 'Liste d\'accès expéditeur';
+$LANG['user.kolabdelegate'] = 'Délégation';
+$LANG['user.kolabhomeserver'] = 'Serveur de Courriel';
+$LANG['user.kolabinvitationpolicy'] = 'Règle de traitement des invitations';
+$LANG['user.l'] = 'Ville, Région';
+$LANG['user.list'] = 'Liste Utilisateurs';
+$LANG['user.loginshell'] = 'Shell';
+$LANG['user.mail'] = 'Courriel principal';
+$LANG['user.mailalternateaddress'] = 'Courriel(s) externe';
+$LANG['user.mailforwardingaddress'] = 'Transférer à';
+$LANG['user.mailhost'] = 'Serveur de courriel';
+$LANG['user.mailquota'] = 'Quota';
+$LANG['user.mailquota.desc'] = 'Laisser vide pour illimité';
+$LANG['user.mobile'] = 'Numéro de téléphone mobile';
+$LANG['user.name'] = 'Nom';
+$LANG['user.norecords'] = 'Pas d\'utilisateur trouvé!';
+$LANG['user.nsrole'] = 'Rôle(s)';
+$LANG['user.nsroledn'] = 'Rôle(s)';
+$LANG['user.other'] = 'Autre';
+$LANG['user.o'] = 'Organisation';
+$LANG['user.org'] = 'Organisation';
+$LANG['user.orgunit'] = 'Unité Organisationelle';
+$LANG['user.ou'] = 'Unité Organisationelle';
+$LANG['user.pager'] = 'Numéro de beep(pager)';
+$LANG['user.password.mismatch'] = 'Les mots de passe ne sont pas identique!';
+$LANG['user.personal'] = 'Personnel';
+$LANG['user.phone'] = 'Numéro de téléphone';
+$LANG['user.postalcode'] = 'Code postal';
+$LANG['user.postbox'] = 'Cedex';
+$LANG['user.postcode'] = 'Code postal';
+$LANG['user.preferredlanguage'] = 'Langue préférée';
+$LANG['user.room'] = 'Numéro de salle';
+$LANG['user.sn'] = 'Nom de famille';
+$LANG['user.street'] = 'Rue';
+$LANG['user.system'] = 'Système';
+$LANG['user.telephonenumber'] = 'Numéro de téléphone';
+$LANG['user.title'] = 'Emploi';
+$LANG['user.type_id'] = 'Type de compte';
+$LANG['user.uid'] = 'Identifiant Unique (UID)';
+$LANG['user.userpassword'] = 'Mot de passe';
+$LANG['user.userpassword2'] = 'Confirmer le mot de passe';
+$LANG['user.uidnumber'] = 'Numéro d\'utilisateur (ID)';
+
+$LANG['welcome'] = 'Bienvenu sur le serveur d\'administration du serveur Kolab';
+
+$LANG['yes'] = 'yes';

@@ -26,14 +26,14 @@ $LANG['attribute.key.invalid'] = 'Type key contains forbidden characters!';
 $LANG['attribute.required.error'] = 'Required attributes missing in attributes list ($1)!';
 
 $LANG['button.cancel'] = 'Cancel';
-$LANG['button.delete'] = 'Delete';
+$LANG['button.delete'] = 'Usuń';
 $LANG['button.save'] = 'Save';
-$LANG['button.submit'] = 'Submit';
+$LANG['button.submit'] = 'Zatwierdź';
 
 $LANG['creatorsname'] = 'Stworzony przez';
 $LANG['days'] = 'dni';
 $LANG['debug'] = 'Debug info';
-$LANG['delete'] = 'Delete';
+$LANG['delete'] = 'Usuń';
 $LANG['deleting'] = 'Usuwam dane...';
 
 $LANG['domain.add'] = 'Dodaj Domenę';
@@ -83,12 +83,12 @@ $LANG['ldap.host'] = 'LDAP Server';
 $LANG['ldap.conditions'] = 'Conditions';
 $LANG['ldap.scope'] = 'Scope';
 $LANG['ldap.filter_any'] = 'is non-empty';
-$LANG['ldap.filter_both'] = 'contains';
+$LANG['ldap.filter_both'] = 'zawiera';
 $LANG['ldap.filter_prefix'] = 'starts with';
 $LANG['ldap.filter_suffix'] = 'ends with';
 $LANG['ldap.filter_exact'] = 'is equal to';
 
-$LANG['list.records'] = '$1 to $2 of $3';
+$LANG['list.records'] = '$1 do $2 z $3';
 
 $LANG['loading'] = 'Wczytuję...';
 $LANG['logout'] = 'Logout';
@@ -187,7 +187,7 @@ $LANG['type.edit.success'] = 'Object type updated successfully.';
 $LANG['type.group'] = 'Group';
 $LANG['type.list'] = 'Object Types List';
 $LANG['type.key'] = 'Key';
-$LANG['type.name'] = 'Name';
+$LANG['type.name'] = 'Nazwa';
 $LANG['type.norecords'] = 'No object type records found!';
 $LANG['type.objectclass'] = 'Object class';
 $LANG['type.object_type'] = 'Object type';
@@ -257,7 +257,7 @@ $LANG['user.mobile'] = 'Numer telefonu komórkowego';
 $LANG['user.name'] = 'Nazwa';
 $LANG['user.norecords'] = 'Nie znaleziono użytkowników';
 $LANG['user.nsrole'] = 'Role';
-$LANG['user.nsroledn'] = 'Role(s)';
+$LANG['user.nsroledn'] = 'Role';
 $LANG['user.other'] = 'Inne';
 $LANG['user.o'] = 'Organizacja';
 $LANG['user.org'] = 'Organizacja';

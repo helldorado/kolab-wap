@@ -7,16 +7,16 @@ $LANG['about.support'] = 'Professional support is available from <a href="http:/
 $LANG['about.technology'] = 'Tecnología';
 $LANG['about.warranty'] = 'Viene absolutamente <b>sin ninguna garantia</b> y normalmente se ejecuta sin ningun tipo de soporte. Puedes obetner ayuda y más información en el <a href="http://kolab.org">sitio web</a> de la comunidad y en el <a href="http://wiki.kolab.org">wiki</a>.';
 
-$LANG['add'] = 'Add';
+$LANG['add'] = 'Añadir';
 
 $LANG['attribute.add'] = 'Add attribute';
 $LANG['attribute.static'] = 'Static value';
-$LANG['attribute.name'] = 'Attribute';
+$LANG['attribute.name'] = 'Atributo';
 $LANG['attribute.optional'] = 'Optional';
 $LANG['attribute.maxcount'] = 'Max. count';
 $LANG['attribute.readonly'] = 'Read-only';
 $LANG['attribute.type'] = 'Field type';
-$LANG['attribute.value'] = 'Value';
+$LANG['attribute.value'] = 'Valor';
 $LANG['attribute.value.auto'] = 'Generated';
 $LANG['attribute.value.auto-readonly'] = 'Generated (read-only)';
 $LANG['attribute.value.normal'] = 'Normal';
@@ -26,14 +26,14 @@ $LANG['attribute.key.invalid'] = 'Type key contains forbidden characters!';
 $LANG['attribute.required.error'] = 'Required attributes missing in attributes list ($1)!';
 
 $LANG['button.cancel'] = 'Cancel';
-$LANG['button.delete'] = 'Delete';
-$LANG['button.save'] = 'Save';
-$LANG['button.submit'] = 'Submit';
+$LANG['button.delete'] = 'Borrar';
+$LANG['button.save'] = 'Guardar';
+$LANG['button.submit'] = 'Enviar';
 
 $LANG['creatorsname'] = 'Creado por';
 $LANG['days'] = 'días';
 $LANG['debug'] = 'Información de depuración';
-$LANG['delete'] = 'Delete';
+$LANG['delete'] = 'Borrar';
 $LANG['deleting'] = 'Borrando datos...';
 
 $LANG['domain.add'] = 'Añadir dominio';
@@ -83,9 +83,9 @@ $LANG['ldap.host'] = 'LDAP Server';
 $LANG['ldap.conditions'] = 'Conditions';
 $LANG['ldap.scope'] = 'Scope';
 $LANG['ldap.filter_any'] = 'is non-empty';
-$LANG['ldap.filter_both'] = 'contains';
+$LANG['ldap.filter_both'] = 'contiene';
 $LANG['ldap.filter_prefix'] = 'starts with';
-$LANG['ldap.filter_suffix'] = 'ends with';
+$LANG['ldap.filter_suffix'] = 'acaba por';
 $LANG['ldap.filter_exact'] = 'is equal to';
 
 $LANG['list.records'] = '$1 to $2 of $3';
@@ -182,12 +182,12 @@ $LANG['type.add.success'] = 'Object type created successfully.';
 $LANG['type.attributes'] = 'Attributes';
 $LANG['type.description'] = 'Description';
 $LANG['type.delete.success'] = 'Object type deleted successfully.';
-$LANG['type.domain'] = 'Domain';
+$LANG['type.domain'] = 'Dominio';
 $LANG['type.edit.success'] = 'Object type updated successfully.';
-$LANG['type.group'] = 'Group';
+$LANG['type.group'] = 'Grupo';
 $LANG['type.list'] = 'Object Types List';
 $LANG['type.key'] = 'Key';
-$LANG['type.name'] = 'Name';
+$LANG['type.name'] = 'Nombre';
 $LANG['type.norecords'] = 'No object type records found!';
 $LANG['type.objectclass'] = 'Object class';
 $LANG['type.object_type'] = 'Object type';
@@ -195,7 +195,7 @@ $LANG['type.properties'] = 'Properties';
 $LANG['type.resource'] = 'Resource';
 $LANG['type.role'] = 'Role';
 $LANG['type.used_for'] = 'Hosted';
-$LANG['type.user'] = 'User';
+$LANG['type.user'] = 'Usuario';
 
 $LANG['user.add'] = 'Añadir usuario';
 $LANG['user.add.success'] = 'Usuario creado con exito.';
@@ -257,7 +257,7 @@ $LANG['user.mobile'] = 'Número de teléfono movil';
 $LANG['user.name'] = 'Nombre';
 $LANG['user.norecords'] = '¡No se han encontrado registros de usuario!';
 $LANG['user.nsrole'] = 'Rol(es)';
-$LANG['user.nsroledn'] = 'Role(s)';
+$LANG['user.nsroledn'] = 'Rol(es)';
 $LANG['user.other'] = 'Otros';
 $LANG['user.o'] = 'Organización';
 $LANG['user.org'] = 'Organización';
