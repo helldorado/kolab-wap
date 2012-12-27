@@ -542,6 +542,11 @@ class LDAP extends Net_LDAP3 {
         return parent::search($base_dn, $filter, $scope, $sort, $search);
     }
 
+    public function subject_base_dn($subject)
+    {
+        return $this->_subject_base_dn($subject);
+    }
+
     public function user_add($attrs, $typeid = null)
     {
         $base_dn = $this->entry_base_dn('user', $typeid);
@@ -1217,10 +1222,6 @@ class LDAP extends Net_LDAP3 {
      */
     private function domain_root_dn($domain)
     {
-        if (!empty($this->domain_root_dn)) {
-            return $this->domain_root_dn;
-        }
-
         if (!$this->connect()) {
             $this->_log(LOG_DEBUG, "Could not connect");
             return false;
@@ -1257,22 +1258,22 @@ class LDAP extends Net_LDAP3 {
 
         if (is_array($entry_attrs)) {
             if (in_array('inetdomainbasedn', $entry_attrs) && !empty($entry_attrs['inetdomainbasedn'])) {
-                $this->domain_root_dn = $entry_attrs['inetdomainbasedn'];
+                $domain_root_dn = $entry_attrs['inetdomainbasedn'];
             }
             else {
                 if (is_array($entry_attrs[$domain_name_attribute])) {
-                    $this->domain_root_dn = $this->_standard_root_dn($entry_attrs[$domain_name_attribute][0]);
+                    $domain_root_dn = $this->_standard_root_dn($entry_attrs[$domain_name_attribute][0]);
                 }
                 else {
-                    $this->domain_root_dn = $this->_standard_root_dn($entry_attrs[$domain_name_attribute]);
+                    $domain_root_dn = $this->_standard_root_dn($entry_attrs[$domain_name_attribute]);
                 }
             }
         }
         else {
-            $this->domain_root_dn = $this->_standard_root_dn($domain);
+            $domain_root_dn = $this->_standard_root_dn($domain);
         }
 
-        return $this->domain_root_dn;
+        return $domain_root_dn;
 
     }
 
