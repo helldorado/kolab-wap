@@ -397,6 +397,11 @@ class Auth {
         return call_user_func_array(Array($this->auth_instance(), 'search'), func_get_args());
     }
 
+    public function subject_base_dn($subject)
+    {
+        return $this->auth_instance()->subject_base_dn($subject);
+    }
+
     public function user_add($attributes, $typeid = null)
     {
         return $this->auth_instance()->user_add($attributes, $typeid);
