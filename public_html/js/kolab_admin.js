@@ -514,11 +514,11 @@ function kolab_admin()
       case 37:  // left
       case 39:  // right
         if (!e.shiftKey)
-	      return;
+          return;
     }
 
     // start timer
-    this.ac_timer = window.setTimeout(function() { kadm.ac_start(props); }, 200);
+    this.ac_timer = window.setTimeout(function() { kadm.ac_start(props); }, 500);
     this.ac_input = e.target;
 
     return true;
@@ -565,10 +565,7 @@ function kolab_admin()
     this.ac_stop();
 
     if (q.length && q.length < min) {
-      if (!this.ac_info) {
-        this.ac_info = this.display_message(
-          this.t('search.acchars').replace('$min', min));
-      }
+      this.display_message(this.t('search.acchars').replace('$min', min), 'notice', 2000);
       return;
     }
 
@@ -698,15 +695,8 @@ function kolab_admin()
     if (this.ac_data)
       this.ac_data.abort();
 
-    if (this.ac_info)
-      this.hide_message(this.ac_info);
-
-    if (this.ac_msg)
-      this.hide_message(this.ac_msg);
-
     this.ac_data = null;
     this.ac_info = null;
-    this.ac_msg = null;
   };
 
 

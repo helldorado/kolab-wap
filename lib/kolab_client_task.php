@@ -1315,9 +1315,12 @@ class kolab_client_task
             ));
         }
 
+        $ac_min_len = $this->config_get('autocomplete_min_length', 1, Conf::INT);
+
         $this->output->set_env('form_id', $attribs['id']);
         $this->output->set_env('assoc_fields', $assoc_fields);
         $this->output->set_env('required_fields', $req_fields);
+        $this->output->set_env('autocomplete_min_length', $ac_min_len);
         $this->output->add_translation('form.required.empty', 'form.maxcount.exceeded',
             $name . '.add.success', $name . '.edit.success', $name . '.delete.success',
             'add', 'edit', 'delete');
