@@ -648,6 +648,10 @@ class kolab_client_task_settings extends kolab_client_task
                 if (empty($data['attributes']['form_fields'][$attr])) {
                     $valtype = 'auto-readonly';
                 }
+
+                if (empty($type) && !empty($data['attributes']['auto_form_fields'][$attr]['type'])) {
+                    $type = $data['attributes']['auto_form_fields'][$attr]['type'];
+                }
             }
 
             // set cell content
