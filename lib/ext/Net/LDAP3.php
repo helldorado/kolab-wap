@@ -1325,6 +1325,8 @@ class Net_LDAP3
 
         $search = $this->search($base_dn, $filter, $scope, $sort, $search);
 
+        $this->additional_filter = null;
+
         if (!$search) {
             $this->_debug("Net_LDAP3: Search did not succeed!");
             return FALSE;
