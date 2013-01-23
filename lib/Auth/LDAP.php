@@ -249,18 +249,13 @@ class LDAP extends Net_LDAP3 {
 
         $mail_attrs = $this->conf->get_list('mail_attributes', array('mail', 'alias'));
 
-        $search = array(
-                'params' => array(
-                        'type' => 'exact'
-                    ),
-                'operator' => "OR"
-            );
+        $search = array('operator' => 'OR');
 
         foreach ($mail_attrs as $num => $attr) {
             $search['params'][$attr] = array(
-                        'type' => 'exact',
-                        'value' => $address,
-                );
+                'type'  => 'exact',
+                'value' => $address,
+            );
         }
 
         $result = $this->search_entries($this->config_get('root_dn'), '(objectclass=*)', 'sub', null, $search);
