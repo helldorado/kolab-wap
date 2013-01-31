@@ -979,7 +979,7 @@ class kolab_api_service_form_value extends kolab_api_service
         $object_type = $postdata['object_type'];
         $object_key  = $postdata['type_key'];
 
-        $base_dn = $auth->subject_base_dn($object_key . '_' . $object_type);
+        $base_dn = $auth->subject_base_dn($object_key, $object_type);
 
         if (!empty($postdata['id'])) {
             $subjects = $auth->search($base_dn, '(' . $unique_attr . '=' . $postdata['id'] . ')')->entries(true);

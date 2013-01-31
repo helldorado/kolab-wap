@@ -537,9 +537,9 @@ class LDAP extends Net_LDAP3 {
         return parent::search($base_dn, $filter, $scope, $sort, $search);
     }
 
-    public function subject_base_dn($subject)
+    public function subject_base_dn($subject, $strict = false)
     {
-        return $this->_subject_base_dn($subject);
+        return $this->_subject_base_dn($subject, $strict);
     }
 
     public function user_add($attrs, $typeid = null)

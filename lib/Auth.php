@@ -397,9 +397,16 @@ class Auth {
         return call_user_func_array(Array($this->auth_instance(), 'search'), func_get_args());
     }
 
-    public function subject_base_dn($subject)
+    public function subject_base_dn($key, $type)
     {
-        return $this->auth_instance()->subject_base_dn($subject);
+        // first try strict match
+        $base_dn = $this->auth_instance()->subject_base_dn($key . '_' . $type, true);
+
+        if (!$base_dn) {
+            $base_dn = $this->auth_instance()->subject_base_dn($type);
+        }
+
+        return $base_dn;
     }
 
     public function user_add($attributes, $typeid = null)
