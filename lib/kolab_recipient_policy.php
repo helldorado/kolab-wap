@@ -43,6 +43,7 @@ class kolab_recipient_policy {
         //console("IN", $groupdata);
         foreach ($groupdata as $key => $value) {
             if (isset($groupdata['preferredlanguage'])) {
+                $locale = $groupdata['preferredlanguage'];
                 setlocale(LC_ALL, $groupdata['preferredlanguage']);
             } else {
                 $conf = Conf::get_instance();
@@ -55,8 +56,13 @@ class kolab_recipient_policy {
             if (!is_array($groupdata[$key])) {
                 $orig_value = $groupdata[$key];
 
-                $groupdata[$key] = iconv('UTF-8', 'ASCII//TRANSLIT', $groupdata[$key]);
-                $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $groupdata[$key]);
+                $result = iconv('UTF-8', 'ASCII//TRANSLIT', $groupdata[$key]);
+
+                if (strpos($result, '?')) {
+                    $groupdata[$key] = self::transliterate($groupdata[$key], $locale);
+                } else {
+                    $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
+                }
             }
         }
 
@@ -70,7 +76,13 @@ class kolab_recipient_policy {
                 'sn' => 'surname',
             );
 
+        $zero_canon = array('ou', 'cn', 'displayname', 'mailhost');
+
         foreach ($userdata as $key => $value) {
+            if (in_array($key, $zero_canon)) {
+                continue;
+            }
+
             if (isset($keymap[$key])) {
                 $_key = $keymap[$key];
             } else {
@@ -78,6 +90,7 @@ class kolab_recipient_policy {
             }
 
             if (isset($userdata['preferredlanguage'])) {
+                $locale = $userdata['preferredlanguage'];
                 setlocale(LC_ALL, $userdata['preferredlanguage']);
             } else {
                 $conf = Conf::get_instance();
@@ -90,8 +103,13 @@ class kolab_recipient_policy {
             if (!is_array($userdata[$_key])) {
                 $orig_value = $userdata[$key];
 
-                $userdata[$_key] = iconv('UTF-8', 'ASCII//TRANSLIT', $userdata[$key]);
-                $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $userdata[$_key]);
+                $result = iconv('UTF-8', 'ASCII//TRANSLIT', $userdata[$key]);
+
+                if (!strstr($result, '?') && !empty($result)) {
+                    $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
+                } else {
+                    $userdata[$_key] = self::transliterate($userdata[$key], $locale);
+                }
             }
         }
 
@@ -264,6 +282,196 @@ class kolab_recipient_policy {
         }
 
         return $secondary_mail_addresses;
+    }
+
+    static public function transliterate($mystring, $locale) {
+        $locale_translit_map = Array(
+                'ru_RU' => 'cyrillic'
+            );
+
+        $translit_map = Array(
+                'cyrillic' => Array(
+                        'А' => 'A',
+                        'а' => 'a',
+                        'Б' => 'B',
+                        'б' => 'b',
+                        'В' => 'V',
+                        'в' => 'v',
+                        'Г' => 'G',
+                        'г' => 'g',
+                        'Д' => 'D',
+                        'д' => 'd',
+                        'Е' => 'E',
+                        'е' => 'e',
+                        'Ё' => 'Yo',
+                        'ё' => 'e',
+                        'Ж' => 'Zh',
+                        'ж' => 'zh',
+                        'З' => 'Z',
+                        'з' => 'z',
+                        'И' => 'I',
+                        'и' => 'i',
+                        'Й' => 'J',
+                        'й' => 'j',
+                        'К' => 'K',
+                        'к' => 'k',
+                        'Л' => 'L',
+                        'л' => 'l',
+                        'М' => 'M',
+                        'м' => 'm',
+                        'Н' => 'N',
+                        'н' => 'n',
+                        'О' => 'O',
+                        'о' => 'o',
+                        'П' => 'P',
+                        'п' => 'p',
+                        'Р' => 'R',
+                        'р' => 'r',
+                        'С' => 'S',
+                        'с' => 's',
+                        'Т' => 'T',
+                        'т' => 't',
+                        'У' => 'U',
+                        'у' => 'u',
+                        'Ф' => 'F',
+                        'ф' => 'f',
+                        'Х' => 'Kh',
+                        'х' => 'kh',
+                        'Ц' => 'Tc',
+                        'ц' => 'tc',
+                        'Ч' => 'Ch',
+                        'ч' => 'ch',
+                        'Ш' => 'Sh',
+                        'ш' => 'sh',
+                        'Щ' => 'Shch',
+                        'щ' => 'shch',
+                        'Ъ' => '',
+                        'ъ' => '',
+                        'Ы' => 'Y',
+                        'ы' => 'y',
+                        'Ь' => '',
+                        'ь' => '',
+                        'Э' => 'E',
+                        'э' => 'e',
+                        'Ю' => 'Yu',
+                        'ю' => 'yu',
+                        'Я' => 'Ya',
+                        'я' => 'ya',
+                    ),
+            );
+
+        $translit = $translit_map[$locale_translit_map[$locale]];
+
+        $result = strtr($mystring, $translit);
+
+        return $result;
+    }
+
+    static public function uid($userdata) {
+        $conf = Conf::get_instance();
+
+        if (isset($userdata['domain'])) {
+            $policy_uid = $conf->get_raw($userdata['domain'], 'policy_uid');
+        } else {
+            $policy_uid = $conf->get_raw($_SESSION['user']->get_domain(), 'policy_uid');
+            $userdata['domain'] = $_SESSION['user']->get_domain();
+        }
+
+        if (empty($policy_uid)) {
+            $policy_uid = "%(surname)s.lower()";
+        }
+
+        $functions = array(
+                '\'*(\w+)\'*\.capitalize\(\)' => 'strtoupper(substr("${1}", 0, 1)) . strtolower(substr("${1}", 1))',
+                '\'*(.*)\'*\.lower\(\)'      => 'strtolower("${1}")',
+                '\'*(\w+)\'*\.upper\(\)'      => 'strtoupper("${1}")',
+            );
+
+        $policy_uid = preg_replace('/(\{\d+\})/', '%s', $policy_uid);
+
+        preg_match_all('/%\((\w+)\)s/', $policy_uid, $substrings);
+
+        // Update userdata array
+        for ($x = 0; $x < count($substrings[0]); $x++) {
+            if (array_key_exists($substrings[1][$x], $userdata)) {
+                if (!empty($substrings[2][$x])) {
+                    if (!empty($substrings[3][$x])) {
+                        $policy_uid = preg_replace(
+                                '/%\(' . $substrings[1][$x]. '\)s/',
+                                substr(
+                                        $userdata[$substrings[1][$x]],
+                                        $substrings[2][$x],
+                                        $substrings[3][$x]
+                                    ),
+                                $policy_uid
+                            );
+
+                    } else {
+                        $policy_uid = preg_replace(
+                                '/%\(' . $substrings[1][$x]. '\)s/',
+                                substr(
+                                        $userdata[$substrings[1][$x]],
+                                        $substrings[2][$x]
+                                    ),
+                                $policy_uid
+                            );
+
+                    }
+                } elseif (!empty($substrings[3][$x])) {
+                    $policy_uid = preg_replace(
+                            '/%\(' . $substrings[1][$x]. '\)s/',
+                            substr(
+                                    $userdata[$substrings[1][$x]],
+                                    0,
+                                    $substrings[3][$x]
+                                ),
+                            $policy_uid
+                        );
+
+                } else {
+                    $policy_uid = preg_replace(
+                            '/%\(' . $substrings[1][$x]. '\)s/',
+                            $userdata[$substrings[1][$x]],
+                            $policy_uid
+                        );
+
+                }
+            }
+        }
+
+        preg_match_all('/.*\'(.*)\'\[(\d+):(\d+)\].*/', $policy_uid, $substrings);
+
+        for ($x = 0; $x < count($substrings[0]); $x++) {
+            if (!empty($substrings[2][$x])) {
+                $start = $substrings[2][$x];
+            } else {
+                $start = 0;
+            }
+
+            if (!empty($substrings[3][$x])) {
+                $end = $substrings[3][$x];
+            } else {
+                $end = 0;
+            }
+
+            $policy_uid = preg_replace('/\'' . $substrings[1][$x] . '\'\['.$substrings[2][$x].':'.$substrings[3][$x].'\]/', "'".substr($substrings[1][$x], $start, $end)."'", $policy_uid);
+        }
+
+        foreach ($functions as $match => $replace) {
+            if (preg_match('/' . $match . '/', $policy_uid, $strings)) {
+                $policy_uid = preg_replace('/' . $match . '/', $replace, $policy_uid);
+            }
+        }
+
+        $formatted_policy_uid = explode(":", $policy_uid);
+        if (is_array($formatted_policy_uid) && count($formatted_policy_uid) == 2) {
+            eval("\$policy_uid = sprintf(" . $formatted_policy_uid[0] . ", " . $formatted_policy_uid[1] . ");");
+        } else {
+            eval("\$policy_uid = " . $policy_uid . ";");
+        }
+
+        return $policy_uid;
+
     }
 
     /**
