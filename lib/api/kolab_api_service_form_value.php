@@ -756,19 +756,15 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            // TODO: Use preferredlanguage
-            if (isset($postdata['preferredlanguage'])) {
-                //console("Using locale for " . $postdata['preferredlanguage']);
-                setlocale(LC_ALL, $postdata['preferredlanguage']);
-            }
-/*            else {
-                //console("No locale specified...!");
-            }
-*/
 
-            $uid = iconv('UTF-8', 'ASCII//TRANSLIT', $postdata['sn']);
-            $uid = strtolower($uid);
-            $uid = preg_replace('/[^a-z-_]/i', '', $uid);
+            if (empty($postdata['uid'])) {
+                $postdata['uid'] = $postdata['sn'];
+            }
+
+            $userdata = kolab_recipient_policy::normalize_userdata($postdata);
+
+            $uid = kolab_recipient_policy::uid($userdata);
+            Log::debug("uid from recipient policy: " . var_export($uid, TRUE));
 
             $orig_uid = $uid;
 
