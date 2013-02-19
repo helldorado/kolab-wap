@@ -53,7 +53,7 @@ if (set_include_path($include_path) === false) {
     die("Fatal error: ini_set/set_include_path does not work.");
 }
 
-ini_set('error_reporting', E_ALL&~E_NOTICE);
+ini_set('error_reporting', E_ALL &~ E_NOTICE &~ E_STRICT);
 ini_set('error_log', INSTALL_PATH . '/../logs/errors');
 
 // Set internal charset
