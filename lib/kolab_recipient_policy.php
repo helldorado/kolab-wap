@@ -59,10 +59,10 @@ class kolab_recipient_policy {
                 $result = iconv('UTF-8', 'ASCII//TRANSLIT', $groupdata[$key]);
 
                 if (strpos($result, '?')) {
-                    $groupdata[$key] = self::transliterate($groupdata[$key], $locale);
-                } else {
-                    $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
+                    $result = self::transliterate($groupdata[$key], $locale);
                 }
+
+                $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
             }
         }
 
@@ -105,11 +105,11 @@ class kolab_recipient_policy {
 
                 $result = iconv('UTF-8', 'ASCII//TRANSLIT', $userdata[$key]);
 
-                if (!strstr($result, '?') && !empty($result)) {
-                    $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
-                } else {
-                    $userdata[$_key] = self::transliterate($userdata[$key], $locale);
+                if (strstr($result, '?')) {
+                    $result = self::transliterate($userdata[$key], $locale);
                 }
+
+                $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
             }
         }
 
@@ -360,11 +360,11 @@ class kolab_recipient_policy {
                     ),
             );
 
-        $translit = $translit_map[$locale_translit_map[$locale]];
+        if ($translit = $translit_map[$locale_translit_map[$locale]]) {
+            $mystring = strtr($mystring, $translit);
+        }
 
-        $result = strtr($mystring, $translit);
-
-        return $result;
+        return $mystring;
     }
 
     static public function uid($userdata) {
