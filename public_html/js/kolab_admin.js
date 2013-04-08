@@ -1304,16 +1304,17 @@ function kolab_admin()
 
   this.form_value_response = function(response)
   {
-    var i, val;
+    var i, val, field;
     if (!this.api_response(response))
       return;
 
     for (i in response.result) {
       val = response.result[i];
+      field = $('[name="'+i+'"]');
       // @TODO: indexed list support
       if ($.isArray(val))
-        val = val.join("\n");
-      $('[name="'+i+'"]').val(val);
+        val = field.is('textarea') ? val.join("\n") : val.shift();
+      field.val(val);
 
       this.form_element_update({name: i});
     }
