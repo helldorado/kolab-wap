@@ -42,15 +42,15 @@ class kolab_recipient_policy {
     {
         //console("IN", $groupdata);
         foreach ($groupdata as $key => $value) {
-            if (isset($groupdata['preferredlanguage'])) {
+            if (!empty($groupdata['preferredlanguage'])) {
                 $locale = $groupdata['preferredlanguage'];
-                setlocale(LC_ALL, $groupdata['preferredlanguage']);
             } else {
                 $conf = Conf::get_instance();
                 $locale = $conf->get('default_locale');
-                if (!empty($locale)) {
-                    setlocale(LC_ALL, $locale);
-                }
+            }
+
+            if (!empty($locale)) {
+                setlocale(LC_ALL, $locale.'utf8', $locale.'UTF-8', $locale);
             }
 
             if (!is_array($groupdata[$key])) {
@@ -89,15 +89,15 @@ class kolab_recipient_policy {
                 $_key = $key;
             }
 
-            if (isset($userdata['preferredlanguage'])) {
+            if (!empty($userdata['preferredlanguage'])) {
                 $locale = $userdata['preferredlanguage'];
-                setlocale(LC_ALL, $userdata['preferredlanguage']);
             } else {
                 $conf = Conf::get_instance();
                 $locale = $conf->get('default_locale');
-                if (!empty($locale)) {
-                    setlocale(LC_ALL, $locale);
-                }
+            }
+
+            if (!empty($locale)) {
+                setlocale(LC_ALL, $locale.'utf8', $locale.'UTF-8', $locale);
             }
 
             if (!is_array($userdata[$_key])) {
