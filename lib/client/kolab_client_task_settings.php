@@ -633,6 +633,7 @@ class kolab_client_task_settings extends kolab_client_task
             if ($data['attributes']['fields'][$attr]) {
                 $valtype = 'static';
                 $_data   = $data['attributes']['fields'][$attr];
+                $_data   = is_array($_data) ? implode(',', $_data) : $_data;
                 $value   = $this->translate('attribute.value.static') . ': ' . kolab_html::escape($_data);
             }
             else if (isset($data['attributes']['auto_form_fields'][$attr])) {
