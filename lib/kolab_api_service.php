@@ -182,7 +182,7 @@ abstract class kolab_api_service
 
             Log::trace("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
             Log::trace("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
-            Log::trace("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ") " . $elem_keys_score);
+            Log::trace("Score for $object_name type " . $elem['name'] . ": " . $elem_score . " (" . $commonalities . "/" . $differences . ") " . $elem_keys_score);
 
             // Compare last and current element score
             if ($elem_score > $type_score || ($elem_score == $type_score && $elem_keys_score > $keys_score)) {
@@ -196,8 +196,7 @@ abstract class kolab_api_service
             if ($object_name == 'resource') {
                 //console("From database", $elem);
                 //console("Element key is " . $elem['key'] . " and \$attributes['mail'] is " . $attributes['mail']);
-
-                if (strstr($attributes['mail'], "-" . $elem['key'] . "-")) {
+                if (strpos($attributes['mail'], 'resource-' . $elem['key'] . '-') === 0) {
                     $type_id = $idx;
                     $type_score = 10;
                 }
