@@ -57,6 +57,7 @@ class kolab_api_service_role extends kolab_api_service
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
             $rights['info'] = "r";
+            $rights['find'] = "r";
             $rights['members_list'] = "r";
         }
 
@@ -167,6 +168,43 @@ class kolab_api_service_role extends kolab_api_service
 
         $auth   = Auth::get_instance();
         $result = $auth->role_info($getdata['role']);
+
+        // normalize result
+        $result = $this->parse_result_attributes('role', $result);
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    /**
+     * Find role and return its data.
+     * It is a combination of role.info and roles.list with search capabilities
+     * If the search returns only one record we'll return role data.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool Role attributes, False on error
+     */
+    public function role_find($get, $post)
+    {
+        $auth       = Auth::get_instance();
+        $attributes = array('');
+        $params     = array('page_size' => 2);
+        $search     = $this->parse_list_search($post);
+
+        // find role(s)
+        $roles = $auth->list_roles(null, $attributes, $search, $params);
+
+        if (empty($roles) || empty($roles['list']) || $roles['count'] > 1) {
+            return false;
+        }
+
+        // get role data
+        $result = $auth->role_info(key($roles['list']));
 
         // normalize result
         $result = $this->parse_result_attributes('role', $result);

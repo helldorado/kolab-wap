@@ -57,6 +57,7 @@ class kolab_api_service_group extends kolab_api_service
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
             $rights['info'] = "r";
+            $rights['find'] = "r";
             $rights['members_list'] = "r";
         }
 
@@ -158,6 +159,43 @@ class kolab_api_service_group extends kolab_api_service
         $result = $this->parse_result_attributes('group', $result);
 
         Log::trace("group_info() result: " . var_export($result, TRUE));
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    /**
+     * Find group and return its data.
+     * It is a combination of group.info and groups.list with search capabilities
+     * If the search returns only one record we'll return group data.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool Group attributes, False on error
+     */
+    public function group_find($get, $post)
+    {
+        $auth       = Auth::get_instance();
+        $attributes = array('');
+        $params     = array('page_size' => 2);
+        $search     = $this->parse_list_search($post);
+
+        // find group(s)
+        $groups = $auth->list_groups(null, $attributes, $search, $params);
+
+        if (empty($groups) || empty($groups['list']) || $groups['count'] > 1) {
+            return false;
+        }
+
+        // get group data
+        $result = $auth->group_info(key($groups['list']));
+
+        // normalize result
+        $result = $this->parse_result_attributes('group', $result);
 
         if ($result) {
             return $result;
