@@ -39,13 +39,9 @@ class kolab_api_service_resource extends kolab_api_service
     {
         //console("kolab_api_service_group::capabilities");
 
-        $auth = Auth::get_instance();
-
+        $auth             = Auth::get_instance();
         $effective_rights = $auth->list_rights('resource');
-
-        //console("effective_rights", $effective_rights);
-
-        $rights = array();
+        $rights           = array();
 
         if (in_array('add', $effective_rights['entryLevelRights'])) {
             $rights['add'] = "w";
@@ -60,10 +56,6 @@ class kolab_api_service_resource extends kolab_api_service
         }
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
-            $rights['find'] = "r";
-            $rights['find_by_any_attribute'] = "r";
-            $rights['find_by_attribute'] = "r";
-            $rights['find_by_attributes'] = "r";
             $rights['info'] = "r";
         }
 

@@ -39,13 +39,9 @@ class kolab_api_service_group extends kolab_api_service
     {
         //console("kolab_api_service_group::capabilities");
 
-        $auth = Auth::get_instance();
-
+        $auth             = Auth::get_instance();
         $effective_rights = $auth->list_rights('group');
-
-        //console("effective_rights", $effective_rights);
-
-        $rights = array();
+        $rights           = array();
 
         if (in_array('add', $effective_rights['entryLevelRights'])) {
             $rights['add'] = "w";
