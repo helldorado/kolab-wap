@@ -23,7 +23,7 @@
  +--------------------------------------------------------------------------+
 */
 
-require_once("Net/LDAP3.php");
+require_once "Net/LDAP3.php";
 
 /**
  * Kolab LDAP handling abstraction class.
@@ -195,7 +195,8 @@ class LDAP extends Net_LDAP3 {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _search()");
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
             $result = $result->entries(true);
-        } else {
+        }
+        else {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _read()");
             $result = $this->_read($domain_dn, $attributes);
         }
@@ -223,27 +224,17 @@ class LDAP extends Net_LDAP3 {
         switch ($subject) {
             case "domain":
                 return parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
-                break;
+
             case "group":
-                return parent::effective_rights($this->_subject_base_dn("group"));
-                break;
             case "resource":
-                return parent::effective_rights($this->_subject_base_dn("resource"));
-                break;
             case "role":
-                return parent::effective_rights($this->_subject_base_dn("role"));
-                break;
             case "sharedfolder":
-                return parent::effective_rights($this->_subject_base_dn("sharedfolder"));
-                break;
             case "user":
-                return parent::effective_rights($this->_subject_base_dn("user"));
-                break;
+                return parent::effective_rights($this->_subject_base_dn($subject));
+
             default:
                 return parent::effective_rights($subject);
-                break;
         }
-
     }
 
     public function find_recipient($address)
@@ -251,8 +242,7 @@ class LDAP extends Net_LDAP3 {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         $mail_attrs = $this->conf->get_list('mail_attributes', array('mail', 'alias'));
-
-        $search = array('operator' => 'OR');
+        $search     = array('operator' => 'OR');
 
         foreach ($mail_attrs as $num => $attr) {
             $search['params'][$attr] = array(
@@ -265,9 +255,9 @@ class LDAP extends Net_LDAP3 {
 
         if ($result->count() > 0) {
             return $result->entries(TRUE);
-        } else {
-            return FALSE;
         }
+
+        return FALSE;
     }
 
     public function get_attributes($subject_dn, $attributes)
