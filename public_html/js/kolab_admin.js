@@ -1636,6 +1636,60 @@ function kolab_admin()
     this.response_handler(response, 'role.edit', 'role.list');
   };
 
+  this.sharedfolder_info = function(id)
+  {
+    this.http_post('sharedfolder.info', {id: id});
+  };
+
+  this.sharedfolder_list = function(props)
+  {
+    this.list_handler('sharedfolder', props);
+  };
+
+  this.sharedfolder_delete = function(sharedfolderid)
+  {
+    this.set_busy(true, 'deleting');
+    this.api_post('sharedfolder.delete', {sharedfolder: sharedfolderid}, 'sharedfolder_delete_response');
+  };
+
+  this.sharedfolder_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('sharedfolder.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('sharedfolder.' + action, data, 'sharedfolder_' + action + '_response');
+  };
+
+  this.sharedfolder_delete_response = function(response)
+  {
+    this.response_handler(response, 'sharedfolder.delete', 'sharedfolder.list');
+  };
+
+  this.sharedfolder_add_response = function(response)
+  {
+    this.response_handler(response, 'sharedfolder.add', 'sharedfolder.list');
+  };
+
+  this.sharedfolder_edit_response = function(response)
+  {
+    this.response_handler(response, 'sharedfolder.edit', 'sharedfolder.list');
+  };
+
+
   this.settings_type_info = function(id)
   {
     this.http_post('settings.type_info', {id: id});

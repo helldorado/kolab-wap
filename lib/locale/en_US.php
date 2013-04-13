@@ -105,6 +105,7 @@ $LANG['menu.groups'] = 'Groups';
 $LANG['menu.resources'] = 'Resources';
 $LANG['menu.roles'] = 'Roles';
 $LANG['menu.settings'] = 'Settings';
+$LANG['menu.sharedfolders'] = 'Shared Folders';
 $LANG['menu.users'] = 'Users';
 
 $LANG['modifiersname'] = 'Modified by';
@@ -161,6 +162,19 @@ $LANG['servererror'] = 'Server Error!';
 
 $LANG['session.expired'] = 'Session has expired. Login again, please';
 
+$LANG['sharedfolder.add'] = 'Add Shared Folder';
+$LANG['sharedfolder.alias'] = 'Secondary Email Address(es)';
+$LANG['sharedfolder.cn'] = 'Folder Name';
+$LANG['sharedfolder.edit'] = 'Edit Shared Folder';
+$LANG['sharedfolder.kolaballowsmtprecipient'] = 'Recipient(s) Access List';
+$LANG['sharedfolder.kolaballowsmtpsender'] = 'Sender Access List';
+$LANG['sharedfolder.kolabdelegate'] = 'Delegate(s)';
+$LANG['sharedfolder.kolabtargetfolder'] = 'Target IMAP Folder';
+$LANG['sharedfolder.mail'] = 'Email Address';
+$LANG['sharedfolder.other'] = 'Other';
+$LANG['sharedfolder.system'] = 'System';
+$LANG['sharedfolder.type_id'] = 'Shared Folder Type';
+
 $LANG['signup.headline'] = 'Sign Up for Hosted Kolab';
 $LANG['signup.intro1'] = 'Having an account on a Kolab server is way better than just simple Email. It also provides you with full groupware functionality including synchronization for shared addressbooks, calendars, tasks, journal and more.';
 $LANG['signup.intro2'] = 'You can sign up here now for an account.';
@@ -194,6 +208,7 @@ $LANG['type.object_type'] = 'Object type';
 $LANG['type.properties'] = 'Properties';
 $LANG['type.resource'] = 'Resource';
 $LANG['type.role'] = 'Role';
+$LANG['type.sharedfolder'] = 'Shared Folder';
 $LANG['type.used_for'] = 'Hosted';
 $LANG['type.user'] = 'User';
 

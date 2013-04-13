@@ -1,0 +1,17 @@
+<div id="toc" class="sharedfolder">
+    <div id="search">
+        <div class="searchinput">
+            <input type="text" id="searchinput" name="search" value="{$engine->translate('search')}" />
+            <script type="text/javascript">search_init('sharedfolder.list')</script>
+            <span class="searchactions">
+                <span id="search-details" title="{$engine->translate('search.criteria')}" onclick="search_details()"></span>
+                <span id="search-reset" title="{$engine->translate('search.reset')}" onclick="search_reset()"></span>
+            </span>
+        </div>
+        <div class="searchdetails">{$engine->search_form()}</div>
+    </div>
+    <div id="sharedfolderlist"></div>
+</div>
+<div class="vsplitter">&nbsp;</div>
+<div id="taskcontent" class="sharedfolder"></div>
+<div class="clear"></div>

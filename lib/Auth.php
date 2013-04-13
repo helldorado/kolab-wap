@@ -315,6 +315,11 @@ class Auth {
         return $this->auth_instance($domain)->list_roles($attributes, $search, $params);
     }
 
+    public function list_sharedfolders($domain = NULL, $attributes = array(), $search = array(), $params = array())
+    {
+        return $this->auth_instance($domain)->list_sharedfolders($attributes, $search, $params);
+    }
+
     public function primary_for_valid_domain($domain)
     {
         $this->domains = $this->list_domains();
@@ -390,6 +395,31 @@ class Auth {
     public function role_info($roledata)
     {
         return $this->auth_instance()->role_info($roledata);
+    }
+
+    public function sharedfolder_add($attributes, $typeid = null)
+    {
+        return $this->auth_instance()->sharedfolder_add($attributes, $typeid);
+    }
+
+    public function sharedfolder_edit($sharedfolder, $attributes, $typeid = null)
+    {
+        return $this->auth_instance()->sharedfolder_edit($sharedfolder, $attributes, $typeid);
+    }
+
+    public function sharedfolder_delete($subject)
+    {
+        return $this->auth_instance()->sharedfolder_delete($subject);
+    }
+
+    public function sharedfolder_find_by_attribute($attribute)
+    {
+        return $this->auth_instance()->sharedfolder_find_by_attribute($attribute);
+    }
+
+    public function sharedfolder_info($sharedfolderdata)
+    {
+        return $this->auth_instance()->sharedfolder_info($sharedfolderdata);
     }
 
     public function search()

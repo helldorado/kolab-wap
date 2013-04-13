@@ -32,8 +32,8 @@ abstract class kolab_api_service
     protected $conf;
     protected $controller;
     protected $db;
-    protected $supported_types_db = array('group', 'resource', 'role', 'user');
-    protected $supported_types    = array('domain', 'group', 'resource', 'role', 'user');
+    protected $supported_types_db = array('group', 'resource', 'role', 'sharedfolder', 'user');
+    protected $supported_types    = array('domain', 'group', 'resource', 'role', 'sharedfolder', 'user');
 
     /**
      * Class constructor.

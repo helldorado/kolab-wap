@@ -46,7 +46,7 @@ class kolab_client_task
     protected $menu = array();
     protected $cache = array();
     protected $devel_mode = false;
-    protected $object_types = array('user', 'group', 'role', 'resource', 'domain');
+    protected $object_types = array('user', 'group', 'role', 'resource', 'sharedfolder', 'domain');
 
     protected static $translation = array();
 

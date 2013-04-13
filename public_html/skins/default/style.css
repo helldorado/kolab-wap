@@ -981,6 +981,10 @@ fieldset.tabbed
   background: url(images/resources.png) center center no-repeat;
 }
 
+#main div.sharedfolder span.image {
+  background: url(images/sharedfolders.png) center center no-repeat;
+}
+
 #main div.settings span.image {
   background: url(images/settings.png) center center no-repeat;
 }
