@@ -1744,9 +1744,6 @@ function kolab_admin()
       return;
     }
 
-    // remove objectClass from required attributes list
-    required = $.map(required, function(a) { return a == 'objectClass' ? null : a; });
-
     request.id = data.id;
     request.key = data.key;
     request.name = data.name;
@@ -2042,15 +2039,18 @@ function kolab_admin()
       return;
 
     var i, lc, list = response.result.attribute.list || [],
+      required = response.result.attribute.required || [],
       select = $('select[name="attr_name"]');
 
+    // remove objectClass from attributes list(s)
+    required = $.map(required, function(a) { return a == 'objectClass' ? null : a; });
+    list = $.map(list, function(a) { return a == 'objectClass' ? null : a; });
+
     this.env.attributes = {};
-    this.env.attributes_required = response.result.attribute.required || [];
+    this.env.attributes_required = required;
     select.empty();
 
     for (i in list) {
-      if (i == 'objectClass')
-        continue;
       lc = list[i].toLowerCase();
       this.env.attributes[lc] = list[i];
       $('<option>').text(list[i]).val(lc).appendTo(select);
