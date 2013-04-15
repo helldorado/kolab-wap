@@ -1,0 +1,172 @@
+-- phpMyAdmin SQL Dump
+-- version 3.5.7
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost
+-- Generation Time: Apr 15, 2013 at 12:33 PM
+-- Server version: 5.1.67
+-- PHP Version: 5.3.10
+
+SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+
+--
+-- Database: `kolab`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `group_types`
+--
+
+CREATE TABLE IF NOT EXISTS `group_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
+
+--
+-- Dumping data for table `group_types`
+--
+
+INSERT INTO `group_types` (`id`, `key`, `name`, `description`, `attributes`) VALUES
+(1, 'kolab', 'Kolab Distribution Group', 'A Kolab Distribution Group (with mail address)', '{"auto_form_fields":{"mail":{"data":["cn"]}},"fields":{"objectclass":["top","groupofuniquenames","kolabgroupofuniquenames"]},"form_fields":{"cn":[],"uniquemember":{"type":"list","autocomplete":true,"optional":true}}}'),
+(2, 'posix', '(Pure) POSIX Group', 'A pure UNIX POSIX Group', '{"auto_form_fields":{"gidnumber":[]},"fields":{"objectclass":["top","groupofuniquenames","posixgroup"]},"form_fields":{"cn":[],"uniquemember":{"type":"list","autocomplete":true,"optional":true}}}'),
+(3, 'posix_mail', 'Mail-enabled POSIX Group', 'A Kolab and also UNIX POSIX Group', '{"auto_form_fields":{"gidnumber":[],"mail":{"data":["cn"]}},"fields":{"objectclass":["top","groupofuniquenames","kolabgroupofuniquenames","posixgroup"]},"form_fields":{"cn":[],"mail":{"optional":true},"uniquemember":{"type":"list","autocomplete":true,"optional":true}}}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `options`
+--
+
+CREATE TABLE IF NOT EXISTS `options` (
+  `attribute` varchar(128) NOT NULL,
+  `option_values` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `options`
+--
+
+INSERT INTO `options` (`attribute`, `option_values`) VALUES
+('preferredlanguage', '["aa_DJ","aa_ER","aa_ET","af_ZA","am_ET","an_ES","ar_AE","ar_BH","ar_DZ","ar_EG","ar_IN","ar_IQ","ar_JO","ar_KW","ar_LB","ar_LY","ar_MA","ar_OM","ar_QA","ar_SA","ar_SD","ar_SY","ar_TN","ar_YE","as_IN","az_AZ","be_BY","bg_BG","bn_BD","bn_IN","bokmal","br_FR","bs_BA","byn_ER","C","ca_AD","ca_ES","ca_FR","ca_IT","catalan","croatian","csb_PL","cs_CZ","cy_GB","czech","da_DK","danish","dansk","de_AT","de_BE","de_CH","de_DE","de_LU","deutsch","dutch","dz_BT","eesti","el_CY","el_GR","en_AU","en_BW","en_CA","en_DK","en_GB","en_HK","en_IE","en_IN","en_NZ","en_PH","en_SG","en_US","en_ZA","en_ZW","es_AR","es_BO","es_CL","es_CO","es_CR","es_DO","es_EC","es_ES","es_GT","es_HN","es_MX","es_NI","es_PA","es_PE","es_PR","es_PY","es_SV","estonian","es_US","es_UY","es_VE","et_EE","eu_ES","fa_IR","fi_FI","finnish","fo_FO","fr_BE","fr_CA","fr_CH","french","fr_FR","fr_LU","fy_NL","ga_IE","galego","galician","gd_GB","german","gez_ER","gez_ET","gl_ES","greek","gu_IN","gv_GB","hebrew","he_IL","hi_IN","hr_HR","hrvatski","hsb_DE","hu_HU","hungarian","hy_AM","icelandic","id_ID","is_IS","italian","it_CH","it_IT","iw_IL","ja_JP","japanese","ka_GE","kk_KZ","kl_GL","km_KH","kn_IN","ko_KR","korean","ku_TR","kw_GB","ky_KG","lg_UG","lithuanian","lo_LA","lt_LT","lv_LV","mai_IN","mg_MG","mi_NZ","mk_MK","ml_IN","mn_MN","mr_IN","ms_MY","mt_MT","nb_NO","ne_NP","nl_BE","nl_NL","nn_NO","no_NO","norwegian","nr_ZA","nso_ZA","nynorsk","oc_FR","om_ET","om_KE","or_IN","pa_IN","pa_PK","pl_PL","polish","portuguese","POSIX","pt_BR","pt_PT","romanian","ro_RO","ru_RU","russian","ru_UA","rw_RW","se_NO","sid_ET","si_LK","sk_SK","slovak","slovene","slovenian","sl_SI","so_DJ","so_ET","so_KE","so_SO","spanish","sq_AL","sr_CS","sr_ME","sr_RS","ss_ZA","st_ZA","sv_FI","sv_SE","swedish","ta_IN","te_IN","tg_TJ","thai","th_TH","ti_ER","ti_ET","tig_ER","tl_PH","tn_ZA","tr_CY","tr_TR","ts_ZA","tt_RU","turkish","uk_UA","ur_PK","uz_UZ","ve_ZA","vi_VN","wa_BE","xh_ZA","yi_US","zh_CN","zh_HK","zh_SG","zh_TW","zu_ZA"]'),
+('c', '["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","YU","ZA","ZM","ZW"]');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `resource_types`
+--
+
+CREATE TABLE IF NOT EXISTS `resource_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=6 ;
+
+--
+-- Dumping data for table `resource_types`
+--
+
+INSERT INTO `resource_types` (`id`, `key`, `name`, `description`, `attributes`) VALUES
+(1, 'collection', 'Resource Collection', 'A collection or pool of resources', '{"auto_form_fields":{"mail":{"data":["cn"]}},"fields":{"objectclass":["top","groupofuniquenames","kolabgroupofuniquenames"]},"form_fields":{"cn":[],"uniquemember":{"type":"list","autocomplete":true,"optional":true}}}'),
+(2, 'car', 'Car', 'A car', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}'),
+(3, 'confroom', 'Conference Room', 'A conference room', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}'),
+(4, 'beamer', 'Beamer', 'A portable beamer', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}'),
+(5, 'footballtickets', 'Football Season Tickets', 'Season tickets to the game (pretty good seats too!)', '{"auto_form_fields":{"cn":{"data":["cn"]},"kolabtargetfolder":{"data":["cn"]},"mail":{"data":["cn"]}},"fields":{"objectclass":["top","kolabsharedfolder","mailrecipient"],"kolabfoldertype":["event"]},"form_fields":{"cn":[]}}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role_types`
+--
+
+CREATE TABLE IF NOT EXISTS `role_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
+
+--
+-- Dumping data for table `role_types`
+--
+
+INSERT INTO `role_types` (`id`, `key`, `name`, `description`, `attributes`) VALUES
+(1, 'simple_managed', 'Standard Role', 'A standard role definition', '{"auto_form_fields":[],"fields":{"objectclass":["top","ldapsubentry","nsroledefinition","nssimpleroledefinition","nsmanagedroledefinition"]},"form_fields":{"cn":[],"description":[]}}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sharedfolder_types`
+--
+
+CREATE TABLE IF NOT EXISTS `sharedfolder_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=6 ;
+
+--
+-- Dumping data for table `sharedfolder_types`
+--
+
+INSERT INTO `sharedfolder_types` (`id`, `key`, `name`, `description`, `attributes`) VALUES
+(1, 'addressbook', 'Shared Address Book', 'A shared address book', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["contact"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(2, 'calendar', 'Shared Calendar', 'A shared calendar', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["event"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(3, 'journal', 'Shared Journal', 'A shared journal', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["journal"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(4, 'task', 'Shared Tasks', 'A shared tasks folder', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["task"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(5, 'mail', 'Shared Mail Folder', 'A shared mail folder', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["mail"],"objectclass":["top","kolabsharedfolder","mailrecipient"]},"form_fields":{"cn":[],"alias":{"type":"list","optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"kolabtargetfolder":[],"mail":[]}}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_types`
+--
+
+CREATE TABLE IF NOT EXISTS `user_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  `used_for` varchar(16) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
+
+--
+-- Dumping data for table `user_types`
+--
+
+INSERT INTO `user_types` (`id`, `key`, `name`, `description`, `attributes`, `used_for`) VALUES
+(1, 'kolab', 'Kolab User', 'A Kolab User', '{"auto_form_fields":{"alias":{"type":"list","data":["givenname","preferredlanguage","sn"]},"cn":{"data":["givenname","sn"]},"displayname":{"data":["givenname","sn"]},"mail":{"data":["givenname","preferredlanguage","sn"]},"mailhost":{"optional":true},"uid":{"data":["givenname","preferredlanguage","sn"]},"userpassword":{"optional":true}},"form_fields":{"alias":{"optional":true},"givenname":[],"initials":{"optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolabinvitationpolicy":{"type":"select","values":["","ACT_MANUAL","ACT_REJECT"],"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"l":{"optional":true},"mailalternateaddress":{"type":"list","optional":true},"mailquota":{"optional":true},"mobile":{"optional":true},"nsroledn":{"type":"list","autocomplete":true,"optional":true},"o":{"optional":true},"ou":{"type":"select"},"pager":{"optional":true},"postalcode":{"optional":true},"preferredlanguage":{"type":"select"},"sn":[],"street":{"optional":true},"telephonenumber":{"optional":true},"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","kolabinetorgperson","mailrecipient","organizationalperson","person"]}}', NULL),
+(2, 'posix', 'POSIX User', 'A POSIX user (with a home directory and shell access)', '{"auto_form_fields":{"cn":{"data":["givenname","sn"]},"displayname":{"data":["givenname","sn"]},"gidnumber":[],"homedirectory":{"data":["givenname","preferredlanguage","sn"]},"uid":{"data":["givenname","preferredlanguage","sn"]},"uidnumber":[],"userpassword":{"optional":true}},"form_fields":{"givenname":[],"initials":{"optional":true},"preferredlanguage":{"type":"select","values":["en_US","de_DE","de_CH","en_GB","fi_FI","fr_FR","hu_HU"]},"loginshell":{"type":"select","values":["/bin/bash","/usr/bin/git-shell","/sbin/nologin"]},"ou":{"type":"select"},"sn":[],"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","organizationalperson","person","posixaccount"]}}', NULL),
+(3, 'kolab_posix', 'Mail-enabled POSIX User', 'A mail-enabled POSIX User', '{"auto_form_fields":{"alias":{"data":["givenname","preferredlanguage","sn"]},"cn":{"data":["givenname","preferredlanguage","sn"]},"displayname":{"data":["givenname","preferredlanguage","sn"]},"gidnumber":[],"homedirectory":{"data":["givenname","preferredlanguage","sn"]},"mail":{"data":["givenname","preferredlanguage","sn"]},"mailhost":{"optional":true},"uid":{"data":["givenname","preferredlanguage","sn"]},"uidnumber":[],"userpassword":{"optional":true}},"form_fields":{"alias":{"optional":true},"givenname":[],"initials":{"optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolabinvitationpolicy":{"type":"select","values":["","ACT_MANUAL","ACT_REJECT"],"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"l":{"optional":true},"loginshell":{"type":"select","values":["/bin/bash","/usr/bin/git-shell","/sbin/nologin"]},"mailalternateaddress":{"type":"list","optional":true},"mailquota":{"optional":true},"mobile":{"optional":true},"nsroledn":{"type":"list","autocomplete":true,"optional":true},"o":{"optional":true},"ou":{"type":"select"},"pager":{"optional":true},"postalcode":{"optional":true},"preferredlanguage":{"type":"select"},"sn":[],"street":{"optional":true},"telephonenumber":{"optional":true},"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","kolabinetorgperson","mailrecipient","organizationalperson","person","posixaccount"]}}', NULL);
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
