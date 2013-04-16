@@ -253,7 +253,7 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search_entries($this->config_get('root_dn'), '(objectclass=*)', 'sub', null, $search);
 
-        if ($result->count() > 0) {
+        if ($result && $result->count() > 0) {
             return $result->entries(TRUE);
         }
 
@@ -711,7 +711,7 @@ class LDAP extends Net_LDAP3 {
 
         return array(
             'list' => $entries,
-            'count' => $result->count()
+            'count' => is_object($result) ? $result->count() : 0,
         );
     }
 
@@ -919,6 +919,10 @@ class LDAP extends Net_LDAP3 {
 
     private function sort_and_slice(&$result, &$params)
     {
+        if (!is_object($result)) {
+            return array();
+        }
+
         $entries = $result->entries(true);
 
         if ($this->vlv_active) {
