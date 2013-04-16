@@ -157,4 +157,28 @@
                 "VALUES ('posix_mail','Mail-enabled POSIX Group', 'A Kolab and also UNIX POSIX Group'," .
                 "'" . json_encode($attributes) . "')");
 
+    $attributes = Array(
+            "auto_form_fields" => Array(
+                ),
+            "fields" => Array(
+                    "objectclass" => Array(
+                            "top",
+                            "groupofuniquenames",
+                        ),
+                ),
+            "form_fields" => Array(
+                    "cn" => Array(),
+                    "uniquemember" => Array(
+                            "type" => "list",
+                            "autocomplete" => true,
+                            "optional" => true,
+                        ),
+                ),
+        );
+
+    $result = $db->query("INSERT INTO `group_types` (`key`, `name`, `description`, `attributes`) " .
+                "VALUES ('simple','Simple Group (Static)', 'A simple, traditional LDAP group with a static list of members'," .
+                "'" . json_encode($attributes) . "')");
+
+
 ?>
