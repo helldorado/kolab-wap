@@ -25,13 +25,14 @@
 class kolab_client_task_main extends kolab_client_task
 {
     protected $_menu = array(
-        'user'      => 'users',
-        'group'     => 'groups',
-        'domain'    => 'domains',
-        'role'      => 'roles',
-        'resource'  => 'resources',
-        'settings'  => 'settings',
-        'about'     => 'about',
+        'user'          => 'users',
+        'group'         => 'groups',
+        'domain'        => 'domains',
+        'role'          => 'roles',
+        'resource'      => 'resources',
+        'sharedfolder'  => 'sharedfolders',
+        'settings'      => 'settings',
+        'about'         => 'about',
     );
 
 

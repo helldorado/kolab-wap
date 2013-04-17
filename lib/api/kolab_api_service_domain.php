@@ -48,8 +48,7 @@ class kolab_api_service_domain extends kolab_api_service
         }
 
         $effective_rights = $auth->list_rights($domain_base_dn);
-
-        $rights = array();
+        $rights           = array();
 
         if (in_array('add', $effective_rights['entryLevelRights'])) {
             $rights['add'] = "w";
@@ -64,10 +63,6 @@ class kolab_api_service_domain extends kolab_api_service
         }
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
-            $rights['find'] = "r";
-            $rights['find_by_any_attribute'] = "r";
-            $rights['find_by_attribute'] = "r";
-            $rights['find_by_attributes'] = "r";
             $rights['info'] = "r";
         }
 

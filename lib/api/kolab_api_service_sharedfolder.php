@@ -24,9 +24,9 @@
 */
 
 /**
- *
+ * Service providing shared folder data management
  */
-class kolab_api_service_role extends kolab_api_service
+class kolab_api_service_sharedfolder extends kolab_api_service
 {
     /**
      * Returns service capabilities.
@@ -37,10 +37,10 @@ class kolab_api_service_role extends kolab_api_service
      */
     public function capabilities($domain)
     {
-        //console("kolab_api_service_role::capabilities");
+        //console("kolab_api_service_group::capabilities");
 
         $auth             = Auth::get_instance();
-        $effective_rights = $auth->list_rights('role');
+        $effective_rights = $auth->list_rights('sharedfolder');
         $rights           = array();
 
         if (in_array('add', $effective_rights['entryLevelRights'])) {
@@ -58,7 +58,6 @@ class kolab_api_service_role extends kolab_api_service
         if (in_array('read', $effective_rights['entryLevelRights'])) {
             $rights['info'] = "r";
             $rights['find'] = "r";
-            $rights['members_list'] = "r";
         }
 
         $rights['effective_rights'] = "r";
@@ -67,110 +66,108 @@ class kolab_api_service_role extends kolab_api_service
     }
 
     /**
-     * Group create.
+     * Create a shared folder.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
-     * @return array|bool Group attributes or False on failure
+     * @return array|bool User attributes or False on error.
      */
-    public function role_add($getdata, $postdata)
+    public function sharedfolder_add($getdata, $postdata)
     {
-        $role_attributes = $this->parse_input_attributes('role', $postdata);
+        //console("sharedfolder_add()", $postdata);
 
-        $auth   = Auth::get_instance();
-        $result = $auth->role_add($role_attributes, $postdata['type_id']);
+        $sharedfolder_attributes = $this->parse_input_attributes('sharedfolder', $postdata);
+
+        //console("sharedfolder_add()", $sharedfolder_attributes);
+
+        // TODO: The cn needs to be unique
+        $auth = Auth::get_instance();
+        $result = $auth->sharedfolder_add($sharedfolder_attributes, $postdata['type_id']);
 
         if ($result) {
-            return $role_attributes;
+            return $sharedfolder_attributes;
         }
 
-        return FALSE;
+        return false;
     }
 
     /**
-     * Group delete.
+     * Detete a shared folder.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
      * @return bool True on success, False on failure
      */
-    public function role_delete($getdata, $postdata)
+    public function sharedfolder_delete($getdata, $postdata)
     {
-        if (empty($postdata['role'])) {
-            return FALSE;
+        //console("sharedfolder_delete()", $getdata, $postdata);
+        if (!isset($postdata['sharedfolder'])) {
+            return false;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->role_delete($postdata['role']);
+        $result = $auth->sharedfolder_delete($postdata['sharedfolder']);
 
         if ($result) {
             return $result;
         }
 
-        return FALSE;
-    }
-
-    public function role_edit($getdata, $postdata)
-    {
-        //console("role_edit \$postdata", $postdata);
-
-        $role_attributes = $this->parse_input_attributes('role', $postdata);
-        $role            = $postdata['id'];
-
-        $auth   = Auth::get_instance();
-        $result = $auth->role_edit($postdata['id'], $role_attributes, $postdata['type_id']);
-
-        // @TODO: return unique attribute or all attributes as role_add()
-        if ($result) {
-            return true;
-        }
-
         return false;
     }
 
-    public function role_effective_rights($getdata, $postdata)
+    public function sharedfolder_edit($getdata, $postdata)
     {
-        $auth = Auth::get_instance();
+        //console("\$postdata to sharedfolder_edit()", $postdata);
 
-        // Roles are special in that they are ldapsubentries.
-        if (!empty($getdata['role'])) {
-            $unique_attr = $this->unique_attribute();
-            $role        = $auth->role_find_by_attribute(Array($unique_attr => $getdata['role']));
+        $sharedfolder_attributes = $this->parse_input_attributes('sharedfolder', $postdata);
 
-            if (is_array($role) && count($role) == 1) {
-                $role_dn = key($role);
-            }
+        //console("\$sharedfolder_attributes as result from parse_input_attributes", $sharedfolder_attributes);
+
+        $sharedfolder   = $postdata['id'];
+
+        $auth   = Auth::get_instance();
+        $result = $auth->sharedfolder_edit($sharedfolder, $sharedfolder_attributes, $postdata['type_id']);
+
+        // Return the $mod_array
+        if ($result) {
+            return $result;
         }
 
-        $effective_rights = $auth->list_rights(empty($role_dn) ? 'role' : $role_dn);
+        return false;
 
+    }
+
+    public function sharedfolder_effective_rights($getdata, $postdata)
+    {
+        $auth = Auth::get_instance();
+        $effective_rights = $auth->list_rights(empty($getdata['sharedfolder']) ? 'sharedfolder' : $getdata['sharedfolder']);
         return $effective_rights;
     }
 
     /**
-     * Role information.
+     * User information.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
-     * @return array|bool Role attributes or False on failure
+     * @return array|bool User attributes, False on error
      */
-    public function role_info($getdata, $postdata)
+    public function sharedfolder_info($getdata, $postdata)
     {
-        //console("api::role.info \$getdata, \$postdata", $getdata, $postdata);
-
-        if (empty($getdata['role'])) {
+        if (!isset($getdata['sharedfolder'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->role_info($getdata['role']);
+        $result = $auth->sharedfolder_info($getdata['sharedfolder']);
 
         // normalize result
-        $result = $this->parse_result_attributes('role', $result);
+        $result = $this->parse_result_attributes('sharedfolder', $result);
+
+        //console($result);
 
         if ($result) {
             return $result;
@@ -180,34 +177,34 @@ class kolab_api_service_role extends kolab_api_service
     }
 
     /**
-     * Find role and return its data.
-     * It is a combination of role.info and roles.list with search capabilities
-     * If the search returns only one record we'll return role data.
+     * Find a shared folder and return its data.
+     * It is a combination of sharedfolder.info and sharedfolders.list with search capabilities
+     * If the search returns only one record we'll return sharedfolder data.
      *
      * @param array $get   GET parameters
      * @param array $post  POST parameters
      *
-     * @return array|bool Role attributes, False on error
+     * @return array|bool Resource attributes, False on error
      */
-    public function role_find($get, $post)
+    public function sharedfolder_find($get, $post)
     {
         $auth       = Auth::get_instance();
         $attributes = array('');
         $params     = array('page_size' => 2);
         $search     = $this->parse_list_search($post);
 
-        // find role(s)
-        $roles = $auth->list_roles(null, $attributes, $search, $params);
+        // find shared folder(s)
+        $sharedfolders = $auth->list_sharedfolders(null, $attributes, $search, $params);
 
-        if (empty($roles) || empty($roles['list']) || $roles['count'] > 1) {
+        if (empty($sharedfolders) || empty($sharedfolders['list']) || $sharedfolders['count'] > 1) {
             return false;
         }
 
-        // get role data
-        $result = $auth->role_info(key($roles['list']));
+        // get shared folder data
+        $result = $auth->sharedfolder_info(key($sharedfolders['list']));
 
         // normalize result
-        $result = $this->parse_result_attributes('role', $result);
+        $result = $this->parse_result_attributes('sharedfolder', $result);
 
         if ($result) {
             return $result;
@@ -216,28 +213,4 @@ class kolab_api_service_role extends kolab_api_service
         return false;
     }
 
-    /**
-     * Group members listing.
-     *
-     * @param array $get   GET parameters
-     * @param array $post  POST parameters
-     *
-     * @return array List of role members ('list' and 'count' items)
-     */
-    public function role_members_list($getdata, $postdata)
-    {
-        $auth = Auth::get_instance();
-
-        if (empty($getdata['role'])) {
-            //console("Empty \$getdata['role']");
-            return FALSE;
-        }
-
-        $result = $auth->role_members_list($getdata['role'], false);
-
-        return array(
-            'list'  => $result,
-            'count' => count($result),
-        );
-    }
 }

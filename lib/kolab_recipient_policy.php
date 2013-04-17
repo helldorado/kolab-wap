@@ -42,15 +42,15 @@ class kolab_recipient_policy {
     {
         //console("IN", $groupdata);
         foreach ($groupdata as $key => $value) {
-            if (isset($groupdata['preferredlanguage'])) {
+            if (!empty($groupdata['preferredlanguage'])) {
                 $locale = $groupdata['preferredlanguage'];
-                setlocale(LC_ALL, $groupdata['preferredlanguage']);
             } else {
                 $conf = Conf::get_instance();
                 $locale = $conf->get('default_locale');
-                if (!empty($locale)) {
-                    setlocale(LC_ALL, $locale);
-                }
+            }
+
+            if (!empty($locale)) {
+                setlocale(LC_ALL, $locale.'utf8', $locale.'UTF-8', $locale);
             }
 
             if (!is_array($groupdata[$key])) {
@@ -59,10 +59,10 @@ class kolab_recipient_policy {
                 $result = iconv('UTF-8', 'ASCII//TRANSLIT', $groupdata[$key]);
 
                 if (strpos($result, '?')) {
-                    $groupdata[$key] = self::transliterate($groupdata[$key], $locale);
-                } else {
-                    $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
+                    $result = self::transliterate($groupdata[$key], $locale);
                 }
+
+                $groupdata[$key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
             }
         }
 
@@ -89,15 +89,15 @@ class kolab_recipient_policy {
                 $_key = $key;
             }
 
-            if (isset($userdata['preferredlanguage'])) {
+            if (!empty($userdata['preferredlanguage'])) {
                 $locale = $userdata['preferredlanguage'];
-                setlocale(LC_ALL, $userdata['preferredlanguage']);
             } else {
                 $conf = Conf::get_instance();
                 $locale = $conf->get('default_locale');
-                if (!empty($locale)) {
-                    setlocale(LC_ALL, $locale);
-                }
+            }
+
+            if (!empty($locale)) {
+                setlocale(LC_ALL, $locale.'utf8', $locale.'UTF-8', $locale);
             }
 
             if (!is_array($userdata[$_key])) {
@@ -105,11 +105,11 @@ class kolab_recipient_policy {
 
                 $result = iconv('UTF-8', 'ASCII//TRANSLIT', $userdata[$key]);
 
-                if (!strstr($result, '?') && !empty($result)) {
-                    $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
-                } else {
-                    $userdata[$_key] = self::transliterate($userdata[$key], $locale);
+                if (strstr($result, '?')) {
+                    $result = self::transliterate($userdata[$key], $locale);
                 }
+
+                $userdata[$_key] = preg_replace('/[^a-z0-9-_]/i', '', $result);
             }
         }
 
@@ -360,11 +360,11 @@ class kolab_recipient_policy {
                     ),
             );
 
-        $translit = $translit_map[$locale_translit_map[$locale]];
+        if ($translit = $translit_map[$locale_translit_map[$locale]]) {
+            $mystring = strtr($mystring, $translit);
+        }
 
-        $result = strtr($mystring, $translit);
-
-        return $result;
+        return $mystring;
     }
 
     static public function uid($userdata) {

@@ -23,7 +23,7 @@
  +--------------------------------------------------------------------------+
 */
 
-require_once("Net/LDAP3.php");
+require_once "Net/LDAP3.php";
 
 /**
  * Kolab LDAP handling abstraction class.
@@ -195,7 +195,8 @@ class LDAP extends Net_LDAP3 {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _search()");
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
             $result = $result->entries(true);
-        } else {
+        }
+        else {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _read()");
             $result = $this->_read($domain_dn, $attributes);
         }
@@ -223,24 +224,17 @@ class LDAP extends Net_LDAP3 {
         switch ($subject) {
             case "domain":
                 return parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
-                break;
+
             case "group":
-                return parent::effective_rights($this->_subject_base_dn("group"));
-                break;
             case "resource":
-                return parent::effective_rights($this->_subject_base_dn("resource"));
-                break;
             case "role":
-                return parent::effective_rights($this->_subject_base_dn("role"));
-                break;
+            case "sharedfolder":
             case "user":
-                return parent::effective_rights($this->_subject_base_dn("user"));
-                break;
+                return parent::effective_rights($this->_subject_base_dn($subject));
+
             default:
                 return parent::effective_rights($subject);
-                break;
         }
-
     }
 
     public function find_recipient($address)
@@ -248,8 +242,7 @@ class LDAP extends Net_LDAP3 {
         $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
         $mail_attrs = $this->conf->get_list('mail_attributes', array('mail', 'alias'));
-
-        $search = array('operator' => 'OR');
+        $search     = array('operator' => 'OR');
 
         foreach ($mail_attrs as $num => $attr) {
             $search['params'][$attr] = array(
@@ -260,11 +253,11 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->search_entries($this->config_get('root_dn'), '(objectclass=*)', 'sub', null, $search);
 
-        if ($result->count() > 0) {
+        if ($result && $result->count() > 0) {
             return $result->entries(TRUE);
-        } else {
-            return FALSE;
         }
+
+        return FALSE;
     }
 
     public function get_attributes($subject_dn, $attributes)
@@ -399,6 +392,20 @@ class LDAP extends Net_LDAP3 {
         return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
     }
 
+    public function list_sharedfolders($attributes = array(), $search = array(), $params = array())
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::list_sharedfolders(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
+
+        $base_dn = $this->_subject_base_dn('sharedfolder');
+        $filter  = $this->conf->get('sharedfolder_filter');
+
+        if (!$filter) {
+            $filter = "(&(objectclass=*)(!(objectclass=organizationalunit)))";
+        }
+
+        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
+    }
+
     public function list_users($attributes = array(), $search = array(), $params = array())
     {
         $this->_log(LOG_DEBUG, "Auth::LDAP::list_users(" . var_export($attributes, true) . ", " . var_export($search, true) . ", " . var_export($params, true));
@@ -527,6 +534,58 @@ class LDAP extends Net_LDAP3 {
         return $this->_read($role_dn, $attributes);
     }
 
+    public function sharedfolder_add($attrs, $typeid = null)
+    {
+        $base_dn = $this->entry_base_dn('sharedfolder', $typeid);
+
+        // TODO: The rdn is configurable as well.
+        // Use [$type_str . "_"]user_rdn_attr
+        $dn = "cn=" . $attrs['cn'] . "," . $base_dn;
+
+        return $this->entry_add($dn, $attrs);
+    }
+
+    public function sharedfolder_delete($sharedfolder)
+    {
+        return $this->entry_delete($sharedfolder);
+    }
+
+    public function sharedfolder_edit($sharedfolder, $attributes, $typeid = null)
+    {
+        $sharedfolder = $this->sharedfolder_info($sharedfolder, array_keys($attributes));
+
+        if (empty($sharedfolder)) {
+            return false;
+        }
+
+        $sharedfolder_dn = key($sharedfolder);
+
+        // We should start throwing stuff over the fence here.
+        return $this->modify_entry($sharedfolder_dn, $sharedfolder[$sharedfolder_dn], $attributes);
+    }
+
+    public function sharedfolder_find_by_attribute($attribute)
+    {
+        return $this->entry_find_by_attribute($attribute);
+    }
+
+    public function sharedfolder_info($sharedfolder, $attributes = array('*'))
+    {
+        $this->_log(LOG_DEBUG, "Auth::LDAP::sharedfolder_info() for sharedfolder " . var_export($sharedfolder, true));
+        $this->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $sharedfolder_dn = $this->entry_dn($sharedfolder);
+
+        if (!$sharedfolder_dn) {
+            return false;
+        }
+
+        $this->read_prepare($attributes);
+
+        return $this->_read($sharedfolder_dn, $attributes);
+    }
+
+
     public function search($base_dn, $filter = '(objectclass=*)', $scope = 'sub', $sort = NULL, $search = array())
     {
         if (isset($_SESSION['user']->user_bind_dn) && !empty($_SESSION['user']->user_bind_dn)) {
@@ -652,7 +711,7 @@ class LDAP extends Net_LDAP3 {
 
         return array(
             'list' => $entries,
-            'count' => $result->count()
+            'count' => is_object($result) ? $result->count() : 0,
         );
     }
 
@@ -860,6 +919,10 @@ class LDAP extends Net_LDAP3 {
 
     private function sort_and_slice(&$result, &$params)
     {
+        if (!is_object($result)) {
+            return array();
+        }
+
         $entries = $result->entries(true);
 
         if ($this->vlv_active) {

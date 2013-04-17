@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 3.5.2
+-- version 3.5.7
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Aug 29, 2012 at 11:37 AM
--- Server version: 5.5.27
--- PHP Version: 5.4.5
+-- Generation Time: Apr 15, 2013 at 12:33 PM
+-- Server version: 5.1.67
+-- PHP Version: 5.3.10
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -117,6 +117,33 @@ INSERT INTO `role_types` (`id`, `key`, `name`, `description`, `attributes`) VALU
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sharedfolder_types`
+--
+
+CREATE TABLE IF NOT EXISTS `sharedfolder_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` text NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `description` text NOT NULL,
+  `attributes` longtext NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=6 ;
+
+--
+-- Dumping data for table `sharedfolder_types`
+--
+
+INSERT INTO `sharedfolder_types` (`id`, `key`, `name`, `description`, `attributes`) VALUES
+(1, 'addressbook', 'Shared Address Book', 'A shared address book', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["contact"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(2, 'calendar', 'Shared Calendar', 'A shared calendar', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["event"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(3, 'journal', 'Shared Journal', 'A shared journal', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["journal"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(4, 'task', 'Shared Tasks', 'A shared tasks folder', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["task"],"objectclass":["top","kolabsharedfolder"]},"form_fields":{"cn":[]}}'),
+(5, 'mail', 'Shared Mail Folder', 'A shared mail folder', '{"auto_form_fields":[],"fields":{"kolabfoldertype":["mail"],"objectclass":["top","kolabsharedfolder","mailrecipient"]},"form_fields":{"cn":[],"alias":{"type":"list","optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"kolabtargetfolder":[],"mail":[]}}');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `user_types`
 --
 
@@ -138,7 +165,7 @@ CREATE TABLE IF NOT EXISTS `user_types` (
 INSERT INTO `user_types` (`id`, `key`, `name`, `description`, `attributes`, `used_for`) VALUES
 (1, 'kolab', 'Kolab User', 'A Kolab User', '{"auto_form_fields":{"alias":{"type":"list","data":["givenname","preferredlanguage","sn"]},"cn":{"data":["givenname","sn"]},"displayname":{"data":["givenname","sn"]},"mail":{"data":["givenname","preferredlanguage","sn"]},"mailhost":{"optional":true},"uid":{"data":["givenname","preferredlanguage","sn"]},"userpassword":{"optional":true}},"form_fields":{"alias":{"optional":true},"givenname":[],"initials":{"optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolabinvitationpolicy":{"type":"select","values":["","ACT_MANUAL","ACT_REJECT"],"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"l":{"optional":true},"mailalternateaddress":{"type":"list","optional":true},"mailquota":{"optional":true},"mobile":{"optional":true},"nsroledn":{"type":"list","autocomplete":true,"optional":true},"o":{"optional":true},"ou":{"type":"select"},"pager":{"optional":true},"postalcode":{"optional":true},"preferredlanguage":{"type":"select"},"sn":[],"street":{"optional":true},"telephonenumber":{"optional":true},"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","kolabinetorgperson","mailrecipient","organizationalperson","person"]}}', NULL),
 (2, 'posix', 'POSIX User', 'A POSIX user (with a home directory and shell access)', '{"auto_form_fields":{"cn":{"data":["givenname","sn"]},"displayname":{"data":["givenname","sn"]},"gidnumber":[],"homedirectory":{"data":["givenname","preferredlanguage","sn"]},"uid":{"data":["givenname","preferredlanguage","sn"]},"uidnumber":[],"userpassword":{"optional":true}},"form_fields":{"givenname":[],"initials":{"optional":true},"preferredlanguage":{"type":"select","values":["en_US","de_DE","de_CH","en_GB","fi_FI","fr_FR","hu_HU"]},"loginshell":{"type":"select","values":["/bin/bash","/usr/bin/git-shell","/sbin/nologin"]},"ou":{"type":"select"},"sn":[],"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","organizationalperson","person","posixaccount"]}}', NULL),
-(3, 'kolab_posix', 'Mail-enabled POSIX User', 'A mail-enabled POSIX User', '{"auto_form_fields":{"alias":{"type":"list","data":["givenname","preferredlanguage","sn"]},"cn":{"data":["givenname","preferredlanguage","sn"]},"displayname":{"data":["givenname","preferredlanguage","sn"]},"gidnumber":[],"homedirectory":{"data":["givenname","preferredlanguage","sn"]},"mail":{"data":["givenname","preferredlanguage","sn"]},"mailhost":{"optional":true},"uid":{"data":["givenname","preferredlanguage","sn"]},"uidnumber":[],"userpassword":{"optional":true}},"form_fields":{"alias":{"optional":true},"givenname":[],"initials":{"optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolabinvitationpolicy":{"type":"select","values":["","ACT_MANUAL","ACT_REJECT"],"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"l":{"optional":true},"loginshell":{"type":"select","values":["/bin/bash","/usr/bin/git-shell","/sbin/nologin"]},"mailalternateaddress":{"type":"list","optional":true},"mailquota":{"optional":true},"mobile":{"optional":true},"nsroledn":{"type":"list","autocomplete":true,"optional":true},"o":{"optional":true},"ou":{"type":"select"},"pager":{"optional":true},"postalcode":{"optional":true},"preferredlanguage":{"type":"select"},"sn":[],"street":{"optional":true},"telephonenumber":{"optional":true},"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","kolabinetorgperson","mailrecipient","organizationalperson","person","posixaccount"]}}', NULL);
+(3, 'kolab_posix', 'Mail-enabled POSIX User', 'A mail-enabled POSIX User', '{"auto_form_fields":{"alias":{"data":["givenname","preferredlanguage","sn"]},"cn":{"data":["givenname","preferredlanguage","sn"]},"displayname":{"data":["givenname","preferredlanguage","sn"]},"gidnumber":[],"homedirectory":{"data":["givenname","preferredlanguage","sn"]},"mail":{"data":["givenname","preferredlanguage","sn"]},"mailhost":{"optional":true},"uid":{"data":["givenname","preferredlanguage","sn"]},"uidnumber":[],"userpassword":{"optional":true}},"form_fields":{"alias":{"optional":true},"givenname":[],"initials":{"optional":true},"kolabdelegate":{"type":"list","autocomplete":true,"optional":true},"kolabinvitationpolicy":{"type":"select","values":["","ACT_MANUAL","ACT_REJECT"],"optional":true},"kolaballowsmtprecipient":{"type":"list","optional":true},"kolaballowsmtpsender":{"type":"list","optional":true},"l":{"optional":true},"loginshell":{"type":"select","values":["/bin/bash","/usr/bin/git-shell","/sbin/nologin"]},"mailalternateaddress":{"type":"list","optional":true},"mailquota":{"optional":true},"mobile":{"optional":true},"nsroledn":{"type":"list","autocomplete":true,"optional":true},"o":{"optional":true},"ou":{"type":"select"},"pager":{"optional":true},"postalcode":{"optional":true},"preferredlanguage":{"type":"select"},"sn":[],"street":{"optional":true},"telephonenumber":{"optional":true},"title":{"optional":true},"userpassword":{"optional":true}},"fields":{"objectclass":["top","inetorgperson","kolabinetorgperson","mailrecipient","organizationalperson","person","posixaccount"]}}', NULL);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

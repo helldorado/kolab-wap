@@ -1304,16 +1304,17 @@ function kolab_admin()
 
   this.form_value_response = function(response)
   {
-    var i, val;
+    var i, val, field;
     if (!this.api_response(response))
       return;
 
     for (i in response.result) {
       val = response.result[i];
+      field = $('[name="'+i+'"]');
       // @TODO: indexed list support
       if ($.isArray(val))
-        val = val.join("\n");
-      $('[name="'+i+'"]').val(val);
+        val = field.is('textarea') ? val.join("\n") : val.shift();
+      field.val(val);
 
       this.form_element_update({name: i});
     }
@@ -1635,6 +1636,60 @@ function kolab_admin()
     this.response_handler(response, 'role.edit', 'role.list');
   };
 
+  this.sharedfolder_info = function(id)
+  {
+    this.http_post('sharedfolder.info', {id: id});
+  };
+
+  this.sharedfolder_list = function(props)
+  {
+    this.list_handler('sharedfolder', props);
+  };
+
+  this.sharedfolder_delete = function(sharedfolderid)
+  {
+    this.set_busy(true, 'deleting');
+    this.api_post('sharedfolder.delete', {sharedfolder: sharedfolderid}, 'sharedfolder_delete_response');
+  };
+
+  this.sharedfolder_save = function(reload, section)
+  {
+    var data = this.serialize_form('#'+this.env.form_id),
+      action = data.id ? 'edit' : 'add';
+
+    if (reload) {
+      data.section = section;
+      this.http_post('sharedfolder.' + action, {data: data});
+      return;
+    }
+
+    this.form_error_clear();
+
+    if (!this.check_required_fields(data)) {
+      this.display_message('form.required.empty', 'error');
+      return;
+    }
+
+    this.set_busy(true, 'saving');
+    this.api_post('sharedfolder.' + action, data, 'sharedfolder_' + action + '_response');
+  };
+
+  this.sharedfolder_delete_response = function(response)
+  {
+    this.response_handler(response, 'sharedfolder.delete', 'sharedfolder.list');
+  };
+
+  this.sharedfolder_add_response = function(response)
+  {
+    this.response_handler(response, 'sharedfolder.add', 'sharedfolder.list');
+  };
+
+  this.sharedfolder_edit_response = function(response)
+  {
+    this.response_handler(response, 'sharedfolder.edit', 'sharedfolder.list');
+  };
+
+
   this.settings_type_info = function(id)
   {
     this.http_post('settings.type_info', {id: id});
@@ -1688,9 +1743,6 @@ function kolab_admin()
       this.display_message('attribute.key.invalid', 'error');
       return;
     }
-
-    // remove objectClass from required attributes list
-    required = $.map(required, function(a) { return a == 'objectClass' ? null : a; });
 
     request.id = data.id;
     request.key = data.key;
@@ -1987,15 +2039,18 @@ function kolab_admin()
       return;
 
     var i, lc, list = response.result.attribute.list || [],
+      required = response.result.attribute.required || [],
       select = $('select[name="attr_name"]');
 
+    // remove objectClass from attributes list(s)
+    required = $.map(required, function(a) { return a == 'objectClass' ? null : a; });
+    list = $.map(list, function(a) { return a == 'objectClass' ? null : a; });
+
     this.env.attributes = {};
-    this.env.attributes_required = response.result.attribute.required || [];
+    this.env.attributes_required = required;
     select.empty();
 
     for (i in list) {
-      if (i == 'objectClass')
-        continue;
       lc = list[i].toLowerCase();
       this.env.attributes[lc] = list[i];
       $('<option>').text(list[i]).val(lc).appendTo(select);

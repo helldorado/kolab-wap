@@ -43,14 +43,19 @@ class kolab_api_service_type extends kolab_api_service
         if (in_array('add', (array)$effective_rights['entryLevelRights'])) {
             $rights['add'] = "w";
         }
+
         if (in_array('delete', (array)$effective_rights['entryLevelRights'])) {
             $rights['delete'] = "w";
         }
+
         if (in_array('modrdn', (array)$effective_rights['entryLevelRights'])) {
             $rights['edit'] = "w";
         }
 
-        $rights['info'] = "r";
+        if (in_array('read', (array)$effective_rights['entryLevelRights'])) {
+            $rights['info'] = "r";
+        }
+
         $rights['effective_rights'] = "r";
 
         return $rights;

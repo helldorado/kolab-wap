@@ -39,13 +39,9 @@ class kolab_api_service_resource extends kolab_api_service
     {
         //console("kolab_api_service_group::capabilities");
 
-        $auth = Auth::get_instance();
-
+        $auth             = Auth::get_instance();
         $effective_rights = $auth->list_rights('resource');
-
-        //console("effective_rights", $effective_rights);
-
-        $rights = array();
+        $rights           = array();
 
         if (in_array('add', $effective_rights['entryLevelRights'])) {
             $rights['add'] = "w";
@@ -60,11 +56,8 @@ class kolab_api_service_resource extends kolab_api_service
         }
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
-            $rights['find'] = "r";
-            $rights['find_by_any_attribute'] = "r";
-            $rights['find_by_attribute'] = "r";
-            $rights['find_by_attributes'] = "r";
             $rights['info'] = "r";
+            $rights['find'] = "r";
         }
 
         $rights['effective_rights'] = "r";
@@ -182,4 +175,42 @@ class kolab_api_service_resource extends kolab_api_service
 
         return false;
     }
+
+    /**
+     * Find resource and return its data.
+     * It is a combination of resource.info and resources.list with search capabilities
+     * If the search returns only one record we'll return resource data.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool Resource attributes, False on error
+     */
+    public function resource_find($get, $post)
+    {
+        $auth       = Auth::get_instance();
+        $attributes = array('');
+        $params     = array('page_size' => 2);
+        $search     = $this->parse_list_search($post);
+
+        // find resource(s)
+        $resources = $auth->list_resources(null, $attributes, $search, $params);
+
+        if (empty($resources) || empty($resources['list']) || $resources['count'] > 1) {
+            return false;
+        }
+
+        // get resource data
+        $result = $auth->resource_info(key($resources['list']));
+
+        // normalize result
+        $result = $this->parse_result_attributes('resource', $result);
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
 }

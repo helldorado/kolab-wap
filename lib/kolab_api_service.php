@@ -32,8 +32,8 @@ abstract class kolab_api_service
     protected $conf;
     protected $controller;
     protected $db;
-    protected $supported_types_db = array('group', 'resource', 'role', 'user');
-    protected $supported_types    = array('domain', 'group', 'resource', 'role', 'user');
+    protected $supported_types_db = array('group', 'resource', 'role', 'sharedfolder', 'user');
+    protected $supported_types    = array('domain', 'group', 'resource', 'role', 'sharedfolder', 'user');
 
     /**
      * Class constructor.
@@ -134,8 +134,7 @@ abstract class kolab_api_service
         $object_class = array_map('strtolower', $object_class);
         $object_keys  = array_keys($attributes);
         $keys_count   = count($object_keys);
-        $type_score   = -1;
-        $keys_score   = 0;
+        $type_score   = null;
         $type_id      = null;
 
         Log::trace("kolab_api_service::object_type_id objectClasses: " . implode(", ", $object_class));
@@ -148,6 +147,9 @@ abstract class kolab_api_service
             }
 
             Log::trace("Reference objectclasses for " . $elem['key'] . ": " . implode(", ", $ref_class));
+
+            $elem_keys_score   = 0;
+            $elem_values_score = 0;
 
             // Eliminate the duplicates between the $data_ocs and $ref_ocs
             $_object_class = array_diff($object_class, $ref_class);
@@ -169,6 +171,19 @@ abstract class kolab_api_service
                 $elem_keys_score = $keys_count - count(array_diff($object_keys, $ref_keys));
             }
 
+            // Static attributes score
+            $elem_values_score = 0;
+            foreach ((array) $elem['attributes']['fields'] as $attr => $value) {
+                $v = $attributes[$attr];
+                if (is_array($value)) {
+                    $value = implode('', $value);
+                }
+                if (is_array($v)) {
+                    $v = implode('', $v);
+                }
+                $elem_values_score += intval($v == $value);
+            }
+
             // Position in tree score
             if (!empty($elem['attributes']['fields']['ou'])) {
                 if (!empty($attributes['ou'])) {
@@ -180,27 +195,26 @@ abstract class kolab_api_service
                 }
             }
 
-            Log::trace("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
-            Log::trace("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
-            Log::trace("Score for $object_name type " . $elem['name'] . ": " . $elem_score . "(" . $commonalities . "/" . $differences . ") " . $elem_keys_score);
-
-            // Compare last and current element score
-            if ($elem_score > $type_score || ($elem_score == $type_score && $elem_keys_score > $keys_score)) {
-                $type_id    = $idx;
-                $type_score = $elem_score;
-                $keys_score = $elem_keys_score;
-            }
-
             // On the likely chance that the object is a resource (types of which likely have the same
             // set of objectclass attribute values), consider the other attributes. (#853)
             if ($object_name == 'resource') {
                 //console("From database", $elem);
                 //console("Element key is " . $elem['key'] . " and \$attributes['mail'] is " . $attributes['mail']);
-
-                if (strstr($attributes['mail'], "-" . $elem['key'] . "-")) {
-                    $type_id = $idx;
-                    $type_score = 10;
+                if (strpos($attributes['mail'], 'resource-' . $elem['key'] . '-') === 0) {
+                    $elem_score += 10;
                 }
+            }
+
+            $elem_score .= ':' . $elem_keys_score . ':' . $elem_values_score;
+
+//            Log::trace("\$object_class not in \$ref_class (" . $elem['key'] . "): " . implode(", ", $_object_class));
+//            Log::trace("\$ref_class not in \$object_class (" . $elem['key'] . "): " . implode(", ", $_ref_class));
+            Log::trace("Score for $object_name type " . $elem['name'] . ": " . $elem_score . " (" . $commonalities . "/" . $differences . ")");
+
+            // Compare last and current element (object type) score
+            if ($this->score_compare($elem_score, $type_score)) {
+                $type_id    = $idx;
+                $type_score = $elem_score;
             }
         }
 
@@ -483,6 +497,35 @@ abstract class kolab_api_service
         $attrs['type_id'] = $type_id;
 
         return $attrs;
+    }
+
+    /**
+     * Compare two score values
+     *
+     * @param string $s1 Score
+     * @param string $s2 Score
+     *
+     * @return bool True when $s1 is greater than $s2
+     */
+    protected function score_compare($s1, $s2)
+    {
+        if (empty($s2) && !empty($s1)) {
+            return true;
+        }
+
+        $s1 = explode(':', $s1);
+        $s2 = explode(':', $s2);
+
+        foreach ($s1 as $key => $val) {
+            if ($val > $s2[$key]) {
+                return true;
+            }
+            if ($val < $s2[$key]) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -46,7 +46,7 @@ class kolab_client_task
     protected $menu = array();
     protected $cache = array();
     protected $devel_mode = false;
-    protected $object_types = array('user', 'group', 'role', 'resource', 'domain');
+    protected $object_types = array('user', 'group', 'role', 'resource', 'sharedfolder', 'domain');
 
     protected static $translation = array();
 
@@ -1020,8 +1020,8 @@ class kolab_client_task
 
         // Get the rights on the entry and attribute level
         $data['effective_rights'] = $this->effective_rights($name, $data['id']);
-        $attribute_rights         = $data['effective_rights']['attribute'];
-        $entry_rights             = $data['effective_rights']['entry'];
+        $attribute_rights         = (array) $data['effective_rights']['attribute'];
+        $entry_rights             = (array) $data['effective_rights']['entry'];
 
         // See if "administrators" (those who can delete and add back on the entry
         // level) may override the automatically generated contents of auto_form_fields.

@@ -28,6 +28,14 @@
                 ),
             "form_fields" => Array(
                     "cn" => Array(),
+                    "kolaballowsmtprecipient" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
+                    "kolaballowsmtpsender" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
                     "uniquemember" => Array(
                             "type" => "list",
                             "autocomplete" => true,
@@ -37,8 +45,50 @@
         );
 
     $result = $db->query("INSERT INTO `group_types` (`key`, `name`, `description`, `attributes`) " .
-                "VALUES ('kolab','Kolab Distribution Group', 'A Kolab Distribution Group (with mail address)'," .
+                "VALUES ('kolab','Kolab Distribution Group (Static)', 'A static Kolab Distribution Group (with mail address)'," .
                 "'" . json_encode($attributes) . "')");
+
+    $attributes = Array(
+            "auto_form_fields" => Array(
+                    "mail" => Array(
+                            "data" => Array(
+                                    "cn",
+                                ),
+                        ),
+                ),
+            "fields" => Array(
+                    "objectclass" => Array(
+                            "top",
+                            "groupofurls",
+                            "kolabgroupofuniquenames",
+                        ),
+                ),
+            "form_fields" => Array(
+                    "cn" => Array(),
+                    "kolaballowsmtprecipient" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
+                    "kolaballowsmtpsender" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
+                    "memberurl" => Array(
+                            "type" => "ldap_url",
+                            "optional" => true,
+                        ),
+                    "uniquemember" => Array(
+                            "type" => "list",
+                            "autocomplete" => true,
+                            "optional" => true,
+                        ),
+                ),
+        );
+
+    $result = $db->query("INSERT INTO `group_types` (`key`, `name`, `description`, `attributes`) " .
+                "VALUES ('kolab_dynamic','Kolab Distribution Group (Dynamic)', 'A dynamic Kolab Distribution Group (with mail address)'," .
+                "'" . json_encode($attributes) . "')");
+
 
     $attributes = Array(
             "auto_form_fields" => Array(
@@ -84,6 +134,14 @@
                 ),
             "form_fields" => Array(
                     "cn" => Array(),
+                    "kolaballowsmtprecipient" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
+                    "kolaballowsmtpsender" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
                     "mail" => Array(
                             "optional" => true
                         ),
@@ -98,5 +156,29 @@
     $result = $db->query("INSERT INTO `group_types` (`key`, `name`, `description`, `attributes`) " .
                 "VALUES ('posix_mail','Mail-enabled POSIX Group', 'A Kolab and also UNIX POSIX Group'," .
                 "'" . json_encode($attributes) . "')");
+
+    $attributes = Array(
+            "auto_form_fields" => Array(
+                ),
+            "fields" => Array(
+                    "objectclass" => Array(
+                            "top",
+                            "groupofuniquenames",
+                        ),
+                ),
+            "form_fields" => Array(
+                    "cn" => Array(),
+                    "uniquemember" => Array(
+                            "type" => "list",
+                            "autocomplete" => true,
+                            "optional" => true,
+                        ),
+                ),
+        );
+
+    $result = $db->query("INSERT INTO `group_types` (`key`, `name`, `description`, `attributes`) " .
+                "VALUES ('simple','Simple Group (Static)', 'A simple, traditional LDAP group with a static list of members'," .
+                "'" . json_encode($attributes) . "')");
+
 
 ?>

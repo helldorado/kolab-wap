@@ -633,6 +633,7 @@ class kolab_client_task_settings extends kolab_client_task
             if ($data['attributes']['fields'][$attr]) {
                 $valtype = 'static';
                 $_data   = $data['attributes']['fields'][$attr];
+                $_data   = is_array($_data) ? implode(',', $_data) : $_data;
                 $value   = $this->translate('attribute.value.static') . ': ' . kolab_html::escape($_data);
             }
             else if (isset($data['attributes']['auto_form_fields'][$attr])) {
@@ -836,6 +837,7 @@ class kolab_client_task_settings extends kolab_client_task
         $response   = $this->api_post('form_value.select_options', null, $post_data);
         $response   = $response->get('attribute');
         $attributes = array();
+        $required   = array();
 
         // convert to hash array
         if (!empty($response['list'])) {
@@ -846,8 +848,13 @@ class kolab_client_task_settings extends kolab_client_task
             }
         }
 
+        if (!empty($response['required'])) {
+            // remove objectClass
+            $required = array_diff($response['required'], array('objectClass'));
+        }
+
         $this->output->set_env('attributes', $attributes);
-        $this->output->set_env('attributes_required', $response['required']);
+        $this->output->set_env('attributes_required', $required);
 
         return $attributes;
     }

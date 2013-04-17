@@ -60,11 +60,8 @@ class kolab_api_service_user extends kolab_api_service
         }
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
-            $rights['find'] = "r";
-            $rights['find_by_any_attribute'] = "r";
-            $rights['find_by_attribute'] = "r";
-            $rights['find_by_attributes'] = "r";
             $rights['info'] = "r";
+            $rights['find'] = "r";
         }
 
         $rights['effective_rights'] = "r";
@@ -181,4 +178,42 @@ class kolab_api_service_user extends kolab_api_service
 
         return false;
     }
+
+    /**
+     * Find user and return his data.
+     * It is a combination of user.info and users.list with search capabilities
+     * If the search returns only one record we'll return user data.
+     *
+     * @param array $get   GET parameters
+     * @param array $post  POST parameters
+     *
+     * @return array|bool User attributes, False on error
+     */
+    public function user_find($get, $post)
+    {
+        $auth       = Auth::get_instance();
+        $attributes = array('');
+        $params     = array('page_size' => 2);
+        $search     = $this->parse_list_search($post);
+
+        // find user(s)
+        $users = $auth->list_users(null, $attributes, $search, $params);
+
+        if (empty($users) || empty($users['list']) || $users['count'] > 1) {
+            return false;
+        }
+
+        // get user data
+        $result = $auth->user_info(key($users['list']));
+
+        // normalize result
+        $result = $this->parse_result_attributes('user', $result);
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
 }

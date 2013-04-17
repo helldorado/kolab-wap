@@ -59,9 +59,11 @@ class kolab_api_service_form_value extends kolab_api_service
      */
     public function generate($getdata, $postdata)
     {
-        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id']);
+        $attribs    = $this->object_type_attributes($postdata['object_type'], $postdata['type_id'], true, $type_key);
         $attributes = (array) $postdata['attributes'];
         $result     = array();
+
+        $postdata['type_key'] = $type_key;
 
         foreach ($attributes as $attr_name) {
             if (empty($attr_name)) {
