@@ -59,6 +59,20 @@ class Conf {
         $this->read_config();
     }
 
+    public function getDomains()
+    {
+        $result = array();
+
+        foreach ($this->_conf as $key => $value) {
+            $base_dn = $this->get($key, "base_dn");
+            if (strlen($base_dn) > 0 && $key != "ldap") {
+                $result[] = str_replace("dc=","", str_replace(",dc=", ".", $base_dn));
+            }
+        }
+
+        return $result;
+    }
+
     public function get($key1, $key2 = null, $type = null)
     {
         $value = $this->expand($this->get_raw($key1, $key2));

@@ -143,11 +143,51 @@ class LDAP extends Net_LDAP3 {
             if ($domain_info === false) {
                 $this->_domain_add_new($parent_domain, $prepopulate);
             }
-
+#TODO store domain admin?
             return $this->_domain_add_alias($domain, $parent_domain);
         }
         else {
             return $this->_domain_add_new($domain, $prepopulate);
+        }
+    }
+
+    private function domain_admin_save($domain, $domain_dn, $attributes) 
+    {
+        $currentdomain = $domain[$domain_dn]["associateddomain"];
+        $currentdomain_dn = "dc=".implode (",dc=", explode(".", $currentdomain));
+        $currentdomain_da_dn = "cn=Directory Administrators,".$currentdomain_dn;
+
+        $domainadmins = $this->_search($currentdomain_dn, "cn=Directory Administrators*", array("uniqueMember"));
+        $domainadmins = $domainadmins->entries(true);
+
+        $origvalues = array();
+        if (is_array($domainadmins[$currentdomain_da_dn]["uniquemember"])) {
+            $origvalues = $domainadmins[$currentdomain_da_dn];
+        }
+        else {
+            $origvalues["uniquemember"] = array();
+            $origvalues["uniquemember"][] = $domainadmins[$currentdomain_da_dn]["uniquemember"];
+        }
+
+        $info = array();
+        $info["uniquemember"] = array();
+        $containsDirectoryManager = false;
+        for ($count = 0; $count < count($attributes["domainadmin"]); $count++) {
+            if ($attributes["domainadmin"][$count] == "cn=Directory Manager") {
+                $containsDirectoryManager = true;
+            }
+            $info["uniquemember"][] = $attributes["domainadmin"][$count];
+        }
+
+        # make sure that Directory Manager is still in the list
+        if (!$containsDirectoryManager) {
+            $info["uniquemember"][] = "cn=Directory Manager";
+        }
+
+        $result = $this->modify_entry($currentdomain_da_dn, $origvalues, $info);
+        
+        if (!$result) {
+            return false;
         }
     }
 
@@ -160,6 +200,11 @@ class LDAP extends Net_LDAP3 {
         }
 
         $domain_dn = key($domain);
+
+        if (isset($attributes["domainadmin"])) {
+            $this->domain_admin_save($domain, $domain_dn, $attributes);
+            unset($attributes["domainadmin"]);
+        }
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($domain_dn, $domain[$domain_dn], $attributes);
@@ -203,6 +248,24 @@ class LDAP extends Net_LDAP3 {
 
         if (!$result) {
             return false;
+        }
+
+        $currentdomain = $result[$domain_dn]["associateddomain"];
+        $currentdomain_dn = "dc=".implode (",dc=", explode(".", $currentdomain));
+        $currentdomain_da_dn = "cn=Directory Administrators,".$currentdomain_dn;
+
+        $domainadmins = $this->_search($currentdomain_dn, "cn=Directory Administrators*", array("uniqueMember"));
+        $domainadmins = $domainadmins->entries(true);
+
+        // read domain admins from LDAP, uniqueMembers of Directory Administrators of domain
+        $result[$domain_dn]["domainadmin"] = array();
+        if (is_array($domainadmins[$currentdomain_da_dn]["uniquemember"])) {
+            foreach ($domainadmins[$currentdomain_da_dn]["uniquemember"] as $domainadmin) {
+                $result[$domain_dn]["domainadmin"][] = $domainadmin;
+            }
+        }
+        else {
+            $result[$domain_dn]["domainadmin"][] = $domainadmins[$currentdomain_da_dn]["uniquemember"];
         }
 
         $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() result: " . var_export($result, true));
@@ -347,7 +410,27 @@ class LDAP extends Net_LDAP3 {
             $filter = "(associateddomain=*)";
         }
 
-        return $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
+        $result = $this->_list($base_dn, $filter, 'sub', $attributes, $search, $params);
+
+        if ($result['count'] < 1) {
+            $domains = $this->conf->getDomains();
+            foreach ($domains as $domain) {
+                # check for permissions in cn=Directory Administrators of the domain, if the current user is in uniqueMembers:
+                # try if the current user has permissions to this domain, by accessing the list of Directory Administrators
+                # attention: every user has read access to the main domain. that is why we exclude it in the kolab.conf, base_dn is part of ldap, not of the domain section
+                # to add permissions: see alteruser.php
+                $base_dnTest = "cn=Directory Administrators,dc=".implode(",dc=",explode(".", $domain));
+                $filter  = "(objectclass=groupofuniquenames)";
+                $administrators = $this->_list($base_dnTest, $filter, 'sub', null, null, null);
+
+                if ($administrators['count'] > 0) {
+                    $result['list'][] = $domain;
+                }
+            }
+            $result['count'] = count($result['list']);
+        }
+
+        return $result;
     }
 
     public function list_groups($attributes = array(), $search = array(), $params = array())

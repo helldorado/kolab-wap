@@ -224,6 +224,7 @@ class kolab_client_task_domain extends kolab_client_task
         $sections = array(
             'system'   => 'domain.system',
             'other'    => 'domain.other',
+            'admins'    => 'domain.admins',
         );
 
         // field-to-section map and fields order
@@ -231,6 +232,7 @@ class kolab_client_task_domain extends kolab_client_task
             'type_id'           => 'system',
             'type_id_name'      => 'system',
             'associateddomain'  => 'system',
+            'domainadmin'       => 'admins',
         );
 
         //console("domain_form() \$data", $data);
