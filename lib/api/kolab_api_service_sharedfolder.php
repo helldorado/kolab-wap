@@ -103,13 +103,13 @@ class kolab_api_service_sharedfolder extends kolab_api_service
     public function sharedfolder_delete($getdata, $postdata)
     {
         //console("sharedfolder_delete()", $getdata, $postdata);
-        if (!isset($postdata['sharedfolder'])) {
+        if (!isset($postdata['id'])) {
             return false;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->sharedfolder_delete($postdata['sharedfolder']);
+        $result = $auth->sharedfolder_delete($postdata['id']);
 
         if ($result) {
             return $result;
@@ -143,7 +143,7 @@ class kolab_api_service_sharedfolder extends kolab_api_service
     public function sharedfolder_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights(empty($getdata['sharedfolder']) ? 'sharedfolder' : $getdata['sharedfolder']);
+        $effective_rights = $auth->list_rights(empty($getdata['id']) ? 'sharedfolder' : $getdata['id']);
         return $effective_rights;
     }
 
@@ -157,12 +157,12 @@ class kolab_api_service_sharedfolder extends kolab_api_service
      */
     public function sharedfolder_info($getdata, $postdata)
     {
-        if (!isset($getdata['sharedfolder'])) {
+        if (!isset($getdata['id'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->sharedfolder_info($getdata['sharedfolder']);
+        $result = $auth->sharedfolder_info($getdata['id']);
 
         // normalize result
         $result = $this->parse_result_attributes('sharedfolder', $result);

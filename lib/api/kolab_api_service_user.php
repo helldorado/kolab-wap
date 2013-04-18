@@ -106,13 +106,13 @@ class kolab_api_service_user extends kolab_api_service
     public function user_delete($getdata, $postdata)
     {
         //console("user_delete()", $getdata, $postdata);
-        if (!isset($postdata['user'])) {
+        if (!isset($postdata['id'])) {
             return false;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->user_delete($postdata['user']);
+        $result = $auth->user_delete($postdata['id']);
 
         if ($result) {
             return $result;
@@ -145,7 +145,7 @@ class kolab_api_service_user extends kolab_api_service
     public function user_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights(empty($getdata['user']) ? 'user' : $getdata['user']);
+        $effective_rights = $auth->list_rights(empty($getdata['id']) ? 'user' : $getdata['id']);
         return $effective_rights;
     }
 
@@ -159,18 +159,18 @@ class kolab_api_service_user extends kolab_api_service
      */
     public function user_info($getdata, $postdata)
     {
-        if (!isset($getdata['user'])) {
+        if (!isset($getdata['id'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->user_info($getdata['user']);
+        $result = $auth->user_info($getdata['id']);
 
-        Log::trace("user.info on " . $getdata['user'] . " result: " . var_export($result, TRUE));
+        Log::trace("user.info on " . $getdata['id'] . " result: " . var_export($result, TRUE));
         // normalize result
         $result = $this->parse_result_attributes('user', $result);
 
-        Log::trace("user.info on " . $getdata['user'] . " parsed result: " . var_export($result, TRUE));
+        Log::trace("user.info on " . $getdata['id'] . " parsed result: " . var_export($result, TRUE));
 
         if ($result) {
             return $result;

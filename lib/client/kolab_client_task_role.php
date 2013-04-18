@@ -179,7 +179,7 @@ class kolab_client_task_role extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api_get('role.info', array('role' => $id));
+        $result = $this->api_get('role.info', array('id' => $id));
         $role  = $result->get();
         $output = $this->role_form(null, $role);
 

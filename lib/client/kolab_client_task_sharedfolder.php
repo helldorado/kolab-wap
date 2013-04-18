@@ -192,7 +192,7 @@ class kolab_client_task_sharedfolder extends kolab_client_task
     public function action_info()
     {
         $id             = $this->get_input('id', 'POST');
-        $result         = $this->api_get('sharedfolder.info', array('sharedfolder' => $id));
+        $result         = $this->api_get('sharedfolder.info', array('id' => $id));
         $sharedfolder   = $result->get();
 
         //console("action_info()", $sharedfolder);

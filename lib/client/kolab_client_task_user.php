@@ -179,7 +179,7 @@ class kolab_client_task_user extends kolab_client_task
     public function action_info()
     {
         $id     = $this->get_input('id', 'POST');
-        $result = $this->api_get('user.info', array('user' => $id));
+        $result = $this->api_get('user.info', array('id' => $id));
         $user   = $result->get();
         $output = $this->user_form(null, $user);
 

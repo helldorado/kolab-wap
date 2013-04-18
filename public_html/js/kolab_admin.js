@@ -1373,10 +1373,10 @@ function kolab_admin()
     this.list_handler('domain', props);
   };
 
-  this.domain_delete = function(domainid)
+  this.domain_delete = function(id)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('domain.delete', {domain: domainid}, 'domain_delete_response');
+    this.api_post('domain.delete', {'id': id}, 'domain_delete_response');
   };
 
   this.domain_save = function(reload, section)
@@ -1418,7 +1418,7 @@ function kolab_admin()
 
   this.user_info = function(id)
   {
-    this.http_post('user.info', {id: id});
+    this.http_post('user.info', {'id': id});
   };
 
   this.user_list = function(props)
@@ -1426,10 +1426,10 @@ function kolab_admin()
     this.list_handler('user', props);
   };
 
-  this.user_delete = function(userid)
+  this.user_delete = function(id)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('user.delete', {user: userid}, 'user_delete_response');
+    this.api_post('user.delete', {'id': id}, 'user_delete_response');
   };
 
   this.user_save = function(reload, section)
@@ -1487,10 +1487,10 @@ function kolab_admin()
     this.list_handler('group', props);
   };
 
-  this.group_delete = function(groupid)
+  this.group_delete = function(id)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('group.delete', {group: groupid}, 'group_delete_response');
+    this.api_post('group.delete', {'id': id}, 'group_delete_response');
   };
 
   this.group_save = function(reload, section)
@@ -1540,10 +1540,10 @@ function kolab_admin()
     this.list_handler('resource', props);
   };
 
-  this.resource_delete = function(resourceid)
+  this.resource_delete = function(id)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('resource.delete', {resource: resourceid}, 'resource_delete_response');
+    this.api_post('resource.delete', {'id': id}, 'resource_delete_response');
   };
 
   this.resource_save = function(reload, section)
@@ -1593,10 +1593,10 @@ function kolab_admin()
     this.list_handler('role', props);
   };
 
-  this.role_delete = function(roleid)
+  this.role_delete = function(id)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('role.delete', {role: roleid}, 'role_delete_response');
+    this.api_post('role.delete', {'id': id}, 'role_delete_response');
   };
 
   this.role_save = function(reload, section)
@@ -1646,10 +1646,10 @@ function kolab_admin()
     this.list_handler('sharedfolder', props);
   };
 
-  this.sharedfolder_delete = function(sharedfolderid)
+  this.sharedfolder_delete = function(id)
   {
     this.set_busy(true, 'deleting');
-    this.api_post('sharedfolder.delete', {sharedfolder: sharedfolderid}, 'sharedfolder_delete_response');
+    this.api_post('sharedfolder.delete', {'id': id}, 'sharedfolder_delete_response');
   };
 
   this.sharedfolder_save = function(reload, section)

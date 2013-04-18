@@ -103,13 +103,13 @@ class kolab_api_service_resource extends kolab_api_service
     public function resource_delete($getdata, $postdata)
     {
         //console("resource_delete()", $getdata, $postdata);
-        if (!isset($postdata['resource'])) {
+        if (!isset($postdata['id'])) {
             return false;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->resource_delete($postdata['resource']);
+        $result = $auth->resource_delete($postdata['id']);
 
         if ($result) {
             return $result;
@@ -143,7 +143,7 @@ class kolab_api_service_resource extends kolab_api_service
     public function resource_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights(empty($getdata['resource']) ? 'resource' : $getdata['resource']);
+        $effective_rights = $auth->list_rights(empty($getdata['id']) ? 'resource' : $getdata['id']);
         return $effective_rights;
     }
 
@@ -157,12 +157,12 @@ class kolab_api_service_resource extends kolab_api_service
      */
     public function resource_info($getdata, $postdata)
     {
-        if (!isset($getdata['resource'])) {
+        if (!isset($getdata['id'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->resource_info($getdata['resource']);
+        $result = $auth->resource_info($getdata['id']);
 
         // normalize result
         $result = $this->parse_result_attributes('resource', $result);

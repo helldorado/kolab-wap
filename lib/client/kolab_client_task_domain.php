@@ -189,7 +189,7 @@ class kolab_client_task_domain extends kolab_client_task
         $id     = $this->get_input('id', 'POST');
         //console("action_info() on", $id);
 
-        $result = $this->api_get('domain.info', array('domain' => $id));
+        $result = $this->api_get('domain.info', array('id' => $id));
         //console("action_info() \$result", $result);
 
         $domain  = $result->get();

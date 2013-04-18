@@ -98,13 +98,13 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function group_delete($getdata, $postdata)
     {
-        if (empty($postdata['group'])) {
+        if (empty($postdata['id'])) {
             return FALSE;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->group_delete($postdata['group']);
+        $result = $auth->group_delete($postdata['id']);
 
         if ($result) {
             return $result;
@@ -134,7 +134,7 @@ class kolab_api_service_group extends kolab_api_service
     public function group_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
-        $effective_rights = $auth->list_rights(empty($getdata['group']) ? 'group' : $getdata['group']);
+        $effective_rights = $auth->list_rights(empty($getdata['id']) ? 'group' : $getdata['id']);
         return $effective_rights;
     }
 
@@ -148,12 +148,12 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function group_info($getdata, $postdata)
     {
-        if (empty($getdata['group'])) {
+        if (empty($getdata['id'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->group_info($getdata['group']);
+        $result = $auth->group_info($getdata['id']);
 
         // normalize result
         $result = $this->parse_result_attributes('group', $result);
@@ -214,15 +214,15 @@ class kolab_api_service_group extends kolab_api_service
      */
     public function group_members_list($getdata, $postdata)
     {
-        Log::trace("group_members_list() for group " . $getdata['group']);
+        Log::trace("group_members_list() for group " . $getdata['id']);
         $auth = Auth::get_instance();
 
-        if (empty($getdata['group'])) {
-            //console("Empty \$getdata['group']");
+        if (empty($getdata['id'])) {
+            //console("Empty \$getdata['id']");
             return FALSE;
         }
 
-        $result = $auth->group_members_list($getdata['group'], false);
+        $result = $auth->group_members_list($getdata['id'], false);
 
         Log::trace("group_members_list() result: " . var_export($result, TRUE));
 

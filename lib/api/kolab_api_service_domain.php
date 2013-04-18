@@ -81,7 +81,8 @@ class kolab_api_service_domain extends kolab_api_service
         }
 
         if (empty($postdata[$dna])) {
-            return;
+            Log::error("domain.add called without '" . $dna . "' specified");
+            return false;
         }
 
         $auth = Auth::get_instance($conf->get('kolab', 'primary_domain'));
@@ -94,9 +95,42 @@ class kolab_api_service_domain extends kolab_api_service
         }
     }
 
+    /**
+     * Domain delete.
+     *
+     * @param array $get  GET parameters
+     * @param array $post POST parameters
+     *
+     * @return bool True on success, False on failure
+     */
+    public function domain_delete($getdata, $postdata)
+    {
+        Log::trace("domain.delete(\$getdata = '" . var_export($getdata, TRUE) . "', \$postdata = '" . var_export($postdata, TRUE) . "')");
+
+        if (empty($postdata['id'])) {
+            Log::error("domain.delete called without a Domain ID");
+            return false;
+        }
+
+        // TODO: Input validation
+        $auth   = Auth::get_instance();
+        $result = $auth->domain_delete($postdata['id']);
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
     public function domain_edit($getdata, $postdata)
     {
-        //console("domain_edit \$postdata", $postdata);
+        Log::trace("domain.edit(\$getdata = '" . var_export($getdata, TRUE) . "', \$postdata = '" . var_export($postdata, TRUE) . "')");
+
+        if (empty($postdata['id'])) {
+            Log::error("domain.edit called without a Domain ID");
+            return false;
+        }
 
         $domain_attributes  = $this->parse_input_attributes('domain', $postdata);
         $domain             = $postdata['id'];
@@ -112,37 +146,20 @@ class kolab_api_service_domain extends kolab_api_service
         return false;
     }
 
-    /**
-     * Domain delete.
-     *
-     * @param array $get  GET parameters
-     * @param array $post POST parameters
-     *
-     * @return bool True on success, False on failure
-     */
-    public function domain_delete($getdata, $postdata)
-    {
-        if (empty($postdata['domain'])) {
-            return false;
-        }
-
-        // TODO: Input validation
-        $auth   = Auth::get_instance();
-        $result = $auth->domain_delete($postdata['domain']);
-
-        if ($result) {
-            return $result;
-        }
-
-        return false;
-    }
-
     public function domain_effective_rights($getdata, $postdata)
     {
         $auth = Auth::get_instance();
 
-        if (!empty($getdata['domain'])) {
-            $entry_dn    = $getdata['domain'];
+        $conf = Conf::get_instance();
+        $dna = $conf->get('domain_name_attribute');
+
+        if (empty($dna)) {
+            $dna = 'associateddomain';
+        }
+
+        // TODO: Input validation
+        if (!empty($getdata[$dna])) {
+            $entry_dn    = $getdata[$dna];
             $unique_attr = $this->unique_attribute();
             $domain      = $auth->domain_find_by_attribute(array($unique_attr => $entry_dn));
 
@@ -172,21 +189,22 @@ class kolab_api_service_domain extends kolab_api_service
      */
     public function domain_info($getdata, $postdata)
     {
-        if (!isset($getdata['domain'])) {
+        Log::trace("domain.info(\$getdata = '" . var_export($getdata, TRUE) . "', \$postdata = '" . var_export($postdata, TRUE) . "')");
+
+        if (empty($getdata['id'])) {
+            Log::error("domain.info called without a Domain ID");
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->domain_info($getdata['domain']);
+        $result = $auth->domain_info($getdata['id']);
 
         // normalize result
         $result = $this->parse_result_attributes('domain', $result);
 
         if (empty($result['id'])) {
-            $result['id'] = $getdata['domain'];
+            $result['id'] = $getdata[$dna];
         }
-
-        //console("API/domain.info() \$result:", $result);
 
         if ($result) {
             return $result;

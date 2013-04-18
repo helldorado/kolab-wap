@@ -98,13 +98,13 @@ class kolab_api_service_role extends kolab_api_service
      */
     public function role_delete($getdata, $postdata)
     {
-        if (empty($postdata['role'])) {
+        if (empty($postdata['id'])) {
             return FALSE;
         }
 
         // TODO: Input validation
         $auth   = Auth::get_instance();
-        $result = $auth->role_delete($postdata['role']);
+        $result = $auth->role_delete($postdata['id']);
 
         if ($result) {
             return $result;
@@ -136,9 +136,9 @@ class kolab_api_service_role extends kolab_api_service
         $auth = Auth::get_instance();
 
         // Roles are special in that they are ldapsubentries.
-        if (!empty($getdata['role'])) {
+        if (!empty($getdata['id'])) {
             $unique_attr = $this->unique_attribute();
-            $role        = $auth->role_find_by_attribute(Array($unique_attr => $getdata['role']));
+            $role        = $auth->role_find_by_attribute(Array($unique_attr => $getdata['id']));
 
             if (is_array($role) && count($role) == 1) {
                 $role_dn = key($role);
@@ -162,12 +162,12 @@ class kolab_api_service_role extends kolab_api_service
     {
         //console("api::role.info \$getdata, \$postdata", $getdata, $postdata);
 
-        if (empty($getdata['role'])) {
+        if (empty($getdata['id'])) {
             return false;
         }
 
         $auth   = Auth::get_instance();
-        $result = $auth->role_info($getdata['role']);
+        $result = $auth->role_info($getdata['id']);
 
         // normalize result
         $result = $this->parse_result_attributes('role', $result);
@@ -228,12 +228,12 @@ class kolab_api_service_role extends kolab_api_service
     {
         $auth = Auth::get_instance();
 
-        if (empty($getdata['role'])) {
-            //console("Empty \$getdata['role']");
+        if (empty($getdata['id'])) {
+            //console("Empty \$getdata['id']");
             return FALSE;
         }
 
-        $result = $auth->role_members_list($getdata['role'], false);
+        $result = $auth->role_members_list($getdata['id'], false);
 
         return array(
             'list'  => $result,
