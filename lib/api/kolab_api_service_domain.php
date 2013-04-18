@@ -63,6 +63,7 @@ class kolab_api_service_domain extends kolab_api_service
         }
 
         if (in_array('read', $effective_rights['entryLevelRights'])) {
+            $rights['find'] = "r";
             $rights['info'] = "r";
         }
 
@@ -177,6 +178,30 @@ class kolab_api_service_domain extends kolab_api_service
         $effective_rights = $auth->list_rights($entry_dn);
 
         return $effective_rights;
+    }
+
+    public function domain_find($getdata, $postdata)
+    {
+        $auth = Auth::get_instance();
+        $conf = Conf::get_instance();
+        $dna = $conf->get('domain_name_attribute');
+
+        if (empty($dna)) {
+            $dna = 'associateddomain';
+        }
+
+        if (empty($getdata[$dna])) {
+            Log::error("domain.find called without a '" . $dna . "' parameter");
+            return false;
+        }
+
+        $domain      = $auth->domain_find_by_attribute(array($dna => $getdata[$dna]));
+
+        if (!empty($domain)) {
+            return $domain;
+        }
+
+        return false;
     }
 
     /**
