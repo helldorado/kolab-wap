@@ -839,6 +839,7 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         // return specified records only, by exact DN attributes
         if (!empty($postdata['list'])) {
+            $data['page_size'] = count($postdata['list']);
             $data['search'] = array(
                 'entrydn' => array(
                     'value' => $postdata['list'],
@@ -889,6 +890,7 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         // return specified records only, by exact DN attributes
         if (!empty($postdata['list'])) {
+            $data['page_size'] = count($postdata['list']);
             $data['search'] = array(
                 'entrydn' => array(
                     'value' => $postdata['list'],
@@ -1158,6 +1160,7 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         // return specified records only, by exact DN attributes
         if (!empty($postdata['list'])) {
+            $data['page_size'] = count($postdata['list']);
             $data['search'] = array(
                     'params' => array(
                             'entrydn' => array(
@@ -1224,6 +1227,7 @@ class kolab_api_service_form_value extends kolab_api_service
     {
         // return specified records only, by exact DN attributes
         if (!empty($postdata['list'])) {
+            $data['page_size'] = count($postdata['list']);
             $data['search'] = array(
                 'entrydn' => array(
                     'value' => $postdata['list'],
