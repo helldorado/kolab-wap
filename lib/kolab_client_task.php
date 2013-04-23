@@ -114,6 +114,9 @@ class kolab_client_task
 
         $skin = $this->config_get('skin', 'default');
         $this->output = new kolab_client_output($skin);
+
+        // Assign self to template variable
+        $this->output->assign('engine', $this);
     }
 
     /**
@@ -267,9 +270,6 @@ class kolab_client_task
     {
         // Initialize locales
         $this->locale_init();
-
-        // Assign self to template variable
-        $this->output->assign('engine', $this);
 
         // Session check
         if (empty($_SESSION['user']) || empty($_SESSION['user']['token'])) {
