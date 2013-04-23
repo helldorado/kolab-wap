@@ -259,7 +259,7 @@ class kolab_api_controller
         session_id($sess_id);
         session_start();
 
-        if (empty($_SESSION['user']) || !$_SESSION['user']->authenticated()) {
+        if (empty($_SESSION['user']) || !is_a($_SESSION['user'], 'User') || !$_SESSION['user']->authenticated()) {
             return false;
         }
 
