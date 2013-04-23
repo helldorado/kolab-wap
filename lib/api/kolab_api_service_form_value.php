@@ -246,7 +246,7 @@ class kolab_api_service_form_value extends kolab_api_service
         $rcpt_pol_aliases = $this->generate_secondary_mail($postdata, $attribs);
 
         $service = $this->controller->get_service('user');
-        $user_attrs  = $service->user_info(Array( "user" => $postdata['id']), null);
+        $user_attrs  = $service->user_info(array('id' => $postdata['id']), null);
 
         if (!empty($user_attrs['alias'])) {
             $cur_aliases = $user_attrs['alias'];

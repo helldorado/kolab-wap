@@ -208,7 +208,7 @@ class kolab_client_task
                         $user['fullname'] = ucwords($m[1]);
                     }
                     else {
-                        $res = $this->api->get('user.info', array('user' => $user['id']));
+                        $res = $this->api->get('user.info', array('id' => $user['id']));
                         $res = $res->get();
 
                         if (is_array($res) && !empty($res)) {
@@ -638,7 +638,7 @@ class kolab_client_task
             }
         }
 
-        $result   = $this->api_get('user.info', array('user' => $dn));
+        $result   = $this->api_get('user.info', array('id' => $dn));
         $username = $result->get('displayname');
 
         if (empty($username)) {
@@ -730,7 +730,7 @@ class kolab_client_task
         }
 
         // Get the rights on the entry and attribute level
-        $result = $this->api_get($type . '.effective_rights', array($type => $id));
+        $result = $this->api_get($type . '.effective_rights', array('id' => $id));
 
         $result = array(
             'attribute' => $result->get('attributeLevelRights'),
