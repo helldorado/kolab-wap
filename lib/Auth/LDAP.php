@@ -217,7 +217,7 @@ class LDAP extends Net_LDAP3 {
         }
 
         # check for removed admins: remove also read permission from associateddomain in cn=kolab,cn=config
-        foreach ($[$currentdomain_da_dn][$currentdomain_da_dn]["uniquemember"] as $oldadmin) {
+        foreach ($domain_admins[$currentdomain_da_dn][$currentdomain_da_dn]["uniquemember"] as $oldadmin) {
             if (!in_array($oldadmin, $attributes["domainadmin"])) {
                 if ($oldadmin == "cn=Directory Manager") {
                     # make sure that Directory Manager is still in the list
