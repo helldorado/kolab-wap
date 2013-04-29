@@ -229,7 +229,7 @@ class LDAP extends Net_LDAP3 {
             }
         }
 
-        $result = $this->modify_entry($currentdomain_da_dn, $origvalues, $info);
+        $result = $this->modify_entry($currentdomain_da_dn, $domain_admins[$currentdomain_da_dn], $info);
         
         if (!$result) {
             return false;
