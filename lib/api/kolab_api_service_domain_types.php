@@ -64,6 +64,10 @@ class kolab_api_service_domain_types extends kolab_api_service
                         'associateddomain' => array(
                             'type' => 'list',
                         ),
+                        'domainadmin' => array(
+                            'type' => 'list',
+                            'optional' => 'true',
+                        ),
                         'inetdomainbasedn' => array(
                             'optional' => 'true',
                         ),

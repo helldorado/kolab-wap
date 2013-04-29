@@ -87,6 +87,9 @@ abstract class kolab_api_service
                             'type' => 'list'
                         ),
                     ),
+                    'domainadmin' => array(
+                            'type' => 'list'
+                        ),
                     'fields' => array(
                         'objectclass' => array(
                             'top',
