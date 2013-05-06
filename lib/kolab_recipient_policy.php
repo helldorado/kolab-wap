@@ -467,7 +467,7 @@ class kolab_recipient_policy {
         if (is_array($formatted_policy_uid) && count($formatted_policy_uid) == 2) {
             eval("\$policy_uid = sprintf(" . $formatted_policy_uid[0] . ", " . $formatted_policy_uid[1] . ");");
         } else {
-            eval("\$policy_uid = " . $policy_uid . ";");
+            eval("\$policy_uid = '" . $policy_uid . "';");
         }
 
         return $policy_uid;
