@@ -223,9 +223,21 @@ class kolab_api_service_form_value extends kolab_api_service
                 }
             }
 
-            if (array_key_exists($attr_name, $attribs['form_fields']) && empty($attribs['form_fields'][$attr_name]['optional'])) {
+            if (array_key_exists($attr_name, $attribs['form_fields'])) {
+                if (empty($attribs['form_fields'][$attr_name]['optional'])) {
+                    $attribs['form_fields'][$attr_name]['optional'] = false;
+                }
+            }
+
+            if (array_key_exists($attr_name, $attribs['form_fields'])) {
+                if (empty($attribs['form_fields'][$attr_name]['validate'])) {
+                    $attribs['form_fields'][$attr_name]['validate'] = true;
+                }
+            }
+
+            if ($attribs['form_fields'][$attr_name]['optional'] && !($attribs['form_fields'][$attr_name]['validate'])) {
                 $result[$attr_name] = $this->{$method_name}($attr_value, $postdata);
-            } else if (array_key_exists($attr_name, $attribs['form_fields']) && empty($attribs['form_fields'][$attr_name]['validate'])) {
+            } else if (!($attribs['form_fields'][$attr_name]['validate'])) {
                 $result[$attr_name] = $attr_value;
             } else {
                 try {
