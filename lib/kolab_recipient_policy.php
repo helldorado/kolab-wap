@@ -382,9 +382,9 @@ class kolab_recipient_policy {
         }
 
         $functions = array(
-                '\'*(\w+)\'*\.capitalize\(\)' => 'strtoupper(substr("${1}", 0, 1)) . strtolower(substr("${1}", 1))',
-                '\'*(.*)\'*\.lower\(\)'      => 'strtolower("${1}")',
-                '\'*(\w+)\'*\.upper\(\)'      => 'strtoupper("${1}")',
+                '\'*(\w+)\'*\.capitalize\(\).*' => 'strtoupper(substr("${1}", 0, 1)) . strtolower(substr("${1}", 1))',
+                '\'*(.*)\'*\.lower\(\).*'       => 'strtolower("${1}")',
+                '\'*(\w+)\'*\.upper\(\).*'      => 'strtoupper("${1}")',
             );
 
         $policy_uid = preg_replace('/(\{\d+\})/', '%s', $policy_uid);
@@ -454,18 +454,26 @@ class kolab_recipient_policy {
                 $end = 0;
             }
 
-            $policy_uid = preg_replace('/\'' . $substrings[1][$x] . '\'\['.$substrings[2][$x].':'.$substrings[3][$x].'\]/', "'".substr($substrings[1][$x], $start, $end)."'", $policy_uid);
+            $policy_uid = preg_replace(
+                    "/'" . $substrings[1][$x] . "'\[" . $substrings[2][$x] . ':' . $substrings[3][$x] . "\]/",
+                    substr($substrings[1][$x], $start, $end),
+                    $policy_uid
+                );
         }
 
         foreach ($functions as $match => $replace) {
-            if (preg_match('/' . $match . '/', $policy_uid, $strings)) {
+            while (preg_match('/' . $match . '/', $policy_uid, $strings)) {
                 $policy_uid = preg_replace('/' . $match . '/', $replace, $policy_uid);
             }
         }
 
+        Log::trace("kolab_recipient_policy::" . __LINE__ . " \$policy_uid: " . var_export($policy_uid, TRUE));
+
         $formatted_policy_uid = explode(":", $policy_uid);
         if (is_array($formatted_policy_uid) && count($formatted_policy_uid) == 2) {
             eval("\$policy_uid = sprintf(" . $formatted_policy_uid[0] . ", " . $formatted_policy_uid[1] . ");");
+        } elseif (preg_match('/\(/', $policy_uid) && preg_match('/\)/', $policy_uid)) {
+            eval("\$policy_uid = " . $policy_uid . ";");
         } else {
             eval("\$policy_uid = '" . $policy_uid . "';");
         }
