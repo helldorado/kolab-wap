@@ -1256,7 +1256,7 @@ class LDAP extends Net_LDAP3 {
         $entry_attrs = $entries[$entry_dn];
 
         if (is_array($entry_attrs)) {
-            if (in_array('inetdomainbasedn', $entry_attrs) && !empty($entry_attrs['inetdomainbasedn'])) {
+            if (array_key_exists('inetdomainbasedn', $entry_attrs) && !empty($entry_attrs['inetdomainbasedn'])) {
                 $domain_root_dn = $entry_attrs['inetdomainbasedn'];
             }
             else {
