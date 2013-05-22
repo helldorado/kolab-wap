@@ -69,6 +69,18 @@ class LDAP extends Net_LDAP3 {
         // Continue and default to the primary domain.
         $this->domain       = $domain ? $domain : $this->conf->get('primary_domain');
 
+        $unique_attr = $this->conf->get($domain, 'unique_attribute');
+
+        if (empty($unique_attr)) {
+            $unique_attr = $this->conf->get('ldap', 'unique_attribute');
+        }
+
+        if (empty($unique_attr)) {
+            $unique_attr = 'nsuniqueid';
+        }
+
+        $this->config_set('unique_attribute', $unique_attr);
+
         $this->_ldap_uri    = $this->conf->get('ldap_uri');
         $this->_ldap_server = parse_url($this->_ldap_uri, PHP_URL_HOST);
         $this->_ldap_port   = parse_url($this->_ldap_uri, PHP_URL_PORT);
@@ -223,17 +235,23 @@ class LDAP extends Net_LDAP3 {
 
         switch ($subject) {
             case "domain":
-                return parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
+                $result = parent::effective_rights($this->conf->get("ldap", "domain_base_dn"));
 
             case "group":
             case "resource":
             case "role":
             case "sharedfolder":
             case "user":
-                return parent::effective_rights($this->_subject_base_dn($subject));
+                $result = parent::effective_rights($this->_subject_base_dn($subject));
 
             default:
-                return parent::effective_rights($subject);
+                $result = parent::effective_rights($subject);
+        }
+
+        if (!$result) {
+            return $this->legacy_rights($subject);
+        } else {
+            return $result;
         }
     }
 
@@ -726,6 +744,8 @@ class LDAP extends Net_LDAP3 {
             $unique_attr = 'nsuniqueid';
         }
 
+        Log::trace("Using unique_attribute " . var_export($unique_attr, TRUE) . " at " . __FILE__ . ":" . __LINE__);
+
         if (!in_array($unique_attr, $attributes)) {
             $attributes[] = $unique_attr;
         }
@@ -906,8 +926,13 @@ class LDAP extends Net_LDAP3 {
         );
 
         $subject    = $this->_search($subject_dn);
+
+        if (!$subject) {
+            return $rights;
+        }
+
         $subject    = $subject->entries(true);
-        $attributes = $this->allowed_attributes($subject[$subject_dn]['objectclass']);
+        $attributes = $this->attributes_allowed($subject[$subject_dn]['objectclass']);
         $attributes = array_merge($attributes['may'], $attributes['must']);
 
         foreach ($attributes as $attribute) {
