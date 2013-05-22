@@ -1310,6 +1310,10 @@ class LDAP extends Net_LDAP3 {
 
         $result = $this->_search($domain_base_dn, $domain_filter);
 
+        if (!$result) {
+            return $this->_standard_root_dn($domain);
+        }
+
         $entries = $result->entries(true);
         $entry_dn = key($entries);
         $entry_attrs = $entries[$entry_dn];
