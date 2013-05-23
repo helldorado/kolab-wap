@@ -83,6 +83,10 @@ abstract class kolab_api_service
                 $result = array(
                     'auto_form_fields' => array(),
                     'form_fields' => array(
+                        'aci' => array(
+                            'type' => 'list',
+                            'optional' => true,
+                        ),
                         'associateddomain' => array(
                             'type' => 'list'
                         ),
