@@ -209,9 +209,9 @@ class Auth {
         return $this->auth_instance()->attribute_details((array)$attributes);
     }
 
-    public function domain_add($domain, $parent_domain=null)
+    public function domain_add($domain_attrs, $parent_domain=null)
     {
-        return $this->auth_instance()->domain_add($domain, $parent_domain);
+        return $this->auth_instance()->domain_add($domain_attrs, $parent_domain);
     }
 
     public function domain_edit($domain, $attributes, $typeid = null)

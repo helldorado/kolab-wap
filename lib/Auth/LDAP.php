@@ -147,8 +147,11 @@ class LDAP extends Net_LDAP3 {
         return $result;
     }
 
-    public function domain_add($domain, $parent_domain = false, $prepopulate = true)
+    public function domain_add($domain_attrs, $parent_domain = false, $prepopulate = true)
     {
+        $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
+        $domain = $domain_attrs[$domain_name_attribute];
+
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
             $domain_info = $this->domain_info($parent_domain);
@@ -156,11 +159,20 @@ class LDAP extends Net_LDAP3 {
                 $this->_domain_add_new($parent_domain, $prepopulate);
             }
 
-            return $this->_domain_add_alias($domain, $parent_domain);
+            $add_domain_result = $this->_domain_add_alias($domain, $parent_domain);
         }
         else {
-            return $this->_domain_add_new($domain, $prepopulate);
+            $add_domain_result = $this->_domain_add_new($domain, $prepopulate);
         }
+
+        if (empty($add_domain_result) || !$add_domain_result) {
+            Log::error("Failed to add domain");
+            return false;
+        }
+
+        unset($domain_attrs[$domain_name_attribute]);
+
+        return $this->domain_edit($domain, $domain_attrs);
     }
 
     public function domain_edit($domain, $attributes, $typeid = null)
@@ -1062,7 +1074,7 @@ class LDAP extends Net_LDAP3 {
 
     private function _domain_add_new($domain)
     {
-        console("Auth::LDAP::_domain_add_new()", $domain);
+        Log::trace("Auth::LDAP::_domain_add_new(\$domain = " . var_export($domain, TRUE) . ")");
 
         $auth = Auth::get_instance();
 
