@@ -161,12 +161,22 @@ function ui_resize()
 function ui_load()
 {
   domain_selector();
-}
+};
+
+// API response handler
+function http_response(response)
+{
+  ui_resize();
+
+  // update domain selector
+  if (response.action == 'domain.list')
+    domain_selector();
+};
 
 /**
  * UI Initialization
  */
 kadm.add_event_listener('form-load', form_load);
-kadm.add_event_listener('http-response', ui_resize);
+kadm.add_event_listener('http-response', http_response);
 //$(window).resize(function() { ui_resize(); });
 $(window).load(function() { ui_load(); });

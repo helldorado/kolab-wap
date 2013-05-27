@@ -151,8 +151,8 @@ td.label {
   color: #aaa;
   font-size: 11px;
   padding-top: 2px;
-  display: inline-block;
-  height: 18px;
+  height: 20px;
+  line-height: 20px;
 }
 
 #navigation {
@@ -257,7 +257,7 @@ td.label {
 }
 
 #topmenu .logout {
-  background: url(images/buttons.png) -1px -100px no-repeat;
+  background: url(images/buttons.png) -1px -101px no-repeat;
   padding-left: 20px;
   margin-right: 10px;
   color: white;
@@ -604,6 +604,7 @@ span.listelement {
   padding: 0;
   margin: 0;
   height: 18px;
+  line-height: 18px;
   overflow: hidden;
   border-top: 1px solid #d0d0d0;
   white-space: nowrap;

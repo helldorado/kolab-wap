@@ -55,6 +55,14 @@ class kolab_client_task_domain extends kolab_client_task
      */
     public function action_list()
     {
+        if (!empty($_POST['refresh'])) {
+            // refresh domains list
+            if ($domains = $this->get_domains(true)) {
+                sort($domains, SORT_LOCALE_STRING);
+                $this->output->set_env('domains', $domains);
+            }
+        }
+
         $page_size = 20;
         $page      = (int) self::get_input('page', 'POST');
         if (!$page || $page < 1) {

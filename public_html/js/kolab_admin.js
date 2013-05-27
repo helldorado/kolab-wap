@@ -284,7 +284,7 @@ function kolab_admin()
 
     return $.ajax({
       type: 'POST', url: url, data: postdata, dataType: 'json',
-      success: function(response) { kadm.http_response(response); },
+      success: function(response) { kadm.http_response(response, action); },
       error: function(o, status, err) { kadm.http_error(o, status, err); }
     });
   };
@@ -307,7 +307,7 @@ function kolab_admin()
   };
 
   // handle HTTP response
-  this.http_response = function(response)
+  this.http_response = function(response, action)
   {
     var i;
 
@@ -334,6 +334,7 @@ function kolab_admin()
     if (response.exec)
       eval(response.exec);
 
+    response.action = action;
     this.trigger_event('http-response', response);
   };
 
@@ -980,25 +981,34 @@ function kolab_admin()
   {
     var e = $(form_element),
       form = form_element.form,
-      elem = $('<span class="link"></span>'),
-      area = $('<span class="listarea autocomplete select popup"></span>'),
-      content = $('<span class="listcontent"></span>'),
+      name = form_element.name,
+      elem = $('#selectlabel_' + name),
+      area = $('<span class="listarea autocomplete select popup" id="selectarea_' + name + '"></span>'),
+      content = $('<span class="listcontent" id="selectcontent_' + name + '"></span>'),
       list = this.env.assoc_fields ? this.env.assoc_fields[form_element.name] : [];
 
-    elem.text(e.val()).css({cursor: 'pointer'})
-      .click(function(e) {
-        var popup = $('span.listarea', this.parentNode);
-        kadm.popup_show(e, popup);
-        $('input', popup).val('').focus();
-        $('span.listcontent > span.listelement', popup).removeClass('selected').show();
-      })
-      .appendTo(form_element.parentNode);
+    if (elem.length) {
+      $('#selectarea_' + name).remove();
+      $('#selectcontent_' + name).remove();
+    }
+    else {
+      elem = $('<span class="link" id="selectlabel_' + name + '"></span>')
+        .css({cursor: 'pointer'})
+        .click(function(e) {
+          var popup = $('span.listarea', this.parentNode);
+          kadm.popup_show(e, popup);
+          $('input', popup).val('').focus();
+          $('span.listcontent > span.listelement', popup).removeClass('selected').show();
+        })
+        .appendTo(form_element.parentNode);
+    }
+
+    elem.text(e.val());
 
     if (list.length <= 1)
       return;
 
     if (form_element.type != 'hidden') e.hide();
-    area.hide();
 
     elem = this.form_list_element(form, {
       autocomplete: true,
@@ -1007,6 +1017,7 @@ function kolab_admin()
 
     elem.appendTo(area);
     content.appendTo(area);
+    area.hide().appendTo(form_element.parentNode);
 
     // popup events
     $('input', area)
@@ -1092,8 +1103,6 @@ function kolab_admin()
       var elem = kadm.form_select_option_element(form, {value: v, key: v, element: e});
       elem.appendTo(content);
     });
-
-    area.appendTo(form_element.parentNode);
   };
 
   // Creates option element for smart select
@@ -1403,17 +1412,17 @@ function kolab_admin()
 
   this.domain_delete_response = function(response)
   {
-    this.response_handler(response, 'domain.delete', 'domain.list');
+    this.response_handler(response, 'domain.delete', 'domain.list', {refresh: 1});
   };
 
   this.domain_add_response = function(response)
   {
-    this.response_handler(response, 'domain.add', 'domain.list');
+    this.response_handler(response, 'domain.add', 'domain.list', {refresh: 1});
   };
 
   this.domain_edit_response = function(response)
   {
-    this.response_handler(response, 'domain.edit', 'domain.list');
+    this.response_handler(response, 'domain.edit', 'domain.list', {refresh: 1});
   };
 
   this.user_info = function(id)
@@ -1689,7 +1698,6 @@ function kolab_admin()
     this.response_handler(response, 'sharedfolder.edit', 'sharedfolder.list');
   };
 
-
   this.settings_type_info = function(id)
   {
     this.http_post('settings.type_info', {id: id});
@@ -1825,7 +1833,7 @@ function kolab_admin()
   /*********************************************************/
 
   // universal API response handler
-  this.response_handler = function(response, action, list)
+  this.response_handler = function(response, action, list, list_params)
   {
     if (!this.api_response(response))
       return;
@@ -1841,7 +1849,11 @@ function kolab_admin()
       if (this.env.list_page > 1 && this.env.list_size == 1 && action.match(/\.delete/))
         page -= 1;
 
-      this.command(list, {page: page});
+      if (!list_params)
+        list_params = {};
+
+      list_params.page = page;
+      this.command(list, list_params);
       this.set_watermark('taskcontent');
     }
   };

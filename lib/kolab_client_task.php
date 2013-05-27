@@ -661,13 +661,14 @@ class kolab_client_task
     /**
      * Returns list of system capabilities.
      *
-     * @param bool $all If enabled capabilities for all domains will be returned
+     * @param bool $all     If enabled capabilities for all domains will be returned
+     * @param bool $refresh Disable session cache
      *
      * @return array List of system capabilities
      */
-    protected function capabilities($all = false)
+    protected function capabilities($all = false, $refresh = false)
     {
-        if (isset($_SESSION['capabilities']) && !$this->devel_mode) {
+        if (!$refresh && isset($_SESSION['capabilities']) && !$this->devel_mode) {
             $list = $_SESSION['capabilities'];
         }
         else {
@@ -701,11 +702,13 @@ class kolab_client_task
     /**
      * Returns domains list (based on capabilities response)
      *
+     * @param bool $refresh Refresh session cache
+     *
      * @return array List of domains
      */
-    protected function get_domains()
+    protected function get_domains($refresh = false)
     {
-        $caps = $this->capabilities(true);
+        $caps = $this->capabilities(true, $refresh);
 
         return is_array($caps) ? array_keys($caps) : array();
     }
