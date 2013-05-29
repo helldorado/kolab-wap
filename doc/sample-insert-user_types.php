@@ -390,4 +390,95 @@
                 "VALUES ('kolab_posix','Mail-enabled POSIX User', 'A mail-enabled POSIX User'," .
                 "'" . json_encode($attributes) . "')");
 
+    $attributes = Array(
+            "auto_form_fields" => Array(
+                    "cn" => Array(
+                            "data" => Array(
+                                    "givenname",
+                                    "sn",
+                                ),
+                        ),
+                    "displayname" => Array(
+                            "data" => Array(
+                                    "givenname",
+                                    "sn",
+                                ),
+                        ),
+                    "uid" => Array(
+                            "data" => Array(
+                                    "givenname",
+                                    "preferredlanguage",
+                                    "sn",
+                                ),
+                        ),
+                    "userpassword" => Array(
+                            "optional" => true,
+                        ),
+                ),
+            "form_fields" => Array(
+                    "cn" => Array(
+                            "optional" => true,
+                        ),
+                    "displayname" => Array(
+                            "optional" => true,
+                        ),
+                    "givenname" => Array(),
+                    "initials" => Array(
+                            "optional" => true,
+                        ),
+                    "l" => Array(
+                            "optional" => true,
+                        ),
+                    "mail" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
+                    "mailalternateaddress" => Array(
+                            "type" => "list",
+                            "optional" => true,
+                        ),
+                    "mobile" => Array(
+                            "optional" => true,
+                        ),
+                    "o" => Array(
+                            "optional" => true,
+                        ),
+                    "ou" => Array(
+                            "type" => "select",
+                        ),
+                    "pager" => Array(
+                            "optional" => true,
+                        ),
+                    "postalcode" => Array(
+                            "optional" => true,
+                        ),
+                    "sn" => Array(),
+                    "street" => Array(
+                            "optional" => true,
+                        ),
+                    "telephonenumber" => Array(
+                            "optional" => true,
+                        ),
+                    "title" => Array(
+                            "optional" => true,
+                        ),
+                    "userpassword" => Array(
+                            "optional" => true,
+                        ),
+                ),
+            "fields" => Array(
+                    "objectclass" => Array(
+                            "top",
+                            "inetorgperson",
+                            "mailrecipient",
+                            "organizationalperson",
+                            "person",
+                        ),
+                ),
+        );
+
+    $result = $db->query("INSERT INTO `user_types` (`key`, `name`, `description`, `attributes`) " .
+                "VALUES ('contact','Contact', 'A global address book contact'," .
+                "'" . json_encode($attributes) . "')");
+
 ?>
