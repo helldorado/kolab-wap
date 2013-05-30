@@ -42,7 +42,7 @@ class kolab_client_task
     protected $config;
 
     protected $ajax_only = false;
-    protected $page_title = 'Kolab Admin Panel';
+    protected $page_title = 'Kolab Web Admin Panel';
     protected $menu = array();
     protected $cache = array();
     protected $devel_mode = false;
@@ -349,7 +349,7 @@ class kolab_client_task
             $this->output->command('display_message', $error, 'error', 60000);
         }
 
-        $this->output->send('login');
+        $this->send('login');
         exit;
     }
 
@@ -381,16 +381,18 @@ class kolab_client_task
 
         $this->output->assign('error_code', $code);
         $this->output->assign('error_message', $msg);
-        $this->output->send('error');
+        $this->send('error');
         exit;
     }
 
     /**
      * Output sending.
      */
-    public function send()
+    public function send($template = null)
     {
-        $template = $this->get_task();
+        if (!$template) {
+            $template = $this->get_task();
+        }
 
         if ($this->page_title) {
             $this->output->assign('pagetitle', $this->page_title);
