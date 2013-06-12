@@ -571,6 +571,9 @@ class Net_LDAP3
         if (!$entry_dn) {
             $entry_dn = $this->config_get("base_dn");
         }
+        if (!$entry_dn) {
+            $entry_dn = $this->config_get("root_dn");
+        }
 
         $this->_debug("effective_rights for subject $subject resolves to entry dn $entry_dn");
 
