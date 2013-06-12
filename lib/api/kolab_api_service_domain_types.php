@@ -67,11 +67,16 @@ class kolab_api_service_domain_types extends kolab_api_service
                         'inetdomainbasedn' => array(
                             'optional' => 'true',
                         ),
+                        'inetdomainstatus' => array(
+                            'type' => 'checkbox',
+                            'optional' => true,
+                        ),
                     ),
                     'fields' => array(
                         'objectclass' => array(
                             'top',
                             'domainrelatedobject',
+                            'inetdomain',
                         ),
                     ),
                 ),

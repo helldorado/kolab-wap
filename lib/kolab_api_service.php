@@ -90,11 +90,18 @@ abstract class kolab_api_service
                         'associateddomain' => array(
                             'type' => 'list'
                         ),
+                        'inetdomainbasedn' => array(
+                            'optional' => true,
+                        ),
+                        'inetdomainstatus' => array(
+                            'optional' => true,
+                        ),
                     ),
                     'fields' => array(
                         'objectclass' => array(
                             'top',
                             'domainrelatedobject',
+                            'inetdomain',
                         ),
                     ),
                 );
