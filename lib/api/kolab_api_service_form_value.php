@@ -1013,14 +1013,15 @@ class kolab_api_service_form_value extends kolab_api_service
             $default = $base_dn;
         }
 
-        $ous  = $auth->search($base_dn, '(objectclass=organizationalunit)');
         $_ous = array();
 
-        foreach ($ous->entries(true) as $ou_dn => $ou_attrs) {
-            $_ous[] = strtolower($ou_dn);
-        }
+        if ($ous = $auth->search($base_dn, '(objectclass=organizationalunit)')) {
+            foreach ($ous->entries(true) as $ou_dn => $ou_attrs) {
+                $_ous[] = strtolower($ou_dn);
+            }
 
-        sort($_ous);
+            sort($_ous);
+        }
 
         return array(
             'list'    => $_ous,
