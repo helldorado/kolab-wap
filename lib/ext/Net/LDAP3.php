@@ -474,7 +474,7 @@ class Net_LDAP3
             {
                 if ($this->config_get('use_tls', false) === true) {
                     if (!ldap_start_tls($lc)) {
-                        $this->_debug("S: Could not start TLS.");
+                        $this->_debug("S: Could not start TLS. " . ldap_error($lc));
                         continue;
                     }
                 }
@@ -498,21 +498,11 @@ class Net_LDAP3
                     );
                 }
 
-                if ($this->config_get('referrals', false)) {
-                    ldap_set_option(
-                            $lc,
-                            LDAP_OPT_REFERRALS,
-                            (bool)($this->config_get('referrals'))
-                        );
-
-                } else {
-                    ldap_set_option(
-                            $lc,
-                            LDAP_OPT_REFERRALS,
-                            (bool)($this->config_get('referrals'))
-                        );
-
-                }
+                ldap_set_option(
+                    $lc,
+                    LDAP_OPT_REFERRALS,
+                    (bool)($this->config_get('referrals'))
+                );
 
                 break;
             }
@@ -721,7 +711,7 @@ class Net_LDAP3
         $this->config_set('return_attributes', array_keys($attributes));
         $result = $this->search($base_dn, $filter);
 
-        if ($result->count() > 0) {
+        if ($result && $result->count() > 0) {
             $this->_debug("Results found: " . implode(', ', array_keys($result->entries(true))));
             return $result->entries(true);
         }
