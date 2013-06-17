@@ -98,6 +98,7 @@ class LDAP extends Net_LDAP3 {
 
         $this->config_set("host", $this->_ldap_server);
         $this->config_set("port", $this->_ldap_port);
+        $this->config_set("use_tls", $this->_ldap_scheme == 'tls');
 
         parent::connect();
 
