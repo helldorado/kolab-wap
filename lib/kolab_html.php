@@ -154,6 +154,33 @@ class kolab_html
     }
 
     /**
+     * Input element for mail quota. user can select the unit (GB, MB)
+     *
+     * @param array  $attribs  Element attributes
+     *
+     * @return string HTML output of the input
+     */
+    public static function inputquota($attribs = array())
+    {
+        $elem_attribs = array_merge(self::$input_attribs, self::$input_event_attribs,
+            self::$common_attribs, self::$event_attribs);
+        $selected_option_mb = $selected_option_gb = "";
+        $selected_option_kb = "selected";
+        if ($attribs['value'] >= 1024 && $attribs['value'] % 1024 == 0) {
+            $attribs['value'] /= 1024;
+            $selected_option_kb = "";
+            $selected_option_mb = "selected";
+        }
+        if ($attribs['value'] >= 1024 && $attribs['value'] % 1024 == 0) {
+            $attribs['value'] /= 1024;
+            $selected_option_mb = "";
+            $selected_option_gb = "selected";
+        }
+
+        return sprintf('<input%s /><select name="%s-unit"><option value="kb" %s>KB</option><option value="mb" %s>MB</option><option value="gb" %s>GB</option></select>', self::attrib_string($attribs, $elem_attribs), $attribs['name'], $selected_option_kb, $selected_option_mb, $selected_option_gb);
+    }
+
+    /**
      * Textarea element.
      *
      * @param array $attribs  Element attributes

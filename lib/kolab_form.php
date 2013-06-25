@@ -38,6 +38,7 @@ class kolab_form
     const INPUT_HIDDEN   = 9;
     const INPUT_CUSTOM   = 10;
     const INPUT_CONTENT  = 20;
+    const INPUT_TEXTQUOTA = 30;
 
     const TYPE_LIST = 1;
 
@@ -275,6 +276,11 @@ class kolab_form
             }
 
             $content = kolab_html::input($attribs);
+            break;
+
+        case self::INPUT_TEXTQUOTA:
+            $attribs['type'] = 'text';
+            $content = kolab_html::inputquota($attribs);
             break;
 
         case self::INPUT_CHECKBOX:
