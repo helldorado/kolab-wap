@@ -33,6 +33,7 @@ class kolab_client_task_settings extends kolab_client_task
 
     protected $form_element_types = array(
         'text', 'select', 'multiselect', 'list', 'list-autocomplete', 'checkbox', 'password', 'ldap_url',
+        'text-quota',
     );
 
 

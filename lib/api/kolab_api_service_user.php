@@ -128,6 +128,13 @@ class kolab_api_service_user extends kolab_api_service
     {
         //console("\$postdata to user_edit()", $postdata);
 
+        if ($postdata['mailquota-unit'] == 'gb') {
+            $postdata['mailquota'] *= 1024*1024;
+        }
+        if ($postdata['mailquota-unit'] == 'mb') {
+            $postdata['mailquota'] *= 1024;
+        }
+
         $user_attributes = $this->parse_input_attributes('user', $postdata);
         $user            = $postdata['id'];
 

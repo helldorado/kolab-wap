@@ -849,6 +849,10 @@ class kolab_client_task
             }
             break;
 
+        case 'text-quota':
+            $result['type'] = kolab_form::INPUT_TEXTQUOTA;
+            break;
+
         default:
             $result['type'] = kolab_form::INPUT_TEXT;
             if (isset($field['maxlength'])) {
