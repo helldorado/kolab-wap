@@ -76,6 +76,10 @@ class kolab_client_task
      */
     protected function locale_init()
     {
+        if (!empty(self::$translation)) {
+            return;
+        }
+
         $language = $this->get_language();
         $LANG     = array();
 
@@ -244,6 +248,7 @@ class kolab_client_task
                         $label = 'internalerror';
                         $this->raise_error(500, 'Login failed. ' . $str);
                     }
+
                     $this->output->command('display_message', $label, 'error');
                 }
             }
@@ -318,6 +323,9 @@ class kolab_client_task
      */
     private function action_logout($sess_expired = false, $stop_sess = true)
     {
+        // Initialize locales
+        $this->locale_init();
+
         if (!empty($_SESSION['user']) && !empty($_SESSION['user']['token']) && $stop_sess) {
             $this->api->logout();
         }
