@@ -409,7 +409,7 @@ abstract class kolab_api_service
             }
         }
 
-        return $list;
+        return $result;
     }
 
     protected function parse_list_params($post)
