@@ -73,6 +73,7 @@ class kolab_api_service_users extends kolab_api_service
         $search = $this->parse_list_search($post);
 
         $users = $auth->list_users(null, $attributes, $search, $params);
+        $users = $this->parse_list_result($users);
 
         Log::trace("users.list result: " . var_export($users, TRUE));
 

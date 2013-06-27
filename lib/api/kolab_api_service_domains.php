@@ -95,6 +95,7 @@ class kolab_api_service_domains extends kolab_api_service
         $search = $this->parse_list_search($post);
 
         $domains = $auth->list_domains($attributes, $search, $params);
+        $domains = $this->parse_list_result($domains);
 
         return $domains;
     }

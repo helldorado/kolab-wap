@@ -68,6 +68,7 @@ class kolab_api_service_resources extends kolab_api_service
         $search = $this->parse_list_search($post);
 
         $resources = $auth->list_resources(null, $attributes, $search, $params);
+        $resources = $this->parse_list_result($resources);
 
         return $resources;
     }

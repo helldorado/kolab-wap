@@ -66,6 +66,7 @@ class kolab_api_service_roles extends kolab_api_service
         $search = $this->parse_list_search($post);
 
         $roles = $auth->list_roles(null, $attributes, $search, $params);
+        $roles = $this->parse_list_result($roles);
 
         return $roles;
     }

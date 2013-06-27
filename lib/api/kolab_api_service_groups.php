@@ -67,8 +67,8 @@ class kolab_api_service_groups extends kolab_api_service
         $search = $this->parse_list_search($post);
 
         $groups = $auth->list_groups(null, $attributes, $search, $params);
+        $groups = $this->parse_list_result($groups);
 
         return $groups;
-
     }
 }

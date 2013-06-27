@@ -379,6 +379,11 @@ abstract class kolab_api_service
             $attributes = array_intersect($this->list_attribs, $post['attributes']);
             // need to fix array keys
             $attributes = array_values($attributes);
+
+            // unique attribute is always allowed
+            if (($key = array_search('id', $post['attributes'])) !== false) {
+                $attributes[] = $this->unique_attribute();
+            }
         }
 
         if (empty($attributes)) {
@@ -386,6 +391,25 @@ abstract class kolab_api_service
         }
 
         return $attributes;
+    }
+
+    protected function parse_list_result($result)
+    {
+        if (!empty($result) && !empty($result['count'])) {
+            $unique_attr = $this->unique_attribute();
+
+            // replace back unique attribute name with 'id'
+            foreach ($result['list'] as $idx => $record) {
+                // if not set, we assume unique attribute wasn't requested
+                if (!isset($record[$unique_attr])) {
+                    break;
+                }
+                $result['list'][$idx]['id'] = $record[$unique_attr];
+                unset($result['list'][$idx][$unique_attr]);
+            }
+        }
+
+        return $list;
     }
 
     protected function parse_list_params($post)
