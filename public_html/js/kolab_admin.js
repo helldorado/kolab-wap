@@ -1030,6 +1030,12 @@ function kolab_admin()
         if (e.which == 13)
           e.preventDefault();
       })
+      .keydown(function(e) {
+        // block Up/Down arrow keys,
+        // in Firefox Up arrow moves cursor left
+        if (e.which == 38 || e.which == 40)
+          e.preventDefault();
+      })
       .keyup(function(e) {
         // filtering
         var s = this.value,
@@ -1048,36 +1054,38 @@ function kolab_admin()
         // UP/Down arrows
         else if (e.which == 38 || e.which == 40) {
           options = options.not(':hidden');
-          var selected = options.filter('.selected');
 
-          if (!selected.length) {
-            if (e.which == 40) // Down key
-              options.first().addClass('selected').parent().get(0).scrollTop = 0;
+          if (options.length <= 1)
+            return;
+
+          var focused,
+            selected = options.filter('.selected'),
+            index = options.index(selected);
+
+          if (e.which == 40) {
+            if (!(focused = options.get(index+1)))
+              focused = options.get(index-1);
           }
           else {
-            var focused = selected[e.which == 40 ? 'next' : 'prev']();
+            if (!(focused = options.get(index-1)))
+              focused = options.get(index+1);
+          }
 
-            while (focused.length && focused.is(':hidden'))
-              focused = selected[e.which == 40 ? 'next' : 'prev']();
+          if (focused) {
+            focused = $(focused);
+            selected.removeClass('selected');
+            focused.addClass('selected');
 
-            if (!focused.length)
-              focused = options[e.which == 40 ? 'first' : 'last']();
+            var parent = focused.parent(),
+              parent_height = parent.height(),
+              parent_top = parent.get(0).scrollTop,
+              top = focused.offset().top - parent.offset().top,
+              height = focused.height();
 
-            if (focused.length) {
-              selected.removeClass('selected');
-              focused.addClass('selected');
-
-              var parent = focused.parent(),
-                parent_height = parent.height(),
-                parent_top = parent.get(0).scrollTop,
-                top = focused.offset().top - parent.offset().top,
-                height = focused.height();
-
-              if (top < 0)
-                parent.get(0).scrollTop = 0;
-              else if (top >= parent_height)
-                parent.get(0).scrollTop = top - parent_height + height + parent_top;
-            }
+            if (top < 0)
+              parent.get(0).scrollTop = 0;
+            else if (top >= parent_height)
+              parent.get(0).scrollTop = top - parent_height + height + parent_top;
           }
 
           return;
