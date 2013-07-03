@@ -923,7 +923,7 @@ class kolab_client_task
             // Exceptions
             if ($field['name'] == 'ou') {
                 foreach ($options as $idx => $dn) {
-                    $options[$idx] = ldap_dn2ufn($dn);
+                    $options[$idx] = kolab_utils::dn2ufn($dn);
                 }
             }
         }

@@ -154,4 +154,26 @@ class kolab_utils
         return is_array($arr) && count(array_filter(array_keys($arr), 'is_string')) == count($arr);
     }
 
+    /**
+     * Unicode-aware ldap_dn2ufn() wrapper
+     *
+     * @param string $dn LDAP DN string
+     *
+     * @return string Human-readable string
+     */
+    public static function dn2ufn($dn)
+    {
+        $name = ldap_dn2ufn($dn);
+        $pos  = 0;
+
+        // example: "\C3\A4" => "ä"
+        while (preg_match('/\\\\[0-9a-fA-F]{2}/', $name, $matches, PREG_OFFSET_CAPTURE, $pos)) {
+            $char = chr(hexdec(substr($matches[0][0], 1)));
+            $pos  = $matches[0][1];
+            $name = substr_replace($name, $char, $pos, 3);
+            $pos += 1;
+        }
+
+        return $name;
+    }
 }
