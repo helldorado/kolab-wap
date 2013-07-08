@@ -1204,8 +1204,9 @@ class kolab_api_service_form_value extends kolab_api_service
         $result  = $service->users_list(null, $data);
         $list    = $result['list'];
 
-        // skip groups listing if the list if already full
-        if ($result['count'] < $data['page_size']) {
+        // skip groups listing if the list if already full,
+        // and full list was requested (no paging)
+        if (empty($keyword) && $result['count'] < $data['page_size']) {
             $data['attributes'] = array('cn', 'mail');
 
             $service = $this->controller->get_service('groups');
