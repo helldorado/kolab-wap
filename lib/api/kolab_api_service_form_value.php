@@ -1202,14 +1202,16 @@ class kolab_api_service_form_value extends kolab_api_service
 
         $service = $this->controller->get_service('users');
         $result  = $service->users_list(null, $data);
-
         $list    = $result['list'];
 
-        $data['attributes'] = array('cn', 'mail');
+        // skip groups listing if the list if already full
+        if ($result['count'] < $data['page_size']) {
+            $data['attributes'] = array('cn', 'mail');
 
-        $service = $this->controller->get_service('groups');
-        $result  = $service->groups_list(null, $data);
-        $list    = array_merge($list, $result['list']);
+            $service = $this->controller->get_service('groups');
+            $result  = $service->groups_list(null, $data);
+            $list    = array_merge($list, $result['list']);
+        }
 
         // convert to key=>value array
         foreach ($list as $idx => $value) {
