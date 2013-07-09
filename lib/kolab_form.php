@@ -38,6 +38,7 @@ class kolab_form
     const INPUT_HIDDEN   = 9;
     const INPUT_CUSTOM   = 10;
     const INPUT_CONTENT  = 20;
+    const INPUT_DOMAINADMIN = 40;
 
     const TYPE_LIST = 1;
 
@@ -305,6 +306,11 @@ class kolab_form
                 }
             }
 
+            $content = kolab_html::textarea($attribs, true);
+            break;
+
+        case self::INPUT_DOMAINADMIN:
+            $attribs['data-type'] = 'selectlist';
             $content = kolab_html::textarea($attribs, true);
             break;
 

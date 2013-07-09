@@ -92,6 +92,9 @@ abstract class kolab_api_service
                             'top',
                             'domainrelatedobject',
                         ),
+                        'domainadmin' => array(
+                            'type' => 'list'
+                        ),
                     ),
                 );
 

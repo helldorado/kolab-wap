@@ -630,6 +630,11 @@ span.listelement input:focus {
   outline: none;
 }
 
+span.listelement select {
+  width: 332px;
+  height: 18px;
+}
+
 span.listelement span.actions {
   float: left;
   padding: 1px 0;
