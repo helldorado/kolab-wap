@@ -1,9 +1,10 @@
 body {
-  background: #F3F3F3;
+  background: none repeat scroll 0 0 transparent;
   text-align: center;
 }
 
 #taskcontent {
+  margin: auto;
   width: 680px;
   min-height: 100px;
   max-height: 460px;
