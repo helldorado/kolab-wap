@@ -93,9 +93,9 @@ class kolab_api_service_domain extends kolab_api_service
 
         if (is_array($postdata[$dna])) {
             $parent_domain = array_shift($postdata[$dna]);
-            return $auth->domain_add($postdata[$dna], $parent_domain);
+            return $auth->domain_add($postdata, $parent_domain);
         } else {
-            return $auth->domain_add($postdata[$dna]);
+            return $auth->domain_add($postdata);
         }
     }
 

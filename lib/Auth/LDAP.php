@@ -151,8 +151,11 @@ class LDAP extends Net_LDAP3 {
         return $result;
     }
 
-    public function domain_add($domain, $parent_domain = false, $prepopulate = true)
+    public function domain_add($domain_attrs, $parent_domain = false, $prepopulate = true)
     {
+        $domain_name_attribute = $this->conf->get('ldap', 'domain_name_attribute');
+        $domain = $domain_attrs[$domain_name_attribute];
+
         // Apply some routines for access control to this function here.
         if (!empty($parent_domain)) {
             $domain_info = $this->domain_info($parent_domain);
