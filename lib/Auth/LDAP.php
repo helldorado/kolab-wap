@@ -178,7 +178,17 @@ class LDAP extends Net_LDAP3 {
             $domain = $parent_domain;
         }
 
-        return $this->domain_edit($domain, $domain_attrs);
+        $domain = $this->domain_info($domain, array_keys($domain_attrs));
+
+        if (empty($domain)) {
+            return false;
+        }
+
+        $domain_dn = key($domain);
+
+        $this->domain_admin_save($domain, $domain_dn, $domain_attrs["domainadmin"]);
+
+        return true;
     }
 
     private function ChangeDomainReadCapability($user, $domain, $action='add')
