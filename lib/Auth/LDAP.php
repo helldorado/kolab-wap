@@ -203,7 +203,20 @@ class LDAP extends Net_LDAP3 {
             'nsslapd-backend' => $_domain,
         );
 
-        $this->add_entry($dn, $attrs);
+        $replica_hosts = $this->list_replicas();
+        if (!empty($replica_hosts)) {
+            foreach ($replica_hosts as $replica_host) {
+                $ldap = new Net_LDAP3($this->config);
+                $ldap->config_set('host', $replica_host);
+                $ldap->config_set('hosts', array($replica_host));
+                $ldap->connect();
+                $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
+                $ldap->add_entry($dn, $attrs);
+                $ldap->close();
+            }
+        } else {
+            $this->add_entry($dn, $attrs);
+        }
 
         $result = $this->_read("cn=" . $_primary_domain . ",cn=ldbm database,cn=plugins,cn=config", array('nsslapd-directory'));
         if (!$result) {
@@ -245,9 +258,21 @@ class LDAP extends Net_LDAP3 {
             'nsslapd-dncachememsize' => '10485760'
         );
 
-        $this->add_entry($dn, $attrs);
+        $replica_hosts = $this->list_replicas();
+        if (!empty($replica_hosts)) {
+            foreach ($replica_hosts as $replica_host) {
+                $ldap = new Net_LDAP3($this->config);
+                $ldap->config_set('host', $replica_host);
+                $ldap->config_set('hosts', array($replica_host));
+                $ldap->connect();
+                $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
+                $ldap->add_entry($dn, $attrs);
+                $ldap->close();
+            }
+        } else {
+            $this->add_entry($dn, $attrs);
+        }
 
-        // Query the ACI for the primary domain
         // Query the ACI for the primary domain
         $domain_filter = $this->conf->get('ldap', 'domain_filter');
         $domain_filter = '(&(' . $domain_name_attribute . '=' . $primary_domain . ')' . $domain_filter . ')';
@@ -266,6 +291,7 @@ class LDAP extends Net_LDAP3 {
         $result = $result[key($result)];
         $acis   = $result['aci'];
 
+        // Skip one particular ACI
         foreach ($acis as $aci) {
             if (stristr($aci, "SIE Group") === false) {
                 continue;
@@ -303,14 +329,31 @@ class LDAP extends Net_LDAP3 {
                         $_aci,
 
                         // Search Access,
-                        "(targetattr = \"*\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "??sub?(objectclass=*)\");)",
+                        "(targetattr != \"userPassword\") (version 3.0;acl \"Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $inetdomainbasedn . "??sub?(objectclass=*)\");)",
 
                         // Service Search Access
                         "(targetattr = \"*\") (version 3.0;acl \"Service Search Access\";allow (read,compare,search)(userdn = \"ldap:///" . $service_bind_dn . "\");)",
                     ),
             );
 
-        $this->add_entry($dn, $attrs);
+        $replica_hosts = $this->list_replicas();
+        if (!empty($replica_hosts)) {
+            foreach ($replica_hosts as $replica_host) {
+                $ldap = new Net_LDAP3($this->config);
+                $ldap->config_set('host', $replica_host);
+                $ldap->config_set('hosts', array($replica_host));
+                $ldap->connect();
+                $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
+                $ldap->add_entry($dn, $attrs);
+                $ldap->close();
+            }
+        } else {
+            $this->add_entry($dn, $attrs);
+        }
+
+        if (!empty($replica_hosts)) {
+            $this->add_replication_agreements($inetdomainbasedn);
+        }
 
         $dn = "cn=Directory Administrators," . $inetdomainbasedn;
         $attrs = array(
