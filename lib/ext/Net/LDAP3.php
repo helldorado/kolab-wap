@@ -289,7 +289,7 @@ class Net_LDAP3
             $ldap->config_set('host', $replica_host);
             $ldap->config_set('hosts', array($replica_host));
             $ldap->connect();
-            $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
+            $ldap->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
 
             $replica_attrs = Array(
                     'cn' => 'replica',
@@ -308,9 +308,14 @@ class Net_LDAP3
 
             $new_replica_dn = 'cn=replica,cn="' . $domain_root_dn . '",cn=mapping tree,cn=config';
 
-            $this->_debug("Would have added $new_replica_dn with attributes: " . var_export($replica_attrs, TRUE));
+            $this->_debug("Adding $new_replica_dn to $replica_host with attributes: " . var_export($replica_attrs, TRUE));
 
             $result = $ldap->add_entry($new_replica_dn, $replica_attrs);
+
+            if (!$result) {
+                $this->_error("Could not add replication configuration to database for $domain_root_dn on $replica_host");
+                continue;
+            }
 
             $result = $ldap->search($replica_dn, "(objectclass=nsDS5ReplicationAgreement)", "sub");
 
@@ -329,7 +334,7 @@ class Net_LDAP3
                 if ($replicate_to_host == $replica_host)
                     continue;
 
-                $this->_debug("About to add a replication agreement for $domain_root_dn to $replicate_to_host on " . $ldap->config_get('host'));
+                $this->_debug("Adding a replication agreement for $domain_root_dn to $replicate_to_host on " . $ldap->config_get('host'));
 
                 $attrs = Array(
                         'objectclass',
@@ -346,10 +351,12 @@ class Net_LDAP3
                 $replica_agreement_attrs['nsDS5ReplicaRoot'] = $domain_root_dn;
                 $replica_agreement_dn = "cn=" . $replica_agreement_attrs['cn'] . "," . $new_replica_dn;
 
-                $this->_debug("Would have added $replica_agreement_dn with attributes: " . var_export($replica_agreement_attrs, TRUE));
+                $this->_debug("Adding $replica_agreement_dn to $replica_host with attributes: " . var_export($replica_agreement_attrs, TRUE));
 
                 $result = $ldap->add_entry($replica_agreement_dn, $replica_agreement_attrs);
-
+                if (!$result) {
+                    $this->_error("Failed adding $replica_agreement_dn");
+                }
             }
         }
 
@@ -960,6 +967,72 @@ class Net_LDAP3
     public function get_result()
     {
         return $this->result;
+    }
+
+    public function list_replicas()
+    {
+        $this->_debug("Finding replicas for this server.");
+
+        // Search any host that is a replica for the current host
+        $replica_hosts = $this->config_get('replica_hosts', Array());
+
+        if (!empty($replica_hosts)) {
+            return $replica_hosts;
+        }
+
+        $ldap = new Net_LDAP3($this->config);
+        $ldap->connect();
+        $ldap->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+        $ldap->config_set('return_attributes', array('nsds5replicahost'));
+
+        $result = $ldap->search($this->config_get('config_root_dn'), '(objectclass=nsds5replicationagreement)', 'sub');
+
+        if (!$result) {
+            $this->_debug("No replicas configured");
+            return $replica_hosts;
+        }
+
+	$this->_debug("Replication agreements found: " . var_export($result->entries(TRUE), TRUE));
+
+        foreach ($result->entries(TRUE) as $dn => $attrs) {
+            if (!in_array($attrs['nsds5replicahost'], $replica_hosts)) {
+                $replica_hosts[] = $attrs['nsds5replicahost'];
+            }
+        }
+
+        // $replica_hosts now holds the IDs of servers we are currently NOT
+        // connected to. We might need this later in order to set
+        $this->_server_id_not = $replica_hosts;
+
+        $this->_debug("So far, we have the following replicas: " . var_export($replica_hosts, TRUE));
+
+        $ldap->close();
+
+        foreach ($replica_hosts as $replica_host) {
+            $ldap->config_set('host', $replica_host);
+            $ldap->config_set('hosts', array($replica_host));
+            $ldap->connect();
+            $ldap->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+            $ldap->config_set('return_attributes', array('nsds5replicahost'));
+            $result = $ldap->search($this->config_get('config_root_dn'), '(objectclass=nsds5replicationagreement)', 'sub');
+            if (!$result) {
+                $this->_debug("No replicas configured");
+            }
+
+            foreach ($result->entries(TRUE) as $dn => $attrs) {
+                if (!in_array($attrs['nsds5replicahost'], $replica_hosts)) {
+                    $replica_hosts[] = $attrs['nsds5replicahost'];
+                }
+            }
+
+            $ldap->close();
+        }
+
+        $this->config_set('replica_hosts', $replica_hosts);
+
+        return $replica_hosts;
     }
 
     public function login($username, $password, $domain = null)
@@ -2052,70 +2125,6 @@ class Net_LDAP3
         }
 
         return array_filter($group_members);
-    }
-
-    private function list_replicas()
-    {
-        $this->_debug("Finding replicas for this server.");
-
-        // Search any host that is a replica for the current host
-        $replica_hosts = $this->config_get('replica_hosts', Array());
-
-        if (!empty($replica_hosts)) {
-            return $replica_hosts;
-        }
-
-        $ldap = new Net_LDAP3($this->config);
-        $ldap->connect();
-        $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
-
-        $ldap->config_set('return_attributes', array('nsds5replicahost'));
-
-        $result = $ldap->search($this->config_get('config_root_dn'), '(objectclass=nsds5replicationagreement)', 'sub');
-
-        if (!$result) {
-            $this->_debug("No replicas configured");
-            return $replica_hosts;
-        }
-
-        foreach ($result->entries(TRUE) as $dn => $attrs) {
-            if (!in_array($attrs['nsds5replicahost'], $replica_hosts)) {
-                $replica_hosts[] = $attrs['nsds5replicahost'];
-            }
-        }
-
-        // $replica_hosts now holds the IDs of servers we are currently NOT
-        // connected to. We might need this later in order to set
-        $this->_server_id_not = $replica_hosts;
-
-        $this->_debug("So far, we have the following replicas: " . var_export($replica_hosts, TRUE));
-
-        $ldap->close();
-
-        foreach ($replica_hosts as $replica_host) {
-            $ldap->config_set('host', $replica_host);
-            $ldap->config_set('hosts', array($replica_host));
-            $ldap->connect();
-            $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
-
-            $ldap->config_set('return_attributes', array('nsds5replicahost'));
-            $result = $ldap->search($this->config_get('config_root_dn'), '(objectclass=nsds5replicationagreement)', 'sub');
-            if (!$result) {
-                $this->_debug("No replicas configured");
-            }
-
-            foreach ($result->entries(TRUE) as $dn => $attrs) {
-                if (!in_array($attrs['nsds5replicahost'], $replica_hosts)) {
-                    $replica_hosts[] = $attrs['nsds5replicahost'];
-                }
-            }
-
-            $ldap->close();
-        }
-
-        $this->config_set('replica_hosts', $replica_hosts);
-
-        return $replica_hosts;
     }
 
     /**

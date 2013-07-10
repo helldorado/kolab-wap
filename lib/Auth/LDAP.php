@@ -206,12 +206,19 @@ class LDAP extends Net_LDAP3 {
         $replica_hosts = $this->list_replicas();
         if (!empty($replica_hosts)) {
             foreach ($replica_hosts as $replica_host) {
+                Log::trace("Iterating over replication partners (now: $replica_host)");
                 $ldap = new Net_LDAP3($this->config);
+                $ldap->config_set("log_hook", array($this, "_log"));
                 $ldap->config_set('host', $replica_host);
                 $ldap->config_set('hosts', array($replica_host));
                 $ldap->connect();
-                $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
-                $ldap->add_entry($dn, $attrs);
+                $ldap->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+                $result = $ldap->add_entry($dn, $attrs);
+
+                if (!$result) {
+                    Log::error("Error adding $dn to $replica_host");
+                }
+
                 $ldap->close();
             }
         } else {
@@ -254,7 +261,6 @@ class LDAP extends Net_LDAP3 {
             'nsslapd-cachememsize'   => '10485760',
             'nsslapd-readonly'       => 'off',
             'nsslapd-require-index'  => 'off',
-            'nsslapd-directory'      => $directory,
             'nsslapd-dncachememsize' => '10485760'
         );
 
@@ -262,10 +268,38 @@ class LDAP extends Net_LDAP3 {
         if (!empty($replica_hosts)) {
             foreach ($replica_hosts as $replica_host) {
                 $ldap = new Net_LDAP3($this->config);
+                $ldap->config_set("log_hook", array($this, "_log"));
                 $ldap->config_set('host', $replica_host);
                 $ldap->config_set('hosts', array($replica_host));
                 $ldap->connect();
-                $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
+                $ldap->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
+
+                $ldap->config_set('return_attributes', array('nsslapd-directory'));
+                $result = $ldap->get_entry("cn=" . $_primary_domain . ",cn=ldbm database,cn=plugins,cn=config");
+                if (!$result) {
+                    $result = $ldap->get_entry("cn=" . $primary_domain . ",cn=ldbm database,cn=plugins,cn=config");
+                }
+
+                if (!$result) {
+                    $result = $ldap->get_entry("cn=userRoot,cn=ldbm database,cn=plugins,cn=config");
+                }
+
+                $this->_log(LOG_DEBUG, "Primary domain ldbm database configuration entry: " . var_export($result, true));
+
+                $result         = $result[key($result)];
+                $orig_directory = $result['nsslapd-directory'];
+                $directory      = str_replace($_primary_domain, $_domain, $result['nsslapd-directory']);
+
+                if ($directory == $orig_directory) {
+                    $directory = str_replace($primary_domain, $_domain, $result['nsslapd-directory']);
+                }
+
+                if ($directory == $orig_directory) {
+                    $directory = str_replace("userRoot", $_domain, $result['nsslapd-directory']);
+                }
+
+                $attrs['nsslapd-directory'] = $directory;
+
                 $ldap->add_entry($dn, $attrs);
                 $ldap->close();
             }
@@ -340,10 +374,11 @@ class LDAP extends Net_LDAP3 {
         if (!empty($replica_hosts)) {
             foreach ($replica_hosts as $replica_host) {
                 $ldap = new Net_LDAP3($this->config);
+                $ldap->config_set("log_hook", array($this, "_log"));
                 $ldap->config_set('host', $replica_host);
                 $ldap->config_set('hosts', array($replica_host));
                 $ldap->connect();
-                $ldap->bind($this->config_get('bind_dn'), $this->config_get('bind_pw'));
+                $ldap->bind($_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw);
                 $ldap->add_entry($dn, $attrs);
                 $ldap->close();
             }
