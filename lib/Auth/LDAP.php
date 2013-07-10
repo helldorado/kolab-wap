@@ -247,6 +247,10 @@ class LDAP extends Net_LDAP3 {
               (array)($domain_admins[$currentdomain_da_dn]["uniquemember"]);
         }
 
+        if (empty($domainadmins)) {
+            $domainadmins = array();
+        }
+
         if (!in_array('cn=Directory Manager', $domainadmins)) {
             $domainadmins[] = 'cn=Directory Manager';
         }
@@ -1118,7 +1122,7 @@ class LDAP extends Net_LDAP3 {
         if (is_array($domain)) {
             $_new_attr = array($domain_name_attribute => array_unique(array_merge((array)($domain_entry[$domain_name_attribute]), $domain)));
         } else {
-            $_new_attr = array($domain_name_attribute => array($domain_entry[$domain_name_attribute], $domain));
+            $_new_attr = array($domain_name_attribute => array_unique(array_merge((array)($domain_entry[$domain_name_attribute]), array($domain))));
         }
 
         return $this->modify_entry($domain_dn, $_old_attr, $_new_attr);
