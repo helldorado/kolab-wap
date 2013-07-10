@@ -293,7 +293,7 @@ abstract class kolab_api_service
      */
     protected function parse_input_attributes($object_name, $attribs)
     {
-        $type_attrs   = $this->object_type_attributes($object_name, $attribs['type_id']);
+        $type_attrs = $this->object_type_attributes($object_name, $attribs['type_id']);
 
         Log::trace("kolab_api_service::parse_input_attributes for $object_name: " . var_export($type_attrs, TRUE));
         Log::trace("called with \$attribs: " . var_export($attribs, TRUE));
