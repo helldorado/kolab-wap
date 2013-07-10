@@ -1221,6 +1221,13 @@ class LDAP extends Net_LDAP3 {
             $str2 = $b[$this->sort_result_key];
         }
 
+        if (is_array($str1)) {
+            $str1 = array_shift($str1);
+        }
+        if (is_array($str2)) {
+            $str2 = array_shift($str2);
+        }
+
         return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
     }
 
