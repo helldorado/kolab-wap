@@ -70,12 +70,12 @@ class kolab_api_service_form_value extends kolab_api_service
                 continue;
             }
 
-            $method_name = 'generate_' . strtolower($attr_name) . '_' . strtolower($postdata['object_type']);
+            $method_name = 'generate_' . str_replace('-', '_', strtolower($attr_name)) . '_' . strtolower($postdata['object_type']);
 
             if (!method_exists($this, $method_name)) {
                 Log::trace("Method $method_name doesn't exist");
 
-                $method_name = 'generate_' . strtolower($attr_name);
+                $method_name = 'generate_' . str_replace('-', '_', strtolower($attr_name));
 
                 if (!method_exists($this, $method_name)) {
                     Log::trace("Method $method_name doesn't exist either");
@@ -278,6 +278,14 @@ class kolab_api_service_form_value extends kolab_api_service
         Log::trace("kolab_api_service_form_value::generate_alias() \$form_aliases: " . var_export($form_aliases, TRUE));
 
         return array_values($form_aliases);
+    }
+
+    private function generate_apple_generateduid($postdata, $attribs = array())
+    {
+        if (isset($attribs['auto_form_fields']) && isset($attribs['auto_form_fields']['apple-generateduid'])) {
+            $uuid = exec("uuidgen | tr '[:lower:]' '[:upper:]'");
+            return $uuid;
+        }
     }
 
     private function generate_astaccountcallerid($postdata, $attribs = array())
