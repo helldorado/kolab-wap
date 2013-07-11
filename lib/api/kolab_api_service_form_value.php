@@ -536,8 +536,22 @@ class kolab_api_service_form_value extends kolab_api_service
             $uid = $this->generate_uid($postdata, $attribs);
 
             // TODO: Home directory base path from configuration?
+            $conf = Conf::get_instance():
 
-            return '/home/' . $uid;
+            $homedirectory_base = $conf->get($_SESSION['user']->get_domain(), 'homedirectory_base');
+            if (empty($homedirectory_base)) {
+                $homedirectory_base = $conf->get('kolab', 'homedirectory_base');
+            }
+
+            if (empty($homedirectory_base)) {
+                $homedirectory_base = "/home/";
+            }
+
+            if (substr($homedirectory_base, (strlen($homedirectory_base)-1), 1) == "/") {
+                $homedirectory_base = substr($homedirectory_base, 0, (strlen($homedirectory_base)-1));
+            }
+
+            return $homedirectory_base . '/' . $uid;
         }
     }
 
