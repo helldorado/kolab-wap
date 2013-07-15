@@ -866,6 +866,11 @@ class kolab_client_task
             $result['type'] = kolab_form::INPUT_TEXTQUOTA;
             break;
 
+        case 'list-domainadmins':
+            $result['type'] = kolab_form::INPUT_DOMAINADMIN;
+            $result['data-type'] = kolab_form::TYPE_LIST;
+            break;
+
         default:
             $result['type'] = kolab_form::INPUT_TEXT;
             if (isset($field['maxlength'])) {
@@ -1260,6 +1265,12 @@ class kolab_client_task
                     if (is_array($field['value'])) {
                         $field['value'] = implode("\n", $field['value']);
                     }
+                }
+
+                // used for selectlist, eg. domainadmins
+                if (!empty($data[$idx."_options"]))
+                {
+                    $assoc_fields[$idx] = !empty($data[$idx."_options"]) ? $data[$idx."_options"] : array();
                 }
 
                 // @TODO: We assume here that all autocompletion lists are associative

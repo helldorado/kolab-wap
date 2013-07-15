@@ -1051,6 +1051,41 @@ class kolab_api_service_form_value extends kolab_api_service
         );
     }
 
+    /**
+     * get the users that are domainadmins.
+     * We assume: all users in the main domain (kolab.conf: base_dn), plus the Directory Manager
+     */
+    private function select_options_domainadmin($postdata, $attribs = array())
+    {
+        $conf = Conf::get_instance();
+
+        $base_dn = $conf->get("base_dn");
+        $auth = Auth::get_instance($base_dn);
+
+        $_domainadmins = array();
+
+        $domainadmin = array();
+        $domainadmin[] = $conf->get("bind_dn"); // "cn=Directory Manager";
+        $domainadmin[] = "Directory Manager";
+        $_domainadmins[] = $domainadmin;
+
+        if ($domainadmins = $auth->search($base_dn, '(objectclass=kolabinetorgperson)')) {
+            foreach ($domainadmins->entries(true) as $domainadmin_dn => $domainadmin_attrs) {
+                $domainadmin = array();
+                $domainadmin[] = $domainadmin_dn;
+                $domainadmin[] = $domainadmin_attrs['displayname'];
+                $_domainadmins[] = $domainadmin;
+            }
+
+            sort($_domainadmins);
+        }
+
+        return array(
+            'list'    => $_domainadmins,
+            'default' => strtolower($conf->get("bind_dn")),
+        );
+    }
+
     private function select_options_preferredlanguage($postdata, $attribs = array())
     {
         $options = $this->_select_options_from_db('preferredlanguage');

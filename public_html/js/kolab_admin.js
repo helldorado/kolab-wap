@@ -715,6 +715,8 @@ function kolab_admin()
     // replace some textarea fields with pretty/smart input lists
     $('textarea[data-type="list"]', form)
       .each(function() { kadm.form_list_element_wrapper(this); });
+    $('textarea[data-type="selectlist"]', form)
+      .each(function() { kadm.form_list_element_wrapper(this, "select"); });
     // create smart select fields
     $('input[data-type="select"]', form)
       .each(function() { kadm.form_select_element_wrapper(this); });
@@ -751,6 +753,22 @@ function kolab_admin()
       data.json[this.name] = value;
     });
 
+    // list of selects
+    $('textarea[data-type="selectlist"]:not(:disabled)', form).each(function() {
+      var i, v, value = [],
+        re = RegExp('^' + RegExp.escape(this.name) + '\[[0-9-]+\]$');
+
+      for (i in data.json) {
+        if (i.match(re)) {
+          if (v = $('select[name="'+i+'"]', form).val())
+            value.push(v);
+          delete data.json[i];
+        }
+      }
+
+      data.json[this.name] = value;
+    });
+
     // smart selects
     $('input[data-type="select"]', form).each(function() {
       delete data.json[this.name];
@@ -781,8 +799,10 @@ function kolab_admin()
   };
 
   // Replaces form element with smart list element
-  this.form_list_element_wrapper = function(form_element)
+  this.form_list_element_wrapper = function(form_element, element_type)
   {
+    element_type = element_type || "text";
+
     var i = 0, j = 0, list = [], elem, e = $(form_element),
       form = form_element.form,
       disabled = e.attr('disabled'),
@@ -848,14 +868,24 @@ function kolab_admin()
 
       // add input rows
       $.each(list, function(i, v) {
-        var elem = kadm.form_list_element(form, {
-          value: v,
-          key: i,
-          maxlength: maxlength,
-          autocomplete: autocomplete,
-          element: e
-        }, j++);
-
+        if (element_type == 'text') {
+            var elem = kadm.form_list_element(form, {
+              value: v,
+              key: i,
+              maxlength: maxlength,
+              autocomplete: autocomplete,
+              element: e
+            }, j++);
+        }
+        else if (element_type='select') {
+            var elem = kadm.form_selectlist_element(form, {
+              value: v,
+              key: i,
+              maxlength: maxlength,
+              autocomplete: autocomplete,
+              element: e
+            }, j++);
+        }
         elem.appendTo(area);
       });
     }
@@ -929,6 +959,90 @@ function kolab_admin()
           span.remove();
         else
           $('input', span).val('').focus();
+
+        // delete key from internal field representation
+        if (key !== undefined && kadm.env.assoc_fields[name])
+          delete kadm.env.assoc_fields[name][key];
+
+        kadm.ac_stop();
+      }).data('key', key);
+
+    return elem;
+  };
+
+  // Creates smart list element
+  this.form_selectlist_element = function(form, data, idx)
+  {
+    var content, elem, input,
+      key = data.key,
+      orig = data.element,
+      ac = data.autocomplete;
+
+    assoc_fields_options = (orig ? orig.attr('name') : data.name); //  + '_options';
+    data.name = (orig ? orig.attr('name') : data.name) + '[' + idx + ']';
+    data.readonly = (ac && idx >= 0);
+
+    // remove internal attributes
+    delete data['element'];
+    delete data['autocomplete'];
+    delete data['key'];
+
+    // build element content
+    content = '<span class="listelement"><span class="actions">'
+      + (!ac ? '<span title="" class="add"></span>' : ac && idx == -1 ? '<span title="" class="search"></span>' : '')
+      + (!ac || idx >= 0 ? '<span title="" class="reset"></span>' : '')
+      + '</span><select>';
+
+    var list = this.env.assoc_fields ? this.env.assoc_fields[assoc_fields_options] : [];
+    $.each(list, function(i, v) {
+        content = content + '<option value="' + v[0] + '">' + v[1] + '</option>';
+    });
+    content = content + '</select></span>';
+
+    elem = $(content);
+    input = $('select', elem);
+
+    // Set INPUT attributes
+    input.attr(data);
+
+    if (data.readonly)
+      input.addClass('readonly');
+    if (ac)
+      input.addClass('autocomplete');
+
+    // attach element creation event
+    if (!ac)
+      $('span[class="add"]', elem).click(function() {
+        var name = data.name.replace(/\[[0-9]+\]$/, ''),
+          span = $(this.parentNode.parentNode),
+          maxcount = $('textarea[name="'+name+'"]').attr('data-maxcount');
+
+        // check element count limit
+        if (maxcount && maxcount <= span.parent().children().length) {
+          alert(kadm.t('form.maxcount.exceeded'));
+          return;
+        }
+
+        var dt = (new Date()).getTime(),
+          elem = kadm.form_selectlist_element(form, {name: name}, dt);
+
+        kadm.ac_stop();
+        span.after(elem);
+        $('select', elem).focus();
+      });
+
+    // attach element deletion event
+    if (!ac || idx >= 0)
+      $('span[class="reset"]', elem).click(function() {
+        var span = $(this.parentNode.parentNode),
+          name = data.name.replace(/\[[0-9]+\]$/, ''),
+          l = $('select[name^="' + name + '"]', form),
+          key = $(this).data('key');
+
+        if (l.length > 1 || $('select[name="' + name + '"]', form).attr('data-autocomplete'))
+          span.remove();
+        else
+          $('select', span).val('').focus();
 
         // delete key from internal field representation
         if (key !== undefined && kadm.env.assoc_fields[name])

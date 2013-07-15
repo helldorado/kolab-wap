@@ -96,6 +96,9 @@ abstract class kolab_api_service
                         'inetdomainstatus' => array(
                             'optional' => true,
                         ),
+                        'domainadmin' => array(
+                            'type' => 'list'
+                        ),
                     ),
                     'fields' => array(
                         'objectclass' => array(

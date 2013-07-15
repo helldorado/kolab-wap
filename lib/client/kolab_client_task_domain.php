@@ -232,6 +232,7 @@ class kolab_client_task_domain extends kolab_client_task
         $sections = array(
             'system'   => 'domain.system',
             'other'    => 'domain.other',
+            'admins'    => 'domain.admins',
         );
 
         // field-to-section map and fields order
@@ -239,6 +240,7 @@ class kolab_client_task_domain extends kolab_client_task
             'type_id'           => 'system',
             'type_id_name'      => 'system',
             'associateddomain'  => 'system',
+            'domainadmin'       => 'admins',
         );
 
         //console("domain_form() \$data", $data);
@@ -293,6 +295,15 @@ class kolab_client_task_domain extends kolab_client_task
                 'value'    => $accttypes[$type]['content'],
             );
         }
+
+        // load all domain admins, ie. all users from the default domain
+        $param = array();
+        $param['attributes'] = array('domainadmin');
+        $resp = $this->api_post('form_value.select_options', null, $param);
+        $resp = $resp->get('domainadmin');
+
+        $default         = $resp['default'];
+        $data['domainadmin_options'] = $resp['list'];
 
         // Create form object and populate with fields
         $form = $this->form_create('domain', $attribs, $sections, $fields, $fields_map, $data, $add_mode);

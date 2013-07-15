@@ -145,6 +145,22 @@ class LDAP extends Net_LDAP3 {
         $_SESSION['user']->user_bind_dn = $result;
         $_SESSION['user']->user_bind_pw = $password;
 
+        # if the user does not have access to the default domain, set another domain
+        $domains = $this->list_domains();
+        $domain = "";
+        foreach ($domains['list'] as $key => $value) {
+            $domain = $value['associateddomain'];
+            if (is_array($domain)) {
+               $domain = $domain[0];
+            }
+            
+            if ($domain == $this->domain) {
+                break;
+            }
+        }
+
+        $_SESSION['user']->set_domain($domain);
+
         return $result;
     }
 
@@ -458,7 +474,107 @@ class LDAP extends Net_LDAP3 {
 
         $this->add_entry($dn, $attrs);
 
+        $domain = $this->domain_info($domain, array_keys($attributes));
+
+        if (empty($domain)) {
+            return false;
+        }
+
+        $domain_dn = key($domain);
+
+        $this->domain_admin_save($domain, $domain_dn, $attributes["domainadmin"]);
+
         return true;
+    }
+
+    private function ChangeDomainReadCapability($user, $domain, $action='add')
+    {
+        if (($tmpconn = ldap_connect($this->_ldap_server)) === false) {
+            return false;
+        }
+
+        if (ldap_bind($tmpconn, $_SESSION['user']->user_bind_dn, $_SESSION['user']->user_bind_pw) === false) {
+            ldap_close($tmpconn);
+            return false;
+        }
+
+        $associateddomain_dn="associateddomain=$domain,cn=kolab,cn=config";
+        $info = array();
+        $info["aci"] = array();
+        if (!(($sr = ldap_read($tmpconn, $associateddomain_dn, "(aci=*)", array('aci'))) === false)) {
+            $entry = ldap_get_entries($tmpconn, $sr);
+            if ($entry['count'] > 0) {
+                for ($count = 0; $count < $entry[0]['aci']['count']; $count++) {
+                    if (strpos($entry[0]['aci'][$count], $user) === false) {
+                        $info['aci'][] = $entry[0]['aci'][$count];
+                    }
+                }
+            }
+        }
+
+        if ($action == 'add') {
+            $info["aci"][] = "(targetattr =\"*\")(version 3.0;acl \"$user\";allow (read,search) (userdn=\"ldap:///$user\");)";
+        }
+
+        if (ldap_modify($tmpconn, $associateddomain_dn, $info) === false) {
+            ldap_close($tmpconn);
+            return false;
+        }
+
+        ldap_close($tmpconn);
+        return true;
+    }
+
+    private function domain_admin_save($domain, $domain_dn, $domainadmins) {
+        $currentdomain_dn = $this->_standard_root_dn($domain[$domain_dn]["associateddomain"]);
+        $currentdomain_da_dn = "cn=Directory Administrators,".$currentdomain_dn;
+
+        $domain_admins_result = $this->_search($currentdomain_dn, "cn=Directory Administrators*", array("uniqueMember"));
+        if ($domain_admins_result != null && count($domain_admins_result) > 0) {
+            $domain_admins = $domain_admins_result->entries(true);
+        }
+
+        if (empty($domain_admins[$currentdomain_da_dn]["uniquemember"])) {
+            $domain_admins[$currentdomain_da_dn]["uniquemember"] = Array();
+        }
+
+        if (!is_array($domain_admins[$currentdomain_da_dn]["uniquemember"])) {
+            $domain_admins[$currentdomain_da_dn]["uniquemember"] = 
+              (array)($domain_admins[$currentdomain_da_dn]["uniquemember"]);
+        }
+
+        if (empty($domainadmins)) {
+            $domainadmins = array();
+        }
+
+        if (!in_array('cn=Directory Manager', $domainadmins)) {
+            $domainadmins[] = 'cn=Directory Manager';
+        }
+
+        $info = array();
+        $info["uniquemember"] = array();
+        for ($count = 0; $count < count($domainadmins); $count++) {
+            $info["uniquemember"][] = $domainadmins[$count];
+
+            if (!in_array($domainadmins[$count], $domain_admins[$currentdomain_da_dn]["uniquemember"])) {
+                # add read permission to associateddomain in cn=kolab,cn=config
+                $this->ChangeDomainReadCapability($domainadmins[$count], $domain[$domain_dn]["associateddomain"], 'add');
+            }
+        }
+
+        # check for removed admins: remove also read permission from associateddomain in cn=kolab,cn=config
+        foreach ($domain_admins[$currentdomain_da_dn]["uniquemember"] as $oldadmin) {
+            if (!in_array($oldadmin, $domainadmins)) {
+                # drop read permission to associateddomain in cn=kolab,cn=config
+                $this->ChangeDomainReadCapability($oldadmin, $domain[$domain_dn]["associateddomain"], 'remove');
+            }
+        }
+
+        $result = $this->modify_entry($currentdomain_da_dn, $domain_admins[$currentdomain_da_dn], $info);
+        
+        if (!$result) {
+            return false;
+        }
     }
 
     public function domain_edit($domain, $attributes, $typeid = null)
@@ -470,6 +586,12 @@ class LDAP extends Net_LDAP3 {
         }
 
         $domain_dn = key($domain);
+
+        # using isset, because if the array is empty, then we want to drop the domain admins.
+        if (isset($attributes["domainadmin"])) {
+            $this->domain_admin_save($domain, $domain_dn, $attributes["domainadmin"]);
+            unset($attributes["domainadmin"]);
+        }
 
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($domain_dn, $domain[$domain_dn], $attributes);
@@ -510,6 +632,7 @@ class LDAP extends Net_LDAP3 {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _search()");
             $result = $this->_search($domain_base_dn, $domain_filter, $attributes);
             $result = $result->entries(true);
+            $domain_dn = key($result);
         }
         else {
             $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() uses _read()");
@@ -518,6 +641,25 @@ class LDAP extends Net_LDAP3 {
 
         if (!$result) {
             return false;
+        }
+
+        $currentdomain_dn = $this->_standard_root_dn($result[$domain_dn]["associateddomain"]);
+        $currentdomain_da_dn = "cn=Directory Administrators,".$currentdomain_dn;
+
+        $domain_admins_result = $this->_search($currentdomain_dn, "cn=Directory Administrators*", array("uniqueMember"));
+        if ($domain_admins_result != null && count($domain_admins_result) > 0) {
+            $domain_admins = $domain_admins_result->entries(true);
+        }
+
+        // read domain admins from LDAP, uniqueMembers of Directory Administrators of domain
+        $result[$domain_dn]["domainadmin"] = array();
+        if (is_array($domain_admins[$currentdomain_da_dn]["uniquemember"])) {
+            foreach ($domain_admins[$currentdomain_da_dn]["uniquemember"] as $domainadmin) {
+                $result[$domain_dn]["domainadmin"][] = $domainadmin;
+            }
+        }
+        else {
+            $result[$domain_dn]["domainadmin"][] = $domain_admins[$currentdomain_da_dn]["uniquemember"];
         }
 
         $this->_log(LOG_DEBUG, "Auth::LDAP::domain_info() result: " . var_export($result, true));
