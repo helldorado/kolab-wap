@@ -190,6 +190,9 @@ class LDAP extends Net_LDAP3 {
             array_unshift($attributes[$domain_name_attribute], $domain);
         }
 
+        $attributes_domainadmin = $attributes["domainadmin"];
+        unset($attributes["domainadmin"]);
+
         $dn = $domain_name_attribute . '=' . $domain . ',' . $domain_base_dn;
 
         $result = $this->add_entry($dn, $attributes);
@@ -482,7 +485,7 @@ class LDAP extends Net_LDAP3 {
 
         $domain_dn = key($domain);
 
-        $this->domain_admin_save($domain, $domain_dn, $attributes["domainadmin"]);
+        $this->domain_admin_save($domain, $domain_dn, $attributes_domainadmin);
 
         return true;
     }
