@@ -596,6 +596,10 @@ class LDAP extends Net_LDAP3 {
             unset($attributes["domainadmin"]);
         }
 
+        // unset the domainadmin and aci values in the original value, to avoid problems during ldap modify
+        unset($domain[$domain_dn]["domainadmin"]);
+        unset($domain[$domain_dn]["aci"]);
+
         // We should start throwing stuff over the fence here.
         return $this->modify_entry($domain_dn, $domain[$domain_dn], $attributes);
     }
